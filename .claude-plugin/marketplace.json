@@ -1,0 +1,15 @@
+{
+  "name": "vibe-garden",
+  "owner": {
+    "name": "Ronald Roy"
+  },
+  "plugins": [
+    {
+      "name": "spiral-grove",
+      "source": "./spiral-grove",
+      "description": "A Spec Driven Development (SDD) set of Claude commands.",
+      "repository": "https://github.com/rjroy/vibe-garden.git",
+      "license": "MIT"
+    }
+  ]
+}
