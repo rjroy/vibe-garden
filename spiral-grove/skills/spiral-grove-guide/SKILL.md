@@ -274,7 +274,9 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 This skill includes comprehensive reference documentation:
 
 ### references/SDD-QUICK-REFERENCE.md
-A concise quick-reference guide containing:
+**Purpose:** Practical operational guide for day-to-day SDD usage
+
+**Contains:**
 - Command summary table
 - Phase flow diagram
 - Quick decision tree
@@ -283,7 +285,40 @@ A concise quick-reference guide containing:
 - Red flags
 - Emergency procedures
 
-Load this when needing a quick lookup or reminder about SDD workflow.
+**When to use:**
+- Need quick lookup of command syntax
+- Want reminder of workflow phases
+- Looking for practical checklists
+- Need immediate decision tree guidance
+- Troubleshooting during active development
+
+### references/SDD-FOUNDATIONS.md
+**Purpose:** Deep theoretical reference for understanding SDD methodology
+
+**Contains:**
+- Academic foundations (Ostroff et al. 2004, Design by Contract, Formal Methods)
+- Industry implementations (GitHub Spec Kit, Kiro IDE)
+- Historical context and timeline
+- Core principles with philosophical grounding
+- Detailed phase explanations with validation criteria
+- Comparisons to other methodologies (Waterfall, Agile, TDD, BDD, DbC)
+- "Why SDD for AI?" rationale and problem analysis
+- Spiral Grove's unique innovations and extensions
+- Benefits, trade-offs, and critical analysis
+- Full academic and industry citations
+
+**When to use:**
+- Need to understand WHY SDD works this way
+- Want academic backing or legitimacy validation
+- Explaining SDD to stakeholders or team members
+- Making methodology decisions (when to use SDD vs alternatives)
+- Understanding relationship to other methodologies
+- Need theoretical grounding for SDD principles
+- Researching trade-offs and costs
+- Writing documentation about SDD
+- Justifying SDD adoption to organization
+
+**Usage guideline:** Use QUICK-REFERENCE for "how to use SDD" and FOUNDATIONS for "why SDD exists and how it works."
 
 ## Tips for Success
 
