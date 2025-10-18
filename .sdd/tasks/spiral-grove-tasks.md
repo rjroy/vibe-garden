@@ -190,17 +190,32 @@ After thorough review, implementation.md is already well-optimized:
 **Priority**: Medium
 **Estimate**: 30 minutes
 **Dependencies**: TASK-002
-**Assigned To**: Unassigned
+**Assigned To**: Completed
+**Status**: Complete ✅
+**Completed**: 2025-10-18
 
 **Description**:
 Add documentation for the `/review` command to the quick reference guide, including when to use it, what it validates, and example workflows.
 
 **Acceptance Criteria**:
-- [ ] `/review` command documented in quick reference
-- [ ] Includes phase-specific validation criteria for spec, plan, tasks, progress
-- [ ] Provides examples of validation findings (pass/fail/warning scenarios)
-- [ ] Explains human-in-loop approval workflow
-- [ ] Maintains consistent formatting with existing quick reference style
+- [x] `/review` command documented in quick reference
+- [x] Includes phase-specific validation criteria for spec, plan, tasks, progress
+- [x] Provides examples of validation findings (pass/fail/warning scenarios)
+- [x] Explains human-in-loop approval workflow
+- [x] Maintains consistent formatting with existing quick reference style
+
+**Implementation Notes**:
+- Added `/review [phase]` to Commands section under new "Meta-Phase Command" subsection
+- Updated Quick Decision Tree with 4 new entries for review validation points
+- Added comprehensive "Review Validation Criteria" section with:
+  - Spec review critical checks and example issues
+  - Plan review critical checks and example issues
+  - Tasks review critical checks and example issues
+  - Progress review critical checks and example issues
+  - Review workflow steps (run → review findings → fix → approve)
+- Added "Moving to next phase without review" to Red Flags section
+- Updated "Checklist for Quality" to include review step
+- Maintains consistent formatting with existing guide style
 
 **Technical Details**:
 - File to modify: `spiral-grove/skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md`
@@ -598,7 +613,7 @@ A task is complete when:
 | TASK-001 | Complete ✅ | Pending commit | Parent/child hierarchy support - All 4 command files updated |
 | TASK-002 | Complete ✅ | Pending commit | Review command creation - 316 lines |
 | TASK-003 | Complete ✅ | - | Implementation.md review - No changes needed |
-| TASK-004 | Not Started | - | Quick reference update |
+| TASK-004 | Complete ✅ | Pending commit | Quick reference update - Added review validation criteria |
 | TASK-005 | Not Started | - | CLAUDE.md update |
 | TASK-006 | Not Started | - | Test single-feature workflow |
 | TASK-007 | Not Started | - | Test phase boundaries |
