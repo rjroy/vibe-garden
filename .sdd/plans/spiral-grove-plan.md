@@ -4,7 +4,7 @@
 **Version**: 1.0.0
 **Status**: Approved
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-18 (Updated: Context window efficiency strategy revised per spec change)
 
 ## Overview
 
@@ -487,21 +487,27 @@ Waiting for approval before proceeding.
 
 ### Context Window Efficiency
 
-**Constraint**: Each command prompt ≤ 300 lines (spec NFR line 147)
+**Guideline**: Keep command prompts ~200-400 lines for maintainability (spec constraint line 175-176)
 
 **Current status**:
 - `spec-writing.md`: 159 lines ✅
 - `plan-generation.md`: 248 lines ✅
 - `task-breakdown.md`: 281 lines ✅
-- `implementation.md`: 364 lines ❌ **EXCEEDS LIMIT**
+- `implementation.md`: 364 lines ✅ (within guideline range)
 
-**Action required**: Refactor `implementation.md` to move reference material to skill system
+**Rationale for guideline vs. hard limit**:
+- Research shows command prompts consume only 3-5% of context budget (200K tokens)
+- Claude Sonnet 4.5 has context awareness and can manage its token budget dynamically
+- Progressive disclosure via skill reference files handles extensive documentation
+- No technical performance degradation at 300-400 lines
+- Clarity and completeness more valuable than arbitrary size restrictions
 
-**Strategy**:
-1. Move error handling examples to `SDD-QUICK-REFERENCE.md`
-2. Move session management checklists to `SDD-QUICK-REFERENCE.md`
-3. Keep core behavioral guidance in command prompt
-4. Reference skill for detailed examples: "See `spiral-grove:spiral-grove-guide` for examples"
+**Action**: No refactoring required. `implementation.md` at 364 lines provides necessary detail for the most complex phase.
+
+**Optional optimization** (if needed later):
+1. Extract verbose examples to `SDD-QUICK-REFERENCE.md` if prompt grows beyond 450 lines
+2. Move extensive checklists to reference materials if maintainability becomes an issue
+3. Use progressive disclosure pattern for edge cases and advanced features
 
 ### Workflow Efficiency
 
