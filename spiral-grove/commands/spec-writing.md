@@ -30,9 +30,24 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
    - Budget or timeline constraints
    - Technology stack limitations
 
-4. **Stay at "WHAT" not "HOW"** - This is NOT the time for implementation details:
+4. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
+
+   **Ask about capabilities needed:**
+   - ✅ "Does the LLM need to support tool/function calling?"
+   - ✅ "What's the acceptable latency for LLM responses?"
    - ✅ "System must support 10,000 concurrent users"
-   - ❌ "Use Redis for session management"
+   - ✅ "Must integrate with existing authentication system"
+
+   **Do NOT ask about implementation choices:**
+   - ❌ "Which cloud LLM service? Claude vs GPT-4?"
+   - ❌ "Should we use Redis for session management?"
+   - ❌ "React or Vue for the frontend?"
+   - ❌ "PostgreSQL or MongoDB?"
+
+   **The distinction:**
+   - **Capabilities/Constraints** = Part of spec (WHAT the system must do/support)
+   - **Technology choices** = Part of planning (HOW we'll build it)
+   - When in doubt: Ask "Could multiple technologies satisfy this requirement?" If yes, it's probably HOW.
 
 ## Output Format
 
@@ -121,6 +136,7 @@ As a [user type], I want [capability], so that [benefit].
 ## Key Reminders
 
 - **No implementation details yet** - Save architecture for `/plan-generation`
+- **Avoid premature vendor/tool selection** - Ask about capabilities needed, not which specific vendor/library/framework to use
 - **Be thorough** - The spec is the contract for all future work
 - **Document unknowns** - "Open Questions" section is critical
 - **Version control** - Specs evolve, track changes
