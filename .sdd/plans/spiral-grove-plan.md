@@ -2,7 +2,7 @@
 
 **Specification**: `.sdd/specs/spiral-grove.md`
 **Version**: 1.0.0
-**Status**: Draft
+**Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18
 
@@ -10,7 +10,7 @@
 
 Spiral Grove is a Claude Code plugin that transforms AI-assisted development from ad-hoc prompting into a structured four-phase workflow. The technical approach centers on **markdown-based command prompts** that guide Claude's behavior through distinct cognitive modes (specification writing, planning, task breakdown, and implementation), with **filesystem-based state management** using `.sdd/` directory artifacts for session persistence and resumability.
 
-The architecture is intentionally **execution-free** (no code except validation scripts) to maximize portability, maintainability, and flexibility across project types.
+The architecture is intentionally **execution-free** (no code except validation scripts) to maximize portability, maintainability, and flexibility across project types. **Project-level configurability** via CLAUDE.md allows teams to customize enforcement policies (e.g., validation strictness) while the base plugin provides methodology and validation capabilities.
 
 ## Current State & Gaps
 
@@ -244,7 +244,7 @@ Spiral Grove operates entirely within the Claude Code plugin ecosystem:
 
 ### Decision 5: Review Command Design
 
-**Context**: Spec requires Phase 5 `/review [phase]` command but it doesn't exist yet.
+**Context**: Spec requires Meta Phase `/review [phase]` command but it doesn't exist yet.
 
 **Options Considered**:
 - **Option A**: Separate `/review-spec`, `/review-plan`, `/review-tasks`, `/review-progress` commands
@@ -254,13 +254,38 @@ Spiral Grove operates entirely within the Claude Code plugin ecosystem:
   - Pros: Matches spec, single command to learn, centralized validation logic
   - Cons: More complex prompt, requires argument parsing
 
-**Decision**: Implement single `/review` command with argument hint `[spec|plan|tasks|progress]`
+**Decision**: Implement single `/review` command with argument hint `[spec|plan|tasks|progress]` that presents findings only and waits for explicit user approval before updating document status
 
 **Rationale**:
-1. **Spec compliance**: Lines 100-122 explicitly define `/review [phase]` with phase argument
+1. **Spec compliance**: Lines 100-122 explicitly define `/review [phase]` with phase argument and lines 117-119 require manual approval
 2. **User simplicity**: One command to remember, not four
-3. **Consistency**: Other commands don't branch by argument, so this establishes the pattern for parameterized commands
-4. **Future extensibility**: Sets precedent for other parameterized commands if needed
+3. **Human-in-loop**: Review presents validation findings, user decides whether to approve and update status
+4. **Consistency**: Other commands don't branch by argument, so this establishes the pattern for parameterized commands
+5. **Future extensibility**: Sets precedent for other parameterized commands if needed
+
+### Decision 6: Validation Strictness Configurability
+
+**Context**: Different projects have different quality standards - some need strict blocking validation, others prefer advisory warnings.
+
+**Options Considered**:
+- **Option A**: Hardcode strict validation (blocks progression on failures)
+  - Pros: Ensures quality, consistent enforcement
+  - Cons: Too rigid, doesn't fit all project workflows
+- **Option B**: Hardcode advisory validation (warns but allows progression)
+  - Pros: Flexible, doesn't block users
+  - Cons: May allow poor quality artifacts in strict environments
+- **Option C**: Make validation strictness project-configurable via CLAUDE.md (chosen)
+  - Pros: Adapts to project needs, base system provides capabilities, projects set policy
+  - Cons: Requires projects to configure explicitly
+
+**Decision**: Spiral Grove provides validation capabilities; projects configure enforcement policy in their CLAUDE.md
+
+**Rationale**:
+1. **Flexibility**: Different projects need different levels of enforcement (startup MVPs vs. safety-critical systems)
+2. **Separation of concerns**: Base system provides validation logic, project owners set quality gates
+3. **Spec alignment**: Spec NFR line 177 says "Do NOT assume one-size-fits-all - support customization"
+4. **Precedent**: Similar to how projects configure git hooks, linters, or CI checks
+5. **Progressive enhancement**: Projects can start permissive and tighten over time
 
 ## Data Model
 
@@ -674,16 +699,22 @@ Waiting for approval before proceeding.
 
 ## Open Questions
 
-- [ ] Should `/review` command automatically update document status fields, or only present findings for manual approval?
-  - **Recommendation**: Present findings, wait for explicit user approval before updating status (safer, aligns with human-in-loop principle)
+All questions have been resolved:
 
-- [ ] Should validation checks be strict (block progression) or advisory (warn but allow)?
-  - **Recommendation**: Advisory for MVP (warnings + user judgment), strict validation can be added later
+- [x] **Should `/review` command automatically update document status fields, or only present findings for manual approval?**
+  - **Decision**: Present findings only, wait for explicit user approval before updating status
+  - **Rationale**: Aligns with human-in-loop principle; prevents accidental status changes; spec already requires this at lines 117-119
+  - **Impact**: Updated Decision 5 to explicitly state this behavior
 
-- [ ] Should parent specs be stored at `.sdd/specs/parent.md` or `.sdd/specs/parent/parent.md`?
-  - **Current approach**: `.sdd/specs/parent.md` (parent outside child directory)
-  - **Alternative**: `.sdd/specs/parent/_parent.md` (parent inside directory with special prefix)
-  - **Recommendation**: Keep current approach per spec lines 184-186
+- [x] **Should validation checks be strict (block progression) or advisory (warn but allow)?**
+  - **Decision**: Validation strictness is configurable per project via CLAUDE.md, not hardcoded in Spiral Grove
+  - **Rationale**: Different projects have different quality standards (startup MVPs vs. safety-critical systems); base system provides validation capabilities, projects set enforcement policy; aligns with spec NFR line 177 "Do NOT assume one-size-fits-all"
+  - **Impact**: Added Decision 6; updated Overview to mention project-level configurability
+
+- [x] **Should parent specs be stored at `.sdd/specs/parent.md` or `.sdd/specs/parent/parent.md`?**
+  - **Decision**: Store at `.sdd/specs/parent.md` (parent outside child directory)
+  - **Rationale**: Specs may not be known to be parents when initially created; moving files later is disruptive; allows organic evolution from single spec to parent spec
+  - **Impact**: No changes needed - spec already defines this at lines 184-186; plan already documents this in Decision 3
 
 ## Appendix
 
@@ -756,7 +787,8 @@ Before marking this plan as approved:
 - [x] Testing strategy is defined
 - [x] Risks are identified with mitigations
 - [x] Data model supports all use cases
-- [ ] User has reviewed and approved the plan
+- [x] User has reviewed and approved the plan
+- [x] All open questions have been resolved with documented decisions
 
 ## Next Steps
 
