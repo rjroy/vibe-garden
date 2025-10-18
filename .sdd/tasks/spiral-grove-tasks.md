@@ -5,7 +5,7 @@
 **Version**: 1.0.0
 **Status**: Ready for Implementation
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-18 (Updated: TASK-003 revised per spec/plan changes to prompt length constraint)
 
 ## Task Summary
 
@@ -87,7 +87,7 @@ Implement the missing `/review` command that validates phase documents (spec, pl
 - [ ] Presents findings in structured format (checklist with pass/fail/warning)
 - [ ] Waits for explicit user approval before updating status field
 - [ ] Does not proceed automatically - requires user confirmation
-- [ ] Command prompt is ≤300 lines
+- [ ] Command prompt follows guideline (~200-400 lines for maintainability)
 
 **Technical Details**:
 - File to create: `spiral-grove/commands/review.md`
@@ -107,42 +107,42 @@ This is a meta-phase command, not part of the linear workflow. It can be invoked
 
 ---
 
-### Task 3: Refactor `implementation.md` to Meet 300-Line Limit
+### Task 3: Review and Optimize `implementation.md` for Clarity (REVISED)
 **ID**: TASK-003
 **Category**: Commands
-**Priority**: High
-**Estimate**: 1-2 hours
+**Priority**: Low
+**Estimate**: 30 minutes - 1 hour
 **Dependencies**: None
 **Assigned To**: Unassigned
+**Status**: Revised (spec constraint changed from hard limit to guideline)
 
 **Description**:
-Reduce `implementation.md` from current 364 lines to ≤300 lines by extracting examples, checklists, and reference material to the `spiral-grove-guide` skill's quick reference document. Retain core behavioral guidance and workflow instructions in the command prompt.
+Review `implementation.md` (currently 364 lines) for clarity, organization, and maintainability. The 300-line hard limit has been revised to a ~200-400 line guideline, so the current length is acceptable. Focus on improving readability and organization rather than size reduction.
 
 **Acceptance Criteria**:
-- [ ] `implementation.md` reduced to ≤300 lines
-- [ ] Core behavioral guidance retained in command
-- [ ] Examples moved to `skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md`
-- [ ] Error handling patterns moved to quick reference
-- [ ] Session management checklists moved to quick reference
-- [ ] Command includes references to skill for detailed examples: "See `spiral-grove:spiral-grove-guide` for examples"
+- [ ] Review `implementation.md` for clarity and organization
+- [ ] Identify any redundant or overly verbose sections (if any)
+- [ ] Ensure section headings are clear and scannable
+- [ ] Verify examples are relevant and concise
+- [ ] Confirm workflow instructions are logically ordered
+- [ ] Optional: Extract only truly excessive content to quick reference if found
 - [ ] All functional capabilities remain intact (no behavior changes)
 - [ ] Command remains self-sufficient for basic usage
 
 **Technical Details**:
-- Files to modify:
-  - `spiral-grove/commands/implementation.md` (reduce to ≤300 lines)
-  - `spiral-grove/skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md` (add extracted content)
-- Strategy: Move verbose examples and edge cases; keep templates and workflow
-- Key considerations: Don't break existing workflow; maintain usability
-- Related spec sections: Lines 147-148 (Performance NFR), Lines 499-504 (Plan: Context Window Efficiency)
+- File to review: `spiral-grove/commands/implementation.md` (364 lines, within 200-400 guideline)
+- Optional file to update: `spiral-grove/skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md`
+- Strategy: Quality and clarity over size reduction
+- Key considerations: Current length is acceptable per revised spec (lines 175-176)
+- Related spec sections: Lines 175-176 (revised constraint), Plan lines 490-510 (updated strategy)
 
 **Testing Requirements**:
-- Line count verification: `wc -l spiral-grove/commands/implementation.md` returns ≤300
+- Readability test: Command is clear and easy to scan
 - Functional test: Run `/implementation` on a simple feature to verify workflow intact
-- Usability test: Ensure command is still understandable without reading skill references
+- Usability test: Ensure command is understandable without reading skill references
 
 **Notes**:
-Focus on moving content that's "nice to have" vs. "must have." Error examples and detailed checklists are candidates. Core template and workflow steps must remain.
+**IMPORTANT**: This task was revised because the spec constraint changed from a hard 300-line limit to a 200-400 line guideline. The current 364-line implementation.md is within acceptable range and provides necessary detail for the most complex phase. Only optimize if genuine clarity improvements are found, not to meet an arbitrary size target.
 
 ---
 
@@ -153,18 +153,17 @@ Focus on moving content that's "nice to have" vs. "must have." Error examples an
 **Category**: Documentation
 **Priority**: Medium
 **Estimate**: 30 minutes
-**Dependencies**: TASK-002, TASK-003
+**Dependencies**: TASK-002
 **Assigned To**: Unassigned
 
 **Description**:
-Add documentation for the `/review` command to the quick reference guide, including when to use it, what it validates, and example workflows. Also incorporate content extracted from `implementation.md` refactoring.
+Add documentation for the `/review` command to the quick reference guide, including when to use it, what it validates, and example workflows.
 
 **Acceptance Criteria**:
 - [ ] `/review` command documented in quick reference
 - [ ] Includes phase-specific validation criteria for spec, plan, tasks, progress
 - [ ] Provides examples of validation findings (pass/fail/warning scenarios)
 - [ ] Explains human-in-loop approval workflow
-- [ ] Includes content extracted from `implementation.md` (error handling, session management)
 - [ ] Maintains consistent formatting with existing quick reference style
 
 **Technical Details**:

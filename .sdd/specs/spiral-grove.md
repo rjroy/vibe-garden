@@ -3,7 +3,7 @@
 **Version**: 1.0.0
 **Status**: Approved
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-18 (Revised prompt length constraint from hard limit to guideline)
 
 ## Executive Summary
 
@@ -172,7 +172,8 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - **Do NOT** integrate directly with external tools (git, Jira, etc.) - allow direction but don't enforce
 - **Do NOT** enforce specific development methodologies (Agile, Waterfall) - SDD is methodology-agnostic
 - **Do NOT** make implementation decisions during specification phase (e.g., selecting databases, frameworks)
-- **Do NOT** exceed 300 lines for any command, skill, or agent prompt (reference materials exempt)
+- **Guideline**: Keep command and skill prompts concise (~200-400 lines) for maintainability; extract verbose examples and reference material using progressive disclosure (skill reference files)
+- **Context efficiency note**: Command prompts typically consume 3-5% of available context budget; prioritize clarity and completeness over arbitrary length limits
 - **Do NOT** replace developer judgment - provide structure, not prescriptive solutions
 - **Do NOT** assume one-size-fits-all - support customization via project-specific skills/conventions
 
