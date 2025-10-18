@@ -2,12 +2,20 @@
 
 ## Commands
 
+### Core Workflow Commands
+
 | Command | Purpose | Input | Output |
 |---------|---------|-------|--------|
 | `/spec-writing` | Define requirements | Feature idea | `.sdd/specs/[feature].md` |
 | `/plan-generation` | Design architecture | Approved spec | `.sdd/plans/[feature]-plan.md` |
 | `/task-breakdown` | Create task list | Approved plan | `.sdd/tasks/[feature]-tasks.md` |
 | `/implementation` | Execute & track | Task list | Code + `.sdd/progress/[feature]-progress.md` |
+
+### Meta-Phase Command
+
+| Command | Purpose | Input | Output |
+|---------|---------|-------|--------|
+| `/review [phase]` | Validate phase documents | `spec`, `plan`, `tasks`, or `progress` | Validation findings + status update (if approved) |
 
 ## Phase Flow
 
@@ -36,11 +44,19 @@
 
 **"I have a feature idea"** → `/spec-writing`
 
+**"I want to validate my spec"** → `/review spec`
+
 **"I have an approved spec"** → `/plan-generation`
+
+**"I want to validate my plan"** → `/review plan`
 
 **"I have a technical plan"** → `/task-breakdown`
 
+**"I want to validate my tasks"** → `/review tasks`
+
 **"I have a task list"** → `/implementation`
+
+**"I want to check implementation progress"** → `/review progress`
 
 **"I'm implementing and confused"** → Check the spec and plan
 
@@ -99,6 +115,60 @@
 /task-breakdown (refine tasks) → /implementation (continue)
 ```
 
+## Review Validation Criteria
+
+Use `/review [phase]` to validate phase documents before progression.
+
+### Spec Review (`/review spec`)
+**Critical checks:**
+- ✅ No HOW details (tech choices like "use PostgreSQL", "deploy on AWS")
+- ✅ Success criteria are measurable (numbers, percentages, time limits)
+- ✅ Explicit constraints documented (DO NOTs)
+- ✅ Stakeholders identified
+- ✅ Acceptance tests defined
+
+**Example issues:**
+- ❌ "Use React for frontend" → Should be "Needs interactive UI"
+- ❌ "System should be fast" → Should be "95th percentile < 200ms"
+
+### Plan Review (`/review plan`)
+**Critical checks:**
+- ✅ References specification explicitly
+- ✅ Technical decisions have rationale (WHY, not just WHAT)
+- ✅ Integration points documented
+- ✅ Existing codebase patterns analyzed
+- ✅ Error handling, security, testing strategies defined
+
+**Example issues:**
+- ❌ "Decision: Use Redis" with no explanation
+- ✅ "Decision: Use Redis. Rationale: Existing infra, team familiar, meets <200ms requirement"
+
+### Tasks Review (`/review tasks`)
+**Critical checks:**
+- ✅ All spec acceptance criteria mapped to tasks
+- ✅ Task sizing < 1 day each
+- ✅ Dependencies documented
+- ✅ Each task has specific acceptance criteria
+- ✅ Testing requirements explicit
+
+**Example issues:**
+- ❌ Task estimated at 3 days → Break down further
+- ❌ Spec criterion has no corresponding task → Add task
+
+### Progress Review (`/review progress`)
+**Critical checks:**
+- ✅ Tasks being tracked (completed, in-progress, upcoming)
+- ✅ Deviations from spec/plan documented with approval
+- ✅ Test coverage maps to spec acceptance criteria
+- ✅ Blockers identified with mitigation plans
+- ✅ Session notes enable resumption without re-explanation
+
+**Review workflow:**
+1. Run `/review [phase]` on your document
+2. Review findings (pass/fail/warning)
+3. Fix critical issues if any
+4. Approve status update when ready
+
 ## Red Flags
 
 🚩 **Writing code during spec-writing** - Too early!
@@ -107,6 +177,7 @@
 🚩 **Implementing without tests** - Tests are not optional
 🚩 **Deviating from spec silently** - Flag and discuss first
 🚩 **Stale progress docs** - Update in real-time
+🚩 **Moving to next phase without review** - Validate quality gates
 
 ## Document Status Flow
 
@@ -146,6 +217,7 @@ Tasks: Draft → Ready for Implementation → In Progress → Complete
 
 **Before moving to next phase:**
 - [ ] Current document is complete
+- [ ] Run `/review [phase]` and address findings
 - [ ] Status is approved/ready
 - [ ] Stakeholders have reviewed
 - [ ] Open questions are resolved
