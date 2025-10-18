@@ -81,23 +81,36 @@ This is a cross-cutting change affecting all commands. Focus on consistency of i
 **Priority**: Critical
 **Estimate**: 2-4 hours
 **Dependencies**: None
-**Assigned To**: Unassigned
+**Assigned To**: Completed
+**Status**: Complete ✅
+**Completed**: 2025-10-18
 
 **Description**:
 Implement the missing `/review` command that validates phase documents (spec, plan, tasks, progress) before progression to next phase. The command accepts a phase argument and performs phase-specific validation checks, then presents findings to the user and waits for explicit approval before updating document status fields.
 
 **Acceptance Criteria**:
-- [ ] Command file created at `spiral-grove/commands/review.md`
-- [ ] Accepts phase argument with hint: `[spec|plan|tasks|progress]`
-- [ ] Validates document exists for specified phase
-- [ ] For specs: checks for HOW details, validates success criteria are measurable, confirms DO NOTs exist
-- [ ] For plans: validates spec reference exists, confirms technical decisions have rationale, verifies integration points documented
-- [ ] For tasks: confirms all spec acceptance criteria mapped to tasks, validates dependency graph exists, checks task sizing (<1 day)
-- [ ] For progress: validates tasks are being tracked, confirms deviations documented, checks test coverage mapping
-- [ ] Presents findings in structured format (checklist with pass/fail/warning)
-- [ ] Waits for explicit user approval before updating status field
-- [ ] Does not proceed automatically - requires user confirmation
-- [ ] Command prompt follows guideline (~200-400 lines for maintainability)
+- [x] Command file created at `spiral-grove/commands/review.md`
+- [x] Accepts phase argument with hint: `[spec|plan|tasks|progress]`
+- [x] Validates document exists for specified phase
+- [x] For specs: checks for HOW details, validates success criteria are measurable, confirms DO NOTs exist
+- [x] For plans: validates spec reference exists, confirms technical decisions have rationale, verifies integration points documented
+- [x] For tasks: confirms all spec acceptance criteria mapped to tasks, validates dependency graph exists, checks task sizing (<1 day)
+- [x] For progress: validates tasks are being tracked, confirms deviations documented, checks test coverage mapping
+- [x] Presents findings in structured format (checklist with pass/fail/warning)
+- [x] Waits for explicit user approval before updating status field
+- [x] Does not proceed automatically - requires user confirmation
+- [x] Command prompt follows guideline (~200-400 lines for maintainability)
+
+**Implementation Notes**:
+- Created review.md with 316 lines (within 200-400 guideline)
+- Comprehensive validation checklists for all four phases (spec, plan, tasks, progress)
+- Phase boundary enforcement for specs (checks for HOW vs WHAT)
+- Nuanced semantic checks instead of simple keyword matching
+- Structured findings output format with pass/fail/warning indicators
+- Human-in-loop approval workflow - never auto-updates status
+- Includes validation examples (good vs bad patterns)
+- Hierarchy-aware (checks for parent/child relationships)
+- Advisory approach - presents findings and lets user decide
 
 **Technical Details**:
 - File to create: `spiral-grove/commands/review.md`
@@ -570,7 +583,7 @@ A task is complete when:
 | Task ID | Status | PR/Commit | Notes |
 |---------|--------|-----------|-------|
 | TASK-001 | Complete ✅ | Pending commit | Parent/child hierarchy support - All 4 command files updated |
-| TASK-002 | Not Started | - | Review command creation |
+| TASK-002 | Complete ✅ | Pending commit | Review command creation - 316 lines |
 | TASK-003 | Not Started | - | Implementation.md refactoring |
 | TASK-004 | Not Started | - | Quick reference update |
 | TASK-005 | Not Started | - | CLAUDE.md update |

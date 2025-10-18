@@ -1,16 +1,17 @@
 # Spiral Grove - Implementation Progress
 
 **Last Updated**: 2025-10-18
-**Current Status**: 8% complete (1 of 12 tasks)
+**Current Status**: 17% complete (2 of 12 tasks)
 
 ## Current Session
 
 **Date**: 2025-10-18
-**Working On**: TASK-001 completed, ready for commit
+**Working On**: TASK-002 completed, ready for commit
 **Blockers**: None
 
 ## Completed Today
-- TASK-001: Add Parent/Child Hierarchy Support to All Commands (pending commit)
+- TASK-001: Add Parent/Child Hierarchy Support to All Commands (committed: 8d22baf)
+- TASK-002: Create `/review [phase]` Command (pending commit)
 
 ## Discovered Issues
 - (None yet)
@@ -20,7 +21,7 @@
 ## Overall Progress
 
 ### Completed Tasks ✅
-- [x] TASK-001: Add Parent/Child Hierarchy Support to All Commands - *Completed 2025-10-18*
+- [x] TASK-001: Add Parent/Child Hierarchy Support to All Commands - *Completed 2025-10-18 (8d22baf)*
   - Updated spec-writing.md with parent/child hierarchy section and template fields
   - Updated plan-generation.md with hierarchy checks and directory structure
   - Updated task-breakdown.md with hierarchy context in workflow
@@ -28,8 +29,18 @@
   - All files remain within reasonable size limits (implementation.md: 377 lines)
   - Added consistent "Mirror directory structure" reminders across all commands
 
+- [x] TASK-002: Create `/review [phase]` Command - *Completed 2025-10-18*
+  - Created review.md command file (316 lines, within 200-400 guideline)
+  - Implemented comprehensive validation checklists for all four phases
+  - Phase-specific checks: specs (HOW vs WHAT), plans (rationale), tasks (sizing, mapping), progress (tracking, deviations)
+  - Structured findings format with pass/fail/warning indicators
+  - Human-in-loop approval workflow - waits for explicit user confirmation
+  - Nuanced semantic checks instead of simple keyword matching
+  - Includes validation examples and anti-patterns
+  - Hierarchy-aware validation
+
 ### In Progress 🚧
-(None - ready to proceed to TASK-002 or commit TASK-001)
+(None - ready to proceed to TASK-003 or commit TASK-002)
 
 ### Upcoming ⏳
 
