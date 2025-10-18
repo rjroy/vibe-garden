@@ -1,7 +1,7 @@
 # Spiral Grove: Spec-Driven Development Plugin - Specification
 
 **Version**: 1.0.0
-**Status**: Draft
+**Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18
 
@@ -97,7 +97,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - Implementation respects plan's architectural decisions
 - Progress document enables resumption without user re-explanation
 
-### Phase 5: Review (`/review [phase]`)
+### Meta Phase: Review (`/review [phase]`)
 
 **Capabilities:**
 - Validate phase documents before moving to next phase
