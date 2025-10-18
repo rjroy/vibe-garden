@@ -30,18 +30,28 @@ Estimated Timeline: 9-15 hours (1.5-2 development days)
 **Priority**: High
 **Estimate**: 2-3 hours
 **Dependencies**: None
-**Assigned To**: Unassigned
+**Assigned To**: Completed
+**Status**: Complete ✅
+**Completed**: 2025-10-18
 
 **Description**:
 Update all four existing command prompts (`spec-writing.md`, `plan-generation.md`, `task-breakdown.md`, `implementation.md`) to include instructions and examples for creating and working with parent/child specification hierarchies. This enables large projects to organize related features hierarchically without loading all context at once.
 
 **Acceptance Criteria**:
-- [ ] `spec-writing.md` includes instructions for creating parent specs with "Child Specifications" section
-- [ ] `spec-writing.md` includes instructions for creating child specs with "Parent Specification" field
-- [ ] All commands include path examples for both single-level and parent/child structures
-- [ ] Commands instruct Claude to check for parent/child relationships when reading specs
-- [ ] Directory structure pattern documented: `.sdd/specs/parent.md` with children at `.sdd/specs/parent/child-*.md`
-- [ ] Same directory mirroring applies to plans, tasks, and progress directories
+- [x] `spec-writing.md` includes instructions for creating parent specs with "Child Specifications" section
+- [x] `spec-writing.md` includes instructions for creating child specs with "Parent Specification" field
+- [x] All commands include path examples for both single-level and parent/child structures
+- [x] Commands instruct Claude to check for parent/child relationships when reading specs
+- [x] Directory structure pattern documented: `.sdd/specs/parent.md` with children at `.sdd/specs/parent/child-*.md`
+- [x] Same directory mirroring applies to plans, tasks, and progress directories
+
+**Implementation Notes**:
+- Added "Parent/Child Hierarchies" section to spec-writing.md with comprehensive explanation
+- Updated all command templates to include optional "Parent Specification" and "Child Specifications" fields
+- Added hierarchy checks to prerequisites and workflow sections in all commands
+- Added "Mirror directory structure" reminders to key reminders sections
+- File size increases: spec-writing.md +31 lines, plan-generation.md +19 lines, task-breakdown.md +20 lines, implementation.md +13 lines
+- All files remain within reasonable size limits (implementation.md is 377 lines, within 200-400 guideline)
 
 **Technical Details**:
 - Files to modify:
@@ -559,7 +569,7 @@ A task is complete when:
 
 | Task ID | Status | PR/Commit | Notes |
 |---------|--------|-----------|-------|
-| TASK-001 | Not Started | - | Parent/child hierarchy support |
+| TASK-001 | Complete ✅ | Pending commit | Parent/child hierarchy support - All 4 command files updated |
 | TASK-002 | Not Started | - | Review command creation |
 | TASK-003 | Not Started | - | Implementation.md refactoring |
 | TASK-004 | Not Started | - | Quick reference update |

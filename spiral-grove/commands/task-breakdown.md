@@ -16,6 +16,10 @@ Before starting, verify:
 1. A specification exists in `.sdd/specs/[feature-name].md`
 2. A plan exists in `.sdd/plans/[feature-name]-plan.md`
 3. Both are marked as "Approved" or "Under Review"
+4. **Check for parent/child relationships**:
+   - If working on a child feature, verify parent spec and plan exist
+   - Understand which specific child you're breaking down tasks for
+   - Ensure directory structure mirrors the hierarchy
 
 If prerequisites are missing, redirect to the appropriate command.
 
@@ -48,13 +52,23 @@ If prerequisites are missing, redirect to the appropriate command.
 
 ## Output Format
 
-Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`:
+Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`.
+
+**For parent/child hierarchies**: Mirror the spec directory structure:
+- Parent tasks: `.sdd/tasks/parent-feature-tasks.md`
+- Child tasks: `.sdd/tasks/parent-feature/child-a-tasks.md`, `.sdd/tasks/parent-feature/child-b-tasks.md`
+
+**Template**:
 
 ```markdown
 # [Feature Name] - Task Breakdown
 
 **Specification**: [link to spec]
 **Plan**: [link to plan]
+**Parent Tasks**: [Path to parent tasks, if this is a child] _(optional)_
+**Child Task Files**: _(optional, for parent task breakdowns)_
+- [child-a-tasks.md](./parent-feature/child-a-tasks.md) - Brief description
+- [child-b-tasks.md](./parent-feature/child-b-tasks.md) - Brief description
 **Version**: 1.0.0
 **Status**: Draft | Ready for Implementation | In Progress | Complete
 **Created**: [Date]
@@ -219,13 +233,17 @@ A task is complete when:
 ## Workflow
 
 1. **Read Spec and Plan**: Understand requirements and architecture
-2. **Identify Components**: List all pieces that need building
-3. **Create Tasks**: Write specific, actionable tasks
-4. **Map Dependencies**: Identify what blocks what
-5. **Estimate**: Provide realistic time estimates
-6. **Review with User**: Present task list for feedback
-7. **Refine**: Adjust based on feedback
-8. **Mark Ready**: Update status to "Ready for Implementation"
+2. **Check Hierarchy Context**:
+   - If breaking down a child feature, understand parent context and sibling features
+   - Identify any dependencies on parent or sibling tasks
+   - Ensure tasks for this child are scoped independently where possible
+3. **Identify Components**: List all pieces that need building
+4. **Create Tasks**: Write specific, actionable tasks
+5. **Map Dependencies**: Identify what blocks what
+6. **Estimate**: Provide realistic time estimates
+7. **Review with User**: Present task list for feedback
+8. **Refine**: Adjust based on feedback
+9. **Mark Ready**: Update status to "Ready for Implementation"
 
 ## Task Creation Guidelines
 
@@ -263,6 +281,8 @@ A task is complete when:
 - **Testable**: Each task should have clear pass/fail criteria
 - **Valuable**: Each task should deliver something meaningful
 - **Reviewable**: Tasks should result in reviewable PRs (~500 lines max)
+- **Respect hierarchy**: Child task breakdowns should be independently workable without loading all sibling contexts
+- **Mirror directory structure**: Task files must match spec/plan hierarchy exactly
 
 ## Validation Checklist
 

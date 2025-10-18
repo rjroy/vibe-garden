@@ -17,6 +17,10 @@ Before starting, verify:
 2. A plan exists: `.sdd/plans/[feature-name]-plan.md`
 3. A task breakdown exists: `.sdd/tasks/[feature-name]-tasks.md`
 4. Task breakdown status is "Ready for Implementation"
+5. **Check for parent/child relationships**:
+   - If implementing a child feature, read parent spec/plan for context
+   - Verify you're working in the correct child feature scope
+   - Ensure progress tracking mirrors the hierarchy
 
 If prerequisites are missing, redirect to the appropriate command.
 
@@ -58,9 +62,10 @@ If prerequisites are missing, redirect to the appropriate command.
 
 1. **Read the task fully**: Understand acceptance criteria and context
 2. **Review related spec sections**: Know what success looks like
-3. **Check dependencies**: Ensure prerequisite tasks are complete
-4. **Update status**: Mark task as "In Progress"
-5. **Read existing code**: Understand current implementation
+3. **Check hierarchy context**: If working on a child feature, ensure parent context is understood
+4. **Check dependencies**: Ensure prerequisite tasks are complete
+5. **Update status**: Mark task as "In Progress"
+6. **Read existing code**: Understand current implementation
 
 ### During Implementation
 
@@ -93,7 +98,13 @@ If prerequisites are missing, redirect to the appropriate command.
 
 ## Progress Tracking
 
-Create/update `.sdd/progress/[feature-name]-progress.md`:
+Create/update `.sdd/progress/[feature-name]-progress.md`.
+
+**For parent/child hierarchies**: Mirror the spec directory structure:
+- Parent progress: `.sdd/progress/parent-feature-progress.md`
+- Child progress: `.sdd/progress/parent-feature/child-a-progress.md`, `.sdd/progress/parent-feature/child-b-progress.md`
+
+**Template**:
 
 ```markdown
 # [Feature Name] - Implementation Progress
@@ -293,6 +304,8 @@ For each spec acceptance test, verify:
 - **Test everything** - If it's not tested, it's not done
 - **Document deviations** - Don't silently change things
 - **Ask before redesigning** - Plan is already approved
+- **Respect hierarchy** - For child features, stay scoped to that child; avoid loading all sibling contexts
+- **Mirror directory structure** - Progress files must match spec/plan/task hierarchy exactly
 
 ## Session Management
 
