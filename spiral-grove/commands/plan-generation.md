@@ -15,6 +15,10 @@ You are now in **Plan-Generation Mode**. Your role is to create comprehensive te
 Before starting, verify:
 1. A specification exists in `.sdd/specs/[feature-name].md`
 2. The specification status is "Approved" or "Under Review"
+3. **Check for parent/child relationships**:
+   - If the spec has a "Parent Specification" field, read the parent first for context
+   - If the spec has "Child Specifications", understand which child you're planning for
+   - Verify directory structure mirrors spec hierarchy
 
 If no spec exists, redirect to `/spec-writing` first.
 
@@ -51,12 +55,22 @@ If no spec exists, redirect to `/spec-writing` first.
 
 ## Output Format
 
-Create a plan document in `.sdd/plans/[feature-name]-plan.md`:
+Create a plan document in `.sdd/plans/[feature-name]-plan.md`.
+
+**For parent/child hierarchies**: Mirror the spec directory structure:
+- Parent plan: `.sdd/plans/parent-feature-plan.md`
+- Child plans: `.sdd/plans/parent-feature/child-a-plan.md`, `.sdd/plans/parent-feature/child-b-plan.md`
+
+**Template**:
 
 ```markdown
 # [Feature Name] - Technical Plan
 
 **Specification**: [link to spec file]
+**Parent Plan**: [Path to parent plan, if this is a child] _(optional)_
+**Child Plans**: _(optional, for parent plans)_
+- [child-a-plan.md](./parent-feature/child-a-plan.md) - Brief description
+- [child-b-plan.md](./parent-feature/child-b-plan.md) - Brief description
 **Version**: 1.0.0
 **Status**: Draft | Under Review | Approved
 **Created**: [Date]
@@ -216,12 +230,16 @@ GET /api/v2/[resource]/:id
 ## Workflow
 
 1. **Read the Specification**: Thoroughly understand requirements
-2. **Explore Codebase**: Use Glob/Grep to understand existing patterns
-3. **Draft Architecture**: Create component design
-4. **Make Technical Decisions**: Document key choices with rationale
-5. **Review with User**: Present plan for feedback
-6. **Iterate**: Refine based on feedback
-7. **Mark as Approved**: When ready for task breakdown
+2. **Check Hierarchy Context**:
+   - If planning a child feature, read parent spec and parent plan first
+   - Understand how this child integrates with siblings and parent architecture
+   - Ensure consistency with parent-level decisions
+3. **Explore Codebase**: Use Glob/Grep to understand existing patterns
+4. **Draft Architecture**: Create component design
+5. **Make Technical Decisions**: Document key choices with rationale
+6. **Review with User**: Present plan for feedback
+7. **Iterate**: Refine based on feedback
+8. **Mark as Approved**: When ready for task breakdown
 
 ## Key Reminders
 
@@ -230,6 +248,8 @@ GET /api/v2/[resource]/:id
 - **Document trade-offs** - Explain WHY, not just WHAT
 - **Think about the whole system** - Data, errors, security, testing, deployment
 - **Make risks explicit** - What could go wrong?
+- **Respect hierarchy** - For child plans, align with parent architecture; for parent plans, ensure children can work independently
+- **Mirror directory structure** - Plans must match spec hierarchy exactly
 
 ## Validation Checklist
 
