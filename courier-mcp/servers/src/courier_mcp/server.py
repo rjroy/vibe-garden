@@ -17,7 +17,7 @@ from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
 from .auth import get_authenticator, initialize_authenticator
-from .config import get_config
+from .config import get_config, load_config
 from .errors import (
     CourierError,
     InvalidInputError,
@@ -90,6 +90,14 @@ class CourierServer:
     def __init__(self):
         """Initialize server."""
         self.gmail_service: GmailService | None = None
+
+        # Load configuration first (required for all subsequent operations)
+        try:
+            load_config()
+            logger.info("Configuration loaded")
+        except Exception as e:
+            logger.error(f"Failed to load configuration: {e}")
+            raise
 
         # Initialize authenticator (will raise if credentials not configured)
         try:
