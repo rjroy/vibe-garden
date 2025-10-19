@@ -164,6 +164,13 @@ class CourierServer:
 
             logger.info(f"get-messages called with args: {arguments}")
 
+            # Ensure Gmail service is ready
+            if not self.gmail_service:
+                await self._initialize_gmail_service()
+
+            if not self.gmail_service:
+                raise CourierError("Gmail service not initialized")
+
             # Validate inputs
             export_directory: str | None = arguments.get("export_directory")
             if not export_directory:
@@ -269,6 +276,13 @@ class CourierServer:
         errors = []
 
         try:
+            # Ensure Gmail service is ready
+            if not self.gmail_service:
+                await self._initialize_gmail_service()
+
+            if not self.gmail_service:
+                raise CourierError("Gmail service not initialized")
+
             # Step 1: Get label ID
             label_id = None
             if folder and folder.upper() != "INBOX":
