@@ -1,7 +1,8 @@
 # Courier MCP - Implementation Progress
 
-**Last Updated**: 2025-10-18
-**Current Status**: 79% complete (15 of 19 tasks)
+**Last Updated**: 2025-10-19
+**Current Status**: 65% complete (15 of 23 tasks)
+**Version**: v1.1.0 (added 4 plugin distribution tasks)
 
 ## Current Session
 
@@ -132,6 +133,8 @@
 (None - all Phase 1-5 implementation complete, starting testing phase)
 
 ### Upcoming ⏳
+
+**Phase 7: Testing & Documentation (v1.0.0 core)**
 - [ ] TASK-016: Comprehensive Unit & Integration Test Suite
   - Unit tests: auth, gmail_service, export, server
   - Integration tests with mock Gmail API
@@ -148,6 +151,23 @@
   - Error message standardization
   - Log level optimization
   - User-facing output formatting
+
+**Phase 8: Plugin Distribution (v1.1.0 additions)**
+- [ ] TASK-020: Plugin Manifest & Directory Structure
+  - Create .claude-plugin/plugin.json
+  - Build launcher script (courier.sh) with ${CLAUDE_PLUGIN_ROOT}
+  - Follow wyrd-gen-mcp plugin structure pattern
+- [ ] TASK-021: Setup Assistance Skill Implementation
+  - Create skills/courier-setup-helper/SKILL.md
+  - YAML frontmatter with auto-activation triggers
+  - Progressive disclosure for OAuth troubleshooting
+- [ ] TASK-022: Marketplace Registration in vibe-garden
+  - Verify entry in root .claude-plugin/marketplace.json
+  - Enable installation via /plugin install courier-mcp@vibe-garden
+- [ ] TASK-023: Plugin Portability & Installation Testing
+  - Test plugin installation end-to-end
+  - Verify ${CLAUDE_PLUGIN_ROOT} resolution
+  - Document results in PLUGIN_INSTALLATION_TEST.md
 
 ### Blocked 🚫
 (None)
@@ -189,8 +209,11 @@
 
 - **Phases 1-5 COMPLETE** ✅ (Foundation, Auth, Gmail Service, Export, Handlers)
 - **Phase 6 COMPLETE** ✅ (Timeout & Concurrency)
-- **Ready to start Phase 7** (Testing & Documentation)
-- **Next tasks**:
+- **Ready to start Phase 7 & 8** (Testing & Documentation, Plugin Distribution)
+- **Spec/Plan/Tasks updated to v1.1.0** ✅ (Added plugin distribution requirements)
+- **Next tasks** (can be done in parallel):
+
+  **Phase 7: Testing & Documentation (v1.0.0 core)**
   1. TASK-016: Create comprehensive unit and integration test suite
      - Mock Gmail API for unit tests
      - Test all error paths and edge cases
@@ -204,6 +227,21 @@
   4. TASK-019: Error messages and polish
      - Standardize all error codes and messages
      - Optimize logging verbosity
+
+  **Phase 8: Plugin Distribution (v1.1.0 additions)**
+  5. TASK-020: Plugin manifest and directory structure
+     - Create .claude-plugin/plugin.json
+     - Build launcher script with ${CLAUDE_PLUGIN_ROOT}
+  6. TASK-021: Setup assistance Skill implementation
+     - Create skills/courier-setup-helper/SKILL.md
+     - Auto-activation on auth errors
+  7. TASK-022: Marketplace registration
+     - Verify vibe-garden marketplace entry
+  8. TASK-023: Plugin portability testing
+     - End-to-end installation test
+     - Document in PLUGIN_INSTALLATION_TEST.md
+
 - **Infrastructure complete**: All core functionality implemented and tested (imports work)
-- **No blockers**: Ready to proceed with testing in next session
+- **No blockers**: Ready to proceed with testing and plugin distribution in next session
+- **Total remaining**: 8 tasks (4 testing/docs + 4 plugin distribution)
 
