@@ -2,7 +2,7 @@
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
 **Version**: 1.1.0
-**Status**: Draft
+**Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-19
 
