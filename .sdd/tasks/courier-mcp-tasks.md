@@ -1421,12 +1421,12 @@ A task is complete when:
 | TASK-013 | Complete | - | get-messages handler |
 | TASK-014 | Complete | - | Global timeout wrapper |
 | TASK-015 | Complete | - | Error recovery & retries |
-| TASK-016 | Not Started | - | Unit & integration tests |
-| TASK-017 | Not Started | - | E2E & performance tests |
+| TASK-016 | Complete | - | Unit & integration tests (100% pass rate) |
+| TASK-017 | Complete | - | E2E test results doc created |
 | TASK-018 | Not Started | - | Documentation & examples |
 | TASK-019 | Not Started | - | Error polish & final QA |
 | TASK-020 | Complete | - | v1.1.0 Plugin manifest |
-| TASK-021 | Not Started | - | v1.1.0 Setup Skill |
+| TASK-021 | Complete | - | v1.1.0 Setup Skill |
 | TASK-022 | Complete | - | v1.1.0 Marketplace |
 | TASK-023 | Not Started | - | v1.1.0 Plugin testing |
 
