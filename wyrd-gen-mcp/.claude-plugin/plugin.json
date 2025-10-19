@@ -1,0 +1,17 @@
+{
+  "name": "wyrd-gen-mcp",
+  "description": "Provides a MCP which uses Replicate to provides text-to-image generation. Uses stdio transport to access the MCP.",
+  "version": "0.1.1",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden.git",
+  "license": "MIT",
+  "mcpServers": {
+    "wyrd-gen": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/wyrd-gen.sh",
+      "args": [""]
+    }
+  }
+}
