@@ -251,31 +251,46 @@ For large projects with multiple related features, use parent/child hierarchies 
 
 ### Branching Strategy
 
-When working with the Spiral Grove SDD methodology, follow this branching approach:
+All work must be done on feature branches. Direct commits to `main` are blocked by a pre-commit hook.
 
-**Branch Creation**:
-- Create a branch named after the tasks file being worked on
-- For simple features: `feature-name-tasks`
-- For hierarchical features: `parent-feature/child-feature-tasks`
-- Use kebab-case for branch names
+**Branch Naming Conventions**:
+
+1. **Design Phase Branches** (Spec, Plan, Breakdown):
+   - Branch name: `<project>-design`
+   - Example: `courier-mcp-design`
+   - Use for all SDD phases before implementation
+
+2. **Implementation Phase Branches** (Task Execution):
+   - Branch name: `<feature>-tasks`
+   - For simple features: `feature-name-tasks`
+   - For hierarchical features: `parent-feature/child-feature-tasks`
+   - Example: `courier-mcp-tasks`
+
+3. **General Maintenance Branches** (Cleanup, updates, non-project work):
+   - Branch name: `vibe-garden-update-YYYY-MM-DD`
+   - Example: `vibe-garden-update-2025-10-18`
 
 **Commit Policy**:
-- You are free to commit to the task branch as you see fit during implementation
-- Do not commit to the `main` branch when working through a task file
-- All work-in-progress commits go to the task branch
-- When tasks are complete, create a pull request to merge back to `main`
+- Do not commit to `main` - the pre-commit hook will block this
+- Use your feature branch as the working branch
+- You are free to commit as needed to your branch
+- When work is complete, create a pull request to merge back to `main`
 
-**Example**:
-```
-# When starting implementation of courier-mcp-tasks.md
+**Examples**:
+```bash
+# Design phase work
+git checkout -b courier-mcp-design
+# Create specs, plans, task breakdowns...
+git add . && git commit -m "Create courier-mcp specification"
+
+# Implementation phase
 git checkout -b courier-mcp-tasks
-
-# Work on tasks, making commits as needed
 git add . && git commit -m "Implement TASK-001: Project setup"
 git add . && git commit -m "Implement TASK-002: Dependencies"
 
-# When ready, create PR to merge back to main
-git push -u origin courier-mcp-tasks
+# General maintenance
+git checkout -b vibe-garden-update-2025-10-18
+git add CLAUDE.md && git commit -m "Update documentation"
 ```
 
 ## Anti-Patterns to Avoid
