@@ -249,6 +249,50 @@ For large projects with multiple related features, use parent/child hierarchies 
 4. Progress documents track each child independently
 5. Parent progress document summarizes overall completion
 
+### Branching Strategy
+
+All work must be done on feature branches. Direct commits to `main` are blocked by a pre-commit hook.
+
+**Branch Naming Conventions**:
+
+1. **Design Phase Branches** (Spec, Plan, Breakdown):
+   - Branch name: `<project>-design`
+   - Example: `courier-mcp-design`
+   - Use for all SDD phases before implementation
+
+2. **Implementation Phase Branches** (Task Execution):
+   - Branch name: `<feature>-tasks`
+   - For simple features: `feature-name-tasks`
+   - For hierarchical features: `parent-feature/child-feature-tasks`
+   - Example: `courier-mcp-tasks`
+
+3. **General Maintenance Branches** (Cleanup, updates, non-project work):
+   - Branch name: `vibe-garden-update-YYYY-MM-DD`
+   - Example: `vibe-garden-update-2025-10-18`
+
+**Commit Policy**:
+- Do not commit to `main` - the pre-commit hook will block this
+- Use your feature branch as the working branch
+- You are free to commit as needed to your branch
+- When work is complete, create a pull request to merge back to `main`
+
+**Examples**:
+```bash
+# Design phase work
+git checkout -b courier-mcp-design
+# Create specs, plans, task breakdowns...
+git add . && git commit -m "Create courier-mcp specification"
+
+# Implementation phase
+git checkout -b courier-mcp-tasks
+git add . && git commit -m "Implement TASK-001: Project setup"
+git add . && git commit -m "Implement TASK-002: Dependencies"
+
+# General maintenance
+git checkout -b vibe-garden-update-2025-10-18
+git add CLAUDE.md && git commit -m "Update documentation"
+```
+
 ## Anti-Patterns to Avoid
 
 - **Skipping phases** - Each phase builds on the previous
