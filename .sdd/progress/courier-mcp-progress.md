@@ -1,7 +1,7 @@
 # Courier MCP - Implementation Progress
 
 **Last Updated**: 2025-10-19
-**Current Status**: 65% complete (15 of 23 tasks)
+**Current Status**: 74% complete (17 of 23 tasks)
 **Version**: v1.1.0 (added 4 plugin distribution tasks)
 
 ## Current Session
@@ -129,6 +129,19 @@
   - Informational error logging for deleted messages (404)
   - Transparent retry to users (backoff happens silently)
 
+**Phase 8: Plugin Distribution (v1.1.0)**
+- [x] TASK-020: Plugin Manifest & Directory Structure
+  - Created .claude-plugin/plugin.json with v1.1.0 metadata
+  - MCP server name: "courier" (fixed from "wyrd-gen")
+  - Launcher script: servers/scripts/courier.sh with ${CLAUDE_PLUGIN_ROOT}
+  - Directory structure follows plugin conventions
+  - Venv setup and dependency installation automated
+
+- [x] TASK-022: Marketplace Registration in vibe-garden
+  - Courier MCP entry exists in root .claude-plugin/marketplace.json
+  - Plugin discoverable via /plugin install courier-mcp@vibe-garden
+  - Entry follows vibe-garden marketplace format
+
 ### In Progress 🚧
 (None - all Phase 1-5 implementation complete, starting testing phase)
 
@@ -153,17 +166,10 @@
   - User-facing output formatting
 
 **Phase 8: Plugin Distribution (v1.1.0 additions)**
-- [ ] TASK-020: Plugin Manifest & Directory Structure
-  - Create .claude-plugin/plugin.json
-  - Build launcher script (courier.sh) with ${CLAUDE_PLUGIN_ROOT}
-  - Follow wyrd-gen-mcp plugin structure pattern
 - [ ] TASK-021: Setup Assistance Skill Implementation
   - Create skills/courier-setup-helper/SKILL.md
   - YAML frontmatter with auto-activation triggers
   - Progressive disclosure for OAuth troubleshooting
-- [ ] TASK-022: Marketplace Registration in vibe-garden
-  - Verify entry in root .claude-plugin/marketplace.json
-  - Enable installation via /plugin install courier-mcp@vibe-garden
 - [ ] TASK-023: Plugin Portability & Installation Testing
   - Test plugin installation end-to-end
   - Verify ${CLAUDE_PLUGIN_ROOT} resolution
@@ -229,19 +235,15 @@
      - Optimize logging verbosity
 
   **Phase 8: Plugin Distribution (v1.1.0 additions)**
-  5. TASK-020: Plugin manifest and directory structure
-     - Create .claude-plugin/plugin.json
-     - Build launcher script with ${CLAUDE_PLUGIN_ROOT}
-  6. TASK-021: Setup assistance Skill implementation
+  5. TASK-021: Setup assistance Skill implementation ⏳
      - Create skills/courier-setup-helper/SKILL.md
      - Auto-activation on auth errors
-  7. TASK-022: Marketplace registration
-     - Verify vibe-garden marketplace entry
-  8. TASK-023: Plugin portability testing
+  6. TASK-023: Plugin portability testing ⏳
      - End-to-end installation test
      - Document in PLUGIN_INSTALLATION_TEST.md
 
 - **Infrastructure complete**: All core functionality implemented and tested (imports work)
-- **No blockers**: Ready to proceed with testing and plugin distribution in next session
-- **Total remaining**: 8 tasks (4 testing/docs + 4 plugin distribution)
+- **Plugin foundation complete**: ✅ TASK-020 (manifest) and TASK-022 (marketplace) done
+- **No blockers**: Ready to proceed with testing, documentation, and remaining plugin tasks
+- **Total remaining**: 6 tasks (4 testing/docs + 2 plugin distribution)
 
