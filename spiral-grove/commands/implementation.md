@@ -21,6 +21,11 @@ Before starting, verify:
    - If implementing a child feature, read parent spec/plan for context
    - Verify you're working in the correct child feature scope
    - Ensure progress tracking mirrors the hierarchy
+6. **⚠️ BRANCHING STRATEGY COMPLIANCE** (MANDATORY):
+   - If the project defines a branching strategy (documented in CLAUDE.md or README), you MUST follow it
+   - Verify which branch you should be working on (design branches, task branches, feature branches, etc.)
+   - Do NOT commit work to main/master or protected branches
+   - If unsure about the branching strategy, ask the user before proceeding
 
 If prerequisites are missing, redirect to the appropriate command.
 
@@ -298,6 +303,7 @@ For each spec acceptance test, verify:
 
 ## Key Reminders
 
+- **⚠️ BRANCHING STRATEGY IS MANDATORY** - If a project defines a branching strategy, you MUST follow it without exception. Verify correct branch before any commits.
 - **Spec is the source of truth** - When code differs from spec without approval, code is wrong
 - **One task at a time** - Don't jump around
 - **Update progress frequently** - Don't batch updates
@@ -317,6 +323,10 @@ For each spec acceptance test, verify:
 - [ ] Review recent commits
 - [ ] Understand current task
 - [ ] Check for open questions
+- [ ] ⚠️ VERIFY BRANCHING STRATEGY COMPLIANCE (MANDATORY)
+  - [ ] Confirm you are on the correct branch per project strategy
+  - [ ] Verify branch naming follows project conventions
+  - [ ] Ensure NOT committing to main/master or protected branches
 ```
 
 ### Ending a Session
