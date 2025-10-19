@@ -1,7 +1,7 @@
 # Courier MCP Specification
 
 **Version**: 1.0.0
-**Status**: Draft
+**Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18
 
@@ -57,8 +57,17 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 
 ### Performance
 - Target response time: < 20 seconds for up to 100 messages (including export)
+  - Configurable via `COURIER_TIMEOUT_SECONDS` environment variable (default: 20)
 - Batch API calls to minimize quota consumption
 - Cache folder/label list for the duration of the session
+
+### Configuration
+- Server stores default configuration in repository (e.g., `config.yaml` or `courier.config`)
+- Configuration values can be overridden via environment variables:
+  - `COURIER_TIMEOUT_SECONDS`: Request timeout in seconds (default: 20)
+  - `COURIER_MAX_RESULTS_DEFAULT`: Default max results per request (default: 10)
+  - Any other configurable parameters documented in config file
+- Follows pattern used in wyrd-gen-mcp: config in repo, instance-specific overrides via `.env` files
 
 ### Security
 - **Authentication**: Single Gmail account via OAuth 2.0 with refresh tokens (or Service Account with domain delegation)
@@ -118,10 +127,10 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 **Input Parameters**:
 - `search_query` (string, optional): Full Gmail search syntax (e.g., `is:unread`, `has:attachment`, `subject:[VOICE]`)
 - `folder` (string, optional): Label/folder name (default: "INBOX")
-- `export_directory` (string, required): Absolute path where markdown files are saved
+- `export_directory` (string, required): Directory path where markdown files are saved (absolute or relative to invocation directory)
 - `date_start` (string, optional): ISO 8601 date (YYYY-MM-DD) or Gmail date query format
 - `date_end` (string, optional): ISO 8601 date or Gmail date query format
-- `max_results` (integer, optional): 1-100, default 10 (affects quota; higher values fetch up to 100)
+- `max_results` (integer, optional): 1-100, default from config (via `COURIER_MAX_RESULTS_DEFAULT` env var, default 10)
 
 **Output Schema**:
 ```json
@@ -159,9 +168,9 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 ```json
 {
   "folders": [
-    {"id": "INBOX", "name": "Inbox", "message_count": 1245},
-    {"id": "SENT", "name": "[Gmail]/Sent Mail", "message_count": 523},
-    {"id": "Label_123", "name": "Project Docs", "message_count": 89}
+    {"id": "INBOX", "name": "Inbox", "message_count": 1245, "unread_count": 42},
+    {"id": "SENT", "name": "[Gmail]/Sent Mail", "message_count": 523, "unread_count": 0},
+    {"id": "Label_123", "name": "Project Docs", "message_count": 89, "unread_count": 12}
   ]
 }
 ```
@@ -171,6 +180,7 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
   - `id` (string): Gmail label ID (used in `get-messages` folder parameter)
   - `name` (string): Human-readable folder name
   - `message_count` (integer): Approximate number of messages in folder
+  - `unread_count` (integer): Number of unread messages in folder (if available from API)
 
 ---
 
@@ -182,6 +192,9 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 ---
 from: Alice Johnson <alice@example.com>
 to: Me <user@gmail.com>
+cc:
+  - Bob Smith <bob@example.com>
+bcc: []
 subject: "Q4 Planning: [VOICE] Meeting Notes"
 date: 2025-10-15T14:32:00Z
 message-id: <CABcDEF1234567890@mail.gmail.com>
@@ -192,9 +205,11 @@ attachments:
   - filename: "meeting-notes.pdf"
     size: 245678
     mime_type: "application/pdf"
+    url: "https://mail.google.com/mail/u/0/?ui=2&ik=xyz&attid=0.1&permmsgid=msg-a:r123&th=abc&view=att&disp=safe"
   - filename: "transcript.txt"
     size: 12345
     mime_type: "text/plain"
+    url: "https://mail.google.com/mail/u/0/?ui=2&ik=xyz&attid=0.2&permmsgid=msg-a:r123&th=abc&view=att&disp=safe"
 ---
 
 # Email from Alice Johnson
@@ -209,11 +224,17 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 **Frontmatter Fields**:
 - `from` (string): Sender email address and display name
 - `to` (string): Primary recipient email address
+- `cc` (array): List of CC recipients (if any)
+- `bcc` (array): List of BCC recipients (if any)
 - `subject` (string): Email subject line
 - `date` (ISO 8601): Timestamp when email was sent
 - `message-id` (string): Unique Gmail message ID
 - `labels` (array): List of Gmail labels/folders this message belongs to
-- `attachments` (array, optional): List of attachments with metadata (not binary content)
+- `attachments` (array, optional): List of attachments with metadata
+  - `filename` (string): Attachment filename
+  - `size` (integer): Size in bytes
+  - `mime_type` (string): MIME type
+  - `url` (string, optional): Download URL if available from Gmail API (no binary download occurs)
 
 **Filename Convention**:
 - Format: `YYYYMMDD_HHMMSS_[folder]_[sender-name].md`
@@ -233,13 +254,13 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 9. **Context efficiency**: Tool output is concise (filenames only), not full message bodies
 10. **Empty results**: Query with no matches → Returns empty `files_saved` array with summary
 
-## Open Questions
+## Resolved Questions
 
-- [ ] Should `get-folders` include unread count per folder, or just total message count?
-- [ ] Should YAML frontmatter include CC and BCC fields, or just `to`?
-- [ ] Is 20-second timeout appropriate, or should it be configurable?
-- [ ] Should the tool support exporting to relative paths, or require absolute paths?
-- [ ] Should attachment list include download URLs, or just metadata?
+- [x] **Unread counts**: Include unread count per folder alongside total message count (if easily obtained from API)
+- [x] **CC/BCC fields**: Include CC and BCC in YAML frontmatter when available
+- [x] **Timeout configurability**: Server has config file in repository; values can be overridden via ENV variables (timeout, max_results defaults, etc.)
+- [x] **Path support**: Tool supports both absolute and relative paths; relative paths resolve relative to invocation directory (following wyrd-gen pattern)
+- [x] **Attachment URLs**: Include download URLs if Gmail API provides them; fallback to metadata-only if not available (no manual binary downloads)
 
 ## Out of Scope
 
