@@ -125,8 +125,8 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 ```
 
 **Input Parameters**:
-- `search_query` (string, optional): Full Gmail search syntax (e.g., `is:unread`, `has:attachment`, `subject:[VOICE]`)
-- `folder` (string, optional): Label/folder name (default: "INBOX")
+- `search_query` (string, optional): Full Gmail search syntax (e.g., `is:unread`, `has:attachment`, `subject:[VOICE]`). Use label names, not IDs (e.g., `label:ProjectDocs`, not `label:Label_789`)
+- `folder` (string, optional): Friendly label/folder name (e.g., "INBOX", "Project Docs", "Team Review"); default: "INBOX". Use the names returned by `get-folders` tool
 - `export_directory` (string, required): Directory path where markdown files are saved (absolute or relative to invocation directory)
 - `date_start` (string, optional): ISO 8601 date (YYYY-MM-DD) or Gmail date query format
 - `date_end` (string, optional): ISO 8601 date or Gmail date query format
@@ -270,7 +270,10 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 - Downloading attachment binaries
 - Real-time sync or polling for new messages
 - Integration with external services (Slack, databases, etc.)
-- Thread/conversation support (flat message list only)
+
+## Potential Future Features (v2.0+)
+
+- **Thread/conversation support**: Group related messages by Gmail thread ID; optional `include_thread_context` parameter for grouped exports
 
 ---
 
