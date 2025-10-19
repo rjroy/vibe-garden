@@ -1,9 +1,9 @@
 # Courier MCP Specification
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Status**: Approved
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-19
 
 ## Executive Summary
 
@@ -42,6 +42,11 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 
 ### Folder Discovery
 - **FR-7**: Provide a tool to list all available folders/labels with message counts
+
+### Setup Assistance
+- **FR-14**: Provide a Claude Skill that assists users when Gmail OAuth setup fails
+- **FR-15**: Skill presents the SETUP.md documentation with step-by-step troubleshooting
+- **FR-16**: Skill is invoked automatically by Claude when authentication or credential errors are detected
 
 ### Markdown Export Format
 - **FR-8**: YAML frontmatter includes: `from`, `to`, `subject`, `date`, `message-id`, `labels`, `attachments` (list)
@@ -86,6 +91,14 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 - Cross-platform support (Linux, macOS, Windows)
 - No external service dependencies (all computation local)
 
+### Plugin Distribution
+- Must be packaged as a Claude Code plugin with valid `.claude-plugin/plugin.json` manifest
+- Must be registered in the vibe-garden marketplace (`.claude-plugin/marketplace.json`)
+- Plugin structure follows Claude Code plugin conventions:
+  - MCP server configuration in `plugin.json` using `${CLAUDE_PLUGIN_ROOT}` environment variable
+  - Documentation and supporting files organized in plugin root
+  - Server implementation in `servers/` directory
+
 ## Explicit Constraints (DO NOT)
 
 - Do NOT send emails, create drafts, or modify message state (read-only)
@@ -98,13 +111,22 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 
 ## Technical Context
 
-- **Existing Stack**: Gmail API (REST), Python or TypeScript for MCP implementation
+- **Existing Stack**: Gmail API (REST), Python for MCP implementation
 - **Integration Points**:
   - Google Cloud project with Gmail API enabled
   - Local file system for markdown export
-  - Claude Code environment for tool invocation
+  - Claude Code plugin system for MCP server integration
+  - Vibe Garden marketplace for plugin distribution
 - **Auth Method**: OAuth 2.0 with user's own Gmail account (or Service Account for server deployments)
-- **Reference Materials**: See `/seeds/reference/gmail-README.md` and related docs for API specifics
+- **Plugin Structure**: Must conform to Claude Code plugin standards
+  - Plugin manifest at `.claude-plugin/plugin.json`
+  - MCP server configuration using `${CLAUDE_PLUGIN_ROOT}` for portability
+  - Setup documentation at `docs/SETUP.md`
+  - Skills directory at `skills/` for setup assistance
+- **Reference Materials**:
+  - Gmail API: `/seeds/reference/gmail-README.md`
+  - Claude Code plugins: `/seeds/reference/claude-plugin-basics.md`, `/seeds/reference/claude-plugin-reference.md`
+  - Marketplace integration: `/seeds/reference/claude-plugin-marketplaces.md`
 
 ## Tool Specifications
 
@@ -241,6 +263,46 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 - Example: `20251018_145032_inbox_from_alice.md`
 - If file exists, append `_1`, `_2`, etc.: `20251018_145032_inbox_from_alice_1.md`
 
+---
+
+## Skill Specifications
+
+### Skill: `courier-setup-helper`
+
+**Purpose**: Assist users when Gmail OAuth setup or authentication fails by presenting comprehensive troubleshooting guidance.
+
+**Location**: `skills/courier-setup-helper/SKILL.md`
+
+**Invocation Conditions**:
+- Authentication errors from Gmail API (invalid credentials, missing token, expired OAuth)
+- Missing `GMAIL_CREDENTIALS_PATH` environment variable
+- Failed MCP server initialization due to credential issues
+- User explicitly asks for help with Courier MCP setup
+
+**Skill Behavior**:
+1. Detect authentication or setup failures from error messages
+2. Present relevant sections of `docs/SETUP.md` based on error type
+3. Guide user through:
+   - Google Cloud Console setup
+   - OAuth 2.0 credential creation
+   - Environment variable configuration
+   - First-time authentication flow
+   - Common troubleshooting scenarios
+4. Provide step-by-step instructions with command examples
+5. Link to relevant external resources (Google Cloud Console, Gmail API docs)
+
+**Success Criteria**:
+- Skill automatically activates when authentication errors occur
+- User receives actionable troubleshooting steps
+- Guidance is specific to the detected error type
+- User can resolve setup issues without external documentation
+
+**Supporting Files**:
+- `docs/SETUP.md`: Primary setup and troubleshooting documentation
+- `skills/courier-setup-helper/SKILL.md`: Skill definition and prompt
+
+---
+
 ## Acceptance Tests
 
 1. **Basic retrieval**: User requests last 10 unread emails → 10 markdown files appear in export directory
@@ -253,6 +315,10 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 8. **Timeout resilience**: If request exceeds 20 seconds, tool returns files saved so far + error message
 9. **Context efficiency**: Tool output is concise (filenames only), not full message bodies
 10. **Empty results**: Query with no matches → Returns empty `files_saved` array with summary
+11. **Plugin installation**: User installs via `/plugin install courier-mcp@vibe-garden` → Plugin and MCP server are configured
+12. **Plugin portability**: Plugin works regardless of installation location → `${CLAUDE_PLUGIN_ROOT}` resolves correctly
+13. **Setup assistance**: When authentication fails, Claude invokes setup Skill → User sees SETUP.md guidance
+14. **Marketplace registration**: Plugin appears in vibe-garden marketplace listing → Users can discover and install it
 
 ## Resolved Questions
 
@@ -274,6 +340,46 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 ## Potential Future Features (v2.0+)
 
 - **Thread/conversation support**: Group related messages by Gmail thread ID; optional `include_thread_context` parameter for grouped exports
+
+---
+
+## Version History
+
+### v1.1.0 (2025-10-19)
+**Added Plugin Distribution and Setup Assistance Requirements**
+
+- **New Functional Requirements**:
+  - FR-14: Setup assistance Skill for authentication failures
+  - FR-15: Skill presents SETUP.md documentation
+  - FR-16: Automatic Skill invocation on credential errors
+
+- **New Non-Functional Requirements**:
+  - Plugin Distribution: Claude Code plugin packaging standards
+  - Marketplace registration in vibe-garden
+  - Plugin structure conventions and portability
+
+- **Updated Technical Context**:
+  - Added Claude Code plugin system integration points
+  - Documented plugin structure requirements
+  - Added reference materials for plugin development
+
+- **New Specifications**:
+  - Skill Specification: `courier-setup-helper` for setup troubleshooting
+  - Plugin directory structure and manifest requirements
+
+- **New Acceptance Tests**:
+  - AT-11: Plugin installation via vibe-garden marketplace
+  - AT-12: Plugin portability with `${CLAUDE_PLUGIN_ROOT}`
+  - AT-13: Setup assistance Skill activation on auth failures
+  - AT-14: Marketplace registration and discoverability
+
+### v1.0.0 (2025-10-18)
+- Initial specification approved
+- Core MCP tools: `get-messages`, `get-folders`
+- Gmail OAuth 2.0 authentication
+- Markdown export with YAML frontmatter
+- Rate limiting and timeout handling
+- Configuration management
 
 ---
 
