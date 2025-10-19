@@ -1,0 +1,17 @@
+{
+  "name": "courier-mcp",
+  "description": "Provides a MCP which accesses GMail service for a specific user.",
+  "version": "0.1.1",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden.git",
+  "license": "MIT",
+  "mcpServers": {
+    "wyrd-gen": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh",
+      "args": [""]
+    }
+  }
+}
