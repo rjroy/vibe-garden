@@ -9,21 +9,20 @@ Provides:
 - Safe file writing with atomic operations
 """
 
+import base64
 import os
 import re
-import base64
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-import yaml
 import html2text
+import yaml
 
-from courier_mcp.logger import get_logger
-from courier_mcp.config import get_config
 from courier_mcp.errors import ExportError
+from courier_mcp.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -91,7 +90,7 @@ def extract_sender_name(email_str: str) -> str:
     return extract_email_address(email_str)
 
 
-def get_message_body(message: Dict[str, Any]) -> str:
+def get_message_body(message: dict[str, Any]) -> str:
     """Extract message body from Gmail message payload.
 
     Tries to extract in order:
@@ -152,7 +151,7 @@ def get_message_body(message: Dict[str, Any]) -> str:
     return ""
 
 
-def extract_headers(message: Dict[str, Any]) -> Dict[str, Any]:
+def extract_headers(message: dict[str, Any]) -> dict[str, Any]:
     """Extract email headers from Gmail message.
 
     Args:
@@ -182,7 +181,7 @@ def extract_headers(message: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def parse_recipients(recipients_str: str) -> List[str]:
+def parse_recipients(recipients_str: str) -> list[str]:
     """Parse comma-separated recipients into list.
 
     Handles "Name <email>" format.
@@ -200,7 +199,7 @@ def parse_recipients(recipients_str: str) -> List[str]:
     return [r.strip() for r in recipients_str.split(",") if r.strip()]
 
 
-def extract_attachments(message: Dict[str, Any]) -> List[Dict[str, Any]]:
+def extract_attachments(message: dict[str, Any]) -> list[dict[str, Any]]:
     """Extract attachment metadata from message.
 
     Returns metadata (filename, size, MIME type) but not binary data.
@@ -239,7 +238,7 @@ def extract_attachments(message: Dict[str, Any]) -> List[Dict[str, Any]]:
     return attachments
 
 
-def format_message_to_markdown(message: Dict[str, Any]) -> str:
+def format_message_to_markdown(message: dict[str, Any]) -> str:
     """Convert Gmail message to markdown with YAML frontmatter.
 
     Format:
@@ -285,6 +284,7 @@ def format_message_to_markdown(message: Dict[str, Any]) -> str:
         try:
             # Gmail date format: "Mon, 18 Oct 2025 14:30:00 +0000"
             from email.utils import parsedate_to_datetime
+
             dt = parsedate_to_datetime(headers["date"])
             date_iso = dt.isoformat()
         except Exception as e:
@@ -361,7 +361,9 @@ def truncate_markdown(content: str, max_size_kb: int = 10) -> str:
     parts = content.split("---", 2)  # Split at most 2 times
     if len(parts) < 3:
         # Malformed frontmatter, truncate from start
-        truncation_note = "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        truncation_note = (
+            "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        )
         available = max_bytes - len(truncation_note.encode("utf-8"))
         return content[:available] + truncation_note
 
@@ -374,11 +376,15 @@ def truncate_markdown(content: str, max_size_kb: int = 10) -> str:
     if available > 0:
         # Truncate body
         body_truncated = body[:available]
-        truncation_note = "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        truncation_note = (
+            "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        )
         return frontmatter + body_truncated + truncation_note
     else:
         # Not enough space, just add note
-        truncation_note = "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        truncation_note = (
+            "\n\n[Message truncated - exceeded size limit. Full message available in Gmail.]\n"
+        )
         return frontmatter + truncation_note
 
 
@@ -406,7 +412,7 @@ def sanitize_filename(name: str, max_length: int = 50) -> str:
 
 
 def generate_filename(
-    message: Dict[str, Any],
+    message: dict[str, Any],
     folder: str = "inbox",
 ) -> str:
     """Generate filename for markdown export.
@@ -426,6 +432,7 @@ def generate_filename(
     headers = extract_headers(message)
     try:
         from email.utils import parsedate_to_datetime
+
         dt = parsedate_to_datetime(headers["date"])
         timestamp = dt.strftime("%Y%m%d_%H%M%S")
     except Exception:
