@@ -101,10 +101,13 @@ class CourierServer:
 
         logger.info("CourierServer initialized")
 
-    async def _handle_get_folders(self) -> list[TextContent]:
+    async def _handle_get_folders(self, _: dict[str, Any]) -> list[TextContent]:
         """Handle get-folders tool call.
 
         Lists all Gmail labels/folders with message counts.
+
+        Args:
+            arguments: not used
 
         Returns:
             List with single TextContent containing JSON results
