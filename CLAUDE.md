@@ -249,6 +249,35 @@ For large projects with multiple related features, use parent/child hierarchies 
 4. Progress documents track each child independently
 5. Parent progress document summarizes overall completion
 
+### Branching Strategy
+
+When working with the Spiral Grove SDD methodology, follow this branching approach:
+
+**Branch Creation**:
+- Create a branch named after the tasks file being worked on
+- For simple features: `feature-name-tasks`
+- For hierarchical features: `parent-feature/child-feature-tasks`
+- Use kebab-case for branch names
+
+**Commit Policy**:
+- You are free to commit to the task branch as you see fit during implementation
+- Do not commit to the `main` branch when working through a task file
+- All work-in-progress commits go to the task branch
+- When tasks are complete, create a pull request to merge back to `main`
+
+**Example**:
+```
+# When starting implementation of courier-mcp-tasks.md
+git checkout -b courier-mcp-tasks
+
+# Work on tasks, making commits as needed
+git add . && git commit -m "Implement TASK-001: Project setup"
+git add . && git commit -m "Implement TASK-002: Dependencies"
+
+# When ready, create PR to merge back to main
+git push -u origin courier-mcp-tasks
+```
+
 ## Anti-Patterns to Avoid
 
 - **Skipping phases** - Each phase builds on the previous
