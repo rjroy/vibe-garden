@@ -27,12 +27,29 @@ vibe-garden/
 │       ├── spec-writing.md     # Specification phase
 │       ├── plan-generation.md  # Planning phase
 │       ├── task-breakdown.md   # Task decomposition phase
-│       └── implementation.md   # Implementation tracking phase
+│       ├── implementation.md   # Implementation tracking phase
+│       └── review.md           # Meta-phase validation command
 └── .sdd/                       # SDD artifacts (created during workflow)
     ├── specs/                  # Feature specifications
-    ├── plans/                  # Technical plans
-    ├── tasks/                  # Task breakdowns
-    └── progress/               # Implementation progress
+    │   ├── parent-feature.md   # Parent spec (optional, for large projects)
+    │   └── parent-feature/     # Child specs (organize related features)
+    │       ├── child-a.md
+    │       └── child-b.md
+    ├── plans/                  # Technical plans (mirror spec structure)
+    │   ├── parent-feature-plan.md
+    │   └── parent-feature/
+    │       ├── child-a-plan.md
+    │       └── child-b-plan.md
+    ├── tasks/                  # Task breakdowns (mirror spec structure)
+    │   ├── parent-feature-tasks.md
+    │   └── parent-feature/
+    │       ├── child-a-tasks.md
+    │       └── child-b-tasks.md
+    └── progress/               # Implementation progress (mirror spec structure)
+        ├── parent-feature-progress.md
+        └── parent-feature/
+            ├── child-a-progress.md
+            └── child-b-progress.md
 ```
 
 ## Spec-Driven Development (SDD) Workflow
@@ -63,6 +80,15 @@ This repository implements a structured development methodology via the **Spiral
 - Validate against specification
 - Track progress and deviations
 - Output: Code + `.sdd/progress/[feature-name]-progress.md`
+
+### Meta-Phase: Review (`/review`)
+- **Validate phase documents before progression** (can be run at any time)
+- Check specs for HOW vs WHAT separation
+- Verify plans have technical rationale
+- Confirm tasks map to spec acceptance criteria
+- Validate progress is being tracked and deviations documented
+- Presents findings and waits for explicit approval before proceeding
+- Output: Advisory findings and approval checkpoint
 
 ## Key Principles
 
@@ -127,6 +153,9 @@ Located in `seeds/brainstorm/patterns/`:
 
 # Begin implementation with tracking
 /implementation
+
+# Validate phase documents before progression (meta-phase)
+/review [spec|plan|tasks|progress]
 ```
 
 ### Utility Scripts
@@ -187,6 +216,38 @@ Jump into any phase as needed:
 - Revise plans when architecture needs adjustment
 - Refine tasks when scope changes
 - Continue implementation tracking
+
+### Using Parent/Child Specification Hierarchies
+
+For large projects with multiple related features, use parent/child hierarchies to organize work without loading all context at once:
+
+**Use parent/child hierarchy when**:
+- A feature naturally decomposes into 3+ related sub-features
+- Sub-features are managed by different people or completed in phases
+- Want to avoid context overload from loading all specs simultaneously
+
+**Directory structure** (mirrored across specs, plans, tasks, progress):
+```
+.sdd/specs/dashboard-controller.md          # Parent spec
+.sdd/specs/dashboard-controller/
+  ├── widgets-system.md                    # Child spec 1
+  ├── data-binding.md                      # Child spec 2
+  └── real-time-sync.md                    # Child spec 3
+```
+
+**Key points**:
+- Parent spec lists all child specifications
+- Each child spec references its parent (for context)
+- Plans, tasks, and progress files mirror the same directory structure
+- Can work on a single child feature without loading sibling specs
+- Reduces cognitive load for complex projects while maintaining traceability
+
+**Example workflow**:
+1. Create parent spec outlining system architecture
+2. Create child specs for each subsystem
+3. For each child, follow standard workflow: plan → tasks → implementation
+4. Progress documents track each child independently
+5. Parent progress document summarizes overall completion
 
 ## Anti-Patterns to Avoid
 
