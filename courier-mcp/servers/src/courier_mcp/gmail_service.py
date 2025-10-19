@@ -9,7 +9,6 @@ Provides:
 """
 
 import asyncio
-from sys import last_exc
 import time
 from dataclasses import asdict, dataclass
 from typing import Any
