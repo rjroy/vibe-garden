@@ -1406,25 +1406,25 @@ A task is complete when:
 
 | Task ID | Status | PR | Notes |
 |---------|--------|----|----|
-| TASK-001 | Not Started | - | - |
-| TASK-002 | Not Started | - | - |
-| TASK-003 | Not Started | - | - |
-| TASK-004 | Not Started | - | - |
-| TASK-005 | Not Started | - | - |
-| TASK-006 | Not Started | - | - |
-| TASK-007 | Not Started | - | - |
-| TASK-008 | Not Started | - | - |
-| TASK-009 | Not Started | - | - |
-| TASK-010 | Not Started | - | - |
-| TASK-011 | Not Started | - | - |
-| TASK-012 | Not Started | - | - |
-| TASK-013 | Not Started | - | - |
-| TASK-014 | Not Started | - | - |
-| TASK-015 | Not Started | - | - |
-| TASK-016 | Not Started | - | - |
-| TASK-017 | Not Started | - | - |
-| TASK-018 | Not Started | - | - |
-| TASK-019 | Not Started | - | - |
+| TASK-001 | Complete | - | Project setup & config |
+| TASK-002 | Complete | - | Dependencies & venv |
+| TASK-003 | Complete | - | Logging & errors |
+| TASK-004 | Complete | - | OAuth 2.0 auth |
+| TASK-005 | Complete | - | SETUP.md docs |
+| TASK-006 | Complete | - | Label caching |
+| TASK-007 | Complete | - | Message fetch with rate limiting |
+| TASK-008 | Complete | - | Concurrent fetch & timeout |
+| TASK-009 | Complete | - | Markdown export formatting |
+| TASK-010 | Complete | - | Filename collision prevention |
+| TASK-011 | Complete | - | MCP server setup |
+| TASK-012 | Complete | - | get-folders handler |
+| TASK-013 | Complete | - | get-messages handler |
+| TASK-014 | Complete | - | Global timeout wrapper |
+| TASK-015 | Complete | - | Error recovery & retries |
+| TASK-016 | Not Started | - | Unit & integration tests |
+| TASK-017 | Not Started | - | E2E & performance tests |
+| TASK-018 | Not Started | - | Documentation & examples |
+| TASK-019 | Not Started | - | Error polish & final QA |
 | TASK-020 | Not Started | - | v1.1.0 Plugin manifest |
 | TASK-021 | Not Started | - | v1.1.0 Setup Skill |
 | TASK-022 | Not Started | - | v1.1.0 Marketplace |
