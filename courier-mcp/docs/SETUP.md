@@ -214,8 +214,11 @@ courier-mcp
 **Solution**:
 ```bash
 cd courier-mcp
-pip install -e .
+pip install -e .              # Install in editable mode
+pip install -e ".[dev]"        # Include development tools (pytest, black, etc.)
 ```
+
+**Note**: Dependencies are managed via `pyproject.toml` (modern Python standard)
 
 ---
 

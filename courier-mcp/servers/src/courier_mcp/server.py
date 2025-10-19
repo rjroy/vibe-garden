@@ -9,29 +9,79 @@ Runs as stdio-based MCP server for integration with Claude Code.
 
 import asyncio
 import json
-from typing import Any, Dict, List
+import sys
+from typing import Any
 
 from mcp.server import Server
-from mcp.types import Tool, TextContent
+from mcp.server.stdio import stdio_server
+from mcp.types import TextContent, Tool
 
-from courier_mcp.logger import get_logger
-from courier_mcp.config import get_config
-from courier_mcp.errors import (
+from .auth import get_authenticator, initialize_authenticator
+from .config import get_config
+from .errors import (
     CourierError,
     InvalidInputError,
-    TimeoutError as CourierTimeoutError,
     error_to_json,
 )
-from courier_mcp.auth import initialize_authenticator, get_authenticator
-from courier_mcp.gmail_service import GmailService
-from courier_mcp.export import (
+from .export import (
     format_message_to_markdown,
-    truncate_markdown,
     generate_filename,
     safe_file_write,
+    truncate_markdown,
 )
+from .gmail_service import GmailService
+from .logger import get_logger
 
 logger = get_logger(__name__)
+
+# Tool definitions
+TOOLS = [
+    Tool(
+        name="get-folders",
+        description="List all available Gmail labels/folders with message counts",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
+    Tool(
+        name="get-messages",
+        description="Query Gmail inbox, filter by criteria, and export matching messages to directory",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "search_query": {
+                    "type": "string",
+                    "description": "Gmail search query syntax (e.g., 'is:unread from:boss@example.com')",
+                },
+                "folder": {
+                    "type": "string",
+                    "description": "Friendly folder/label name (e.g., 'INBOX', 'Project Docs'). Get list from get-folders tool.",
+                },
+                "export_directory": {
+                    "type": "string",
+                    "description": "Directory path where markdown files will be saved (absolute or relative)",
+                },
+                "date_start": {
+                    "type": "string",
+                    "description": "Start date in YYYY-MM-DD format (optional)",
+                },
+                "date_end": {
+                    "type": "string",
+                    "description": "End date in YYYY-MM-DD format (optional)",
+                },
+                "max_results": {
+                    "type": "integer",
+                    "description": "Maximum messages to retrieve (1-100, default from config)",
+                    "minimum": 1,
+                    "maximum": 100,
+                },
+            },
+            "required": ["export_directory"],
+        },
+    ),
+]
 
 
 class CourierServer:
@@ -39,86 +89,22 @@ class CourierServer:
 
     def __init__(self):
         """Initialize server."""
-        self.server = Server("courier-mcp")
-        self.gmail_service = None
+        self.gmail_service: GmailService | None = None
 
         # Initialize authenticator (will raise if credentials not configured)
         try:
-            initialize_authenticator()
+            _ = initialize_authenticator()
             logger.info("Authenticator initialized")
         except Exception as e:
             logger.error(f"Failed to initialize authenticator: {e}")
             raise
 
-        self._setup_tools()
         logger.info("CourierServer initialized")
 
-    def _setup_tools(self):
-        """Register tools with MCP server."""
-        # Tool 1: get-folders
-        self.server.register_tool(
-            Tool(
-                name="get-folders",
-                description="List all available Gmail labels/folders with message counts",
-                inputSchema={
-                    "type": "object",
-                    "properties": {},
-                    "required": [],
-                },
-            ),
-            self._handle_get_folders,
-        )
-
-        # Tool 2: get-messages
-        self.server.register_tool(
-            Tool(
-                name="get-messages",
-                description="Query Gmail inbox, filter by criteria, and export matching messages to directory",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "search_query": {
-                            "type": "string",
-                            "description": "Gmail search query syntax (e.g., 'is:unread from:boss@example.com')",
-                        },
-                        "folder": {
-                            "type": "string",
-                            "description": "Friendly folder/label name (e.g., 'INBOX', 'Project Docs'). Get list from get-folders tool.",
-                        },
-                        "export_directory": {
-                            "type": "string",
-                            "description": "Directory path where markdown files will be saved (absolute or relative)",
-                        },
-                        "date_start": {
-                            "type": "string",
-                            "description": "Start date in YYYY-MM-DD format (optional)",
-                        },
-                        "date_end": {
-                            "type": "string",
-                            "description": "End date in YYYY-MM-DD format (optional)",
-                        },
-                        "max_results": {
-                            "type": "integer",
-                            "description": "Maximum messages to retrieve (1-100, default from config)",
-                            "minimum": 1,
-                            "maximum": 100,
-                        },
-                    },
-                    "required": ["export_directory"],
-                },
-            ),
-            self._handle_get_messages,
-        )
-
-        logger.info("Tools registered: get-folders, get-messages")
-
-    async def _handle_get_folders(self, arguments: Dict[str, Any]) -> List[TextContent]:
+    async def _handle_get_folders(self) -> list[TextContent]:
         """Handle get-folders tool call.
 
         Lists all Gmail labels/folders with message counts.
-
-        Args:
-            arguments: Tool input (empty for this tool)
 
         Returns:
             List with single TextContent containing JSON results
@@ -130,11 +116,14 @@ class CourierServer:
             if not self.gmail_service:
                 await self._initialize_gmail_service()
 
+            if not self.gmail_service:
+                raise CourierError("Gmail service not initialized")
+
             # Fetch labels
             labels = self.gmail_service.fetch_labels()
 
             # Format response
-            folders = []
+            folders: list[dict[str, str | int]] = []
             for label_id, label in labels.items():
                 folders.append(
                     {
@@ -156,7 +145,7 @@ class CourierServer:
             logger.error(f"get-folders unexpected error: {e}")
             return [TextContent(type="text", text=json.dumps(error_to_json(e), indent=2))]
 
-    async def _handle_get_messages(self, arguments: Dict[str, Any]) -> List[TextContent]:
+    async def _handle_get_messages(self, arguments: dict[str, Any]) -> list[TextContent]:
         """Handle get-messages tool call.
 
         Queries Gmail, retrieves messages, and exports to markdown files.
@@ -167,6 +156,8 @@ class CourierServer:
         Returns:
             List with single TextContent containing JSON results
         """
+
+        timeout_seconds: float | None = None
         try:
             config = get_config()
             timeout_seconds = config.get_float("COURIER_TIMEOUT_SECONDS", 20)
@@ -174,20 +165,22 @@ class CourierServer:
             logger.info(f"get-messages called with args: {arguments}")
 
             # Validate inputs
-            export_directory = arguments.get("export_directory")
+            export_directory: str | None = arguments.get("export_directory")
             if not export_directory:
-                raise InvalidInputError("export_directory is required", parameter="export_directory")
+                raise InvalidInputError(
+                    "export_directory is required", parameter="export_directory"
+                )
 
-            search_query = arguments.get("search_query", "")
-            folder = arguments.get("folder", "INBOX")
-            date_start = arguments.get("date_start")
-            date_end = arguments.get("date_end")
-            max_results = arguments.get("max_results")
+            search_query: str = arguments.get("search_query", "")
+            folder: str = arguments.get("folder", "INBOX")
+            date_start: str | None = arguments.get("date_start")
+            date_end: str | None = arguments.get("date_end")
+            max_results: int | None = arguments.get("max_results")
 
             if max_results is None:
                 max_results = config.get_int("COURIER_MAX_RESULTS_DEFAULT", 10)
-            else:
-                max_results = max(1, min(int(max_results), 100))
+
+            max_results = max(1, min(int(max_results), 100))
 
             # Ensure Gmail service is ready
             if not self.gmail_service:
@@ -207,7 +200,7 @@ class CourierServer:
             )
 
             logger.info(
-                f"get-messages: Successfully exported {len(result['files_saved'])} messages"
+                f"get-messages: Successfully exported {len(result.get('files_saved', []))} messages"
             )
             return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
@@ -248,10 +241,10 @@ class CourierServer:
         search_query: str,
         folder: str,
         export_directory: str,
-        date_start: str,
-        date_end: str,
+        date_start: str | None,
+        date_end: str | None,
         max_results: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Export messages to markdown files.
 
         Orchestrates the full workflow:
@@ -270,7 +263,7 @@ class CourierServer:
             max_results: Maximum messages to retrieve
 
         Returns:
-            Dict with files_saved, summary, and errors
+            dict with files_saved, summary, and errors
         """
         files_saved = []
         errors = []
@@ -308,7 +301,10 @@ class CourierServer:
             fetch_timeout = timeout_seconds * 0.8
 
             message_ids = [m.id for m in message_list]
-            detailed_messages, fetch_errors = await self.gmail_service.fetch_message_details(
+            (
+                detailed_messages,
+                fetch_errors,
+            ) = await self.gmail_service.fetch_message_details(
                 message_ids,
                 timeout_seconds=fetch_timeout,
             )
@@ -362,28 +358,53 @@ class CourierServer:
             logger.error(f"Export failed: {e}")
             raise
 
-    async def run(self):
-        """Run the MCP server."""
-        logger.info("Starting Courier MCP server...")
-        try:
-            async with self.server.stdio():
-                logger.info("MCP server running (stdio)")
-                await asyncio.sleep(float("inf"))
-        except Exception as e:
-            logger.error(f"Server error: {e}")
-            raise
-
 
 async def main():
     """Entry point for MCP server."""
-    server = CourierServer()
-    await server.run()
+    # Initialize CourierServer instance (validates auth)
+    courier_server = CourierServer()
+
+    # Create MCP Server instance
+    server = Server("courier-mcp")
+
+    # Register list_tools handler
+    @server.list_tools()
+    async def list_tools() -> list[Tool]:
+        return TOOLS
+
+    # Register call_tool handler
+    @server.call_tool()
+    async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+        logger.info(f"Tool called: {name}")
+        logger.debug(f"Tool arguments: {arguments}")
+        try:
+            if name == "get-folders":
+                return await courier_server._handle_get_folders(arguments)
+            elif name == "get-messages":
+                return await courier_server._handle_get_messages(arguments)
+            else:
+                logger.error(f"Unknown tool: {name}")
+                raise ValueError(f"Unknown tool: {name}")
+        except Exception as e:
+            logger.exception(f"Error in tool {name}: {e}")
+            error_result = {
+                "success": False,
+                "error": str(e),
+            }
+            return [TextContent(type="text", text=json.dumps(error_result, indent=2))]
+
+    # Run the server
+    logger.info("Starting Courier MCP Server")
+    print("Courier MCP Server running on stdio", file=sys.stderr)
+    async with stdio_server() as (read_stream, write_stream):
+        logger.info("stdio_server started, beginning server.run")
+        await server.run(read_stream, write_stream, server.create_initialization_options())
+        logger.info("Server run completed")
 
 
 if __name__ == "__main__":
-    import sys
-
     try:
+        logger.info("Main entry point - starting asyncio.run(main())")
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Server stopped by user")

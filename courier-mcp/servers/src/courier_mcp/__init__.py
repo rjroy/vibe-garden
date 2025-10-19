@@ -11,7 +11,7 @@ Main exports:
 """
 
 __version__ = "1.0.0"
-__author__ = "Anthropic"
+__author__ = "Ronald Roy"
 
 # Export main components for easy access
 from courier_mcp.config import Config, load_config, get_config  # noqa: F401

@@ -12,14 +12,16 @@ Example: COURIER_TIMEOUT_SECONDS=30 overrides courier.config value
 import os
 import yaml
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, final, override
 
 
 class ConfigError(Exception):
     """Configuration loading or validation error."""
+
     pass
 
 
+@final
 class Config:
     """Configuration manager for Courier MCP server."""
 
@@ -36,7 +38,7 @@ class Config:
         "GMAIL_API_QUOTA_UNITS_PER_SECOND": 250,
     }
 
-    def __init__(self, config_file: Optional[str] = None):
+    def __init__(self, config_file: str | None = None):
         """Initialize configuration.
 
         Args:
@@ -46,10 +48,10 @@ class Config:
         Raises:
             ConfigError: If configuration is invalid or missing required values.
         """
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
         self._load_config(config_file)
 
-    def _load_config(self, config_file: Optional[str]) -> None:
+    def _load_config(self, config_file: str | None) -> None:
         """Load configuration from file, environment, and defaults.
 
         Priority (lowest to highest):
@@ -90,9 +92,11 @@ class Config:
                     else:
                         self._config[key] = env_value
                 except ValueError:
-                    raise ConfigError(f"Invalid value for {key}: {env_value} (expected {type(self._DEFAULTS[key]).__name__})")
+                    raise ConfigError(
+                        f"Invalid value for {key}: {env_value} (expected {type(self._DEFAULTS[key]).__name__})"
+                    )
 
-    def _find_config_file(self) -> Optional[str]:
+    def _find_config_file(self) -> str | None:
         """Find courier.config file in current or parent directories.
 
         Returns:
@@ -140,6 +144,25 @@ class Config:
             return int(value)
         except (ValueError, TypeError):
             raise ConfigError(f"Configuration {key} is not a valid integer: {value}")
+
+    def get_float(self, key: str, default: float = 0) -> float:
+        """Get configuration value as float.
+
+        Args:
+            key: Configuration key
+            default: Default float value
+
+        Returns:
+            Configuration value as float
+
+        Raises:
+            ConfigError: If value cannot be converted to float
+        """
+        value = self.get(key, default)
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            raise ConfigError(f"Configuration {key} is not a valid float: {value}")
 
     def get_str(self, key: str, default: str = "") -> str:
         """Get configuration value as string.
@@ -206,8 +229,11 @@ class Config:
         log_level = self.get_str("COURIER_LOG_LEVEL").upper()
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if log_level not in valid_levels:
-            raise ConfigError(f"COURIER_LOG_LEVEL must be one of: {', '.join(valid_levels)}")
+            raise ConfigError(
+                f"COURIER_LOG_LEVEL must be one of: {', '.join(valid_levels)}"
+            )
 
+    @override
     def __repr__(self) -> str:
         """String representation (excludes sensitive values)."""
         # Don't include credentials path in repr
@@ -216,10 +242,10 @@ class Config:
 
 
 # Global config instance (lazy-loaded)
-_config: Optional[Config] = None
+_config: Config | None = None
 
 
-def load_config(config_file: Optional[str] = None) -> Config:
+def load_config(config_file: str | None = None) -> Config:
     """Load and return global configuration instance.
 
     Args:
