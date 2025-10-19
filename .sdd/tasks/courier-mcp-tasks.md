@@ -2,17 +2,17 @@
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
 **Plan**: [.sdd/plans/courier-mcp-plan.md](./../plans/courier-mcp-plan.md)
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Status**: Ready for Implementation
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-19
 
 ## Task Summary
 
-Total Tasks: 19
-Estimated Timeline: ~38 hours (5-6 days full-time)
+Total Tasks: 23
+Estimated Timeline: ~43 hours (5-6 days full-time)
 
-*Note: Original plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements.*
+*Note: v1.0.0 plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements. v1.1.0 adds ~5 hours for plugin distribution, marketplace integration, and setup Skill.*
 
 ## Task Categories
 
@@ -24,6 +24,7 @@ Estimated Timeline: ~38 hours (5-6 days full-time)
 - **Timeout & Concurrency**: 2 tasks - Async execution, timeout enforcement
 - **Testing**: 2 tasks - Unit and integration tests, E2E validation
 - **Documentation & Polish**: 2 tasks - Setup guides, error messages, final testing
+- **Plugin Distribution (v1.1.0)**: 4 tasks - Plugin manifest, setup Skill, marketplace registration, portability testing
 
 ---
 
@@ -1001,6 +1002,237 @@ Polish error messages, improve logging, add helpful user guidance, and prepare f
 
 ---
 
+## Plugin Distribution Tasks (v1.1.0)
+
+### Task 20: Plugin Manifest & Directory Structure
+**ID**: TASK-020
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 1 hour
+**Dependencies**: TASK-001
+**Assigned To**: Unassigned
+
+**Description**:
+Create Claude Code plugin manifest and directory structure following plugin conventions. Package Courier MCP as a Claude Code plugin for easy installation via marketplace.
+
+**Acceptance Criteria**:
+- [ ] `.claude-plugin/plugin.json` created with plugin metadata
+- [ ] Plugin name: `"courier-mcp"`
+- [ ] Plugin description matches spec v1.1.0
+- [ ] Version: `"1.1.0"`
+- [ ] Author metadata: Ronald Roy, gsdwig@gmail.com
+- [ ] Repository URL: `https://github.com/rjroy/vibe-garden.git`
+- [ ] License: MIT
+- [ ] `mcpServers` configuration:
+  - Server name: `"courier"`
+  - Command: `"${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh"`
+  - Args: `[""]`
+- [ ] Directory structure follows plugin conventions:
+  - `.claude-plugin/` - Plugin manifest
+  - `servers/` - MCP server implementation (existing `src/courier_mcp/`)
+  - `servers/scripts/` - Launcher scripts
+  - `docs/` - Documentation (existing)
+  - `skills/` - Setup assistance Skill (new)
+- [ ] `servers/scripts/courier.sh` launcher script created
+- [ ] Launcher activates venv and runs MCP server with stdio transport
+- [ ] `${CLAUDE_PLUGIN_ROOT}` variable used for portability
+- [ ] Plugin manifest validated against plugin.json schema
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/.claude-plugin/plugin.json`
+  - `courier-mcp/servers/scripts/courier.sh`
+- Files to reference:
+  - `wyrd-gen-mcp/.claude-plugin/plugin.json` (template)
+  - `wyrd-gen-mcp/servers/scripts/wyrd-gen.sh` (launcher template)
+- Key considerations:
+  - `${CLAUDE_PLUGIN_ROOT}` resolves to plugin installation directory
+  - Launcher must handle venv activation and Python path resolution
+  - Server command must be executable (chmod +x)
+  - Cross-platform compatibility (Linux, macOS, Windows)
+- Related spec sections: NFR - Plugin Distribution, Technical Context
+
+**Testing Requirements**:
+- Validate plugin.json syntax (JSON schema)
+- Test launcher script executes server successfully
+- Verify `${CLAUDE_PLUGIN_ROOT}` resolves correctly
+- Test plugin installation in Claude Code (if possible)
+
+**Notes**:
+- Reference: `seeds/reference/claude-plugin-basics.md`, `claude-plugin-reference.md`
+- Plugin manifest follows standard Claude Code plugin conventions
+
+---
+
+### Task 21: Setup Assistance Skill Implementation
+**ID**: TASK-021
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 2.5 hours
+**Dependencies**: TASK-005 (SETUP.md), TASK-020
+**Assigned To**: Unassigned
+
+**Description**:
+Create setup assistance Skill that automatically activates when Gmail OAuth authentication fails. Skill presents troubleshooting guidance from SETUP.md with progressive disclosure.
+
+**Acceptance Criteria**:
+- [ ] `skills/courier-setup-helper/SKILL.md` created
+- [ ] YAML frontmatter with metadata:
+  - `name: courier-setup-helper`
+  - `description:` Includes trigger keywords: "Gmail OAuth", "authentication", "credential", "GMAIL_CREDENTIALS_PATH", "token", "permission"
+- [ ] Skill instructions guide users through:
+  1. Detecting error type from error message
+  2. Presenting relevant SETUP.md sections
+  3. Troubleshooting OAuth setup failures
+  4. Environment variable configuration
+  5. First-time authentication flow
+  6. Common error scenarios (token expired, invalid credentials, permission denied)
+- [ ] Progressive disclosure levels:
+  - Level 1 (metadata): YAML frontmatter always loaded (~50 tokens)
+  - Level 2 (instructions): SKILL.md loaded when triggered (~2-3k tokens)
+  - Level 3 (reference): Links to `docs/SETUP.md` for detailed steps
+- [ ] Skill invocation conditions documented:
+  - Authentication errors from Gmail API (401, 403)
+  - Missing `GMAIL_CREDENTIALS_PATH` environment variable
+  - Expired or invalid OAuth token
+  - MCP server initialization failures due to credentials
+  - User explicitly asks for help with Courier MCP setup
+- [ ] Skill provides actionable steps:
+  - Google Cloud Console setup instructions
+  - OAuth credential download process
+  - Environment variable setup commands
+  - Token refresh commands
+  - Links to external resources (Google Cloud Console, Gmail API docs)
+- [ ] Skill tested: triggers on common auth errors
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/skills/courier-setup-helper/SKILL.md`
+- Files to reference:
+  - `spiral-grove/skills/spiral-grove-guide/SKILL.md` (template)
+  - `courier-mcp/docs/SETUP.md` (source material)
+  - `seeds/reference/claude-agent-skills.md` (Skill conventions)
+- Key considerations:
+  - Skill description must match error patterns for auto-activation
+  - YAML frontmatter used for Skill discovery
+  - Instructions should be concise but actionable
+  - Link to SETUP.md for detailed steps (avoid duplication)
+  - Claude automatically invokes Skill when error messages match description
+- Related spec sections: FR-14, FR-15, FR-16 (Setup assistance Skill)
+
+**Testing Requirements**:
+- Test Skill activation on auth errors (mock error scenarios)
+- Verify YAML frontmatter is valid
+- Verify Skill provides helpful guidance
+- Test progressive disclosure (metadata → instructions → reference)
+- User testing: can users resolve auth issues with Skill guidance?
+
+**Notes**:
+- Skill enhances UX by reducing need for external documentation searches
+- Auto-activation on common errors reduces support burden
+
+---
+
+### Task 22: Marketplace Registration in vibe-garden
+**ID**: TASK-022
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: Medium
+**Estimate**: 30 minutes
+**Dependencies**: TASK-020
+**Assigned To**: Unassigned
+
+**Description**:
+Register Courier MCP plugin in the vibe-garden marketplace catalog. Update root marketplace.json to include courier-mcp plugin entry for discovery and installation.
+
+**Acceptance Criteria**:
+- [ ] `.claude-plugin/marketplace.json` updated at vibe-garden root
+- [ ] Courier MCP entry added to `plugins` array:
+  - `name: "courier-mcp"`
+  - `source: "./courier-mcp"`
+  - `description:` Matches plugin.json description
+  - `repository:` vibe-garden repository URL
+  - `license: "MIT"`
+- [ ] Entry follows same format as existing plugins (spiral-grove, wyrd-gen-mcp)
+- [ ] Marketplace file validated (JSON syntax)
+- [ ] Plugin discoverable via `/plugin install courier-mcp@vibe-garden`
+- [ ] Marketplace listing verified (if testable)
+
+**Technical Details**:
+- Files to modify:
+  - `/home/rjroy/Projects/vibe-garden/.claude-plugin/marketplace.json`
+- Key considerations:
+  - Marketplace is at vibe-garden repository root
+  - Courier MCP already in marketplace (from file read), verify entry is complete
+  - Plugin source path relative to vibe-garden root: `"./courier-mcp"`
+- Related spec sections: NFR - Plugin Distribution, Marketplace Integration
+
+**Testing Requirements**:
+- Validate marketplace.json syntax
+- Test plugin installation command (if Claude Code supports it)
+- Verify plugin appears in marketplace listing
+
+**Notes**:
+- Courier MCP entry already exists in marketplace.json (confirmed from earlier file read)
+- Task primarily verification and documentation
+
+---
+
+### Task 23: Plugin Portability & Installation Testing
+**ID**: TASK-023
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 1.5 hours
+**Dependencies**: TASK-020, TASK-021, TASK-022
+**Assigned To**: Unassigned
+
+**Description**:
+Test plugin installation, portability across different installation locations, and end-to-end plugin workflow. Verify `${CLAUDE_PLUGIN_ROOT}` resolves correctly and MCP server starts successfully.
+
+**Acceptance Criteria**:
+- [ ] Plugin installs successfully via marketplace: `/plugin install courier-mcp@vibe-garden`
+- [ ] Plugin works regardless of installation directory (portability verified)
+- [ ] `${CLAUDE_PLUGIN_ROOT}` variable resolves to correct plugin installation path
+- [ ] MCP server starts successfully after plugin installation
+- [ ] Launcher script (`courier.sh`) executes without errors
+- [ ] Virtual environment activates correctly in launcher
+- [ ] MCP tools (`get-messages`, `get-folders`) available after installation
+- [ ] Setup Skill discoverable in Claude Code
+- [ ] Setup Skill triggers on authentication errors
+- [ ] Plugin version matches spec version (1.1.0)
+- [ ] Documentation accessible from plugin directory
+- [ ] Uninstall/reinstall works without issues
+- [ ] Cross-platform compatibility tested (Linux, macOS, Windows if available)
+- [ ] Test report documented: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/docs/PLUGIN_INSTALLATION_TEST.md` (test report)
+- Files to test:
+  - `.claude-plugin/plugin.json`
+  - `servers/scripts/courier.sh`
+  - `skills/courier-setup-helper/SKILL.md`
+- Key considerations:
+  - `${CLAUDE_PLUGIN_ROOT}` must resolve across different installation paths
+  - Launcher script must handle paths correctly
+  - Virtual environment must be relative to plugin root (or handled in launcher)
+  - All plugin components must work after installation
+- Related spec sections: AT-11, AT-12, AT-13 (Plugin acceptance tests)
+
+**Testing Requirements**:
+- Install plugin in multiple locations (test portability)
+- Verify all paths resolve correctly
+- Test MCP server startup
+- Test Skill activation
+- Document test results
+- Verify plugin uninstall/reinstall
+
+**Notes**:
+- Critical for plugin distribution success
+- Portability ensures plugin works for all users regardless of installation location
+- Reference spec acceptance tests: AT-11 (installation), AT-12 (portability), AT-13 (Skill activation)
+
+---
+
 ## Dependency Graph
 
 ```
@@ -1009,6 +1241,7 @@ TASK-001 (Project setup)
   ├── TASK-003 (Logging)
   │    ├── TASK-004 (Auth)
   │    │    ├── TASK-005 (Setup docs)
+  │    │    │    └── TASK-021 (Setup Skill) ──→ TASK-023 (Plugin testing)
   │    │    └── TASK-006 (Label caching)
   │    │         ├── TASK-007 (Message list)
   │    │         │    └── TASK-008 (Concurrent fetch)
@@ -1016,13 +1249,17 @@ TASK-001 (Project setup)
   │    │         │         │    └── TASK-010 (Filename collision)
   │    │         │         └── TASK-014 (Timeout wrapper)
   │    │         │              └── TASK-015 (Error recovery)
-  │    └── TASK-011 (Server setup)
-  │         ├── TASK-012 (get-folders handler)
-  │         └── TASK-013 (get-messages handler)
-  │              └── TASK-016 (Test suite)
-  │                   └── TASK-017 (E2E testing)
-  │                        └── TASK-018 (Documentation)
-  │                             └── TASK-019 (Polish)
+  │    ├── TASK-011 (Server setup)
+  │    │    ├── TASK-012 (get-folders handler)
+  │    │    └── TASK-013 (get-messages handler)
+  │    │         └── TASK-016 (Test suite)
+  │    │              └── TASK-017 (E2E testing)
+  │    │                   └── TASK-018 (Documentation)
+  │    │                        └── TASK-019 (Polish)
+  │    └── TASK-020 (Plugin manifest)
+  │         ├── TASK-021 (Setup Skill)
+  │         ├── TASK-022 (Marketplace registration) ──→ TASK-023 (Plugin testing)
+  │         └── TASK-023 (Plugin testing)
 ```
 
 ## Implementation Order
@@ -1056,9 +1293,15 @@ TASK-001 (Project setup)
 - TASK-016: Unit & integration tests
 - TASK-017: E2E testing & performance
 
-**Phase 7: Documentation & Release** (final phase)
+**Phase 7: Documentation & Release** (after Phase 6)
 - TASK-018: Documentation & examples
 - TASK-019: Error messages & polish
+
+**Phase 8: Plugin Distribution (v1.1.0)** (can be done in parallel with Phase 1-7, but depends on TASK-001 and TASK-005)
+- TASK-020: Plugin manifest & directory structure (after TASK-001)
+- TASK-021: Setup assistance Skill (after TASK-005, TASK-020)
+- TASK-022: Marketplace registration (after TASK-020)
+- TASK-023: Plugin portability testing (after TASK-020, TASK-021, TASK-022)
 
 ## Acceptance Test Mapping
 
@@ -1103,6 +1346,22 @@ Maps specification acceptance tests (spec lines 244-255) to task tests:
 **Spec Test 10: Empty results** (no matches → empty array with summary)
 - Covered by: TASK-013 (get-messages), TASK-017 (E2E testing)
 - Test files: `tests/test_acceptance.py::test_empty_results`
+
+**Spec Test 11 (v1.1.0): Plugin installation** (install via marketplace)
+- Covered by: TASK-020 (plugin manifest), TASK-022 (marketplace registration), TASK-023 (installation testing)
+- Test files: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 12 (v1.1.0): Plugin portability** (`${CLAUDE_PLUGIN_ROOT}` resolves correctly)
+- Covered by: TASK-020 (plugin manifest), TASK-023 (portability testing)
+- Test files: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 13 (v1.1.0): Setup assistance Skill** (auto-activation on auth failures)
+- Covered by: TASK-021 (setup Skill), TASK-023 (Skill testing)
+- Test files: `skills/courier-setup-helper/SKILL.md`, `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 14 (v1.1.0): Marketplace registration** (discoverable in vibe-garden)
+- Covered by: TASK-022 (marketplace registration)
+- Test files: `.claude-plugin/marketplace.json` (vibe-garden root)
 
 ## Risk Mitigation Tasks
 
@@ -1166,6 +1425,10 @@ A task is complete when:
 | TASK-017 | Not Started | - | - |
 | TASK-018 | Not Started | - | - |
 | TASK-019 | Not Started | - | - |
+| TASK-020 | Not Started | - | v1.1.0 Plugin manifest |
+| TASK-021 | Not Started | - | v1.1.0 Setup Skill |
+| TASK-022 | Not Started | - | v1.1.0 Marketplace |
+| TASK-023 | Not Started | - | v1.1.0 Plugin testing |
 
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 
@@ -1175,6 +1438,38 @@ A task is complete when:
 - [x] **Thread/conversation grouping**: Defer to v2.0+. Already documented as "Potential Future Features" in spec. No threading logic in v1.0; can be added if users request grouped exports later.
 - [x] **Markdown file size limit**: 10KB limit per file in `courier.config`. If message body exceeds 10KB, split across multiple markdown files or truncate with note. Config key: `COURIER_MAX_FILE_SIZE_KB: 10`
 - [x] **Automatic retry on network failures**: Yes, implement with exponential backoff. Retry attempts: 3 (configurable). Backoff factor: 2 (configurable). Applies to transient errors (timeout, connection refused, 503) but NOT permanent errors (401, 403, 400).
+
+---
+
+## Version History
+
+### v1.1.0 (2025-10-19)
+**Added Plugin Distribution and Setup Assistance Tasks**
+
+Added 4 new tasks to align with spec v1.1.0:
+- **TASK-020**: Plugin manifest and directory structure for Claude Code plugin packaging
+- **TASK-021**: Setup assistance Skill for automatic OAuth troubleshooting
+- **TASK-022**: Marketplace registration in vibe-garden repository
+- **TASK-023**: Plugin portability and installation testing
+
+**Updated Estimates**:
+- Total tasks: 19 → 23
+- Estimated timeline: ~38 hours → ~43 hours (added ~5 hours for v1.1.0)
+
+**New Implementation Phase**:
+- Phase 8 added for plugin distribution tasks
+- Can be done in parallel with core implementation after TASK-001 and TASK-005
+
+**Acceptance Test Mapping Extended**:
+- AT-11: Plugin installation via marketplace
+- AT-12: Plugin portability with `${CLAUDE_PLUGIN_ROOT}`
+- AT-13: Setup Skill auto-activation on auth failures
+- AT-14: Marketplace registration and discoverability
+
+### v1.0.0 (2025-10-18)
+- Initial task breakdown for Courier MCP spec v1.0.0
+- 19 tasks across 7 implementation phases
+- Comprehensive acceptance test mapping for all spec requirements
 
 ---
 
