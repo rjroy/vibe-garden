@@ -242,11 +242,11 @@ Quick reference should be scannable and practical. Use tables or checklists wher
 Update the repository's CLAUDE.md file to document the `/review` command and parent/child specification hierarchy feature, including usage examples and workflow integration points.
 
 **Acceptance Criteria**:
-- [ ] `/review` command added to "Common Commands" section
-- [ ] Parent/child hierarchy documented in "Repository Structure" section
-- [ ] Directory structure examples updated to show parent/child pattern
-- [ ] Usage guidance added for when to use parent/child vs. flat structure
-- [ ] SDD workflow section updated to mention review as meta-phase (not linear step)
+- [x] `/review` command added to "Common Commands" section
+- [x] Parent/child hierarchy documented in "Repository Structure" section
+- [x] Directory structure examples updated to show parent/child pattern
+- [x] Usage guidance added for when to use parent/child vs. flat structure
+- [x] SDD workflow section updated to mention review as meta-phase (not linear step)
 
 **Technical Details**:
 - File to modify: `CLAUDE.md`
@@ -276,12 +276,12 @@ CLAUDE.md is the primary reference for developers using the plugin. Keep it accu
 Execute the full workflow for a single new feature ("Add user notification preferences") to validate that the complete SDD process works end-to-end with all updated commands.
 
 **Acceptance Criteria**:
-- [ ] Run `/spec-writing` and create spec with no technology choices
-- [ ] Run `/plan-generation` and verify 3+ existing patterns referenced
-- [ ] Run `/task-breakdown` and verify tasks complete without intervention
-- [ ] Run `/implementation` and produce working, tested code
-- [ ] All spec acceptance criteria have passing tests
-- [ ] Workflow completion time is reasonable (indicates efficiency)
+- [x] Run `/spec-writing` and create spec with no technology choices
+- [x] Run `/plan-generation` and verify 3+ existing patterns referenced
+- [x] Run `/task-breakdown` and verify tasks complete without intervention
+- [x] Run `/implementation` and produce working, tested code
+- [x] All spec acceptance criteria have passing tests
+- [x] Workflow completion time is reasonable (indicates efficiency)
 
 **Technical Details**:
 - Test feature: "Add user notification preferences" (from spec line 197)
