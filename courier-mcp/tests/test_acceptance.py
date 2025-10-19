@@ -167,7 +167,8 @@ class TestSpecAcceptanceCriteria:
         assert "inbox" in filename.lower()
         assert "alice" in filename.lower()
 
-    def test_at10_rate_limit_exponential_backoff(self):
+    @pytest.mark.asyncio
+    async def test_at10_rate_limit_exponential_backoff(self):
         """
         Spec AT-5 & AT-8: Rate limit handling with exponential backoff
         """
@@ -195,7 +196,8 @@ class TestSpecAcceptanceCriteria:
 
         # retry_attempts and backoff_factor are configured via config, not __init__
         gmail = GmailService(mock_service)
-        messages = gmail.fetch_messages(max_results=10)
+        # fetch_messages is async
+        messages = await gmail.fetch_messages(max_results=10)
 
         # Should have retried and succeeded
         assert call_count == 2
