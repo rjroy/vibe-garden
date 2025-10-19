@@ -4,8 +4,7 @@ All exceptions inherit from CourierError and include proper logging
 before JSON response is sent to MCP client.
 """
 
-from typing import Optional, Dict, Any
-import json
+from typing import Any
 
 
 class CourierError(Exception):
@@ -20,7 +19,7 @@ class CourierError(Exception):
     error_code = "UNKNOWN_ERROR"
     http_status = 500
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         """Initialize error.
 
         Args:
@@ -31,7 +30,7 @@ class CourierError(Exception):
         self.details = details or {}
         super().__init__(message)
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """Convert error to JSON response format.
 
         Returns:
@@ -53,10 +52,13 @@ class AuthenticationError(CourierError):
     error_code = "AUTH_ERROR"
     http_status = 401
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         if details is None:
             details = {}
-        details.setdefault("guidance", "Check that GMAIL_CREDENTIALS_PATH is set correctly and credentials.json exists")
+        details.setdefault(
+            "guidance",
+            "Check that GMAIL_CREDENTIALS_PATH is set correctly and credentials.json exists",
+        )
         super().__init__(message, details)
 
 
@@ -69,7 +71,9 @@ class GmailAPIError(CourierError):
     error_code = "GMAIL_API_ERROR"
     http_status = 502
 
-    def __init__(self, message: str, status_code: Optional[int] = None, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, message: str, status_code: int | None = None, details: dict[str, Any] | None = None
+    ):
         if details is None:
             details = {}
 
@@ -97,7 +101,7 @@ class ExportError(CourierError):
     error_code = "EXPORT_ERROR"
     http_status = 500
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         if details is None:
             details = {}
         details.setdefault("guidance", "Check export directory path and write permissions")
@@ -118,7 +122,7 @@ class TimeoutError(CourierError):
         message: str,
         timeout_seconds: int,
         messages_processed: int = 0,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         if details is None:
             details = {}
@@ -140,7 +144,7 @@ class RateLimitError(GmailAPIError):
 
     error_code = "RATE_LIMITED"
 
-    def __init__(self, message: str, retry_after_seconds: Optional[int] = None):
+    def __init__(self, message: str, retry_after_seconds: int | None = None):
         details = {}
         if retry_after_seconds:
             details["retry_after_seconds"] = retry_after_seconds
@@ -155,7 +159,7 @@ class ConfigError(CourierError):
     error_code = "CONFIG_ERROR"
     http_status = 500
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         if details is None:
             details = {}
         details.setdefault("guidance", "Check courier.config and environment variables (COURIER_*)")
@@ -171,7 +175,9 @@ class InvalidInputError(CourierError):
     error_code = "INVALID_INPUT"
     http_status = 400
 
-    def __init__(self, message: str, parameter: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, message: str, parameter: str | None = None, details: dict[str, Any] | None = None
+    ):
         if details is None:
             details = {}
         if parameter:
@@ -180,7 +186,7 @@ class InvalidInputError(CourierError):
         super().__init__(message, details)
 
 
-def error_to_json(error: Exception) -> Dict[str, Any]:
+def error_to_json(error: Exception) -> dict[str, Any]:
     """Convert any exception to JSON response format.
 
     Args:

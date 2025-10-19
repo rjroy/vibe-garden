@@ -10,14 +10,14 @@ Provides:
 
 import asyncio
 import time
+from dataclasses import asdict, dataclass
 from typing import Any
-from dataclasses import dataclass, asdict
 
 from googleapiclient.errors import HttpError
 
-from .logger import get_logger
 from .config import get_config
-from .errors import GmailAPIError, RateLimitError, AuthenticationError
+from .errors import AuthenticationError, GmailAPIError, RateLimitError
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -161,9 +161,7 @@ class GmailService:
             elif e.resp.status == 403:
                 raise GmailAPIError("Permission denied", status_code=403)
             else:
-                raise GmailAPIError(
-                    f"Label fetch failed: {e}", status_code=e.resp.status
-                )
+                raise GmailAPIError(f"Label fetch failed: {e}", status_code=e.resp.status)
 
     def get_label_id(self, friendly_name: str) -> str:
         """Translate friendly label name to Gmail label ID.
@@ -272,9 +270,7 @@ class GmailService:
         backoff_factor = config.get_float("COURIER_NETWORK_RETRY_BACKOFF_FACTOR", 2.0)
 
         query = self.build_search_query(search_query, label_id)
-        logger.debug(
-            f"Fetching messages: query='{query}', label={label_id}, max={max_results}"
-        )
+        logger.debug(f"Fetching messages: query='{query}', label={label_id}, max={max_results}")
 
         for attempt in range(max_retries):
             try:
@@ -292,9 +288,7 @@ class GmailService:
                 results = request.execute()
                 messages_data = results.get("messages", [])
 
-                messages = [
-                    Message(id=m["id"], thread_id=m["threadId"]) for m in messages_data
-                ]
+                messages = [Message(id=m["id"], thread_id=m["threadId"]) for m in messages_data]
 
                 logger.info(f"Fetched {len(messages)} message IDs")
                 return messages
@@ -316,9 +310,7 @@ class GmailService:
                 elif e.resp.status == 401:
                     raise AuthenticationError("Token expired")
                 else:
-                    raise GmailAPIError(
-                        f"Message list failed: {e}", status_code=e.resp.status
-                    )
+                    raise GmailAPIError(f"Message list failed: {e}", status_code=e.resp.status)
 
     async def fetch_message_details(
         self,
@@ -434,9 +426,7 @@ class GmailService:
 
                         elif e.resp.status == 403:
                             # Permission error - critical, don't retry
-                            logger.error(
-                                f"Message {msg_id}: Permission denied (403): {e}"
-                            )
+                            logger.error(f"Message {msg_id}: Permission denied (403): {e}")
                             errors.append(
                                 {
                                     "message_id": msg_id,
@@ -447,9 +437,7 @@ class GmailService:
 
                         else:
                             # Other HTTP errors
-                            logger.warning(
-                                f"Message {msg_id}: HTTP error {e.resp.status}: {e}"
-                            )
+                            logger.warning(f"Message {msg_id}: HTTP error {e.resp.status}: {e}")
                             errors.append(
                                 {
                                     "message_id": msg_id,
@@ -476,9 +464,7 @@ class GmailService:
                 elif result is not None:
                     messages.append(result)
 
-            logger.info(
-                f"Fetched {len(messages)} messages successfully, {len(errors)} errors"
-            )
+            logger.info(f"Fetched {len(messages)} messages successfully, {len(errors)} errors")
             return messages, errors
 
         except asyncio.TimeoutError:

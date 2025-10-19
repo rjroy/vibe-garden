@@ -10,9 +10,10 @@ Example: COURIER_TIMEOUT_SECONDS=30 overrides courier.config value
 """
 
 import os
-import yaml
 from pathlib import Path
 from typing import Any, final, override
+
+import yaml
 
 
 class ConfigError(Exception):
@@ -72,12 +73,12 @@ class Config:
         config_path = config_file or self._find_config_file()
         if config_path:
             try:
-                with open(config_path, "r") as f:
+                with open(config_path) as f:
                     yaml_config = yaml.safe_load(f) or {}
                     self._config.update(yaml_config)
             except yaml.YAMLError as e:
                 raise ConfigError(f"Invalid YAML in {config_path}: {e}")
-            except IOError as e:
+            except OSError as e:
                 raise ConfigError(f"Cannot read config file {config_path}: {e}")
 
         # Override with environment variables
@@ -229,9 +230,7 @@ class Config:
         log_level = self.get_str("COURIER_LOG_LEVEL").upper()
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if log_level not in valid_levels:
-            raise ConfigError(
-                f"COURIER_LOG_LEVEL must be one of: {', '.join(valid_levels)}"
-            )
+            raise ConfigError(f"COURIER_LOG_LEVEL must be one of: {', '.join(valid_levels)}")
 
     @override
     def __repr__(self) -> str:

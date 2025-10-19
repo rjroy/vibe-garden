@@ -13,16 +13,16 @@ Security Notes:
 import os
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import final
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google.auth.exceptions import RefreshError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from courier_mcp.logger import get_logger
 from courier_mcp.errors import AuthenticationError
+from courier_mcp.logger import get_logger
 
 # Gmail API scope (read-only)
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -30,10 +30,11 @@ GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 logger = get_logger(__name__)
 
 
+@final
 class GmailAuthenticator:
     """Handles OAuth 2.0 authentication with Gmail API."""
 
-    def __init__(self, credentials_path: Optional[str] = None):
+    def __init__(self, credentials_path: str | None = None):
         """Initialize authenticator.
 
         Args:
@@ -64,7 +65,7 @@ class GmailAuthenticator:
 
         self.credentials_path = str(credentials_file)
         self.token_file = credentials_file.parent / "token.pickle"
-        self._credentials: Optional[Credentials] = None
+        self._credentials: Credentials | None = None
         self._service = None
 
     def _load_or_refresh_credentials(self) -> Credentials:
@@ -97,8 +98,10 @@ class GmailAuthenticator:
                 except RefreshError as e:
                     raise AuthenticationError(
                         f"Failed to refresh token: {e}",
-                        details={"guidance": "Re-authenticate by deleting token.pickle and restarting"},
-                    )
+                        details={
+                            "guidance": "Re-authenticate by deleting token.pickle and restarting"
+                        },
+                    ) from e
             else:
                 # Need to run full OAuth flow
                 try:
@@ -114,7 +117,7 @@ class GmailAuthenticator:
                         details={
                             "guidance": "Ensure credentials.json is valid and from a Desktop/Native application. See docs/SETUP.md",
                         },
-                    )
+                    ) from e
 
         # Save token for next time
         try:
@@ -186,14 +189,14 @@ class GmailAuthenticator:
 
     def __repr__(self) -> str:
         """String representation (no sensitive data)."""
-        return f"GmailAuthenticator(credentials_path=***)"
+        return "GmailAuthenticator(credentials_path=***)"
 
 
 # Global authenticator instance
-_authenticator: Optional[GmailAuthenticator] = None
+_authenticator: GmailAuthenticator | None = None
 
 
-def initialize_authenticator(credentials_path: Optional[str] = None) -> GmailAuthenticator:
+def initialize_authenticator(credentials_path: str | None = None) -> GmailAuthenticator:
     """Initialize and return global authenticator instance.
 
     Args:
@@ -231,7 +234,7 @@ if __name__ == "__main__":
         authenticator = GmailAuthenticator()
         print("✓ Authenticator initialized")
 
-        service = authenticator.build_gmail_service()
+        _ = authenticator.build_gmail_service()
         print("✓ Gmail service built")
 
     except AuthenticationError as e:
