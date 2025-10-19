@@ -1,7 +1,7 @@
 {
   "name": "courier-mcp",
   "description": "Provides a MCP which accesses GMail service for a specific user.",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
