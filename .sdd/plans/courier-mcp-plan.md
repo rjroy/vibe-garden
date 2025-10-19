@@ -1,16 +1,18 @@
 # Courier MCP - Technical Plan
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
-**Version**: 1.0.0
-**Status**: Approved
+**Version**: 1.1.0
+**Status**: Draft
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-19
 
 ## Overview
 
 Courier MCP is a Python-based stdio MCP server that enables Claude Code users to retrieve Gmail messages and export them as markdown files with YAML frontmatter. The implementation will follow the established wyrd-gen-mcp pattern already in the repository, adapting successful architectural decisions to the email-specific domain.
 
 The server will be read-only, stateless, and support concurrent message fetches with exponential backoff for Gmail API rate limiting and a 20-second timeout guarantee for all operations.
+
+**v1.1.0 Updates**: This version adds Claude Code plugin packaging, marketplace integration via the vibe-garden repository, and a setup assistance Skill that automatically activates when authentication failures occur, guiding users through OAuth setup troubleshooting.
 
 ## Architecture
 
@@ -19,6 +21,11 @@ The server will be read-only, stateless, and support concurrent message fetches 
 ```
 User (Claude Code)
     ↓
+Claude Code Plugin System
+    ├─→ Marketplace Discovery (vibe-garden)
+    ├─→ Setup Skill (courier-setup-helper)
+    └─→ MCP Server Integration
+            ↓
 Courier MCP Server (stdio-based)
     ├─→ Gmail API (REST)
     ├─→ Local File System (markdown export)
@@ -29,44 +36,66 @@ Courier MCP Server (stdio-based)
 - **Gmail API**: OAuth 2.0 refresh tokens for single user authentication
 - **Local FS**: User-specified directory for markdown exports
 - **Claude Code**: Via MCP protocol over stdio
+- **Plugin System**: Via `.claude-plugin/plugin.json` with `${CLAUDE_PLUGIN_ROOT}` variable
+- **Marketplace**: Registered in vibe-garden `.claude-plugin/marketplace.json`
+- **Setup Skill**: Auto-invoked on authentication errors
 - **Configuration**: Environment variables + optional config.yaml for defaults
 
 ### Component Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Courier MCP Server (src/courier_mcp/server.py)        │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Tool Handlers                                       │ │
-│  ├─ get_messages() - Query + export emails             │ │
-│  └─ get_folders() - List labels with counts            │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                          ↓                                │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Gmail Service Layer (courier_mcp/gmail_service.py) │ │
-│  ├─ fetch_labels()                                     │ │
-│  ├─ fetch_messages()                                   │ │
-│  ├─ fetch_message_detail()                             │ │
-│  └─ with exponential backoff + timeout handling        │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                          ↓                                │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Markdown Export Layer (courier_mcp/export.py)      │ │
-│  ├─ format_message_to_markdown()                       │ │
-│  ├─ generate_filename()                                │ │
-│  ├─ safe_file_write() [collision detection]            │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                          ↓                                │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Authentication Layer (courier_mcp/auth.py)         │ │
-│  ├─ load_credentials()                                 │ │
-│  ├─ ensure_valid_token()                               │ │
-│  └─ build_gmail_service()                              │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│  Claude Code Plugin (courier-mcp/)                         │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Plugin Manifest (.claude-plugin/plugin.json)         │  │
+│  ├─ MCP server command with ${CLAUDE_PLUGIN_ROOT}       │  │
+│  └─ Metadata (name, version, author, repository)        │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Setup Skill (skills/courier-setup-helper/)           │  │
+│  ├─ SKILL.md: Auth troubleshooting instructions         │  │
+│  ├─ Auto-invoked on credential/OAuth errors             │  │
+│  └─ References: docs/SETUP.md                           │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          ↓                                 │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Courier MCP Server (servers/src/courier_mcp/)        │  │
+│  ├──────────────────────────────────────────────────────┤  │
+│  │                                                      │  │
+│  │  ┌─────────────────────────────────────────────────┐ │  │
+│  │  │ Tool Handlers (server.py)                       │ │  │
+│  │  ├─ get_messages() - Query + export emails         │ │  │
+│  │  └─ get_folders() - List labels with counts        │ │  │
+│  │  └─────────────────────────────────────────────────┘ │  │
+│  │                      ↓                               │  │
+│  │  ┌─────────────────────────────────────────────────┐ │  │
+│  │  │ Gmail Service Layer (gmail_service.py)          │ │  │
+│  │  ├─ fetch_labels()                                 │ │  │
+│  │  ├─ fetch_messages()                               │ │  │
+│  │  ├─ fetch_message_detail()                         │ │  │
+│  │  └─ with exponential backoff + timeout handling    │ │  │
+│  │  └─────────────────────────────────────────────────┘ │  │
+│  │                      ↓                               │  │
+│  │  ┌─────────────────────────────────────────────────┐ │  │
+│  │  │ Markdown Export Layer (export.py)               │ │  │
+│  │  ├─ format_message_to_markdown()                   │ │  │
+│  │  ├─ generate_filename()                            │ │  │
+│  │  ├─ safe_file_write() [collision detection]        │ │  │
+│  │  └─────────────────────────────────────────────────┘ │  │
+│  │                      ↓                               │  │
+│  │  ┌─────────────────────────────────────────────────┐ │  │
+│  │  │ Authentication Layer (auth.py)                  │ │  │
+│  │  ├─ load_credentials()                             │ │  │
+│  │  ├─ ensure_valid_token()                           │ │  │
+│  │  └─ build_gmail_service()                          │ │  │
+│  │  └─────────────────────────────────────────────────┘ │  │
+│  │                                                      │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ## Technical Decisions
@@ -204,6 +233,74 @@ Courier MCP Server (stdio-based)
 
 **Decision**: Metadata Only with Optional Download URLs (no validation)
 **Rationale**: Frontmatter includes attachment list with metadata. Gmail API `message.payload.parts` provides MIME structure; return URLs as-is without validation. Gmail URLs are reliable within session, and validation adds unnecessary latency. Users can discover broken/expired URLs naturally if needed. Complies with spec constraints.
+
+---
+
+### Decision 10: Plugin Distribution Strategy (v1.1.0)
+
+**Context**: Spec FR-14-16 require Claude Code plugin packaging, marketplace registration, and setup assistance.
+
+**Options Considered**:
+- **Standalone MCP Server**: No plugin packaging, manual configuration required
+- **Claude Code Plugin with Marketplace** (selected): Discoverable via `/plugin install`, portable via `${CLAUDE_PLUGIN_ROOT}`, integrated setup Skill
+- **npm/PyPI Package**: Requires additional packaging infrastructure, doesn't integrate with Claude Code plugin system
+
+**Decision**: Claude Code Plugin with vibe-garden Marketplace Registration
+**Rationale**:
+- Aligns with existing vibe-garden repository structure (spiral-grove, wyrd-gen-mcp already packaged as plugins)
+- `${CLAUDE_PLUGIN_ROOT}` variable ensures plugin portability across installations
+- Marketplace registration enables `/plugin install courier-mcp@vibe-garden` for easy discovery
+- Plugin manifest provides version management and metadata
+- Follows established patterns in wyrd-gen-mcp (same author, same repo structure)
+- Setup Skill integration provides better user experience for OAuth troubleshooting
+
+---
+
+### Decision 11: Setup Skill Design (v1.1.0)
+
+**Context**: Spec FR-14-16 require automatic invocation of setup assistance when authentication fails.
+
+**Options Considered**:
+- **Static Documentation Only**: User manually reads SETUP.md
+- **Error Messages with Links**: Point to docs, but no active guidance
+- **Setup Skill with Auto-Invocation** (selected): Skill activates on auth errors, presents contextual troubleshooting
+
+**Decision**: Setup Skill (`courier-setup-helper`) with Progressive Disclosure
+**Rationale**:
+- Follows spiral-grove-guide pattern: YAML frontmatter for discovery, main content in SKILL.md, reference materials in separate files
+- Skill description matches common error patterns: "credential", "authentication", "OAuth", "GMAIL_CREDENTIALS_PATH"
+- Claude automatically invokes when error messages match description
+- Progressive disclosure: Level 1 (metadata) always loaded, Level 2 (SKILL.md) loaded on trigger, Level 3 (SETUP.md) referenced as needed
+- Minimal context overhead (~100 tokens for metadata, ~2-3k for instructions when activated)
+- Skill references existing `docs/SETUP.md` rather than duplicating content
+- User-friendly: presents step-by-step guidance without leaving Claude conversation
+
+**Skill Structure**:
+```
+skills/courier-setup-helper/
+├── SKILL.md (setup troubleshooting workflow)
+└── No additional references (uses ../docs/SETUP.md via relative path)
+```
+
+---
+
+### Decision 12: Plugin Portability Strategy (v1.1.0)
+
+**Context**: Plugin must work regardless of installation location for marketplace distribution.
+
+**Options Considered**:
+- **Hardcoded Paths**: Breaks when installed via marketplace
+- **Relative Paths from CWD**: Unreliable, depends on invocation directory
+- **`${CLAUDE_PLUGIN_ROOT}` Environment Variable** (selected): Claude Code sets this automatically, resolves to plugin installation directory
+
+**Decision**: Use `${CLAUDE_PLUGIN_ROOT}` for All Path References
+**Rationale**:
+- Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to plugin installation directory when invoked via plugin system
+- Server startup script path: `${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh`
+- Ensures plugin works whether installed locally or via marketplace
+- Follows wyrd-gen-mcp precedent (same pattern used successfully)
+- No hardcoded paths in `plugin.json`; all paths relative to plugin root
+- Enables `/plugin install courier-mcp@vibe-garden` to work out-of-box
 
 ---
 
@@ -508,6 +605,15 @@ Contingency:               ~5-7s (rate limit backoff)
   - Auth failures
 
 ### Deployment Steps
+
+**Via Plugin Marketplace (Recommended - v1.1.0)**:
+1. Add vibe-garden marketplace: `/plugin marketplace add rjroy/vibe-garden`
+2. Install plugin: `/plugin install courier-mcp@vibe-garden`
+3. Setup Google Cloud project + OAuth credentials (one-time) - guided by setup Skill if errors occur
+4. Create `.env` with `GMAIL_CREDENTIALS_PATH=...`
+5. Restart Claude Code
+
+**Manual Installation (Development)**:
 1. Clone repo or pull updates
 2. Create/activate Python venv
 3. Install dependencies: `pip install -e .`
@@ -515,6 +621,196 @@ Contingency:               ~5-7s (rate limit backoff)
 5. Create `.env` with `GMAIL_CREDENTIALS_PATH=...`
 6. Configure Claude Code `.claude/mcp.json`
 7. Restart Claude Code
+
+## Plugin Distribution & Setup Skill Design (v1.1.0)
+
+### Plugin Structure
+
+```
+courier-mcp/
+├── .claude-plugin/
+│   └── plugin.json                   # Plugin manifest with metadata
+├── skills/
+│   └── courier-setup-helper/
+│       └── SKILL.md                  # Setup assistance Skill
+├── docs/
+│   ├── SETUP.md                      # Complete OAuth setup guide
+│   └── reference/                    # Technical reference docs
+├── servers/
+│   ├── scripts/
+│   │   └── courier.sh                # MCP server startup script
+│   ├── src/courier_mcp/              # Python server implementation
+│   ├── setup.py                      # Python package definition
+│   └── requirements.txt              # Python dependencies
+└── README.md                         # Plugin overview
+```
+
+### Plugin Manifest Design
+
+**File**: `.claude-plugin/plugin.json`
+
+```json
+{
+  "name": "courier-mcp",
+  "description": "Provides a MCP which accesses Gmail service for a specific user.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden.git",
+  "license": "MIT",
+  "mcpServers": {
+    "courier": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh",
+      "args": [""]
+    }
+  }
+}
+```
+
+**Key Design Decisions**:
+- `${CLAUDE_PLUGIN_ROOT}` ensures portability across installation locations
+- Version matches spec version (1.1.0)
+- MCP server name: "courier" (matches tool namespace)
+- Startup script handles venv activation and Python execution
+
+### Marketplace Registration
+
+**File**: `/.claude-plugin/marketplace.json` (vibe-garden root)
+
+Entry for courier-mcp:
+```json
+{
+  "name": "courier-mcp",
+  "source": "./courier-mcp",
+  "description": "Provides a MCP which accesses Gmail service for a specific user.",
+  "repository": "https://github.com/rjroy/vibe-garden.git",
+  "license": "MIT"
+}
+```
+
+**Integration Flow**:
+1. User adds marketplace: `/plugin marketplace add rjroy/vibe-garden`
+2. User browses plugins: `/plugin` → sees courier-mcp listed
+3. User installs: `/plugin install courier-mcp@vibe-garden`
+4. Claude Code clones vibe-garden repo, extracts courier-mcp subdirectory
+5. Plugin manifest is read, MCP server configured automatically
+6. Skills are discovered via YAML frontmatter
+
+### Setup Skill Design
+
+**Purpose**: Automatically assist users when Gmail OAuth setup fails
+
+**File**: `skills/courier-setup-helper/SKILL.md`
+
+**YAML Frontmatter** (Level 1 - always loaded):
+```yaml
+---
+name: courier-setup-helper
+description: Assist users when Gmail OAuth setup fails for Courier MCP. Use when authentication errors occur, credentials are missing, or GMAIL_CREDENTIALS_PATH is invalid. Guides through Google Cloud Console setup, OAuth 2.0 credential creation, and troubleshooting.
+---
+```
+
+**Invocation Triggers** (detected in error messages):
+- "credentials not found"
+- "GMAIL_CREDENTIALS_PATH"
+- "OAuth"
+- "authentication failed"
+- "invalid_grant"
+- "token expired"
+- "Permission denied" (Gmail API)
+
+**Skill Content Structure** (Level 2 - loaded when triggered):
+
+```markdown
+# Courier MCP Setup Helper
+
+You are assisting a user who encountered an authentication error with Courier MCP.
+
+## Common Error Scenarios
+
+### Error: "GMAIL_CREDENTIALS_PATH not set"
+**Cause**: Environment variable missing
+**Solution**:
+1. Check `.env` file in project root
+2. Add: `GMAIL_CREDENTIALS_PATH=/path/to/credentials.json`
+3. Restart Claude Code
+
+### Error: "credentials.json not found"
+**Cause**: File path incorrect or file doesn't exist
+**Solution**:
+1. Verify file exists at path specified in GMAIL_CREDENTIALS_PATH
+2. If missing, follow OAuth setup steps below
+
+### Error: "invalid_grant" or "Token has expired"
+**Cause**: Refresh token invalid or revoked
+**Solution**:
+1. Delete `token.pickle` file (usually in same directory as credentials.json)
+2. Next run will trigger re-authentication flow
+3. Browser window will open to grant access again
+
+## First-Time OAuth Setup
+
+For complete setup instructions, see [SETUP.md](../../docs/SETUP.md).
+
+**Quick Start**:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create project → Enable Gmail API
+3. Create OAuth 2.0 Client ID (Desktop application type)
+4. Download credentials.json
+5. Set GMAIL_CREDENTIALS_PATH environment variable
+6. First run will open browser for authentication
+
+## Troubleshooting Steps
+
+1. **Verify credentials file exists**: `ls -la $GMAIL_CREDENTIALS_PATH`
+2. **Check file permissions**: File must be readable
+3. **Verify Gmail API is enabled**: Check Google Cloud Console
+4. **Check OAuth consent screen**: Must be configured with your email
+5. **Try re-authentication**: Delete token.pickle and re-run
+
+## Reference Documentation
+
+- [Complete Setup Guide](../../docs/SETUP.md)
+- [Gmail API Scopes](https://developers.google.com/gmail/api/auth/scopes)
+- [OAuth 2.0 Troubleshooting](https://developers.google.com/identity/protocols/oauth2/native-app#troubleshooting)
+
+---
+
+After addressing the error, try running the Courier MCP command again.
+```
+
+**Progressive Disclosure Strategy**:
+- **Level 1** (~100 tokens): Skill metadata loaded at Claude Code startup
+- **Level 2** (~2-3k tokens): SKILL.md content loaded when auth error detected
+- **Level 3** (0 tokens in context): References SETUP.md via filesystem; Claude reads only if needed
+
+**User Experience Flow**:
+1. User installs courier-mcp plugin
+2. User attempts to use get-messages tool
+3. Authentication error occurs (missing credentials)
+4. Claude detects error message matches Skill description
+5. Skill is automatically invoked
+6. Claude presents relevant troubleshooting section from SKILL.md
+7. If more detail needed, Claude reads docs/SETUP.md
+8. User follows guidance, resolves issue
+9. User retries command successfully
+
+### Setup Skill Testing Strategy
+
+**Test Scenarios**:
+1. Missing `GMAIL_CREDENTIALS_PATH` → Skill presents env var setup guidance
+2. `credentials.json` not found → Skill presents OAuth setup steps
+3. `invalid_grant` error → Skill presents token refresh guidance
+4. `Permission denied` (403) → Skill presents scope/API enablement guidance
+5. Token expired (401) → Skill presents re-authentication steps
+
+**Acceptance Criteria**:
+- Skill automatically invokes when auth errors occur
+- Guidance is contextual to specific error type
+- User can resolve common issues without external documentation
+- Skill does not interfere with normal operation (no false positives)
 
 ## Risks & Mitigations
 
@@ -555,6 +851,7 @@ Contingency:               ~5-7s (rate limit backoff)
 
 ## Timeline Estimate
 
+### v1.0.0 Core Implementation
 - **Setup & Auth**: 2-3 hours (OAuth flow, credential management)
 - **Gmail Service Layer**: 3-4 hours (message fetching, label caching, error handling)
 - **Markdown Export**: 2-3 hours (YAML frontmatter, HTML conversion, filename collision detection)
@@ -563,7 +860,18 @@ Contingency:               ~5-7s (rate limit backoff)
 - **Testing & Documentation**: 3-4 hours (unit tests, E2E tests, docs)
 - **Integration & Polish**: 1-2 hours (final testing, script setup, error messages)
 
-**Total**: ~16-21 hours (3-4 days full-time)
+**v1.0.0 Subtotal**: ~16-21 hours (3-4 days full-time)
+
+### v1.1.0 Plugin Distribution & Setup Skill
+- **Plugin Manifest & Structure**: 1 hour (plugin.json, directory organization)
+- **Marketplace Registration**: 30 minutes (update vibe-garden marketplace.json)
+- **Setup Skill Development**: 2-3 hours (SKILL.md creation, error trigger testing, SETUP.md integration)
+- **Plugin Portability Testing**: 1-2 hours (test ${CLAUDE_PLUGIN_ROOT}, marketplace installation)
+- **Documentation Updates**: 1 hour (README, installation instructions)
+
+**v1.1.0 Subtotal**: ~5-7 hours (1 day full-time)
+
+**Total**: ~21-28 hours (4-5 days full-time)
 
 ## Resolved Questions
 
@@ -576,6 +884,14 @@ Contingency:               ~5-7s (rate limit backoff)
 - [x] **Deleted Messages**: Report in errors array, but frame as informational (likely user action). Include message like "Message ABC was deleted (possibly by another client)" in errors list. Transparent to user without implying implementation error.
 
 - [x] **Thread Support**: Implement flat message list only (per spec). Mark thread/conversation support as **potential future feature** in spec. No threading logic in v1.0; can be added if users request grouped exports in v2.0.
+
+- [x] **Plugin vs. Standalone Distribution** (v1.1.0): Package as Claude Code plugin. Better discoverability via marketplace, consistent with vibe-garden ecosystem (spiral-grove, wyrd-gen-mcp), superior UX with integrated setup Skill.
+
+- [x] **Skill Trigger Reliability** (v1.1.0): Use comprehensive error pattern matching in Skill description. Include common keywords ("credentials", "OAuth", "authentication", "GMAIL_CREDENTIALS_PATH") to ensure Claude invokes Skill on any auth-related error.
+
+- [x] **Skill Content Scope** (v1.1.0): SKILL.md contains common error scenarios + quick fixes; references SETUP.md for complete guide. Balances context efficiency (SKILL.md stays under 3k tokens) with comprehensive coverage (SETUP.md accessible via filesystem).
+
+- [x] **Marketplace vs. Package Manager** (v1.1.0): Register in vibe-garden marketplace only (no npm/PyPI). Simpler distribution, consistent with other vibe-garden plugins, better integration with Claude Code plugin discovery.
 
 ## Appendix: Existing Code Analysis
 
@@ -606,8 +922,30 @@ Contingency:               ~5-7s (rate limit backoff)
 - **Virtual Environment**: Python venv, pip install -e .
 - **Scripts**: Shell wrapper script (scripts/courier-mcp.sh) for orchestration
 
+### Claude Code Plugin Reference (v1.1.0)
+- **Location**: `/home/rjroy/Projects/vibe-garden/wyrd-gen-mcp/.claude-plugin/`
+- **Patterns to Reuse**:
+  - Plugin manifest structure with `${CLAUDE_PLUGIN_ROOT}`
+  - MCP server registration in `mcpServers` section
+  - Metadata format (name, description, version, author, repository, license)
+  - Shell script for server startup (handles venv activation)
+
+### Skill Reference (v1.1.0)
+- **Location**: `/home/rjroy/Projects/vibe-garden/spiral-grove/skills/spiral-grove-guide/SKILL.md`
+- **Patterns to Reuse**:
+  - YAML frontmatter with name and description
+  - Description includes trigger keywords for auto-invocation
+  - Progressive disclosure: metadata always loaded, content on-demand
+  - Reference to external docs via relative filesystem paths
+  - Clear structure: Problem → Solution → Reference workflow
+
 ---
 
 ## Next Phase
 
 Once this plan is approved, proceed to `/task-breakdown` to decompose architecture into implementable tasks with acceptance criteria.
+
+**v1.1.0 Note**: Task breakdown should include:
+- v1.0.0 tasks (core MCP server implementation)
+- v1.1.0 tasks (plugin packaging, setup Skill, marketplace registration)
+- Dependencies between tasks clearly marked (e.g., Skill creation depends on SETUP.md being complete)
