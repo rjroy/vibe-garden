@@ -1423,7 +1423,7 @@ A task is complete when:
 | TASK-015 | Complete | - | Error recovery & retries |
 | TASK-016 | Complete | - | Unit & integration tests (100% pass rate) |
 | TASK-017 | Complete | - | E2E test results doc created |
-| TASK-018 | Not Started | - | Documentation & examples |
+| TASK-018 | Complete | - | All documentation created (5 files) |
 | TASK-019 | Not Started | - | Error polish & final QA |
 | TASK-020 | Complete | - | v1.1.0 Plugin manifest |
 | TASK-021 | Complete | - | v1.1.0 Setup Skill |
