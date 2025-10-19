@@ -1428,7 +1428,7 @@ A task is complete when:
 | TASK-020 | Complete | - | v1.1.0 Plugin manifest |
 | TASK-021 | Complete | - | v1.1.0 Setup Skill |
 | TASK-022 | Complete | - | v1.1.0 Marketplace |
-| TASK-023 | Not Started | - | v1.1.0 Plugin testing |
+| TASK-023 | Complete | - | v1.1.0 Plugin testing (user-verified) |
 
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 
