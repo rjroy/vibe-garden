@@ -1,19 +1,20 @@
 # Spiral Grove - Implementation Progress
 
-**Last Updated**: 2025-10-18
-**Current Status**: 33% complete (4 of 12 tasks)
+**Last Updated**: 2025-10-18 (Session 2)
+**Current Status**: 42% complete (5 of 12 tasks)
 
 ## Current Session
 
 **Date**: 2025-10-18
-**Working On**: TASK-004 completed - 1 more doc task remaining in Phase 2
+**Working On**: TASK-005 completed - Phase 2 documentation complete
 **Blockers**: None
 
 ## Completed Today
 - TASK-001: Add Parent/Child Hierarchy Support to All Commands (committed: 8d22baf)
 - TASK-002: Create `/review [phase]` Command (committed: 21ee3c9)
 - TASK-003: Review and Optimize implementation.md (committed: 669ee80)
-- TASK-004: Update SDD-QUICK-REFERENCE.md with Review Workflow (pending commit)
+- TASK-004: Update SDD-QUICK-REFERENCE.md with Review Workflow (committed)
+- TASK-005: Update CLAUDE.md with `/review` Command and Parent/Child Hierarchy (committed: f8b674e)
 
 ## Discovered Issues
 - (None yet)
@@ -66,8 +67,20 @@
   - Updated Quality Checklist to include review step
   - Maintains consistent formatting with existing guide
 
+- [x] TASK-005: Update CLAUDE.md with `/review` Command and Parent/Child Hierarchy - *Completed 2025-10-18 (f8b674e)*
+  - Added `/review [phase]` command to Common Commands section
+  - Updated Repository Structure with parent/child directory examples
+  - Added Meta-Phase: Review section to SDD Workflow documentation
+  - Added comprehensive "Using Parent/Child Specification Hierarchies" section with:
+    - Decision criteria for when to use hierarchies
+    - Directory structure examples mirrored across specs/plans/tasks/progress
+    - Key points about scoped context loading
+    - Example workflow for large projects with multiple subsystems
+  - All acceptance criteria satisfied
+  - Repository documentation now reflects latest implementation
+
 ### In Progress 🚧
-(None - ready for TASK-005)
+(None - Phase 2 complete, ready for Phase 3 validation)
 
 ### Upcoming ⏳
 
@@ -76,9 +89,9 @@
 - [x] TASK-002: Review command creation (2-4 hours)
 - [x] TASK-003: Implementation.md review (30min-1 hour)
 
-**Phase 2: Documentation** (after Phase 1)
+**Phase 2: Documentation** ✅ COMPLETE (after Phase 1)
 - [x] TASK-004: Quick reference update (30 min)
-- [ ] TASK-005: CLAUDE.md update (30 min)
+- [x] TASK-005: CLAUDE.md update (30 min)
 
 **Phase 3: Validation** (after Phase 1 and Phase 2)
 - [ ] TASK-006: Test single-feature workflow (1 hour)
@@ -110,9 +123,16 @@
 
 ## Notes for Next Session
 
-- Ready to begin implementation
-- Phase 1 tasks (TASK-001, TASK-002, TASK-003) can be worked in sequence
-- Recommended order: TASK-001 → TASK-002 → TASK-003 (based on dependencies)
+- Phase 1 and Phase 2 complete! Ready to start Phase 3 validation
+- Next tasks: Begin with validation/testing phase
+- Recommended order for Phase 3:
+  1. TASK-006: Test single-feature workflow (1 hour) - Validates core workflow
+  2. TASK-007: Test phase boundary enforcement (30 min) - Validates WHAT/HOW separation
+  3. TASK-008: Test parent-child hierarchy (1 hour) - Validates new hierarchy feature
+  4. TASK-009: Test session resumption (45 min) - Validates progress document quality
+  5. TASK-010: Test spec-to-code alignment (1 hour) - Validates implementation adherence
+  6. TASK-011: Dogfooding review command (30 min) - Self-validate review command
+- After Phase 3: Run TASK-012 (Metadata/Changelog update)
 
 ---
 
