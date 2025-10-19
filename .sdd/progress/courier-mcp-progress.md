@@ -7,10 +7,19 @@
 ## Current Session
 
 **Date**: 2025-10-19
-**Working On**: TASK-017 (E2E testing) ready to start
+**Working On**: TASK-017 (E2E testing) - in progress after critical bug fix
 **Blockers**: None
 
-## Completed Today (Session 3 & 4)
+## Completed Today (Session 5)
+- ✅ **CRITICAL BUG FIX**: MCP server config initialization
+  - **Issue**: Server didn't call `load_config()` on startup, causing "Configuration not yet loaded" error
+  - **Root Cause**: `CourierServer.__init__()` called `get_config()` without first calling `load_config()`
+  - **Fix**: Added `load_config()` call at start of `CourierServer.__init__()` (before authenticator init)
+  - **Impact**: Resolves user's E2E test failure from courier-mcp-error-log.md
+  - **Testing**: All 59 unit tests still pass after fix
+  - **Files Modified**: `servers/src/courier_mcp/server.py:90-100`
+
+## Completed Earlier (Session 3 & 4)
 - ✅ TASK-021: Setup Assistance Skill Implementation
   - Created skills/courier-setup-helper/SKILL.md
   - YAML frontmatter with comprehensive trigger keywords
