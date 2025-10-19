@@ -2,7 +2,7 @@
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
 **Version**: 1.0.0
-**Status**: Draft
+**Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18
 
@@ -202,8 +202,8 @@ Courier MCP Server (stdio-based)
 - **Download & Store**: Violates spec constraint; disk/security issues
 - **Remove Attachment Info**: Loses useful metadata
 
-**Decision**: Metadata Only with Optional Download URLs
-**Rationale**: Frontmatter includes attachment list with metadata. Gmail API `message.payload.parts` provides MIME structure; attachment URLs can be extracted from Gmail's download URLs (if available). Users can manually download if needed. Complies with spec constraints.
+**Decision**: Metadata Only with Optional Download URLs (no validation)
+**Rationale**: Frontmatter includes attachment list with metadata. Gmail API `message.payload.parts` provides MIME structure; return URLs as-is without validation. Gmail URLs are reliable within session, and validation adds unnecessary latency. Users can discover broken/expired URLs naturally if needed. Complies with spec constraints.
 
 ---
 
@@ -291,12 +291,13 @@ attachments:
 
 **Processing Flow**:
 1. Validate export_directory (create if missing, check write permissions)
-2. Build Gmail search query (combine search_query + date_start/date_end + folder)
-3. Call gmail.users().messages().list() with maxResults parameter
-4. For each message ID, fetch full message with concurrent requests (asyncio)
-5. Convert each message to markdown file
-6. Handle collisions (append _1, _2, etc.)
-7. Return results before timeout expires
+2. Normalize folder/label names to IDs (users provide friendly names; we look up IDs via `get_folders` cache)
+3. Build Gmail search query (combine search_query + date_start/date_end + label ID)
+4. Call gmail.users().messages().list() with maxResults parameter
+5. For each message ID, fetch full message with concurrent requests (asyncio)
+6. Convert each message to markdown file
+7. Handle collisions (append _1, _2, etc.)
+8. Return results before timeout expires
 
 **Output Schema**:
 ```json
@@ -360,7 +361,7 @@ attachments:
 
 **In-Memory Session State**:
 - Gmail service instance (authenticated)
-- Label cache (dict with TTL)
+- Label cache (dict with TTL): Includes both system labels (INBOX, SENT, DRAFTS, etc.) and all custom user labels to reduce API back-and-forth for CLI usage
 - Timeout tracking (start time + deadline)
 - Current export operation context
 
@@ -380,7 +381,7 @@ attachments:
 - **Gmail API 429 (Rate Limited)**: Exponential backoff, partial results on timeout
 - **Gmail API 403 (Permission Denied)**: Return error (likely scope issue)
 - **Gmail API 401 (Token Expired)**: Attempt token refresh; if fails, return auth error
-- **Gmail API 404 (Message Not Found)**: Skip message, add to errors array
+- **Gmail API 404 (Message Not Found)**: Skip message, add informational error to errors array (e.g., "Message ABC was deleted (possibly by another client)") to indicate race condition without implying implementation error
 
 ### Unexpected Errors
 - **Unhandled exceptions**: Log with full traceback, return error JSON
@@ -564,13 +565,17 @@ Contingency:               ~5-7s (rate limit backoff)
 
 **Total**: ~16-21 hours (3-4 days full-time)
 
-## Open Questions
+## Resolved Questions
 
-- [ ] Should we support label IDs directly in search_query, or normalize to label names?
-- [ ] For attachment URLs, should we validate they're publicly accessible, or just return what Gmail provides?
-- [ ] Should cached labels include custom user labels, or just system labels (INBOX, SENT, DRAFTS, etc.)?
-- [ ] If a message is deleted between list() and get(), should we silently skip or report error?
-- [ ] Do we need support for Gmail threads/conversations, or just flat message list (as spec indicates)?
+- [x] **Label IDs vs. Names**: Normalize to label names only. Users discover friendly names via `get_folders` tool; we translate internally. Simpler UX, avoids exposing cryptic label IDs.
+
+- [x] **Attachment URL Validation**: Return URLs as-is from Gmail API. Don't validate accessibility; Gmail URLs are reliable within session and validation adds unnecessary latency. Users discover broken URLs naturally if needed.
+
+- [x] **Label Cache Scope**: Cache all labels (system + custom user labels). Reduces back-and-forth with Gmail API per CLI usage context. Memory cost negligible (~10KB even with hundreds of labels). Improves UX by showing complete folder list.
+
+- [x] **Deleted Messages**: Report in errors array, but frame as informational (likely user action). Include message like "Message ABC was deleted (possibly by another client)" in errors list. Transparent to user without implying implementation error.
+
+- [x] **Thread Support**: Implement flat message list only (per spec). Mark thread/conversation support as **potential future feature** in spec. No threading logic in v1.0; can be added if users request grouped exports in v2.0.
 
 ## Appendix: Existing Code Analysis
 
