@@ -9,6 +9,7 @@ Provides:
 """
 
 import asyncio
+from sys import last_exc
 import time
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -65,11 +66,11 @@ class LabelCache:
         age = time.time() - self._cached_at
         return age < self.ttl_seconds
 
-    def get(self) -> Optional[Dict[str, Label]]:
+    def get(self) -> dict[str, Label] | None:
         """Get cached labels if valid."""
         return self._labels if self.is_valid() else None
 
-    def set(self, labels: Dict[str, Label]) -> None:
+    def set(self, labels: dict[str, Label]) -> None:
         """Store labels in cache."""
         self._labels = labels
         self._cached_at = time.time()
@@ -157,11 +158,11 @@ class GmailService:
 
         except HttpError as e:
             if e.resp.status == 401:
-                raise AuthenticationError("Token expired", details={"http_status": 401})
+                raise AuthenticationError("Token expired", details={"http_status": 401}) from e
             elif e.resp.status == 403:
-                raise GmailAPIError("Permission denied", status_code=403)
+                raise GmailAPIError("Permission denied", status_code=403) from e
             else:
-                raise GmailAPIError(f"Label fetch failed: {e}", status_code=e.resp.status)
+                raise GmailAPIError(f"Label fetch failed: {e}", status_code=e.resp.status) from e
 
     def get_label_id(self, friendly_name: str) -> str:
         """Translate friendly label name to Gmail label ID.
@@ -204,10 +205,10 @@ class GmailService:
 
     def build_search_query(
         self,
-        search_query: Optional[str] = None,
-        label_id: Optional[str] = None,
-        date_start: Optional[str] = None,
-        date_end: Optional[str] = None,
+        search_query: str | None = None,
+        label_id: str | None = None,
+        date_start: str | None = None,
+        date_end: str | None = None,
     ) -> str:
         """Build Gmail search query from components.
 
@@ -242,10 +243,10 @@ class GmailService:
 
     async def fetch_messages(
         self,
-        search_query: Optional[str] = None,
-        label_id: Optional[str] = None,
+        search_query: str | None = None,
+        label_id: str | None = None,
         max_results: int = 10,
-    ) -> List[Message]:
+    ) -> list[Message]:
         """Fetch message list with search and label filtering.
 
         Implements exponential backoff for rate limiting (429 responses).
@@ -304,20 +305,24 @@ class GmailService:
                         await asyncio.sleep(backoff)
                         continue
                     else:
-                        raise RateLimitError("Rate limited by Gmail API after retries")
+                        raise RateLimitError("Rate limited by Gmail API after retries") from e
                 elif e.resp.status == 400:
-                    raise GmailAPIError("Invalid search query syntax", status_code=400)
+                    raise GmailAPIError("Invalid search query syntax", status_code=400) from e
                 elif e.resp.status == 401:
-                    raise AuthenticationError("Token expired")
+                    raise AuthenticationError("Token expired") from e
                 else:
-                    raise GmailAPIError(f"Message list failed: {e}", status_code=e.resp.status)
+                    raise GmailAPIError(
+                        f"Message list failed: {e}", status_code=e.resp.status
+                    ) from e
+        # This code should be unreachable
+        raise RateLimitError("Rate limited by Gmail API after retries (unreachable)")
 
     async def fetch_message_details(
         self,
-        message_ids: List[str],
+        message_ids: list[str],
         timeout_seconds: float = 20,
         max_concurrent: int = 5,
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
         """Fetch full message details concurrently with timeout.
 
         Implements:
@@ -354,7 +359,7 @@ class GmailService:
         semaphore = asyncio.Semaphore(max_concurrent)
         all_tasks = []
 
-        async def fetch_one(msg_id: str) -> Optional[Dict]:
+        async def fetch_one(msg_id: str) -> dict[str, Any] | None:
             """Fetch single message with retry and backoff.
 
             Handles:
