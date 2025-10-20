@@ -12,6 +12,14 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
 
 ## Behavior Guidelines
 
+**Anti-Verbosity Principle**:
+This command prompt is intentionally detailed to guide you. **Do NOT mirror this verbosity in your output**. Your spec should be:
+- Concise: Every line adds unique value
+- Scannable: Clear section headers, bulleted lists
+- Actionable: Focused on decisions and criteria, not exposition
+
+Think: "What's the minimum I need to write for someone to build this correctly?"
+
 1. **Ask clarifying questions** - Don't assume. If requirements are vague, probe deeper:
    - "Who are the primary users of this feature?"
    - "What does success look like in measurable terms?"
@@ -36,7 +44,19 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
    - This avoids API timeouts and allows for refinement as understanding deepens
    - You can always edit and improve earlier sections as you work through later ones
 
-5. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
+5. **Conciseness checkpoint**:
+   - Target: 10-15 pages for typical features
+   - If approaching 20+ pages, consider parent/child split
+   - Focus on acceptance criteria, not implementation hints
+   - **One requirement, one bullet** (not paragraphs per requirement)
+
+6. **Final step - Remove duplication**:
+   - Before marking spec complete, scan for repetition
+   - Ensure constraints (DO NOT) aren't duplicated in requirements
+   - Consolidate similar acceptance tests
+   - Every line should add new information
+
+7. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
 
    **Ask about capabilities needed:**
    - ✅ "Does the LLM need to support tool/function calling?"
@@ -57,22 +77,11 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
 
 ## Parent/Child Hierarchies
 
-For large projects, you can organize related features hierarchically:
+For large projects (3+ related sub-features), organize hierarchically to avoid context overload:
 
-**When to use hierarchies**:
-- Parent feature has multiple independent sub-features
-- Each child can be worked on separately without loading all siblings
-- You want to avoid context overload from massive monolithic specs
-
-**Directory structure**:
-- **Parent spec**: `.sdd/specs/parent-feature.md`
-- **Child specs**: `.sdd/specs/parent-feature/child-a.md`, `.sdd/specs/parent-feature/child-b.md`, etc.
-- **Mirror in all phases**: Plans, tasks, and progress follow the same structure
-  - `.sdd/plans/parent-feature-plan.md` with children at `.sdd/plans/parent-feature/child-a-plan.md`
-  - `.sdd/tasks/parent-feature-tasks.md` with children at `.sdd/tasks/parent-feature/child-a-tasks.md`
-  - `.sdd/progress/parent-feature-progress.md` with children at `.sdd/progress/parent-feature/child-a-progress.md`
-
-**Important**: Parent specs may not be known as "parents" initially. They can evolve organically - when a second related feature emerges, convert the first spec to a parent and add both as children.
+**Structure**: `.sdd/specs/parent.md` with children at `.sdd/specs/parent/child-a.md`, `child-b.md`, etc.
+**Mirror across phases**: Plans, tasks, and progress follow same hierarchy.
+**Note**: Can evolve organically - convert to parent when second related feature emerges.
 
 ## Output Format
 
@@ -156,31 +165,19 @@ As a [user type], I want [capability], so that [benefit].
 
 ## Workflow
 
-1. **Initial Exploration**: Ask questions to understand the feature deeply
-2. **Check for Parent/Child Relationships**:
-   - If working on a child feature, read the parent spec first to understand context
-   - If creating a parent, list all child specs in the "Child Specifications" section
-   - Use file paths to verify hierarchy: does `.sdd/specs/parent-feature/` directory exist?
-3. **Inherit Parent Constraints** (for child specs):
-   - Read parent spec's "Explicit Constraints (DO NOT)" section
-   - Ask user which parent constraints apply to this child feature
-   - Include inherited constraints in child spec with note: "(Inherited from parent)"
-   - Add any child-specific constraints as needed
-4. **Draft Specification**: Create structured document, working in sections and saving periodically
-5. **Review with User**: Present for feedback and refinement
-6. **Iterate**: Update based on feedback
-7. **Mark as Approved**: When ready, update status and hand off to planning phase
+1. **Explore**: Ask questions to understand the feature
+2. **Check hierarchy**: If child spec, read parent first; inherit parent constraints with "(Inherited)" note
+3. **Draft**: Create spec in sections, save periodically
+4. **Review & iterate**: Present for feedback, refine
+5. **Approve**: Update status when ready for planning
 
 ## Key Reminders
 
-- **No implementation details yet** - Save architecture for `/plan-generation`
-- **Avoid premature vendor/tool selection** - Ask about capabilities needed, not which specific vendor/library/framework to use
-- **Be thorough** - The spec is the contract for all future work
-- **Document unknowns** - "Open Questions" section is critical
-- **Version control** - Specs evolve, track changes
-- **Think about edge cases** - What happens when things go wrong?
-- **Check for hierarchies** - Always look for parent/child relationships to understand full context
-- **Mirror directory structure** - If specs are hierarchical, plans/tasks/progress must mirror exactly
+- No implementation details - save for `/plan-generation`
+- Ask about capabilities, not specific vendors/tools
+- Document unknowns in "Open Questions"
+- Check for parent/child hierarchies
+- Version control - specs evolve
 
 ## Validation Checklist
 

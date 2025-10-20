@@ -24,6 +24,14 @@ If no spec exists, redirect to `/spec-writing` first.
 
 ## Behavior Guidelines
 
+**Anti-Verbosity Principle**:
+This command prompt is intentionally detailed to guide you. **Do NOT mirror this verbosity in your output**. Your plan should be:
+- Concise: Every line adds unique value
+- Scannable: Clear section headers, bulleted lists
+- Actionable: Focused on decisions and rationale, not exposition
+
+Think: "What's the minimum I need to write for someone to build this correctly?"
+
 1. **Deeply analyze the existing codebase**:
    - Use Glob and Grep to find similar patterns
    - Identify existing services, models, utilities to reuse
@@ -59,6 +67,20 @@ If no spec exists, redirect to `/spec-writing` first.
    - This avoids API timeouts and allows for refinement as design evolves
    - You can always edit and improve earlier sections as you work through later ones
 
+7. **Conciseness over comprehensiveness**:
+   - Target: 15-25 pages for typical features (not 40+)
+   - Each Technical Decision: 1-2 paragraphs for rationale (not a full essay)
+   - API Design: Describe the approach, not every endpoint
+   - Data Model: Show key entities, not complete schemas
+   - **If a section exceeds 100 lines, you're probably too detailed**
+
+8. **Final step - Remove redundancies**:
+   - Before saving, review what you wrote
+   - Look for repeated concepts across sections
+   - Consolidate similar examples
+   - Ask: "Could I explain this in a 30-minute whiteboard session?"
+   - If not, simplify
+
 ## Output Format
 
 Create a plan document in `.sdd/plans/[feature-name]-plan.md`.
@@ -67,195 +89,84 @@ Create a plan document in `.sdd/plans/[feature-name]-plan.md`.
 - Parent plan: `.sdd/plans/parent-feature-plan.md`
 - Child plans: `.sdd/plans/parent-feature/child-a-plan.md`, `.sdd/plans/parent-feature/child-b-plan.md`
 
-**Template**:
+**Template** (use sections as needed, not all required):
 
 ```markdown
 # [Feature Name] - Technical Plan
 
-**Specification**: [link to spec file]
-**Parent Plan**: [Path to parent plan, if this is a child] _(optional)_
-**Child Plans**: _(optional, for parent plans)_
-- [child-a-plan.md](./parent-feature/child-a-plan.md) - Brief description
-- [child-b-plan.md](./parent-feature/child-b-plan.md) - Brief description
-**Version**: 1.0.0
+**Specification**: [link]
 **Status**: Draft | Under Review | Approved
-**Created**: [Date]
-**Last Updated**: [Date]
 
 ## Overview
-
-Brief summary of the technical approach and key architectural decisions.
+Brief technical approach and key decisions (1-2 paragraphs).
 
 ## Architecture
-
-### System Context
-[How this feature fits into the larger system]
-
-### Component Overview
-[High-level components and their responsibilities]
-
-### Architecture Diagram
-```
-[ASCII or Mermaid diagram showing component relationships]
-```
+- **System Context**: How this fits into larger system
+- **Components**: High-level components and responsibilities
+- **Diagram**: ASCII/Mermaid showing relationships (optional)
 
 ## Technical Decisions
+For each major decision:
+- **Context**: Why this decision is needed
+- **Options**: A, B, C with trade-offs
+- **Choice**: Selected option and rationale (1-2 paragraphs max)
 
-### Decision 1: [Decision Name]
-**Context**: [Why we need to make this decision]
-**Options Considered**:
-- Option A: [pros/cons]
-- Option B: [pros/cons]
-**Decision**: [Chosen option]
-**Rationale**: [Why this option was chosen]
+## Data Model (if applicable)
+- New entities (key fields only, not full schemas)
+- Modified entities
+- Data flow
 
-### Decision 2: [Next Decision]
-...
-
-## Data Model
-
-### New Entities
-```typescript
-// High-level schema (not implementation)
-interface Entity {
-  // Key fields and relationships
-}
-```
-
-### Modified Entities
-- [Existing entity] - [What changes and why]
-
-### Data Flow
-[How data moves through the system]
-
-## API Design
-
-### New Endpoints
-```
-POST /api/v2/[resource]
-  - Purpose
-  - Request/response shape (high-level)
-  - Authentication/authorization
-
-GET /api/v2/[resource]/:id
-  - Purpose
-  - Response shape
-```
-
-### Modified Endpoints
-- [Endpoint] - [What changes]
+## API Design (if applicable)
+- Approach (REST/GraphQL/RPC/etc.)
+- Key endpoints (not every endpoint)
+- Auth/authorization approach
 
 ## Integration Points
+- Internal systems to integrate with
+- External systems/APIs
+- How they connect
 
-### Internal Systems
-- **[System Name]**: How we integrate, what we consume/provide
-- **[Another System]**: Integration approach
-
-### External Systems
-- **[Third-party API]**: Why we use it, integration strategy
-- **[Another Service]**: Connection details
-
-## State Management
-
-[How application state is managed - context, stores, database, etc.]
-
-## Error Handling Strategy
-
-- **Validation errors**: [Approach]
-- **External service failures**: [Retry strategy, fallbacks]
-- **Unexpected errors**: [Logging, alerting, user experience]
-
-## Performance Considerations
-
-- **Expected load**: [Based on spec requirements]
-- **Optimization strategy**: [Caching, indexing, etc.]
-- **Monitoring approach**: [What metrics to track]
-
-## Security Design
-
-- **Authentication**: [How users are authenticated]
-- **Authorization**: [Permission model]
-- **Data protection**: [Encryption, PII handling]
-- **Rate limiting**: [Strategy]
+## Error Handling, Performance, Security
+Brief approach for each (not exhaustive):
+- Error strategy
+- Performance targets and approach
+- Security measures
 
 ## Testing Strategy
-
-- **Unit tests**: [What to test at unit level]
-- **Integration tests**: [Key integration scenarios]
-- **E2E tests**: [Critical user flows]
-- **Performance tests**: [Load testing approach]
-
-## Deployment Considerations
-
-- **Database migrations**: [Strategy]
-- **Feature flags**: [If needed]
-- **Rollback plan**: [How to safely revert]
-- **Monitoring**: [What to watch during rollout]
+- Unit, integration, E2E approach
+- What to test at each level
 
 ## Risks & Mitigations
-
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| [Risk 1] | High/Med/Low | High/Med/Low | [How to address] |
-| [Risk 2] | ... | ... | ... |
+| [Major risks only] | H/M/L | H/M/L | [How to address] |
 
 ## Dependencies
-
-### Technical Dependencies
-- New libraries/packages needed
-- Version requirements
-- Infrastructure needs
-
-### Team Dependencies
-- Other teams we need input from
-- Approvals required
-- Resource needs
-
-## Timeline Estimate
-
-[High-level estimate - not detailed tasks yet]
-- Architecture setup: [estimate]
-- Core implementation: [estimate]
-- Testing & refinement: [estimate]
-- Documentation: [estimate]
+- Technical (libraries, infrastructure)
+- Team (approvals, coordination)
 
 ## Open Questions
-
-- [ ] Question requiring technical decision
-- [ ] Question requiring stakeholder input
-
-## Appendix
-
-### Existing Code Analysis
-[Key findings from codebase exploration]
-- Similar patterns found at: [file paths]
-- Reusable utilities: [list]
-- Anti-patterns to avoid: [list]
+- [ ] Unresolved technical decisions
 ```
 
 ## Workflow
 
-1. **Read the Specification**: Thoroughly understand requirements
-2. **Check Hierarchy Context**:
-   - If planning a child feature, read parent spec and parent plan first
-   - Understand how this child integrates with siblings and parent architecture
-   - Ensure consistency with parent-level decisions
-3. **Explore Codebase**: Use Glob/Grep to understand existing patterns
-4. **Draft Architecture**: Create component design in sections, saving periodically
-5. **Make Technical Decisions**: Document key choices with rationale
-6. **Review with User**: Present plan for feedback
-7. **Iterate**: Refine based on feedback
-8. **Mark as Approved**: When ready for task breakdown
+1. **Read spec**: Understand requirements thoroughly
+2. **Check hierarchy**: If child, read parent spec/plan first for context
+3. **Explore codebase**: Use Glob/Grep to find existing patterns
+4. **Draft architecture**: Create in sections, save periodically
+5. **Document decisions**: Key choices with rationale
+6. **Review & iterate**: Present for feedback, refine
+7. **Approve**: Mark ready for task breakdown
 
 ## Key Reminders
 
-- **This is NOT task breakdown yet** - Stay at architecture level
-- **Explore the codebase extensively** - Don't design in a vacuum
-- **Document trade-offs** - Explain WHY, not just WHAT
-- **Think about the whole system** - Data, errors, security, testing, deployment
-- **Make risks explicit** - What could go wrong?
-- **Respect hierarchy** - For child plans, align with parent architecture; for parent plans, ensure children can work independently
-- **Mirror directory structure** - Plans must match spec hierarchy exactly
+- Stay at architecture level (NOT task breakdown yet)
+- Explore codebase extensively - don't design in a vacuum
+- Document WHY, not just WHAT
+- Think whole system: data, errors, security, testing, deployment
+- Make risks explicit
+- Respect hierarchy - plans mirror spec structure
 
 ## Validation Checklist
 

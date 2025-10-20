@@ -25,6 +25,14 @@ If prerequisites are missing, redirect to the appropriate command.
 
 ## Behavior Guidelines
 
+**Anti-Verbosity Principle**:
+This command prompt is intentionally detailed to guide you. **Do NOT mirror this verbosity in your output**. Your task breakdown should be:
+- Concise: Every line adds unique value
+- Scannable: Clear section headers, bulleted lists
+- Actionable: Focused on what to do and acceptance criteria, not exposition
+
+Think: "What's the minimum I need to write for someone to build this correctly?"
+
 1. **Create independently implementable tasks**:
    - Each task should be doable without waiting on other tasks (except explicit dependencies)
    - Each task should result in a single, focused PR
@@ -56,6 +64,20 @@ If prerequisites are missing, redirect to the appropriate command.
    - This avoids API timeouts and allows for refinement as you identify dependencies
    - You can always edit and improve earlier sections as you work through later ones
 
+7. **Task count reality check**:
+   - Typical feature: 10-20 tasks (not 40+)
+   - Each task: 2-8 hours of work (not 30 minutes, not 3 days)
+   - **If you have >25 tasks, stop and check**:
+     - Are tasks too granular? (Combine related work into single PRs)
+     - Are you creating tasks for trivial helpers? (Skip these)
+     - Should this use parent/child hierarchy instead?
+
+8. **Final step - Consolidate redundancies**:
+   - Review your task list before finalizing
+   - Look for tasks that could be combined (e.g., "Create file X" + "Document file X" = one task)
+   - Remove tasks for things that naturally happen together
+   - Each task should deliver meaningful, testable value
+
 ## Output Format
 
 Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`.
@@ -71,191 +93,67 @@ Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`.
 
 **Specification**: [link to spec]
 **Plan**: [link to plan]
-**Parent Tasks**: [Path to parent tasks, if this is a child] _(optional)_
-**Child Task Files**: _(optional, for parent task breakdowns)_
-- [child-a-tasks.md](./parent-feature/child-a-tasks.md) - Brief description
-- [child-b-tasks.md](./parent-feature/child-b-tasks.md) - Brief description
-**Version**: 1.0.0
-**Status**: Draft | Ready for Implementation | In Progress | Complete
-**Created**: [Date]
-**Last Updated**: [Date]
+**Status**: Draft | Ready for Implementation
 
 ## Task Summary
+Total: [number] tasks, Estimated: [total hours/days]
 
-Total Tasks: [number]
-Estimated Timeline: [total estimate]
+## Tasks (organized by category as needed: Foundation, Services, API, Integration, Testing, Documentation)
 
-## Task Categories
+### TASK-001: [Task Name]
+**Category**: [category]
+**Priority**: Critical | High | Medium | Low
+**Estimate**: [hours]
+**Dependencies**: [TASK-IDs or None]
 
-- **Foundation**: [number] tasks - Database, models, core utilities
-- **Services**: [number] tasks - Business logic implementation
-- **API**: [number] tasks - Endpoints and controllers
-- **Integration**: [number] tasks - External system connections
-- **Testing**: [number] tasks - Test suites
-- **Documentation**: [number] tasks - Docs and examples
-
----
-
-## Foundation Tasks
-
-### Task 1: [Task Name]
-**ID**: TASK-001
-**Category**: Foundation
-**Priority**: Critical
-**Estimate**: [hours/days]
-**Dependencies**: None
-**Assigned To**: Unassigned
-
-**Description**:
-[Clear description of what needs to be done]
+**Description**: What needs to be done (1-2 sentences)
 
 **Acceptance Criteria**:
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
+- [ ] Specific, testable outcome 1
+- [ ] Specific, testable outcome 2
 
-**Technical Details**:
-- Files to create/modify: [list]
-- Key considerations: [important notes]
-- Related spec sections: [references]
-
-**Testing Requirements**:
-- Unit tests for: [what]
-- Integration tests for: [what]
-
-**Notes**:
-[Any additional context]
+**Files**: Create/modify [list]
+**Testing**: [What to test]
 
 ---
 
-### Task 2: [Next Task]
-...
+[Repeat for each task]
 
-## Services Tasks
-
-### Task N: [Service Task]
-...
-
-## API Tasks
-
-### Task N+1: [API Task]
-...
-
-## Integration Tasks
-
-### Task N+2: [Integration Task]
-...
-
-## Testing Tasks
-
-### Task N+3: [Testing Task]
-...
-
-## Documentation Tasks
-
-### Task N+4: [Documentation Task]
-...
-
----
-
-## Dependency Graph
-
+## Dependency Graph (if helpful for complex features)
 ```
-TASK-001 (Database setup)
-  ↓
-TASK-002 (Core models)
-  ↓
-├── TASK-003 (Service A) ──→ TASK-007 (API endpoints)
-├── TASK-004 (Service B) ──→ TASK-008 (Integration)
-└── TASK-005 (Service C) ──→ TASK-009 (Testing)
+TASK-001 → TASK-002 → TASK-003
+         └→ TASK-004
 ```
 
 ## Implementation Order
-
-**Phase 1: Foundation** (can be done in parallel)
-- TASK-001: Database setup
-- TASK-002: Core models
-
-**Phase 2: Services** (can be done in parallel after Phase 1)
-- TASK-003: Service A
-- TASK-004: Service B
-- TASK-005: Service C
-
-**Phase 3: Integration** (after relevant services)
-- TASK-007: API endpoints
-- TASK-008: External integrations
-
-**Phase 4: Quality & Documentation** (after Phase 3)
-- TASK-009: E2E test suite
-- TASK-010: Documentation
-
-## Acceptance Test Mapping
-
-Map specification acceptance tests to task tests:
-
-**Spec Test 1: [Test name]**
-- Covered by: TASK-003, TASK-007
-- Test files: [paths]
-
-**Spec Test 2: [Test name]**
-- Covered by: TASK-004, TASK-008
-- Test files: [paths]
-
-## Risk Mitigation Tasks
-
-If the plan identified risks, include tasks to address them:
-
-**Risk: [Risk from plan]**
-- Mitigation Task: TASK-XXX
-- Validation: [How we know it's mitigated]
-
-## Definition of Done
-
-A task is complete when:
-- [ ] All acceptance criteria are met
-- [ ] Code is written and passes linting
-- [ ] Tests are written and passing
-- [ ] Code is reviewed and approved
-- [ ] PR is merged to main branch
-- [ ] Task status is updated in this document
+**Phase 1**: TASK-001, TASK-002 (can do in parallel)
+**Phase 2**: TASK-003, TASK-004 (after Phase 1)
 
 ## Progress Tracking
-
-| Task ID | Status | PR | Notes |
-|---------|--------|----|----|
+| Task | Status | PR | Notes |
+|------|--------|----|-------|
 | TASK-001 | Not Started | - | - |
 | TASK-002 | Not Started | - | - |
-| TASK-003 | Not Started | - | - |
-| ... | ... | ... | ... |
 
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
-
-## Open Questions
-
-- [ ] Question about task scope
-- [ ] Clarification needed on requirement
 ```
 
 ## Workflow
 
-1. **Read Spec and Plan**: Understand requirements and architecture
-2. **Check Hierarchy Context**:
-   - If breaking down a child feature, understand parent context and sibling features
-   - Identify any dependencies on parent or sibling tasks
-   - Ensure tasks for this child are scoped independently where possible
-3. **Identify Components**: List all pieces that need building
-4. **Create Tasks**: Write specific, actionable tasks in sections, saving periodically
-5. **Map Dependencies**: Identify what blocks what
-6. **Estimate**: Provide realistic time estimates
-7. **Review with User**: Present task breakdown for feedback
-8. **Refine**: Adjust based on feedback
-9. **Mark Ready**: Update status to "Ready for Implementation"
+1. **Read spec and plan**: Understand requirements and architecture
+2. **Check hierarchy**: If child, understand parent context and dependencies
+3. **Identify components**: List all pieces to build
+4. **Create tasks**: Write specific tasks in sections, save periodically
+5. **Map dependencies**: Identify what blocks what
+6. **Estimate**: Realistic time per task
+7. **Review & refine**: Present for feedback, adjust
+8. **Mark ready**: Update to "Ready for Implementation"
 
 ## Task Creation Guidelines
 
 **Good Task Example**:
 ```
-### Task: Implement Email Notification Provider
+### TASK-005: Implement Email Notification Provider
 
 **Description**: Create EmailProvider class that sends notifications via SendGrid API
 
@@ -270,7 +168,7 @@ A task is complete when:
 - Create: src/services/notifications/providers/EmailProvider.ts
 - Modify: src/services/notifications/index.ts
 
-**Tests**: Unit tests for send, retry, and error handling
+**Testing**: Unit tests for send, retry, and error handling
 ```
 
 **Bad Task Example** (too vague):
@@ -282,13 +180,11 @@ A task is complete when:
 
 ## Key Reminders
 
-- **Granular but not micro**: Tasks should take hours/days, not weeks or minutes
-- **Independent**: Minimize dependencies between tasks
-- **Testable**: Each task should have clear pass/fail criteria
-- **Valuable**: Each task should deliver something meaningful
-- **Reviewable**: Tasks should result in reviewable PRs (~500 lines max)
-- **Respect hierarchy**: Child task breakdowns should be independently workable without loading all sibling contexts
-- **Mirror directory structure**: Task files must match spec/plan hierarchy exactly
+- Tasks take hours/days (not weeks or minutes)
+- Minimize dependencies between tasks
+- Clear pass/fail criteria per task
+- Reviewable PRs (~500 lines max)
+- Mirror spec/plan hierarchy exactly
 
 ## Validation Checklist
 
