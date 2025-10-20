@@ -17,11 +17,11 @@ venv/bin/pip install -e .
 
 if [ -f $invoke_directory/.env ]; then
     source $invoke_directory/.env
-    env INVOKE_DIR="$invoke_directory"
+    export INVOKE_DIR="$invoke_directory"
     venv/bin/python -m courier_mcp.server
 elif [ -f $invoke_directory/.env.op ]; then
     op run --env-file=$invoke_directory/.env.op -- env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp.server
 else
-    env INVOKE_DIR="$invoke_directory"
+    export INVOKE_DIR="$invoke_directory"
     venv/bin/python -m courier_mcp.server
 fi
