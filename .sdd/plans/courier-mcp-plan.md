@@ -62,7 +62,7 @@ Courier MCP Server (stdio-based)
 │  └──────────────────────────────────────────────────────┘  │
 │                          ↓                                 │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ Courier MCP Server (servers/src/courier_mcp/)        │  │
+│  │ Courier MCP Server (server/src/courier_mcp/)         │  │
 │  ├──────────────────────────────────────────────────────┤  │
 │  │                                                      │  │
 │  │  ┌─────────────────────────────────────────────────┐ │  │
@@ -296,7 +296,7 @@ skills/courier-setup-helper/
 **Decision**: Use `${CLAUDE_PLUGIN_ROOT}` for All Path References
 **Rationale**:
 - Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to plugin installation directory when invoked via plugin system
-- Server startup script path: `${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh`
+- Server startup script path: `${CLAUDE_PLUGIN_ROOT}/server/scripts/courier.sh`
 - Ensures plugin works whether installed locally or via marketplace
 - Follows wyrd-gen-mcp precedent (same pattern used successfully)
 - No hardcoded paths in `plugin.json`; all paths relative to plugin root
@@ -636,7 +636,7 @@ courier-mcp/
 ├── docs/
 │   ├── SETUP.md                      # Complete OAuth setup guide
 │   └── reference/                    # Technical reference docs
-├── servers/
+├── server/
 │   ├── scripts/
 │   │   └── courier.sh                # MCP server startup script
 │   ├── src/courier_mcp/              # Python server implementation
@@ -662,7 +662,7 @@ courier-mcp/
   "license": "MIT",
   "mcpServers": {
     "courier": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/scripts/courier.sh",
       "args": [""]
     }
   }

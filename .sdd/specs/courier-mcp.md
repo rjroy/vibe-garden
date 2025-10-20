@@ -97,7 +97,7 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 - Plugin structure follows Claude Code plugin conventions:
   - MCP server configuration in `plugin.json` using `${CLAUDE_PLUGIN_ROOT}` environment variable
   - Documentation and supporting files organized in plugin root
-  - Server implementation in `servers/` directory
+  - Server implementation in `server/` directory
 
 ## Explicit Constraints (DO NOT)
 

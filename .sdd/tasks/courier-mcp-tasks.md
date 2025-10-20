@@ -1025,15 +1025,15 @@ Create Claude Code plugin manifest and directory structure following plugin conv
 - [ ] License: MIT
 - [ ] `mcpServers` configuration:
   - Server name: `"courier"`
-  - Command: `"${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh"`
+  - Command: `"${CLAUDE_PLUGIN_ROOT}/server/scripts/courier.sh"`
   - Args: `[""]`
 - [ ] Directory structure follows plugin conventions:
   - `.claude-plugin/` - Plugin manifest
-  - `servers/` - MCP server implementation (existing `src/courier_mcp/`)
-  - `servers/scripts/` - Launcher scripts
+  - `server/` - MCP server implementation (existing `src/courier_mcp/`)
+  - `server/scripts/` - Launcher scripts
   - `docs/` - Documentation (existing)
   - `skills/` - Setup assistance Skill (new)
-- [ ] `servers/scripts/courier.sh` launcher script created
+- [ ] `server/scripts/courier.sh` launcher script created
 - [ ] Launcher activates venv and runs MCP server with stdio transport
 - [ ] `${CLAUDE_PLUGIN_ROOT}` variable used for portability
 - [ ] Plugin manifest validated against plugin.json schema
@@ -1041,7 +1041,7 @@ Create Claude Code plugin manifest and directory structure following plugin conv
 **Technical Details**:
 - Files to create:
   - `courier-mcp/.claude-plugin/plugin.json`
-  - `courier-mcp/servers/scripts/courier.sh`
+  - `courier-mcp/server/scripts/courier.sh`
 - Files to reference:
   - `wyrd-gen-mcp/.claude-plugin/plugin.json` (template)
   - `wyrd-gen-mcp/servers/scripts/wyrd-gen.sh` (launcher template)
@@ -1209,7 +1209,7 @@ Test plugin installation, portability across different installation locations, a
   - `courier-mcp/docs/PLUGIN_INSTALLATION_TEST.md` (test report)
 - Files to test:
   - `.claude-plugin/plugin.json`
-  - `servers/scripts/courier.sh`
+  - `server/scripts/courier.sh`
   - `skills/courier-setup-helper/SKILL.md`
 - Key considerations:
   - `${CLAUDE_PLUGIN_ROOT}` must resolve across different installation paths
