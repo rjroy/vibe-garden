@@ -30,7 +30,13 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
    - Budget or timeline constraints
    - Technology stack limitations
 
-4. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
+4. **Work incrementally and save often**:
+   - Create the spec in sections rather than all at once
+   - Save after completing major sections (e.g., after Requirements, after Non-Functional Requirements, etc.)
+   - This avoids API timeouts and allows for refinement as understanding deepens
+   - You can always edit and improve earlier sections as you work through later ones
+
+5. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
 
    **Ask about capabilities needed:**
    - ✅ "Does the LLM need to support tool/function calling?"
@@ -160,7 +166,7 @@ As a [user type], I want [capability], so that [benefit].
    - Ask user which parent constraints apply to this child feature
    - Include inherited constraints in child spec with note: "(Inherited from parent)"
    - Add any child-specific constraints as needed
-4. **Draft Specification**: Create structured document with all sections
+4. **Draft Specification**: Create structured document, working in sections and saving periodically
 5. **Review with User**: Present for feedback and refinement
 6. **Iterate**: Update based on feedback
 7. **Mark as Approved**: When ready, update status and hand off to planning phase

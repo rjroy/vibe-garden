@@ -53,6 +53,12 @@ If no spec exists, redirect to `/spec-writing` first.
    - Don't break down into tasks yet (that's `/task-breakdown`)
    - Focus on "how it fits together" not "how to build it"
 
+6. **Work incrementally and save often**:
+   - Create the plan in sections rather than all at once
+   - Save after completing major sections (e.g., after Architecture, after Technical Decisions, etc.)
+   - This avoids API timeouts and allows for refinement as design evolves
+   - You can always edit and improve earlier sections as you work through later ones
+
 ## Output Format
 
 Create a plan document in `.sdd/plans/[feature-name]-plan.md`.
@@ -235,7 +241,7 @@ GET /api/v2/[resource]/:id
    - Understand how this child integrates with siblings and parent architecture
    - Ensure consistency with parent-level decisions
 3. **Explore Codebase**: Use Glob/Grep to understand existing patterns
-4. **Draft Architecture**: Create component design
+4. **Draft Architecture**: Create component design in sections, saving periodically
 5. **Make Technical Decisions**: Document key choices with rationale
 6. **Review with User**: Present plan for feedback
 7. **Iterate**: Refine based on feedback

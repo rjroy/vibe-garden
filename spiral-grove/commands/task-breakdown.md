@@ -50,6 +50,12 @@ If prerequisites are missing, redirect to the appropriate command.
    - Documentation updates
    - Test data setup
 
+6. **Work incrementally and save often**:
+   - Create the task breakdown in sections rather than all at once
+   - Save after completing major sections (e.g., after Foundation Tasks, after Services Tasks, etc.)
+   - This avoids API timeouts and allows for refinement as you identify dependencies
+   - You can always edit and improve earlier sections as you work through later ones
+
 ## Output Format
 
 Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`.
@@ -238,10 +244,10 @@ A task is complete when:
    - Identify any dependencies on parent or sibling tasks
    - Ensure tasks for this child are scoped independently where possible
 3. **Identify Components**: List all pieces that need building
-4. **Create Tasks**: Write specific, actionable tasks
+4. **Create Tasks**: Write specific, actionable tasks in sections, saving periodically
 5. **Map Dependencies**: Identify what blocks what
 6. **Estimate**: Provide realistic time estimates
-7. **Review with User**: Present task list for feedback
+7. **Review with User**: Present task breakdown for feedback
 8. **Refine**: Adjust based on feedback
 9. **Mark Ready**: Update status to "Ready for Implementation"
 
