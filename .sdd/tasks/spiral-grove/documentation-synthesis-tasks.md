@@ -134,31 +134,125 @@ Add `**Origin**` references linking CLAUDE.md to specs.
 ### TASK-008: Resumability + Reporting
 **Status**: Not Started | **Estimate**: 3h | **Dependencies**: TASK-006, TASK-007
 
-Idempotent re-runs and comprehensive output.
+Implement idempotent re-runs and comprehensive output reporting.
+
+**Implementation approach**:
+
+1. **On command start**, check if `.sdd/module-manifest.json` exists:
+   - If not: Start fresh (proceed to Phase 1)
+   - If yes: Read and parse manifest, count statuses
+
+2. **Status assessment**:
+   - Count modules by status: completed, failed, pending
+   - If all completed: Prompt "All modules complete. Re-run to regenerate all? [y/n]"
+   - If partial: Prompt "Found X pending/failed modules. Continue from where we left off? [y/n]"
+   - If user declines: Exit gracefully
+
+3. **Resume logic**:
+   - Filter manifest to only pending/failed modules
+   - Skip Phase 1 (module discovery) - use existing manifest
+   - Run Phase 2 only on filtered list
+   - Run Phase 3 on all modules (in case new specs added)
+   - Update manifest timestamps
+
+4. **Output reporting** (final summary):
+   - Total count: "Generated X CLAUDE.md files (Y root + Z modules)"
+   - Status breakdown: "Completed: X, Failed: Y"
+   - Linked modules: "Modules with Origin field: X"
+   - Unlinked modules: "Modules without specs: X (list names)"
+   - Failed modules: "Failed: module-name (error message)" with retry guidance
+   - Total time: "Completed in X seconds"
+   - Manifest location: "Progress saved to .sdd/module-manifest.json"
+
+5. **Edge cases**:
+   - 0 modules detected: "No modules found. Try manual manifest or specific directory."
+   - All failed: List all errors, suggest reviewing heuristics
+   - Interrupted mid-run: Next run picks up seamlessly
 
 **Deliverables**:
-- Manifest-based resumption: skip completed, process pending/failed
-- User prompts: "Continue from X remaining?" or "Re-run to regenerate all?"
-- Output report: count summary, linked vs. unlinked modules, failures with guidance, total time
-- Edge case handling: 0 modules, all failed, interruption recovery
+- Resumption logic in synthesize-docs.md command
+- User prompts with clear options
+- Comprehensive final report with counts and guidance
+- Timestamp updates in manifest
 
-**Acceptance**: Re-run after interruption completes only remaining modules, helpful error messages
+**Acceptance**:
+- Re-running interrupted session completes only remaining modules
+- All edge cases handled with helpful messages
+- Report shows counts, failures, and next steps
 
 ### TASK-009: Review Extension - Spec-vs-Code Mode
 **Status**: Not Started | **Estimate**: 6-8h | **Dependencies**: None (extends review.md)
 
-Add drift detection mode to `/spiral-grove:review`.
+Add drift detection mode to `/spiral-grove:review` for detecting spec-code divergence.
+
+**Implementation approach**:
+
+1. **Command structure**:
+   - Add `spec-vs-code` to argument-hint in review.md frontmatter
+   - New mode section after existing review modes
+   - Usage: `/spiral-grove:review spec-vs-code [feature-name]`
+
+2. **Spec criteria extraction**:
+   - Read `.sdd/specs/[feature-name].md`
+   - Parse "Acceptance Criteria" or "Acceptance Tests" section
+   - Extract each criterion (bullet points, numbered lists, checklist items)
+   - Store as array of criterion objects: {text, keywords}
+
+3. **Test suite discovery**:
+   - Use Glob to find test files: `**/*test*.{js,ts,py,go}`, `**/test_*.py`, etc.
+   - Filter to likely feature tests (filename contains feature name or subdirectory match)
+   - Read test files with Read tool
+
+4. **Semantic matching algorithm**:
+   - For each spec criterion:
+     - Tokenize: extract keywords (nouns, verbs), remove stop words
+     - Search test files using Grep for keyword combinations
+     - Score matches: 3/4 keywords = 75% confidence, 4/4 = 100%
+     - Accept matches ≥70% confidence
+   - For each test found:
+     - Check if it maps to any spec criterion
+     - If no mapping and confidence <70%, mark as "Extra" (not in spec)
+
+5. **Drift categorization**:
+   - **Missing**: Spec criteria with no matching tests (confidence <70%)
+   - **Extra**: Tests with no matching spec criteria
+   - **Modified**: Tests that partially match but with low confidence (suggest behavior changed)
+   - Calculate: `drift% = (missing + extra + modified) / total_spec_criteria * 100`
+
+6. **Report generation**:
+   - Header: Feature name, spec path, drift percentage
+   - Section: Missing (in spec, not in tests) - list criteria
+   - Section: Extra (in tests, not in spec) - list test names
+   - Section: Modified (possible behavior changes) - list with confidence scores
+   - Recommendations based on drift%:
+     - <10%: "Minor drift. No action needed."
+     - 10-20%: "Moderate drift. Consider running `/spiral-grove:spec-writing` to update spec."
+     - >20%: "Significant drift detected. Run `/spiral-grove:spec-writing` to synchronize spec with implementation."
+   - Warning: "This is advisory only. No automatic changes made to spec."
+
+7. **False positive mitigation**:
+   - Use flexible keyword matching (synonyms: "create"/"add"/"new")
+   - Present uncertain matches (60-70% confidence) with "Possible match?" prompt
+   - Let user confirm/reject uncertain matches
+   - Target: <5% false positive rate
 
 **Deliverables**:
-- New mode: `/review spec-vs-code [feature-name]`
-- Spec acceptance criteria extraction
-- Test suite comparison via Glob + Grep
-- Semantic matching: tokenize criteria, flexible keyword search, confidence scores
-- Drift categorization: Missing/Extra/Modified with percentage
-- Recommendations: <10% no action, 10-20% consider update, >20% run /spec-writing
-- Advisory only (no auto-updates)
+- New `spec-vs-code` mode in `spiral-grove/commands/review.md`
+- Spec criteria extraction logic
+- Semantic matching algorithm with confidence scoring
+- Drift categorization (Missing/Extra/Modified)
+- Report format with recommendations
+- Advisory-only approach (no auto-updates)
 
-**Acceptance**: <5% false positive rate, correct categorization, completes in <1 min per feature
+**Acceptance**:
+- Correctly categorizes drift in all three categories
+- <5% false positive rate on test features
+- Completes in <1 min for typical feature (5-20 files)
+- No automatic spec modifications
+
+**Open Questions**:
+- Should semantic matching use LLM-based similarity instead of keyword tokenization for better accuracy?
+- What confidence threshold is optimal (currently 70%)?
 
 ## Testing
 
@@ -274,16 +368,65 @@ Prepare plugin release.
 ### TASK-018: Documentation Completion
 **Status**: Not Started | **Estimate**: 2-3h | **Dependencies**: All testing complete
 
-Create comprehensive user-facing documentation.
+Create comprehensive user-facing documentation for the Documentation Synthesis feature.
+
+**Implementation approach**:
+
+1. **README.md additions** (update existing Spiral Grove README):
+   - Add Documentation Synthesis to feature list
+   - Add `/synthesize-docs` and `/review spec-vs-code` to command reference
+   - Quick example: "Generate docs for 100-module project in <5 min"
+
+2. **USAGE.md** (create new file: `spiral-grove/docs/documentation-synthesis-usage.md`):
+   - **Basic workflow**: Spec → Implementation → `/synthesize-docs` → Maintenance
+   - **Command examples**:
+     - Running synthesize-docs for first time
+     - Resuming interrupted generation
+     - Re-running to update after code changes
+   - **Drift detection workflow**: Maintenance → `/review spec-vs-code` → Update spec
+   - **Hand-editing CLAUDE.md**: How to use `<!-- BEGIN: HAND-EDITED -->` markers
+   - **Troubleshooting**: Module not detected, 0 modules found, agent failures
+
+3. **API.md additions** (update existing API reference):
+   - **/synthesize-docs command**:
+     - Arguments: `[scope]` (optional, future: target specific directory)
+     - Output: Manifest location, counts, failures
+     - Exit codes: 0 (success), 1 (partial failure), 2 (complete failure)
+   - **/review spec-vs-code command**:
+     - Arguments: `[feature-name]` (required)
+     - Output: Drift report with categories and percentage
+   - **Module manifest schema**: JSON structure documentation
+   - **CLAUDE.md format**: Link to claude-md-format.md spec
+
+4. **TROUBLESHOOTING.md** (create new or update existing):
+   - **Common issues**:
+     - "No modules detected" → Check heuristics, create manual manifest
+     - "Agent spawn failed" → Check manifest for error, retry specific module
+     - "CLAUDE.md over 400 lines" → Module too complex, consider splitting
+     - "Drift detection has false positives" → Adjust confidence threshold
+     - "Hand-edits were lost" → Check marker syntax, file Git history
+   - **Performance issues**: 100 modules taking >5 min → Check parallel execution
+   - **Debugging**: How to read manifest, check agent logs
+
+5. **Cross-references**:
+   - README → USAGE for detailed workflows
+   - USAGE → API for command specs
+   - USAGE → TROUBLESHOOTING for common issues
+   - TROUBLESHOOTING → CLAUDE.md format spec for marker syntax
 
 **Deliverables**:
-- README.md: Project overview, quick start, tool descriptions
-- USAGE.md: Detailed workflows, examples, tips
-- API.md: Command specs, schemas, error codes
-- TROUBLESHOOTING.md: Common issues, diagnostics, FAQ
-- CONTRIBUTING.md: Dev setup, testing, PR process
+- Updated `spiral-grove/README.md` with feature additions
+- New `spiral-grove/docs/documentation-synthesis-usage.md`
+- Updated API reference with command specs and schemas
+- Troubleshooting guide with common issues and solutions
+- All docs with copy-paste ready examples
 
-**Acceptance**: All docs cross-referenced, copy-paste ready examples, comprehensive coverage
+**Acceptance**:
+- All commands documented with usage examples
+- Common workflows have step-by-step guides
+- Troubleshooting covers 10+ common issues
+- Cross-references work (no broken links)
+- Examples can be copied and run successfully
 
 ## Dependencies
 
@@ -322,12 +465,14 @@ Release: 017, 018 (after all tests)
 **Completed (7/18)**: 001, 002, 003, 004, 005, 006, 007
 
 **Remaining (11/18)**:
-- 008: Resumability + Reporting (3h)
-- 009: Review Extension (6-8h)
-- 010-016: Testing (8h)
-- 017-018: Release + Docs (3-5h)
+- 008: Resumability + Reporting (3h) - Implementation approach documented
+- 009: Review Extension (6-8h) - Semantic matching algorithm detailed
+- 010-016: Testing (8h) - Test cases specified
+- 017-018: Release + Docs (3-5h) - Documentation structure planned
 
 **Total Remaining**: 20-24 hours
+
+**Note**: Tasks 008, 009, and 018 now include detailed implementation approaches with step-by-step HOW guidance.
 
 ---
 
