@@ -329,49 +329,125 @@ Output:
 
 ### Phase 3: SDD Integration (Optional)
 
-**Goal**: Link generated CLAUDE.md files back to specifications.
+**Execute these steps in order:**
 
-**This phase only runs if `.sdd/specs/` directory exists.** Otherwise, skip to final output.
+**Step 1: Check for .sdd/specs/ directory**
+```
+Use Bash: ls -d .sdd/specs 2>/dev/null
+If exit code != 0 (directory doesn't exist):
+  → Skip Phase 3 entirely
+  → Output: "Skipping SDD integration (no .sdd/specs/ directory)"
+  → Jump to Final Output section
+Else:
+  → Continue to Step 2
+```
 
-**Steps**:
+**Step 2: Scan for all spec files**
+```
+Use Glob: ".sdd/specs/**/*.md"
+Collect all spec file paths
 
-1. **Check for .sdd/specs/ directory**:
-   - If missing: Skip Phase 3 (not a Spiral Grove project)
-   - If present: Proceed with integration
+For each spec path:
+  - Extract spec name (e.g., ".sdd/specs/authentication.md" → "authentication")
+  - Extract spec tokens (e.g., "user-authentication" → ["user", "authentication"])
+  - Store in specIndex: { path, name, tokens }
+```
 
-2. **For each completed module**:
-   - Read `[module]/CLAUDE.md`
-   - Analyze module path (e.g., `src/auth`)
-   - Search for matching spec in `.sdd/specs/`:
-     - Exact match: `authentication.md`, `auth.md`
-     - Fuzzy match: `user-authentication.md` (contains "auth")
-     - Parent/child: `authentication/oauth.md` for `src/auth/oauth`
+**Step 3: Match modules to specs**
+```
+For each module in manifest where status === "completed":
+  1. Extract module name from path:
+     - "src/auth" → "auth"
+     - "lib/user-service" → "user-service"
+     - "packages/api/routes" → "routes"
 
-3. **If match found**:
-   - Insert Origin field after title:
-     ```markdown
-     # Authentication Module
+  2. Tokenize module name:
+     - "auth" → ["auth"]
+     - "user-service" → ["user", "service"]
 
-     **Origin**: Implemented from [.sdd/specs/authentication.md](.sdd/specs/authentication.md)
-     **Last Generated**: 2025-10-20T14:30:00Z
-     ```
-   - Re-write CLAUDE.md with Origin field
-   - Preserve hand-edited sections during re-write
+  3. Try exact match first (HIGHEST PRIORITY):
+     - Search specIndex for name === module name
+     - Example: module "auth" matches spec "auth.md"
 
-4. **If no match found**:
-   - Skip Origin field (utility modules may not have specs)
-   - Log for final report: "Module X has no matching spec"
+  4. If no exact match, try parent/child hierarchy:
+     - Module: "src/auth/oauth"
+     - Look for: ".sdd/specs/authentication/oauth.md"
+     - Pattern: parent dir in module path → parent dir in specs
 
-5. **Handle parent/child hierarchies**:
-   - Child module `src/auth/oauth` → child spec `.sdd/specs/authentication/oauth.md`
-   - Child module `src/auth/session` → child spec `.sdd/specs/authentication/session.md`
+  5. If still no match, try fuzzy token matching:
+     - Calculate token overlap for each spec
+     - Overlap = (matching tokens) / (total unique tokens)
+     - Example: module ["auth"] vs spec ["user", "authentication"]
+       → "auth" in "authentication" → 50% overlap
+     - Accept if overlap >= 70%
 
-**Fuzzy matching logic**:
-- Tokenize module name: `src/auth` → `["auth"]`
-- Search specs for matching tokens
-- Confidence threshold: 70% token overlap
-- If multiple matches: Prefer exact, then shortest path
-- If uncertain: Present options to user
+  6. Store result:
+     - If match found: { module: path, spec: specPath, confidence: "exact"|"hierarchy"|"fuzzy" }
+     - If no match: { module: path, spec: null }
+```
+
+**Step 4: Insert Origin fields**
+```
+For each matched module:
+  1. Read current CLAUDE.md: Use Read tool: [module.path]/CLAUDE.md
+
+  2. Extract first line (title): Should match pattern "# [Module Name]"
+
+  3. Find insertion point:
+     - After title (line 1)
+     - Before any existing "**Last Generated**" or "**Origin**" lines
+
+  4. Construct Origin line:
+     - Format: "**Origin**: Implemented from [.sdd/specs/[name].md](.sdd/specs/[name].md)"
+     - Example: "**Origin**: Implemented from [.sdd/specs/authentication.md](.sdd/specs/authentication.md)"
+
+  5. Check if Origin already exists:
+     - Search for "**Origin**:" in current content
+     - If exists: Replace existing Origin line
+     - If not: Insert new Origin line after title
+
+  6. Reconstruct CLAUDE.md:
+     - Line 1: # [Module Name]
+     - Line 2: (blank)
+     - Line 3: **Origin**: [spec link]
+     - Line 4: **Last Generated**: [timestamp]
+     - Line 5+: Rest of content
+
+  7. Use Write tool: [module.path]/CLAUDE.md
+     - Overwrites with updated content
+     - Preserves all other content including hand-edited sections
+
+  8. Log: "✓ Linked [module.path] → [spec.path]"
+```
+
+**Step 5: Report results**
+```
+Count modules:
+  - linked = modules with spec match
+  - unlinked = modules without spec match
+
+Output:
+
+## SDD Integration Complete
+
+**Linked to specs**: [N linked] / [N total] modules
+- ✓ src/auth → .sdd/specs/authentication.md
+- ✓ src/api → .sdd/specs/api-design.md
+...
+
+**No matching spec** (expected for utility modules):
+- src/utils
+- src/scripts
+...
+
+**Next**: Proceed to Final Output
+```
+
+**Edge cases:**
+- **Multiple fuzzy matches**: Choose shortest spec path (most specific)
+- **Spec in subdirectory**: Handle parent/child correctly (e.g., specs/auth/oauth.md)
+- **Module already has Origin**: Replace old Origin, don't duplicate
+- **Hand-edited sections**: Preserved during re-write (origin insertion doesn't affect them)
 
 ---
 
