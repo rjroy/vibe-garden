@@ -450,6 +450,47 @@ def generate_filename(
     return filename
 
 
+def resolve_export_path(export_directory: str) -> Path:
+    """Resolve export directory path.
+
+    Implements FR-17/FR-18:
+    - Relative paths resolved from INVOKE_DIR (where user ran command)
+    - Absolute paths used as-is
+
+    Args:
+        export_directory: User-specified export directory (relative or absolute)
+
+    Returns:
+        Resolved absolute path
+
+    Note:
+        The INVOKE_DIR environment variable is set by the launch script
+        (server/scripts/courier.sh) which captures the directory where the
+        user invoked the command via `$(pwd)` before changing to the server
+        installation directory. This ensures files are saved relative to
+        where the user expects them, not where the server is installed.
+    """
+    export_path = Path(export_directory)
+
+    # If absolute, use as-is
+    if export_path.is_absolute():
+        return export_path.resolve()
+
+    # If relative, resolve from invocation directory
+    invoke_dir = os.getenv("INVOKE_DIR")
+    if invoke_dir:
+        resolved = (Path(invoke_dir) / export_path).resolve()
+        logger.debug(f"Resolved relative path '{export_directory}' from INVOKE_DIR '{invoke_dir}' → '{resolved}'")
+        return resolved
+
+    # Fallback to current directory if INVOKE_DIR not set
+    logger.warning(
+        f"INVOKE_DIR not set, falling back to current directory for relative path '{export_directory}'. "
+        "This may indicate the server was not launched via the standard launch script."
+    )
+    return (Path.cwd() / export_path).resolve()
+
+
 def safe_file_write(filepath: str, content: str) -> str:
     """Write file safely with collision detection.
 
@@ -465,6 +506,11 @@ def safe_file_write(filepath: str, content: str) -> str:
 
     Raises:
         ExportError: If write fails or directory doesn't exist
+
+    Note:
+        This function uses Path.resolve() directly on the filepath parameter.
+        For export directory resolution (relative to invocation directory),
+        use resolve_export_path() before constructing the filepath.
     """
     try:
         # Resolve path

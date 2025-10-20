@@ -11,6 +11,7 @@ import yaml
 from courier_mcp.export import (
     format_message_to_markdown,
     generate_filename,
+    resolve_export_path,
     safe_file_write,
     extract_headers,  # Changed from extract_email_headers
     extract_attachments
@@ -281,3 +282,95 @@ This is a test with **markdown** formatting.
         result_path = safe_file_write(filepath, content)
 
         assert Path(result_path).read_text() == content
+
+
+@pytest.mark.unit
+class TestPathResolution:
+    """Test suite for export path resolution (TASK-024 / v1.2.0)."""
+
+    def test_resolve_absolute_path(self, monkeypatch):
+        """Test that absolute paths are used as-is."""
+        # Set INVOKE_DIR (should be ignored for absolute paths)
+        monkeypatch.setenv("INVOKE_DIR", "/user/invocation/dir")
+
+        absolute_path = "/tmp/exports"
+        resolved = resolve_export_path(absolute_path)
+
+        # Should resolve to absolute path, ignoring INVOKE_DIR
+        assert resolved.is_absolute()
+        assert str(resolved) == str(Path(absolute_path).resolve())
+
+    def test_resolve_relative_path_with_invoke_dir(self, monkeypatch):
+        """Test that relative paths are resolved from INVOKE_DIR."""
+        invoke_dir = "/home/user/notes"
+        monkeypatch.setenv("INVOKE_DIR", invoke_dir)
+
+        relative_path = "emails"
+        resolved = resolve_export_path(relative_path)
+
+        # Should resolve to INVOKE_DIR / relative_path
+        expected = (Path(invoke_dir) / relative_path).resolve()
+        assert resolved == expected
+        assert str(resolved) == str(expected)
+
+    def test_resolve_relative_path_with_subdirs(self, monkeypatch):
+        """Test relative paths with subdirectories."""
+        invoke_dir = "/home/user/notes"
+        monkeypatch.setenv("INVOKE_DIR", invoke_dir)
+
+        relative_path = "emails/inbox/2025"
+        resolved = resolve_export_path(relative_path)
+
+        expected = (Path(invoke_dir) / relative_path).resolve()
+        assert resolved == expected
+
+    def test_resolve_relative_path_without_invoke_dir(self, monkeypatch):
+        """Test fallback when INVOKE_DIR is not set."""
+        # Ensure INVOKE_DIR is not set
+        monkeypatch.delenv("INVOKE_DIR", raising=False)
+
+        relative_path = "emails"
+        resolved = resolve_export_path(relative_path)
+
+        # Should fall back to current working directory
+        expected = (Path.cwd() / relative_path).resolve()
+        assert resolved == expected
+
+    def test_resolve_path_normalization(self, monkeypatch):
+        """Test that paths with .. and . are normalized."""
+        invoke_dir = "/home/user/notes"
+        monkeypatch.setenv("INVOKE_DIR", invoke_dir)
+
+        relative_path = "emails/../exports/./data"
+        resolved = resolve_export_path(relative_path)
+
+        # Should normalize .. and . components
+        expected = (Path(invoke_dir) / relative_path).resolve()
+        assert resolved == expected
+        # Verify normalization occurred
+        assert ".." not in str(resolved)
+        assert "/." not in str(resolved) and str(resolved)[-2:] != "/."
+
+    def test_resolve_current_directory_relative(self, monkeypatch):
+        """Test resolving current directory reference."""
+        invoke_dir = "/home/user/notes"
+        monkeypatch.setenv("INVOKE_DIR", invoke_dir)
+
+        relative_path = "."
+        resolved = resolve_export_path(relative_path)
+
+        # Should resolve to INVOKE_DIR itself
+        expected = Path(invoke_dir).resolve()
+        assert resolved == expected
+
+    def test_resolve_parent_directory_relative(self, monkeypatch):
+        """Test resolving parent directory reference."""
+        invoke_dir = "/home/user/notes"
+        monkeypatch.setenv("INVOKE_DIR", invoke_dir)
+
+        relative_path = "../emails"
+        resolved = resolve_export_path(relative_path)
+
+        # Should resolve relative to INVOKE_DIR
+        expected = (Path(invoke_dir) / relative_path).resolve()
+        assert resolved == expected
