@@ -28,8 +28,8 @@ class Label:
 
     id: str
     name: str
-    message_count: int
-    unread_count: int
+    message_count: int | None
+    unread_count: int | None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -140,8 +140,8 @@ class GmailService:
                 label = Label(
                     id=label_data["id"],
                     name=label_data["name"],
-                    message_count=label_data.get("messagesTotal", 0),
-                    unread_count=label_data.get("messagesUnread", 0),
+                    message_count=label_data.get("messagesTotal", None),
+                    unread_count=label_data.get("messagesUnread", None),
                 )
                 labels[label.id] = label
 
