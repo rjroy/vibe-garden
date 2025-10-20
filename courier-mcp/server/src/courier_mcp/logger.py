@@ -13,10 +13,9 @@ import logging
 import logging.handlers
 import os
 from pathlib import Path
-from typing import Optional
 
 # Global logger instance
-_logger: Optional[logging.Logger] = None
+_logger: logging.Logger | None = None
 
 
 def get_logger(name: str = "courier-mcp") -> logging.Logger:
@@ -121,7 +120,9 @@ def log_quota_usage(logger: logging.Logger, units: int, total_seconds: float) ->
         total_seconds: Time taken in seconds
     """
     units_per_second = units / total_seconds if total_seconds > 0 else 0
-    logger.debug(f"Quota usage: {units} units in {total_seconds:.2f}s ({units_per_second:.1f} units/sec)")
+    logger.debug(
+        f"Quota usage: {units} units in {total_seconds:.2f}s ({units_per_second:.1f} units/sec)"
+    )
 
 
 if __name__ == "__main__":
@@ -131,4 +132,4 @@ if __name__ == "__main__":
     logger.info("Info message")
     logger.warning("Warning message")
     logger.error("Error message")
-    print(f"✓ Logger initialized successfully")
+    print("✓ Logger initialized successfully")

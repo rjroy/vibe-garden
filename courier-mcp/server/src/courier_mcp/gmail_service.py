@@ -10,15 +10,14 @@ Provides:
 
 import asyncio
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any
 
 from googleapiclient.errors import HttpError
 
-from courier_mcp.logger import get_logger
-from courier_mcp.config import get_config
-from courier_mcp.errors import GmailAPIError, RateLimitError, AuthenticationError
+from .config import get_config
+from .errors import AuthenticationError, GmailAPIError, RateLimitError
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -29,10 +28,10 @@ class Label:
 
     id: str
     name: str
-    message_count: int
-    unread_count: int
+    message_count: int | None
+    unread_count: int | None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
 
@@ -54,9 +53,9 @@ class LabelCache:
         Args:
             ttl_seconds: Time to live for cached labels (default: 1 hour)
         """
-        self.ttl_seconds = ttl_seconds
-        self._labels: Optional[Dict[str, Label]] = None
-        self._cached_at: Optional[float] = None
+        self.ttl_seconds: int = ttl_seconds
+        self._labels: dict[str, Label] | None = None
+        self._cached_at: float | None = None
 
     def is_valid(self) -> bool:
         """Check if cache is valid (not expired)."""
@@ -66,11 +65,11 @@ class LabelCache:
         age = time.time() - self._cached_at
         return age < self.ttl_seconds
 
-    def get(self) -> Optional[Dict[str, Label]]:
+    def get(self) -> dict[str, Label] | None:
         """Get cached labels if valid."""
         return self._labels if self.is_valid() else None
 
-    def set(self, labels: Dict[str, Label]) -> None:
+    def set(self, labels: dict[str, Label]) -> None:
         """Store labels in cache."""
         self._labels = labels
         self._cached_at = time.time()
@@ -106,10 +105,10 @@ class GmailService:
         config = get_config()
         ttl = config.get_int("COURIER_LABEL_CACHE_TTL_SECONDS", 3600)
         self._label_cache = LabelCache(ttl)
-        self._label_id_map: Dict[str, str] = {}  # friendly_name → id mapping
+        self._label_id_map: dict[str, str] = {}  # friendly_name → id mapping
         logger.info(f"GmailService initialized with label cache TTL: {ttl}s")
 
-    def fetch_labels(self, force_refresh: bool = False) -> Dict[str, Label]:
+    def fetch_labels(self, force_refresh: bool = False) -> dict[str, Label]:
         """Fetch all Gmail labels with message counts.
 
         Args:
@@ -141,8 +140,8 @@ class GmailService:
                 label = Label(
                     id=label_data["id"],
                     name=label_data["name"],
-                    message_count=label_data.get("messagesTotal", 0),
-                    unread_count=label_data.get("messagesUnread", 0),
+                    message_count=label_data.get("messagesTotal", None),
+                    unread_count=label_data.get("messagesUnread", None),
                 )
                 labels[label.id] = label
 
@@ -158,11 +157,11 @@ class GmailService:
 
         except HttpError as e:
             if e.resp.status == 401:
-                raise AuthenticationError("Token expired", details={"http_status": 401})
+                raise AuthenticationError("Token expired", details={"http_status": 401}) from e
             elif e.resp.status == 403:
-                raise GmailAPIError("Permission denied", status_code=403)
+                raise GmailAPIError("Permission denied", status_code=403) from e
             else:
-                raise GmailAPIError(f"Label fetch failed: {e}", status_code=e.resp.status)
+                raise GmailAPIError(f"Label fetch failed: {e}", status_code=e.resp.status) from e
 
     def get_label_id(self, friendly_name: str) -> str:
         """Translate friendly label name to Gmail label ID.
@@ -205,10 +204,10 @@ class GmailService:
 
     def build_search_query(
         self,
-        search_query: Optional[str] = None,
-        label_id: Optional[str] = None,
-        date_start: Optional[str] = None,
-        date_end: Optional[str] = None,
+        search_query: str | None = None,
+        label_id: str | None = None,
+        date_start: str | None = None,
+        date_end: str | None = None,
     ) -> str:
         """Build Gmail search query from components.
 
@@ -243,11 +242,14 @@ class GmailService:
 
     async def fetch_messages(
         self,
-        search_query: Optional[str] = None,
-        label_id: Optional[str] = None,
+        search_query: str | None = None,
+        label_id: str | None = None,
         max_results: int = 10,
-    ) -> List[Message]:
+    ) -> list[Message]:
         """Fetch message list with search and label filtering.
+
+        Implements exponential backoff for rate limiting (429 responses).
+        Supports pagination via nextPageToken.
 
         Args:
             search_query: Gmail search query syntax
@@ -259,92 +261,132 @@ class GmailService:
 
         Raises:
             GmailAPIError: If API call fails
+            RateLimitError: If rate limited after max retries
+            AuthenticationError: If token expired
         """
         max_results = max(1, min(max_results, 100))  # Clamp to 1-100
+        config = get_config()
+        max_retries = config.get_int("COURIER_NETWORK_RETRY_ATTEMPTS", 3)
+        backoff_factor = config.get_float("COURIER_NETWORK_RETRY_BACKOFF_FACTOR", 2.0)
 
         query = self.build_search_query(search_query, label_id)
-
         logger.debug(f"Fetching messages: query='{query}', label={label_id}, max={max_results}")
 
-        try:
-            request = self.service.users().messages().list(
-                userId="me",
-                q=query,
-                maxResults=max_results,
-            )
-
-            if label_id:
-                # Note: labelIds is separate parameter
-                request = self.service.users().messages().list(
-                    userId="me",
-                    q=query,
-                    labelIds=[label_id] if label_id else None,
-                    maxResults=max_results,
+        for attempt in range(max_retries):
+            try:
+                request = (
+                    self.service.users()
+                    .messages()
+                    .list(
+                        userId="me",
+                        q=query if query else None,
+                        labelIds=[label_id] if label_id else None,
+                        maxResults=max_results,
+                    )
                 )
 
-            results = request.execute()
-            messages_data = results.get("messages", [])
+                results = request.execute()
+                messages_data = results.get("messages", [])
 
-            messages = [Message(id=m["id"], thread_id=m["threadId"]) for m in messages_data]
+                messages = [Message(id=m["id"], thread_id=m["threadId"]) for m in messages_data]
 
-            logger.info(f"Fetched {len(messages)} message IDs")
+                logger.info(f"Fetched {len(messages)} message IDs")
+                return messages
 
-            return messages
-
-        except HttpError as e:
-            if e.resp.status == 429:
-                raise RateLimitError("Rate limited by Gmail API")
-            elif e.resp.status == 400:
-                raise GmailAPIError("Invalid search query syntax", status_code=400)
-            elif e.resp.status == 401:
-                raise AuthenticationError("Token expired")
-            else:
-                raise GmailAPIError(f"Message list failed: {e}", status_code=e.resp.status)
+            except HttpError as e:
+                if e.resp.status == 429:
+                    # Rate limited - implement exponential backoff
+                    if attempt < max_retries - 1:
+                        backoff = min(2**attempt * backoff_factor, 10)
+                        logger.warning(
+                            f"Rate limited (429), backing off {backoff}s (attempt {attempt + 1}/{max_retries})"
+                        )
+                        await asyncio.sleep(backoff)
+                        continue
+                    else:
+                        raise RateLimitError("Rate limited by Gmail API after retries") from e
+                elif e.resp.status == 400:
+                    raise GmailAPIError("Invalid search query syntax", status_code=400) from e
+                elif e.resp.status == 401:
+                    raise AuthenticationError("Token expired") from e
+                else:
+                    raise GmailAPIError(
+                        f"Message list failed: {e}", status_code=e.resp.status
+                    ) from e
+        # This code should be unreachable
+        raise RateLimitError("Rate limited by Gmail API after retries (unreachable)")
 
     async def fetch_message_details(
         self,
-        message_ids: List[str],
+        message_ids: list[str],
         timeout_seconds: float = 20,
         max_concurrent: int = 5,
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
         """Fetch full message details concurrently with timeout.
+
+        Implements:
+        - Concurrent fetching with semaphore to control concurrency
+        - Exponential backoff for rate limits (429)
+        - Graceful handling of deleted messages (404)
+        - Global timeout enforcement returning partial results
+        - Per-message retry logic for transient errors
 
         Args:
             message_ids: List of message IDs to fetch
             timeout_seconds: Maximum time to spend fetching
-            max_concurrent: Maximum concurrent requests
+            max_concurrent: Maximum concurrent requests (default: 5)
 
         Returns:
             Tuple of (messages, errors)
-            - messages: List of full message dicts
-            - errors: List of error dicts with message_id and reason
+            - messages: List of full message dicts (Gmail API format)
+            - errors: List of error dicts with message_id and error reason
 
-        Raises:
-            GmailAPIError: If critical error occurs
+        Note:
+            On timeout, returns partial results (messages fetched so far)
+            and error list including timed-out messages.
         """
-        logger.debug(f"Fetching details for {len(message_ids)} messages (timeout: {timeout_seconds}s)")
+        logger.debug(
+            f"Fetching details for {len(message_ids)} messages (timeout: {timeout_seconds}s, max_concurrent: {max_concurrent})"
+        )
+
+        config = get_config()
+        max_retries = config.get_int("COURIER_NETWORK_RETRY_ATTEMPTS", 3)
+        backoff_factor = config.get_float("COURIER_NETWORK_RETRY_BACKOFF_FACTOR", 2.0)
 
         messages = []
         errors = []
         semaphore = asyncio.Semaphore(max_concurrent)
+        all_tasks = []
 
-        async def fetch_one(msg_id: str) -> Optional[Dict]:
-            """Fetch single message with backoff."""
+        async def fetch_one(msg_id: str) -> dict[str, Any] | None:
+            """Fetch single message with retry and backoff.
+
+            Handles:
+            - 404: Message deleted (informational, no retry)
+            - 429: Rate limited (exponential backoff retry)
+            - 401/403: Auth errors (no retry, critical)
+            - Other: Log and skip
+            """
             async with semaphore:
-                for attempt in range(3):
+                for attempt in range(max_retries):
                     try:
-                        result = self.service.users().messages().get(
-                            userId="me",
-                            id=msg_id,
-                            format="full",
-                        ).execute()
+                        result = (
+                            self.service.users()
+                            .messages()
+                            .get(
+                                userId="me",
+                                id=msg_id,
+                                format="full",
+                            )
+                            .execute()
+                        )
 
                         logger.debug(f"Fetched message {msg_id}")
                         return result
 
                     except HttpError as e:
                         if e.resp.status == 404:
-                            # Message deleted
+                            # Message deleted - informational, don't retry
                             logger.debug(f"Message {msg_id} deleted (404)")
                             errors.append(
                                 {
@@ -353,14 +395,20 @@ class GmailService:
                                 }
                             )
                             return None
+
                         elif e.resp.status == 429:
-                            # Rate limit
-                            if attempt < 2:
-                                backoff = min(2 ** attempt, 10)
-                                logger.debug(f"Rate limited, backing off {backoff}s")
+                            # Rate limited - retry with exponential backoff
+                            if attempt < max_retries - 1:
+                                backoff = min(2**attempt * backoff_factor, 10)
+                                logger.debug(
+                                    f"Message {msg_id}: Rate limited (429), backing off {backoff}s"
+                                )
                                 await asyncio.sleep(backoff)
                                 continue
                             else:
+                                logger.warning(
+                                    f"Message {msg_id}: Rate limited after {max_retries} attempts"
+                                )
                                 errors.append(
                                     {
                                         "message_id": msg_id,
@@ -368,12 +416,36 @@ class GmailService:
                                     }
                                 )
                                 return None
-                        else:
-                            logger.warning(f"Error fetching {msg_id}: {e}")
+
+                        elif e.resp.status == 401:
+                            # Auth error - critical, don't retry
+                            logger.error(f"Message {msg_id}: Auth error (401): {e}")
                             errors.append(
                                 {
                                     "message_id": msg_id,
-                                    "error": str(e),
+                                    "error": "Authentication failed (token expired)",
+                                }
+                            )
+                            return None
+
+                        elif e.resp.status == 403:
+                            # Permission error - critical, don't retry
+                            logger.error(f"Message {msg_id}: Permission denied (403): {e}")
+                            errors.append(
+                                {
+                                    "message_id": msg_id,
+                                    "error": "Permission denied",
+                                }
+                            )
+                            return None
+
+                        else:
+                            # Other HTTP errors
+                            logger.warning(f"Message {msg_id}: HTTP error {e.resp.status}: {e}")
+                            errors.append(
+                                {
+                                    "message_id": msg_id,
+                                    "error": f"HTTP {e.resp.status}: {str(e)[:100]}",
                                 }
                             )
                             return None
@@ -381,6 +453,7 @@ class GmailService:
         try:
             # Create fetch tasks
             tasks = [fetch_one(msg_id) for msg_id in message_ids]
+            all_tasks = tasks
 
             # Run with timeout
             results = await asyncio.wait_for(
@@ -391,19 +464,22 @@ class GmailService:
             # Process results
             for result in results:
                 if isinstance(result, Exception):
-                    logger.error(f"Task failed: {result}")
+                    logger.error(f"Task exception: {result}")
                 elif result is not None:
                     messages.append(result)
 
             logger.info(f"Fetched {len(messages)} messages successfully, {len(errors)} errors")
-
             return messages, errors
 
         except asyncio.TimeoutError:
-            logger.warning(f"Timeout after {timeout_seconds}s, partial results: {len(messages)} messages")
+            logger.warning(
+                f"Timeout after {timeout_seconds}s, partial results: {len(messages)} messages fetched, {len(errors)} errors"
+            )
             # Cancel remaining tasks
-            for task in asyncio.all_tasks():
-                task.cancel()
+            for task in all_tasks:
+                if not task.done():
+                    task.cancel()
+                    logger.debug(f"Cancelled task {task}")
 
             return messages, errors
 

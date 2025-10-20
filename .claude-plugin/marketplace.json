@@ -17,6 +17,13 @@
       "description": "Provides a MCP which uses Replicate to provides text-to-image generation. Uses stdio transport to access the MCP.",
       "repository": "https://github.com/rjroy/vibe-garden.git",
       "license": "MIT"
+    },
+    {
+      "name": "courier-mcp",
+      "source": "./courier-mcp",
+      "description": "Provides a MCP which accesses GMail service for a specific user.",
+      "repository": "https://github.com/rjroy/vibe-garden.git",
+      "license": "MIT"
     }
   ]
 }
