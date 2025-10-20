@@ -24,13 +24,26 @@ If no spec exists, redirect to `/spec-writing` first.
 
 ## Behavior Guidelines
 
-**Anti-Verbosity Principle**:
+**Conciseness Principle**:
 This command prompt is intentionally detailed to guide you. **Do NOT mirror this verbosity in your output**. Your plan should be:
-- Concise: Every line adds unique value
-- Scannable: Clear section headers, bulleted lists
-- Actionable: Focused on decisions and rationale, not exposition
+- **Complete**: All HOW (technical approach) and WHY (rationale) for decisions
+- **Concise**: Remove redundant prose, not essential information
+- **Scannable**: Clear section headers, bulleted lists over paragraphs
+- **Actionable**: Focused on decisions and rationale, not general exposition
 
-Think: "What's the minimum I need to write for someone to build this correctly?"
+**What to keep**:
+- ✅ All technical decisions with full rationale (the HOW and WHY)
+- ✅ Architecture details needed for implementation
+- ✅ Integration points, data models, API designs
+- ✅ Context that explains why choices were made
+
+**What to remove**:
+- ❌ Redundant explanations of the same concept
+- ❌ Verbose prose when bullets suffice
+- ❌ Repeated examples showing the same pattern
+- ❌ General background information covered in the spec
+
+Think: "Have I explained HOW to build this and WHY clearly enough that someone could implement it without guessing?"
 
 1. **Deeply analyze the existing codebase**:
    - Use Glob and Grep to find similar patterns
@@ -56,10 +69,11 @@ Think: "What's the minimum I need to write for someone to build this correctly?"
    - Monitoring and observability
    - Testing strategy
 
-5. **Stay high-level**:
-   - Don't write actual code yet
-   - Don't break down into tasks yet (that's `/task-breakdown`)
-   - Focus on "how it fits together" not "how to build it"
+5. **Stay at architecture level**:
+   - DO explain HOW to structure the solution (components, flow, integration)
+   - DO explain WHY you chose this approach over alternatives
+   - DON'T write actual implementation code (no function bodies, no line-by-line logic)
+   - DON'T break down into granular tasks yet (that's `/task-breakdown`)
 
 6. **Work incrementally and save often**:
    - Create the plan in sections rather than all at once
@@ -67,19 +81,21 @@ Think: "What's the minimum I need to write for someone to build this correctly?"
    - This avoids API timeouts and allows for refinement as design evolves
    - You can always edit and improve earlier sections as you work through later ones
 
-7. **Conciseness over comprehensiveness**:
+7. **Balance conciseness with completeness**:
    - Target: 15-25 pages for typical features (not 40+)
-   - Each Technical Decision: 1-2 paragraphs for rationale (not a full essay)
-   - API Design: Describe the approach, not every endpoint
-   - Data Model: Show key entities, not complete schemas
-   - **If a section exceeds 100 lines, you're probably too detailed**
+   - Each Technical Decision: Enough rationale to understand WHY (typically 1-3 paragraphs)
+   - If rationale is complex, keep the complexity - don't artificially shorten
+   - API Design: Describe the approach and key endpoints (not every parameter)
+   - Data Model: Show key entities and relationships (not exhaustive field lists)
+   - **If a section feels repetitive or redundant, consolidate - but don't cut essential HOW/WHY**
 
 8. **Final step - Remove redundancies**:
    - Before saving, review what you wrote
-   - Look for repeated concepts across sections
-   - Consolidate similar examples
-   - Ask: "Could I explain this in a 30-minute whiteboard session?"
-   - If not, simplify
+   - Look for repeated concepts across sections (consolidate duplicates)
+   - Consolidate similar examples (keep 1-2 representative ones)
+   - Convert long prose paragraphs to bulleted lists where possible
+   - Ask: "Is every technical decision clear with its WHY? Would an implementer have questions?"
+   - If the answer is yes, add clarity - don't remove it
 
 ## Output Format
 
@@ -107,9 +123,8 @@ Brief technical approach and key decisions (1-2 paragraphs).
 
 ## Technical Decisions
 For each major decision:
-- **Context**: Why this decision is needed
-- **Options**: A, B, C with trade-offs
-- **Choice**: Selected option and rationale (1-2 paragraphs max)
+- **Choice**: Selected option (what you're doing)
+- **Rationale**: Why this choice over alternatives (as much detail as needed to justify the decision)
 
 ## Data Model (if applicable)
 - New entities (key fields only, not full schemas)
@@ -161,11 +176,13 @@ Brief approach for each (not exhaustive):
 
 ## Key Reminders
 
-- Stay at architecture level (NOT task breakdown yet)
+- Plans explain HOW to build (architecture) with WHY (rationale), not WHAT to build (that's the spec)
+- Stay at architecture level (NOT granular tasks yet)
 - Explore codebase extensively - don't design in a vacuum
-- Document WHY, not just WHAT
+- Every technical decision needs clear WHY with enough detail to justify it
 - Think whole system: data, errors, security, testing, deployment
 - Make risks explicit
+- Conciseness means removing redundancy, not removing essential HOW/WHY
 - Respect hierarchy - plans mirror spec structure
 
 ## Validation Checklist

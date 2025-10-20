@@ -25,23 +25,38 @@ If prerequisites are missing, redirect to the appropriate command.
 
 ## Behavior Guidelines
 
-**Anti-Verbosity Principle**:
+**Conciseness Principle**:
 This command prompt is intentionally detailed to guide you. **Do NOT mirror this verbosity in your output**. Your task breakdown should be:
-- Concise: Every line adds unique value
-- Scannable: Clear section headers, bulleted lists
-- Actionable: Focused on what to do and acceptance criteria, not exposition
+- **Complete**: Clear deliverables, acceptance criteria, and enough detail to implement
+- **Concise**: Remove redundant prose, not essential information
+- **Scannable**: Clear section headers, bulleted lists over paragraphs
+- **Actionable**: Focused on what to do, how to validate, and dependencies
 
-Think: "What's the minimum I need to write for someone to build this correctly?"
+**What to keep**:
+- ✅ Clear deliverables (files to create/modify, features to implement)
+- ✅ Specific acceptance criteria (how to know it's done)
+- ✅ Dependencies and execution order
+- ✅ Technical considerations for implementation
+
+**What to remove**:
+- ❌ Redundant task descriptions
+- ❌ Verbose prose when bullets suffice
+- ❌ Repeated patterns across similar tasks
+- ❌ Implementation details better left to developer judgment
+
+Think: "Does an implementer have enough detail to complete this task and know when it's done?"
 
 1. **Create independently implementable tasks**:
    - Each task should be doable without waiting on other tasks (except explicit dependencies)
    - Each task should result in a single, focused PR
    - Tasks should be small enough to complete in a day or less
 
-2. **Be specific but flexible**:
-   - Clear about WHAT needs to be done
-   - Clear about acceptance criteria
-   - Flexible on HOW it's implemented (respect developer judgment)
+2. **Be specific with clear acceptance criteria**:
+   - Describe WHAT needs to be delivered (files, features, changes)
+   - Include HOW details from the plan (architecture, algorithms, integration approach)
+   - If uncertain about an approach, document it in Open Questions for review
+   - Omit only trivial details (formatting preferences, exact wording of log messages)
+   - Always include clear acceptance criteria (how to know the task is complete)
 
 3. **Map to the plan**:
    - Every component in the plan should have corresponding tasks
