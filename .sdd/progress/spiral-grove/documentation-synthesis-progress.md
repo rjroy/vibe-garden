@@ -64,9 +64,16 @@
   - Shows good example (concise, 50 lines) vs. bad example (verbose, 500+ lines)
   - Includes testing section examples (good vs. bad)
   - All acceptance criteria met (invocation guide, code analysis guidelines, output format spec, good/bad examples, error handling, references to format spec)
+  - **Refactored** (commit fa902a5): Removed 281 lines of bloat (862 → 581 lines, -32%)
+    - Removed "Good vs. Bad Examples" (teaching material, not LLM instructions)
+    - Moved "When to Use" to frontmatter, removed redundant sections
+    - Condensed output examples from 2 to 1
+    - Removed version history and references bloat
+    - Result: Focused prompt with everything LLM needs, nothing it doesn't
 
 ## Discovered Issues
-(None yet)
+- ⚠️ Agent file was initially too verbose (862 lines with teaching material)
+  - **Resolved**: Refactored to 581 lines focusing on execution instructions only
 
 ---
 
@@ -114,11 +121,10 @@
   - Four condensing strategies
   - Retry logic and warning messages
 
-- [x] TASK-007: Agent Documentation and Examples - *Completed 2025-10-20*
-  - Added "How to Invoke This Agent" section
-  - Added comprehensive "Good vs. Bad Examples" section
-  - Shows concise vs. verbose documentation examples
+- [x] TASK-007: Agent Documentation and Examples - *Completed 2025-10-20, Refactored 2025-10-20*
+  - Added "How to Invoke This Agent" section and output examples
   - All acceptance criteria met
+  - **Refactored**: Removed bloat (862 → 581 lines, -32%) to create focused LLM prompt
 
 ### In Progress 🚧
 (None - Agent Implementation Phase complete)
