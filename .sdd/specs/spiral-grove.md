@@ -4,6 +4,8 @@
 **Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18 (Revised prompt length constraint from hard limit to guideline)
+**Child Specifications**:
+- [documentation-synthesis.md](./spiral-grove/documentation-synthesis.md) - Lifecycle management commands for spec-code synchronization and CLAUDE.md generation
 
 ## Executive Summary
 
