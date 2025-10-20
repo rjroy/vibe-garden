@@ -7,8 +7,8 @@ Usage:
 import asyncio
 import sys
 
-from courier_mcp.logger import get_logger
-from courier_mcp.server import main
+from .logger import get_logger
+from .server import main
 
 logger = get_logger(__name__)
 
