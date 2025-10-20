@@ -10,7 +10,7 @@
   "license": "MIT",
   "mcpServers": {
     "courier": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/courier.sh",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/scripts/courier.sh",
       "args": [""]
     }
   }
