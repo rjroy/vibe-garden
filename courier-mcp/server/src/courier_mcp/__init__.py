@@ -11,22 +11,22 @@ Main exports:
 """
 
 __version__ = "1.0.0"
-__author__ = "Anthropic"
+__author__ = "Ronald Roy"
 
 # Export main components for easy access
-from courier_mcp.config import Config, load_config, get_config  # noqa: F401
-from courier_mcp.logger import get_logger  # noqa: F401
+from courier_mcp.config import Config, get_config, load_config  # noqa: F401
 from courier_mcp.errors import (  # noqa: F401
-    CourierError,
     AuthenticationError,
-    GmailAPIError,
-    ExportError,
-    TimeoutError,
-    RateLimitError,
     ConfigError,
+    CourierError,
+    ExportError,
+    GmailAPIError,
     InvalidInputError,
+    RateLimitError,
+    TimeoutError,
     error_to_json,
 )
+from courier_mcp.logger import get_logger  # noqa: F401
 
 __all__ = [
     "Config",

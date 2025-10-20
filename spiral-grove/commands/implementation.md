@@ -29,6 +29,25 @@ Before starting, verify:
 
 If prerequisites are missing, redirect to the appropriate command.
 
+## Testing Strategy
+
+**Default Policy**: Writing tests and fixing them are the same task.
+
+Unless the project spec, plan, or user explicitly overrides this:
+- Tests that fail indicate **incomplete implementation**
+- A task is NOT complete until tests pass
+- Fix bugs discovered by tests as part of test implementation
+- If a test fails, either:
+  - Fix the implementation to make it pass, OR
+  - Adjust the test (with clear justification documented)
+
+**When to Override**: If the spec, plan, or user specifies:
+- "Write tests only, do not fix failures"
+- "Tests are exploratory/informational"
+- A separate task explicitly for "Fix failing tests"
+
+If unclear, **ask the user** before proceeding with test implementation.
+
 ## Behavior Guidelines
 
 1. **Work task by task**:
@@ -50,6 +69,7 @@ If prerequisites are missing, redirect to the appropriate command.
    - Map back to spec acceptance criteria
    - Cover happy path and edge cases
    - Test error conditions
+   - **⚠️ IMPORTANT**: Unless otherwise specified by the project, spec, or user, writing tests includes fixing any issues the tests discover. Tests that fail indicate incomplete implementation. A task with failing tests is not complete.
 
 5. **Maintain progress documentation**:
    - Update task status in real-time
@@ -78,6 +98,7 @@ If prerequisites are missing, redirect to the appropriate command.
    - Tests based on acceptance criteria
    - Tests should fail initially
    - Implement until tests pass
+   - **Fix implementation bugs discovered by tests** - this is part of test writing, not a separate task
 
 2. **Follow the technical plan**:
    - Use architectures and patterns from plan
@@ -97,6 +118,9 @@ If prerequisites are missing, redirect to the appropriate command.
 
 1. **Verify acceptance criteria**: All checkboxes checked
 2. **Run tests**: All tests passing
+   - **⚠️ BLOCKER**: Failing tests mean the task is NOT complete
+   - Either fix the implementation or adjust test expectations (with justification)
+   - Document any intentionally skipped tests with clear reasoning
 3. **Check code quality**: Linting, formatting, conventions
 4. **Update task document**: Status, PR link, notes
 5. **Update progress file**: Keep central progress doc current

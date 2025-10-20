@@ -293,6 +293,16 @@ git checkout -b vibe-garden-update-2025-10-18
 git add CLAUDE.md && git commit -m "Update documentation"
 ```
 
+## Package Metadata Guidelines
+
+When creating package configuration files (pyproject.toml, package.json, setup.py, etc.):
+
+- **Author**: Ronald Roy
+- **Email**: gsdwig@gmail.com
+- **Repository URLs**: Use paths under `rjroy/vibe-garden` (e.g., `https://github.com/rjroy/vibe-garden`)
+- **Do NOT** use Anthropic as author or include Anthropic URLs in code artifacts
+- **Commit messages**: Anthropic attribution in commit messages is acceptable
+
 ## Anti-Patterns to Avoid
 
 - **Skipping phases** - Each phase builds on the previous

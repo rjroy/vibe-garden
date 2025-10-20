@@ -2,17 +2,17 @@
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
 **Plan**: [.sdd/plans/courier-mcp-plan.md](./../plans/courier-mcp-plan.md)
-**Version**: 1.0.0
+**Version**: 1.2.0
 **Status**: Ready for Implementation
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18
+**Last Updated**: 2025-10-19
 
 ## Task Summary
 
-Total Tasks: 19
-Estimated Timeline: ~38 hours (5-6 days full-time)
+Total Tasks: 24
+Estimated Timeline: ~44.5 hours (5-6 days full-time)
 
-*Note: Original plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements.*
+*Note: v1.0.0 plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements. v1.1.0 adds ~5 hours for plugin distribution, marketplace integration, and setup Skill. v1.2.0 adds ~1.5 hours for export path resolution implementation.*
 
 ## Task Categories
 
@@ -24,6 +24,8 @@ Estimated Timeline: ~38 hours (5-6 days full-time)
 - **Timeout & Concurrency**: 2 tasks - Async execution, timeout enforcement
 - **Testing**: 2 tasks - Unit and integration tests, E2E validation
 - **Documentation & Polish**: 2 tasks - Setup guides, error messages, final testing
+- **Plugin Distribution (v1.1.0)**: 4 tasks - Plugin manifest, setup Skill, marketplace registration, portability testing
+- **Path Resolution (v1.2.0)**: 1 task - Export path resolution implementation
 
 ---
 
@@ -1001,6 +1003,337 @@ Polish error messages, improve logging, add helpful user guidance, and prepare f
 
 ---
 
+## Plugin Distribution Tasks (v1.1.0)
+
+### Task 20: Plugin Manifest & Directory Structure
+**ID**: TASK-020
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 1 hour
+**Dependencies**: TASK-001
+**Assigned To**: Unassigned
+
+**Description**:
+Create Claude Code plugin manifest and directory structure following plugin conventions. Package Courier MCP as a Claude Code plugin for easy installation via marketplace.
+
+**Acceptance Criteria**:
+- [ ] `.claude-plugin/plugin.json` created with plugin metadata
+- [ ] Plugin name: `"courier-mcp"`
+- [ ] Plugin description matches spec v1.1.0
+- [ ] Version: `"1.1.0"`
+- [ ] Author metadata: Ronald Roy, gsdwig@gmail.com
+- [ ] Repository URL: `https://github.com/rjroy/vibe-garden.git`
+- [ ] License: MIT
+- [ ] `mcpServers` configuration:
+  - Server name: `"courier"`
+  - Command: `"${CLAUDE_PLUGIN_ROOT}/server/scripts/courier.sh"`
+  - Args: `[""]`
+- [ ] Directory structure follows plugin conventions:
+  - `.claude-plugin/` - Plugin manifest
+  - `server/` - MCP server implementation (existing `src/courier_mcp/`)
+  - `server/scripts/` - Launcher scripts
+  - `docs/` - Documentation (existing)
+  - `skills/` - Setup assistance Skill (new)
+- [ ] `server/scripts/courier.sh` launcher script created
+- [ ] Launcher activates venv and runs MCP server with stdio transport
+- [ ] `${CLAUDE_PLUGIN_ROOT}` variable used for portability
+- [ ] Plugin manifest validated against plugin.json schema
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/.claude-plugin/plugin.json`
+  - `courier-mcp/server/scripts/courier.sh`
+- Files to reference:
+  - `wyrd-gen-mcp/.claude-plugin/plugin.json` (template)
+  - `wyrd-gen-mcp/servers/scripts/wyrd-gen.sh` (launcher template)
+- Key considerations:
+  - `${CLAUDE_PLUGIN_ROOT}` resolves to plugin installation directory
+  - Launcher must handle venv activation and Python path resolution
+  - Server command must be executable (chmod +x)
+  - Cross-platform compatibility (Linux, macOS, Windows)
+- Related spec sections: NFR - Plugin Distribution, Technical Context
+
+**Testing Requirements**:
+- Validate plugin.json syntax (JSON schema)
+- Test launcher script executes server successfully
+- Verify `${CLAUDE_PLUGIN_ROOT}` resolves correctly
+- Test plugin installation in Claude Code (if possible)
+
+**Notes**:
+- Reference: `seeds/reference/claude-plugin-basics.md`, `claude-plugin-reference.md`
+- Plugin manifest follows standard Claude Code plugin conventions
+
+---
+
+### Task 21: Setup Assistance Skill Implementation
+**ID**: TASK-021
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 2.5 hours
+**Dependencies**: TASK-005 (SETUP.md), TASK-020
+**Assigned To**: Unassigned
+
+**Description**:
+Create setup assistance Skill that automatically activates when Gmail OAuth authentication fails. Skill presents troubleshooting guidance from SETUP.md with progressive disclosure.
+
+**Acceptance Criteria**:
+- [ ] `skills/courier-setup-helper/SKILL.md` created
+- [ ] YAML frontmatter with metadata:
+  - `name: courier-setup-helper`
+  - `description:` Includes trigger keywords: "Gmail OAuth", "authentication", "credential", "GMAIL_CREDENTIALS_PATH", "token", "permission"
+- [ ] Skill instructions guide users through:
+  1. Detecting error type from error message
+  2. Presenting relevant SETUP.md sections
+  3. Troubleshooting OAuth setup failures
+  4. Environment variable configuration
+  5. First-time authentication flow
+  6. Common error scenarios (token expired, invalid credentials, permission denied)
+- [ ] Progressive disclosure levels:
+  - Level 1 (metadata): YAML frontmatter always loaded (~50 tokens)
+  - Level 2 (instructions): SKILL.md loaded when triggered (~2-3k tokens)
+  - Level 3 (reference): Links to `docs/SETUP.md` for detailed steps
+- [ ] Skill invocation conditions documented:
+  - Authentication errors from Gmail API (401, 403)
+  - Missing `GMAIL_CREDENTIALS_PATH` environment variable
+  - Expired or invalid OAuth token
+  - MCP server initialization failures due to credentials
+  - User explicitly asks for help with Courier MCP setup
+- [ ] Skill provides actionable steps:
+  - Google Cloud Console setup instructions
+  - OAuth credential download process
+  - Environment variable setup commands
+  - Token refresh commands
+  - Links to external resources (Google Cloud Console, Gmail API docs)
+- [ ] Skill tested: triggers on common auth errors
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/skills/courier-setup-helper/SKILL.md`
+- Files to reference:
+  - `spiral-grove/skills/spiral-grove-guide/SKILL.md` (template)
+  - `courier-mcp/docs/SETUP.md` (source material)
+  - `seeds/reference/claude-agent-skills.md` (Skill conventions)
+- Key considerations:
+  - Skill description must match error patterns for auto-activation
+  - YAML frontmatter used for Skill discovery
+  - Instructions should be concise but actionable
+  - Link to SETUP.md for detailed steps (avoid duplication)
+  - Claude automatically invokes Skill when error messages match description
+- Related spec sections: FR-14, FR-15, FR-16 (Setup assistance Skill)
+
+**Testing Requirements**:
+- Test Skill activation on auth errors (mock error scenarios)
+- Verify YAML frontmatter is valid
+- Verify Skill provides helpful guidance
+- Test progressive disclosure (metadata → instructions → reference)
+- User testing: can users resolve auth issues with Skill guidance?
+
+**Notes**:
+- Skill enhances UX by reducing need for external documentation searches
+- Auto-activation on common errors reduces support burden
+
+---
+
+### Task 22: Marketplace Registration in vibe-garden
+**ID**: TASK-022
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: Medium
+**Estimate**: 30 minutes
+**Dependencies**: TASK-020
+**Assigned To**: Unassigned
+
+**Description**:
+Register Courier MCP plugin in the vibe-garden marketplace catalog. Update root marketplace.json to include courier-mcp plugin entry for discovery and installation.
+
+**Acceptance Criteria**:
+- [ ] `.claude-plugin/marketplace.json` updated at vibe-garden root
+- [ ] Courier MCP entry added to `plugins` array:
+  - `name: "courier-mcp"`
+  - `source: "./courier-mcp"`
+  - `description:` Matches plugin.json description
+  - `repository:` vibe-garden repository URL
+  - `license: "MIT"`
+- [ ] Entry follows same format as existing plugins (spiral-grove, wyrd-gen-mcp)
+- [ ] Marketplace file validated (JSON syntax)
+- [ ] Plugin discoverable via `/plugin install courier-mcp@vibe-garden`
+- [ ] Marketplace listing verified (if testable)
+
+**Technical Details**:
+- Files to modify:
+  - `/home/rjroy/Projects/vibe-garden/.claude-plugin/marketplace.json`
+- Key considerations:
+  - Marketplace is at vibe-garden repository root
+  - Courier MCP already in marketplace (from file read), verify entry is complete
+  - Plugin source path relative to vibe-garden root: `"./courier-mcp"`
+- Related spec sections: NFR - Plugin Distribution, Marketplace Integration
+
+**Testing Requirements**:
+- Validate marketplace.json syntax
+- Test plugin installation command (if Claude Code supports it)
+- Verify plugin appears in marketplace listing
+
+**Notes**:
+- Courier MCP entry already exists in marketplace.json (confirmed from earlier file read)
+- Task primarily verification and documentation
+
+---
+
+### Task 23: Plugin Portability & Installation Testing
+**ID**: TASK-023
+**Category**: Plugin Distribution (v1.1.0)
+**Priority**: High
+**Estimate**: 1.5 hours
+**Dependencies**: TASK-020, TASK-021, TASK-022
+**Assigned To**: Unassigned
+
+**Description**:
+Test plugin installation, portability across different installation locations, and end-to-end plugin workflow. Verify `${CLAUDE_PLUGIN_ROOT}` resolves correctly and MCP server starts successfully.
+
+**Acceptance Criteria**:
+- [ ] Plugin installs successfully via marketplace: `/plugin install courier-mcp@vibe-garden`
+- [ ] Plugin works regardless of installation directory (portability verified)
+- [ ] `${CLAUDE_PLUGIN_ROOT}` variable resolves to correct plugin installation path
+- [ ] MCP server starts successfully after plugin installation
+- [ ] Launcher script (`courier.sh`) executes without errors
+- [ ] Virtual environment activates correctly in launcher
+- [ ] MCP tools (`get-messages`, `get-folders`) available after installation
+- [ ] Setup Skill discoverable in Claude Code
+- [ ] Setup Skill triggers on authentication errors
+- [ ] Plugin version matches spec version (1.1.0)
+- [ ] Documentation accessible from plugin directory
+- [ ] Uninstall/reinstall works without issues
+- [ ] Cross-platform compatibility tested (Linux, macOS, Windows if available)
+- [ ] Test report documented: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Technical Details**:
+- Files to create:
+  - `courier-mcp/docs/PLUGIN_INSTALLATION_TEST.md` (test report)
+- Files to test:
+  - `.claude-plugin/plugin.json`
+  - `server/scripts/courier.sh`
+  - `skills/courier-setup-helper/SKILL.md`
+- Key considerations:
+  - `${CLAUDE_PLUGIN_ROOT}` must resolve across different installation paths
+  - Launcher script must handle paths correctly
+  - Virtual environment must be relative to plugin root (or handled in launcher)
+  - All plugin components must work after installation
+- Related spec sections: AT-11, AT-12, AT-13 (Plugin acceptance tests)
+
+**Testing Requirements**:
+- Install plugin in multiple locations (test portability)
+- Verify all paths resolve correctly
+- Test MCP server startup
+- Test Skill activation
+- Document test results
+- Verify plugin uninstall/reinstall
+
+**Notes**:
+- Critical for plugin distribution success
+- Portability ensures plugin works for all users regardless of installation location
+- Reference spec acceptance tests: AT-11 (installation), AT-12 (portability), AT-13 (Skill activation)
+
+---
+
+## Path Resolution Tasks (v1.2.0)
+
+### Task 24: Export Path Resolution Implementation
+**ID**: TASK-024
+**Category**: Path Resolution (v1.2.0)
+**Priority**: High
+**Estimate**: 1.5 hours
+**Dependencies**: TASK-010 (safe_file_write), TASK-013 (get-messages handler)
+**Assigned To**: Unassigned
+
+**Description**:
+Implement export path resolution using `INVOKE_DIR` environment variable captured by the launch script. Resolve relative export paths relative to user's invocation directory (where they ran the command) rather than the server installation directory. Support both relative and absolute paths per spec FR-17 and FR-18.
+
+**Acceptance Criteria**:
+- [ ] `export.py` reads `INVOKE_DIR` environment variable set by launcher script
+- [ ] `resolve_export_path(export_directory: str) -> Path` function created
+- [ ] Relative paths resolved from `INVOKE_DIR`: `Path(INVOKE_DIR) / export_directory`
+- [ ] Absolute paths used as-is (bypass `INVOKE_DIR`)
+- [ ] Fallback to current working directory if `INVOKE_DIR` not set (for standalone usage)
+- [ ] Path resolution integrated into `safe_file_write()` function
+- [ ] All file writes use resolved paths
+- [ ] Path resolution logic documented with comments explaining FR-17/FR-18
+- [ ] Error handling: log if `INVOKE_DIR` missing (warning only, use fallback)
+- [ ] Cross-platform compatibility (Linux, macOS, Windows)
+
+**Technical Details**:
+- Files to modify:
+  - `courier-mcp/server/src/courier_mcp/export.py`
+  - `courier-mcp/server/src/courier_mcp/server.py` (if path resolution called from tool handler)
+- Files to reference:
+  - `courier-mcp/server/scripts/courier.sh` (already passes `INVOKE_DIR`)
+- Key considerations:
+  - Launch script already captures: `invoke_directory="$(pwd)"` at line 4
+  - Launch script passes: `env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp`
+  - `Path().is_absolute()` determines if path needs resolution
+  - `Path().resolve()` handles path normalization (.. and . components)
+  - `os.getenv("INVOKE_DIR")` returns None if not set
+  - Relative path example: `emails/` → `/home/user/notes/emails/` (if invoked from /home/user/notes/)
+  - Absolute path example: `/tmp/exports/` → `/tmp/exports/` (no resolution)
+- Related spec sections: FR-17, FR-18, Technical Context (Path Resolution)
+
+**Testing Requirements**:
+- Unit tests for `resolve_export_path()`:
+  - Test relative path with `INVOKE_DIR` set
+  - Test absolute path (bypasses `INVOKE_DIR`)
+  - Test fallback when `INVOKE_DIR` not set
+  - Test path normalization (handles .. and . components)
+  - Test cross-platform path separators (if applicable)
+- Integration tests:
+  - Test export from different invocation directories
+  - Verify files appear in expected locations
+  - Test with both relative and absolute export_directory parameters
+- E2E testing:
+  - User runs command from `/home/user/notes/`
+  - Specifies `export_directory="emails/"` (relative)
+  - Verify files created in `/home/user/notes/emails/`
+  - User specifies `export_directory="/tmp/exports/"` (absolute)
+  - Verify files created in `/tmp/exports/`
+
+**Implementation Example**:
+```python
+import os
+from pathlib import Path
+
+def resolve_export_path(export_directory: str) -> Path:
+    """Resolve export directory path.
+
+    Implements FR-17/FR-18:
+    - Relative paths resolved from INVOKE_DIR (where user ran command)
+    - Absolute paths used as-is
+
+    Args:
+        export_directory: User-specified export directory (relative or absolute)
+
+    Returns:
+        Resolved absolute path
+    """
+    export_path = Path(export_directory)
+
+    # If absolute, use as-is
+    if export_path.is_absolute():
+        return export_path.resolve()
+
+    # If relative, resolve from invocation directory
+    invoke_dir = os.getenv("INVOKE_DIR")
+    if invoke_dir:
+        return (Path(invoke_dir) / export_path).resolve()
+
+    # Fallback to current directory if INVOKE_DIR not set
+    logger.warning("INVOKE_DIR not set, falling back to current directory")
+    return (Path.cwd() / export_path).resolve()
+```
+
+**Notes**:
+- Critical for v1.2.0 user experience: files must appear where users expect them
+- Launch script implementation already done (TASK-020 updated courier.sh)
+- This task completes the path resolution implementation on the Python side
+
+---
+
 ## Dependency Graph
 
 ```
@@ -1009,20 +1342,27 @@ TASK-001 (Project setup)
   ├── TASK-003 (Logging)
   │    ├── TASK-004 (Auth)
   │    │    ├── TASK-005 (Setup docs)
+  │    │    │    └── TASK-021 (Setup Skill) ──→ TASK-023 (Plugin testing)
   │    │    └── TASK-006 (Label caching)
   │    │         ├── TASK-007 (Message list)
   │    │         │    └── TASK-008 (Concurrent fetch)
   │    │         │         ├── TASK-009 (Export formatting)
   │    │         │         │    └── TASK-010 (Filename collision)
+  │    │         │         │         └── TASK-024 (Path resolution) [v1.2.0]
   │    │         │         └── TASK-014 (Timeout wrapper)
   │    │         │              └── TASK-015 (Error recovery)
-  │    └── TASK-011 (Server setup)
-  │         ├── TASK-012 (get-folders handler)
-  │         └── TASK-013 (get-messages handler)
-  │              └── TASK-016 (Test suite)
-  │                   └── TASK-017 (E2E testing)
-  │                        └── TASK-018 (Documentation)
-  │                             └── TASK-019 (Polish)
+  │    ├── TASK-011 (Server setup)
+  │    │    ├── TASK-012 (get-folders handler)
+  │    │    └── TASK-013 (get-messages handler)
+  │    │         ├── TASK-024 (Path resolution) [v1.2.0] ──→ TASK-016 (Test suite)
+  │    │         └── TASK-016 (Test suite)
+  │    │              └── TASK-017 (E2E testing)
+  │    │                   └── TASK-018 (Documentation)
+  │    │                        └── TASK-019 (Polish)
+  │    └── TASK-020 (Plugin manifest)
+  │         ├── TASK-021 (Setup Skill)
+  │         ├── TASK-022 (Marketplace registration) ──→ TASK-023 (Plugin testing)
+  │         └── TASK-023 (Plugin testing)
 ```
 
 ## Implementation Order
@@ -1046,6 +1386,7 @@ TASK-001 (Project setup)
 **Phase 4: Export & Formatting** (after Phase 3)
 - TASK-009: Markdown export formatting
 - TASK-010: Filename collision prevention
+- TASK-024: Export path resolution (v1.2.0)
 
 **Phase 5: Tool Handlers & Integration** (after Phase 4)
 - TASK-011: MCP server setup
@@ -1056,9 +1397,15 @@ TASK-001 (Project setup)
 - TASK-016: Unit & integration tests
 - TASK-017: E2E testing & performance
 
-**Phase 7: Documentation & Release** (final phase)
+**Phase 7: Documentation & Release** (after Phase 6)
 - TASK-018: Documentation & examples
 - TASK-019: Error messages & polish
+
+**Phase 8: Plugin Distribution (v1.1.0)** (can be done in parallel with Phase 1-7, but depends on TASK-001 and TASK-005)
+- TASK-020: Plugin manifest & directory structure (after TASK-001)
+- TASK-021: Setup assistance Skill (after TASK-005, TASK-020)
+- TASK-022: Marketplace registration (after TASK-020)
+- TASK-023: Plugin portability testing (after TASK-020, TASK-021, TASK-022)
 
 ## Acceptance Test Mapping
 
@@ -1104,6 +1451,22 @@ Maps specification acceptance tests (spec lines 244-255) to task tests:
 - Covered by: TASK-013 (get-messages), TASK-017 (E2E testing)
 - Test files: `tests/test_acceptance.py::test_empty_results`
 
+**Spec Test 11 (v1.1.0): Plugin installation** (install via marketplace)
+- Covered by: TASK-020 (plugin manifest), TASK-022 (marketplace registration), TASK-023 (installation testing)
+- Test files: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 12 (v1.1.0): Plugin portability** (`${CLAUDE_PLUGIN_ROOT}` resolves correctly)
+- Covered by: TASK-020 (plugin manifest), TASK-023 (portability testing)
+- Test files: `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 13 (v1.1.0): Setup assistance Skill** (auto-activation on auth failures)
+- Covered by: TASK-021 (setup Skill), TASK-023 (Skill testing)
+- Test files: `skills/courier-setup-helper/SKILL.md`, `docs/PLUGIN_INSTALLATION_TEST.md`
+
+**Spec Test 14 (v1.1.0): Marketplace registration** (discoverable in vibe-garden)
+- Covered by: TASK-022 (marketplace registration)
+- Test files: `.claude-plugin/marketplace.json` (vibe-garden root)
+
 ## Risk Mitigation Tasks
 
 Addressing risks identified in plan (page 521-530):
@@ -1147,25 +1510,30 @@ A task is complete when:
 
 | Task ID | Status | PR | Notes |
 |---------|--------|----|----|
-| TASK-001 | Not Started | - | - |
-| TASK-002 | Not Started | - | - |
-| TASK-003 | Not Started | - | - |
-| TASK-004 | Not Started | - | - |
-| TASK-005 | Not Started | - | - |
-| TASK-006 | Not Started | - | - |
-| TASK-007 | Not Started | - | - |
-| TASK-008 | Not Started | - | - |
-| TASK-009 | Not Started | - | - |
-| TASK-010 | Not Started | - | - |
-| TASK-011 | Not Started | - | - |
-| TASK-012 | Not Started | - | - |
-| TASK-013 | Not Started | - | - |
-| TASK-014 | Not Started | - | - |
-| TASK-015 | Not Started | - | - |
-| TASK-016 | Not Started | - | - |
-| TASK-017 | Not Started | - | - |
-| TASK-018 | Not Started | - | - |
-| TASK-019 | Not Started | - | - |
+| TASK-001 | Complete | - | Project setup & config |
+| TASK-002 | Complete | - | Dependencies & venv |
+| TASK-003 | Complete | - | Logging & errors |
+| TASK-004 | Complete | - | OAuth 2.0 auth |
+| TASK-005 | Complete | - | SETUP.md docs |
+| TASK-006 | Complete | - | Label caching |
+| TASK-007 | Complete | - | Message fetch with rate limiting |
+| TASK-008 | Complete | - | Concurrent fetch & timeout |
+| TASK-009 | Complete | - | Markdown export formatting |
+| TASK-010 | Complete | - | Filename collision prevention |
+| TASK-011 | Complete | - | MCP server setup |
+| TASK-012 | Complete | - | get-folders handler |
+| TASK-013 | Complete | - | get-messages handler |
+| TASK-014 | Complete | - | Global timeout wrapper |
+| TASK-015 | Complete | - | Error recovery & retries |
+| TASK-016 | Complete | - | Unit & integration tests (100% pass rate) |
+| TASK-017 | Complete | - | E2E test results doc created |
+| TASK-018 | Complete | - | All documentation created (5 files) |
+| TASK-019 | Complete | - | Error polish review (all criteria met) |
+| TASK-020 | Complete | - | v1.1.0 Plugin manifest |
+| TASK-021 | Complete | - | v1.1.0 Setup Skill |
+| TASK-022 | Complete | - | v1.1.0 Marketplace |
+| TASK-023 | Complete | - | v1.1.0 Plugin testing (user-verified) |
+| TASK-024 | Complete | - | v1.2.0 Path resolution (7 tests, 100% pass) |
 
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 
@@ -1175,6 +1543,59 @@ A task is complete when:
 - [x] **Thread/conversation grouping**: Defer to v2.0+. Already documented as "Potential Future Features" in spec. No threading logic in v1.0; can be added if users request grouped exports later.
 - [x] **Markdown file size limit**: 10KB limit per file in `courier.config`. If message body exceeds 10KB, split across multiple markdown files or truncate with note. Config key: `COURIER_MAX_FILE_SIZE_KB: 10`
 - [x] **Automatic retry on network failures**: Yes, implement with exponential backoff. Retry attempts: 3 (configurable). Backoff factor: 2 (configurable). Applies to transient errors (timeout, connection refused, 503) but NOT permanent errors (401, 403, 400).
+
+---
+
+## Version History
+
+### v1.2.0 (2025-10-19)
+**Added Export Path Resolution Task**
+
+Added 1 new task to align with spec v1.2.0:
+- **TASK-024**: Export path resolution implementation using `INVOKE_DIR` environment variable
+
+**Updated Estimates**:
+- Total tasks: 23 → 24
+- Estimated timeline: ~43 hours → ~44.5 hours (added ~1.5 hours for v1.2.0)
+
+**Updated Implementation Phases**:
+- Phase 4 (Export & Formatting) now includes TASK-024 (path resolution)
+- TASK-024 depends on TASK-010 (safe_file_write) and TASK-013 (get-messages handler)
+
+**Implementation Details**:
+- Launch script (courier.sh) already captures invocation directory at line 4
+- Launch script passes `INVOKE_DIR` to Python server via environment variable
+- TASK-024 implements Python-side path resolution in `export.py`
+- Relative paths resolved from `INVOKE_DIR`, absolute paths used as-is
+- Implements spec requirements FR-17 and FR-18
+
+### v1.1.0 (2025-10-19)
+**Added Plugin Distribution and Setup Assistance Tasks**
+
+Added 4 new tasks to align with spec v1.1.0:
+- **TASK-020**: Plugin manifest and directory structure for Claude Code plugin packaging
+- **TASK-021**: Setup assistance Skill for automatic OAuth troubleshooting
+- **TASK-022**: Marketplace registration in vibe-garden repository
+- **TASK-023**: Plugin portability and installation testing
+
+**Updated Estimates**:
+- Total tasks: 19 → 23
+- Estimated timeline: ~38 hours → ~43 hours (added ~5 hours for v1.1.0)
+
+**New Implementation Phase**:
+- Phase 8 added for plugin distribution tasks
+- Can be done in parallel with core implementation after TASK-001 and TASK-005
+
+**Acceptance Test Mapping Extended**:
+- AT-11: Plugin installation via marketplace
+- AT-12: Plugin portability with `${CLAUDE_PLUGIN_ROOT}`
+- AT-13: Setup Skill auto-activation on auth failures
+- AT-14: Marketplace registration and discoverability
+
+### v1.0.0 (2025-10-18)
+- Initial task breakdown for Courier MCP spec v1.0.0
+- 19 tasks across 7 implementation phases
+- Comprehensive acceptance test mapping for all spec requirements
 
 ---
 
