@@ -2,17 +2,17 @@
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
 **Plan**: [.sdd/plans/courier-mcp-plan.md](./../plans/courier-mcp-plan.md)
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Status**: Ready for Implementation
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-19
 
 ## Task Summary
 
-Total Tasks: 23
-Estimated Timeline: ~43 hours (5-6 days full-time)
+Total Tasks: 24
+Estimated Timeline: ~44.5 hours (5-6 days full-time)
 
-*Note: v1.0.0 plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements. v1.1.0 adds ~5 hours for plugin distribution, marketplace integration, and setup Skill.*
+*Note: v1.0.0 plan estimate was 16-21 hours. Detailed task breakdown reveals ~38 hours due to granular decomposition of complex async/retry logic and comprehensive testing requirements. v1.1.0 adds ~5 hours for plugin distribution, marketplace integration, and setup Skill. v1.2.0 adds ~1.5 hours for export path resolution implementation.*
 
 ## Task Categories
 
@@ -25,6 +25,7 @@ Estimated Timeline: ~43 hours (5-6 days full-time)
 - **Testing**: 2 tasks - Unit and integration tests, E2E validation
 - **Documentation & Polish**: 2 tasks - Setup guides, error messages, final testing
 - **Plugin Distribution (v1.1.0)**: 4 tasks - Plugin manifest, setup Skill, marketplace registration, portability testing
+- **Path Resolution (v1.2.0)**: 1 task - Export path resolution implementation
 
 ---
 
@@ -1233,6 +1234,106 @@ Test plugin installation, portability across different installation locations, a
 
 ---
 
+## Path Resolution Tasks (v1.2.0)
+
+### Task 24: Export Path Resolution Implementation
+**ID**: TASK-024
+**Category**: Path Resolution (v1.2.0)
+**Priority**: High
+**Estimate**: 1.5 hours
+**Dependencies**: TASK-010 (safe_file_write), TASK-013 (get-messages handler)
+**Assigned To**: Unassigned
+
+**Description**:
+Implement export path resolution using `INVOKE_DIR` environment variable captured by the launch script. Resolve relative export paths relative to user's invocation directory (where they ran the command) rather than the server installation directory. Support both relative and absolute paths per spec FR-17 and FR-18.
+
+**Acceptance Criteria**:
+- [ ] `export.py` reads `INVOKE_DIR` environment variable set by launcher script
+- [ ] `resolve_export_path(export_directory: str) -> Path` function created
+- [ ] Relative paths resolved from `INVOKE_DIR`: `Path(INVOKE_DIR) / export_directory`
+- [ ] Absolute paths used as-is (bypass `INVOKE_DIR`)
+- [ ] Fallback to current working directory if `INVOKE_DIR` not set (for standalone usage)
+- [ ] Path resolution integrated into `safe_file_write()` function
+- [ ] All file writes use resolved paths
+- [ ] Path resolution logic documented with comments explaining FR-17/FR-18
+- [ ] Error handling: log if `INVOKE_DIR` missing (warning only, use fallback)
+- [ ] Cross-platform compatibility (Linux, macOS, Windows)
+
+**Technical Details**:
+- Files to modify:
+  - `courier-mcp/server/src/courier_mcp/export.py`
+  - `courier-mcp/server/src/courier_mcp/server.py` (if path resolution called from tool handler)
+- Files to reference:
+  - `courier-mcp/server/scripts/courier.sh` (already passes `INVOKE_DIR`)
+- Key considerations:
+  - Launch script already captures: `invoke_directory="$(pwd)"` at line 4
+  - Launch script passes: `env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp`
+  - `Path().is_absolute()` determines if path needs resolution
+  - `Path().resolve()` handles path normalization (.. and . components)
+  - `os.getenv("INVOKE_DIR")` returns None if not set
+  - Relative path example: `emails/` → `/home/user/notes/emails/` (if invoked from /home/user/notes/)
+  - Absolute path example: `/tmp/exports/` → `/tmp/exports/` (no resolution)
+- Related spec sections: FR-17, FR-18, Technical Context (Path Resolution)
+
+**Testing Requirements**:
+- Unit tests for `resolve_export_path()`:
+  - Test relative path with `INVOKE_DIR` set
+  - Test absolute path (bypasses `INVOKE_DIR`)
+  - Test fallback when `INVOKE_DIR` not set
+  - Test path normalization (handles .. and . components)
+  - Test cross-platform path separators (if applicable)
+- Integration tests:
+  - Test export from different invocation directories
+  - Verify files appear in expected locations
+  - Test with both relative and absolute export_directory parameters
+- E2E testing:
+  - User runs command from `/home/user/notes/`
+  - Specifies `export_directory="emails/"` (relative)
+  - Verify files created in `/home/user/notes/emails/`
+  - User specifies `export_directory="/tmp/exports/"` (absolute)
+  - Verify files created in `/tmp/exports/`
+
+**Implementation Example**:
+```python
+import os
+from pathlib import Path
+
+def resolve_export_path(export_directory: str) -> Path:
+    """Resolve export directory path.
+
+    Implements FR-17/FR-18:
+    - Relative paths resolved from INVOKE_DIR (where user ran command)
+    - Absolute paths used as-is
+
+    Args:
+        export_directory: User-specified export directory (relative or absolute)
+
+    Returns:
+        Resolved absolute path
+    """
+    export_path = Path(export_directory)
+
+    # If absolute, use as-is
+    if export_path.is_absolute():
+        return export_path.resolve()
+
+    # If relative, resolve from invocation directory
+    invoke_dir = os.getenv("INVOKE_DIR")
+    if invoke_dir:
+        return (Path(invoke_dir) / export_path).resolve()
+
+    # Fallback to current directory if INVOKE_DIR not set
+    logger.warning("INVOKE_DIR not set, falling back to current directory")
+    return (Path.cwd() / export_path).resolve()
+```
+
+**Notes**:
+- Critical for v1.2.0 user experience: files must appear where users expect them
+- Launch script implementation already done (TASK-020 updated courier.sh)
+- This task completes the path resolution implementation on the Python side
+
+---
+
 ## Dependency Graph
 
 ```
@@ -1247,11 +1348,13 @@ TASK-001 (Project setup)
   │    │         │    └── TASK-008 (Concurrent fetch)
   │    │         │         ├── TASK-009 (Export formatting)
   │    │         │         │    └── TASK-010 (Filename collision)
+  │    │         │         │         └── TASK-024 (Path resolution) [v1.2.0]
   │    │         │         └── TASK-014 (Timeout wrapper)
   │    │         │              └── TASK-015 (Error recovery)
   │    ├── TASK-011 (Server setup)
   │    │    ├── TASK-012 (get-folders handler)
   │    │    └── TASK-013 (get-messages handler)
+  │    │         ├── TASK-024 (Path resolution) [v1.2.0] ──→ TASK-016 (Test suite)
   │    │         └── TASK-016 (Test suite)
   │    │              └── TASK-017 (E2E testing)
   │    │                   └── TASK-018 (Documentation)
@@ -1283,6 +1386,7 @@ TASK-001 (Project setup)
 **Phase 4: Export & Formatting** (after Phase 3)
 - TASK-009: Markdown export formatting
 - TASK-010: Filename collision prevention
+- TASK-024: Export path resolution (v1.2.0)
 
 **Phase 5: Tool Handlers & Integration** (after Phase 4)
 - TASK-011: MCP server setup
@@ -1429,6 +1533,7 @@ A task is complete when:
 | TASK-021 | Complete | - | v1.1.0 Setup Skill |
 | TASK-022 | Complete | - | v1.1.0 Marketplace |
 | TASK-023 | Complete | - | v1.1.0 Plugin testing (user-verified) |
+| TASK-024 | Complete | - | v1.2.0 Path resolution (7 tests, 100% pass) |
 
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 
@@ -1442,6 +1547,27 @@ A task is complete when:
 ---
 
 ## Version History
+
+### v1.2.0 (2025-10-19)
+**Added Export Path Resolution Task**
+
+Added 1 new task to align with spec v1.2.0:
+- **TASK-024**: Export path resolution implementation using `INVOKE_DIR` environment variable
+
+**Updated Estimates**:
+- Total tasks: 23 → 24
+- Estimated timeline: ~43 hours → ~44.5 hours (added ~1.5 hours for v1.2.0)
+
+**Updated Implementation Phases**:
+- Phase 4 (Export & Formatting) now includes TASK-024 (path resolution)
+- TASK-024 depends on TASK-010 (safe_file_write) and TASK-013 (get-messages handler)
+
+**Implementation Details**:
+- Launch script (courier.sh) already captures invocation directory at line 4
+- Launch script passes `INVOKE_DIR` to Python server via environment variable
+- TASK-024 implements Python-side path resolution in `export.py`
+- Relative paths resolved from `INVOKE_DIR`, absolute paths used as-is
+- Implements spec requirements FR-17 and FR-18
 
 ### v1.1.0 (2025-10-19)
 **Added Plugin Distribution and Setup Assistance Tasks**

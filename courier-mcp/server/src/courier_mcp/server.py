@@ -26,6 +26,7 @@ from .errors import (
 from .export import (
     format_message_to_markdown,
     generate_filename,
+    resolve_export_path,
     safe_file_write,
     truncate_markdown,
 )
@@ -287,6 +288,12 @@ class CourierServer:
         errors = []
 
         try:
+            # Resolve export directory (FR-17/FR-18)
+            # Relative paths are resolved from INVOKE_DIR (user's invocation directory)
+            # Absolute paths are used as-is
+            resolved_export_dir = resolve_export_path(export_directory)
+            logger.debug(f"Export directory resolved: '{export_directory}' → '{resolved_export_dir}'")
+
             # Ensure Gmail service is ready
             if not self.gmail_service:
                 await self._initialize_gmail_service()
@@ -350,8 +357,8 @@ class CourierServer:
                     # Generate filename
                     filename = generate_filename(message, folder=folder)
 
-                    # Write file
-                    filepath = f"{export_directory}/{filename}"
+                    # Write file (using resolved export directory)
+                    filepath = str(resolved_export_dir / filename)
                     saved_path = safe_file_write(filepath, markdown)
 
                     files_saved.append(saved_path)
