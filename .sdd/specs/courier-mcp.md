@@ -1,6 +1,6 @@
 # Courier MCP Specification
 
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-19
@@ -39,6 +39,8 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 - **FR-4**: Export all retrieved messages to a user-specified directory
 - **FR-5**: Include attachment metadata (filename, size, MIME type) but not binary content
 - **FR-6**: Export format is Markdown with YAML frontmatter
+- **FR-17**: Launch script captures invocation directory and passes it to server via `INVOKE_DIR` environment variable
+- **FR-18**: Server resolves relative export paths relative to invocation directory (from `INVOKE_DIR`), not server installation directory
 
 ### Folder Discovery
 - **FR-7**: Provide a tool to list all available folders/labels with message counts
@@ -123,6 +125,7 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
   - MCP server configuration using `${CLAUDE_PLUGIN_ROOT}` for portability
   - Setup documentation at `docs/SETUP.md`
   - Skills directory at `skills/` for setup assistance
+- **Path Resolution**: Launch script (`server/scripts/courier.sh`) captures invocation directory via `$(pwd)` and passes to server as `INVOKE_DIR` environment variable. Server uses this for resolving relative export paths, ensuring files are saved relative to where user invoked the command, not where server is installed.
 - **Reference Materials**:
   - Gmail API: `/seeds/reference/gmail-README.md`
   - Claude Code plugins: `/seeds/reference/claude-plugin-basics.md`, `/seeds/reference/claude-plugin-reference.md`
@@ -149,7 +152,7 @@ As a Claude Code user leveraging Claude as a note-taking and analysis tool, I wa
 **Input Parameters**:
 - `search_query` (string, optional): Full Gmail search syntax (e.g., `is:unread`, `has:attachment`, `subject:[VOICE]`). Use label names, not IDs (e.g., `label:ProjectDocs`, not `label:Label_789`)
 - `folder` (string, optional): Friendly label/folder name (e.g., "INBOX", "Project Docs", "Team Review"); default: "INBOX". Use the names returned by `get-folders` tool
-- `export_directory` (string, required): Directory path where markdown files are saved (absolute or relative to invocation directory)
+- `export_directory` (string, required): Directory path where markdown files are saved. **Relative paths are resolved relative to the directory where the MCP server was invoked** (captured via `INVOKE_DIR` environment variable by launch script). Absolute paths are used as-is.
 - `date_start` (string, optional): ISO 8601 date (YYYY-MM-DD) or Gmail date query format
 - `date_end` (string, optional): ISO 8601 date or Gmail date query format
 - `max_results` (integer, optional): 1-100, default from config (via `COURIER_MAX_RESULTS_DEFAULT` env var, default 10)
@@ -325,7 +328,7 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 - [x] **Unread counts**: Include unread count per folder alongside total message count (if easily obtained from API)
 - [x] **CC/BCC fields**: Include CC and BCC in YAML frontmatter when available
 - [x] **Timeout configurability**: Server has config file in repository; values can be overridden via ENV variables (timeout, max_results defaults, etc.)
-- [x] **Path support**: Tool supports both absolute and relative paths; relative paths resolve relative to invocation directory (following wyrd-gen pattern)
+- [x] **Path support**: Tool supports both absolute and relative paths; relative paths resolve relative to invocation directory (captured by launch script as `INVOKE_DIR` environment variable)
 - [x] **Attachment URLs**: Include download URLs if Gmail API provides them; fallback to metadata-only if not available (no manual binary downloads)
 
 ## Out of Scope
@@ -344,6 +347,22 @@ Here's the email body in markdown format. Any HTML has been converted to markdow
 ---
 
 ## Version History
+
+### v1.2.0 (2025-10-19)
+**Clarified Invocation Directory and Path Resolution Behavior**
+
+- **New Functional Requirements**:
+  - FR-17: Launch script captures invocation directory via `INVOKE_DIR` environment variable
+  - FR-18: Server resolves relative export paths relative to invocation directory
+
+- **Updated Tool Specifications**:
+  - `get-messages` tool: Clarified that relative `export_directory` paths are resolved relative to invocation directory (from `INVOKE_DIR`), not server installation directory
+
+- **Updated Technical Context**:
+  - Documented path resolution mechanism: launch script captures `$(pwd)`, passes as `INVOKE_DIR` to server
+
+- **Updated Resolved Questions**:
+  - Path support: Clarified implementation uses `INVOKE_DIR` environment variable
 
 ### v1.1.0 (2025-10-19)
 **Added Plugin Distribution and Setup Assistance Requirements**
