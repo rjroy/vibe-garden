@@ -1017,7 +1017,7 @@ A task is complete when:
 | TASK-006 | Complete | a01a09c | 400-line validation (part of TASK-003) |
 | TASK-007 | Complete | befadee | Added invocation guide + good/bad examples |
 | TASK-008 | Complete | fe97e22 | Command structure (325 lines, 3-phase workflow) |
-| TASK-009 | Complete | [pending] | Phase 1 implementation (7 steps, Glob patterns, user approval) |
+| TASK-009 | Complete | b0a3c1d | Phase 1 implementation (7 steps, Glob patterns, user approval) |
 | TASK-010 | Not Started | - | - |
 | TASK-011 | Not Started | - | - |
 | TASK-012 | Not Started | - | - |
