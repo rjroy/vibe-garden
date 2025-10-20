@@ -155,10 +155,15 @@ As a [user type], I want [capability], so that [benefit].
    - If working on a child feature, read the parent spec first to understand context
    - If creating a parent, list all child specs in the "Child Specifications" section
    - Use file paths to verify hierarchy: does `.sdd/specs/parent-feature/` directory exist?
-3. **Draft Specification**: Create structured document with all sections
-4. **Review with User**: Present for feedback and refinement
-5. **Iterate**: Update based on feedback
-6. **Mark as Approved**: When ready, update status and hand off to planning phase
+3. **Inherit Parent Constraints** (for child specs):
+   - Read parent spec's "Explicit Constraints (DO NOT)" section
+   - Ask user which parent constraints apply to this child feature
+   - Include inherited constraints in child spec with note: "(Inherited from parent)"
+   - Add any child-specific constraints as needed
+4. **Draft Specification**: Create structured document with all sections
+5. **Review with User**: Present for feedback and refinement
+6. **Iterate**: Update based on feedback
+7. **Mark as Approved**: When ready, update status and hand off to planning phase
 
 ## Key Reminders
 
@@ -184,4 +189,4 @@ Before marking a spec as complete, verify:
 
 ## Next Phase
 
-Once the specification is approved, use `/plan-generation` to create the technical architecture and implementation plan.
+Once the specification is approved, use `/spiral-grove:plan-generation` to create the technical architecture and implementation plan.

@@ -5,7 +5,7 @@
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-18 (Revised prompt length constraint from hard limit to guideline)
 **Child Specifications**:
-- [documentation-synthesis.md](./spiral-grove/documentation-synthesis.md) - Lifecycle management commands for spec-code synchronization and CLAUDE.md generation
+- [documentation-synthesis.md](./spiral-grove/documentation-synthesis.md) - Lifecycle management with spec-code drift detection and CLAUDE.md generation
 
 ## Executive Summary
 
@@ -23,16 +23,16 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 
 ## Success Criteria
 
-1. **High-confidence automation**: `/implementation` and `/task-breakdown` phases complete successfully in one iteration 80%+ of the time when given quality specs and plans
-2. **Phase adherence**: `/spec-writing` produces specifications with no implementation details (HOW) in 95%+ of cases
+1. **High-confidence automation**: `/spiral-grove:implementation` and `/spiral-grove:task-breakdown` phases complete successfully in one iteration 80%+ of the time when given quality specs and plans
+2. **Phase adherence**: `/spiral-grove:spec-writing` produces specifications with no implementation details (HOW) in 95%+ of cases
 3. **Resumability**: Developers can resume work after interruptions by reading `.sdd/` artifacts without re-explaining context
 4. **Scale flexibility**: Supports single-feature projects and large multi-component systems (via parent/child spec references)
 5. **AI drift prevention**: Implementation deviations from approved specs are detected and flagged before merging
-6. **User effort concentration**: 70%+ of user cognitive effort occurs during `/spec-writing` and `/plan-generation` phases, with minimal intervention during `/task-breakdown` and `/implementation`
+6. **User effort concentration**: 70%+ of user cognitive effort occurs during `/spiral-grove:spec-writing` and `/spiral-grove:plan-generation` phases, with minimal intervention during `/spiral-grove:task-breakdown` and `/spiral-grove:implementation`
 
 ## Functional Requirements
 
-### Phase 1: Specification Writing (`/spec-writing`)
+### Phase 1: Specification Writing (`/spiral-grove:spec-writing`)
 
 **Capabilities:**
 - Guide users through requirements gathering with structured prompts
@@ -48,7 +48,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - Explicit "DO NOT" constraints prevent scope creep
 - Acceptance tests map to testable outcomes
 
-### Phase 2: Plan Generation (`/plan-generation`)
+### Phase 2: Plan Generation (`/spiral-grove:plan-generation`)
 
 **Capabilities:**
 - Analyze existing codebase patterns before designing new architecture
@@ -65,7 +65,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - Risks are identified with likelihood, impact, and mitigation
 - Plans respect specification constraints (no feature additions)
 
-### Phase 3: Task Breakdown (`/task-breakdown`)
+### Phase 3: Task Breakdown (`/spiral-grove:task-breakdown`)
 
 **Capabilities:**
 - Decompose plans into independent, testable tasks
@@ -82,7 +82,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - All spec acceptance criteria map to at least one task
 - Tasks can be worked independently (minimal blocking dependencies)
 
-### Phase 4: Implementation (`/implementation`)
+### Phase 4: Implementation (`/spiral-grove:implementation`)
 
 **Capabilities:**
 - Execute tasks sequentially with real-time progress tracking
@@ -99,7 +99,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - Implementation respects plan's architectural decisions
 - Progress document enables resumption without user re-explanation
 
-### Meta Phase: Review (`/review [phase]`)
+### Meta Phase: Review (`/spiral-grove:review [phase]`)
 
 **Capabilities:**
 - Validate phase documents before moving to next phase
@@ -125,7 +125,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 ### Cross-Phase Capabilities
 
 **Bidirectional navigation:**
-- Return to earlier phases when conflicts arise (e.g., `/spec-writing` to clarify requirements during `/implementation`)
+- Return to earlier phases when conflicts arise (e.g., `/spiral-grove:spec-writing` to clarify requirements during `/spiral-grove:implementation`)
 - Update downstream artifacts when upstream documents change
 - Support iterative refinement (living documents)
 
@@ -170,7 +170,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 ## Explicit Constraints (DO NOT)
 
 - **Do NOT** provide project management features (issue tracking, sprint planning, team coordination beyond docs)
-- **Do NOT** generate code during `/spec-writing`, `/plan-generation`, or `/task-breakdown` phases
+- **Do NOT** generate code during `/spiral-grove:spec-writing`, `/spiral-grove:plan-generation`, or `/spiral-grove:task-breakdown` phases
 - **Do NOT** integrate directly with external tools (git, Jira, etc.) - allow direction but don't enforce
 - **Do NOT** enforce specific development methodologies (Agile, Waterfall) - SDD is methodology-agnostic
 - **Do NOT** make implementation decisions during specification phase (e.g., selecting databases, frameworks)
@@ -198,7 +198,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 
 ### Test 1: Single-feature development workflow
 **Given**: A new feature request ("Add user notification preferences")
-**When**: User runs `/spec-writing` → `/plan-generation` → `/task-breakdown` → `/implementation`
+**When**: User runs `/spiral-grove:spec-writing` → `/spiral-grove:plan-generation` → `/spiral-grove:task-breakdown` → `/spiral-grove:implementation`
 **Then**:
 - Specification contains no technology choices (only capabilities needed)
 - Plan explores existing codebase and documents 3+ patterns to reuse
@@ -222,7 +222,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 - No context loss or re-explanation required
 
 ### Test 4: Phase boundary enforcement
-**Given**: User runs `/spec-writing` command
+**Given**: User runs `/spiral-grove:spec-writing` command
 **When**: AI begins writing implementation code or selecting technologies
 **Then**:
 - Command prompt reminds AI to stay at WHAT level
@@ -241,7 +241,7 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 
 ### Test 6: Extensibility with project-specific tools
 **Given**: Team provides custom MCP tool for issue tracking
-**When**: User directs `/implementation` to use issue tracker for progress
+**When**: User directs `/spiral-grove:implementation` to use issue tracker for progress
 **Then**:
 - Spiral Grove adapts to use custom tool without plugin modification
 - Core SDD workflow remains intact
@@ -249,8 +249,8 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 
 ## Open Questions
 
-- [ ] How should conflicts between multiple specs be handled in large projects (e.g., overlapping requirements)?
-- [ ] Should the plugin provide templates for different project types (web app, CLI tool, library), or remain generic?
+- [x] How should conflicts between multiple specs be handled in large projects (e.g., overlapping requirements)? Escalate to the user.
+- [x] Should the plugin provide templates for different project types (web app, CLI tool, library), or remain generic? NO
 
 ## Out of Scope
 
