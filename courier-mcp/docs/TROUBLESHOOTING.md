@@ -278,7 +278,7 @@ tail -f courier-mcp.log | grep -i quota
 2. Test server manually:
    ```bash
    cd courier-mcp
-   source servers/venv/bin/activate
+   source server/venv/bin/activate
    python -m courier_mcp
    ```
 
@@ -290,7 +290,7 @@ tail -f courier-mcp.log | grep -i quota
 **Common fixes**:
 ```bash
 # Reinstall dependencies
-pip install -e servers/
+pip install -e server/
 
 # Verify Python version
 python --version  # Should be 3.10+
@@ -618,7 +618,7 @@ find . -name "*.pyc" -delete
 find . -name "__pycache__" -delete
 
 # Reinstall dependencies
-pip install --force-reinstall -e servers/
+pip install --force-reinstall -e server/
 
 # Restart MCP server
 ```
@@ -628,7 +628,7 @@ pip install --force-reinstall -e servers/
 Run server manually with debug output:
 ```bash
 cd courier-mcp
-source servers/venv/bin/activate
+source server/venv/bin/activate
 export COURIER_LOG_LEVEL=DEBUG
 export GMAIL_CREDENTIALS_PATH=/path/to/credentials.json
 python -m courier_mcp 2>&1 | tee debug.log

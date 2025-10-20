@@ -37,19 +37,16 @@ cd vibe-garden/courier-mcp
 
 ```bash
 # Create virtual environment
-python -m venv servers/venv
+python -m venv server/venv
 
 # Activate (Linux/macOS)
-source servers/venv/bin/activate
+source server/venv/bin/activate
 
 # Activate (Windows)
-servers\venv\Scripts\activate
+server\venv\Scripts\activate
 
 # Install dependencies (editable mode)
-pip install -e servers/
-
-# Install development dependencies
-pip install -r servers/requirements-dev.txt
+pip install -e .
 ```
 
 ### Configure OAuth Credentials
@@ -85,7 +82,7 @@ python -m courier_mcp
 courier-mcp/
 ├── .claude-plugin/           # Claude Code plugin manifest
 │   └── plugin.json
-├── servers/
+├── server/
 │   ├── src/courier_mcp/      # Main source code
 │   │   ├── __init__.py
 │   │   ├── __main__.py       # Entry point
@@ -181,13 +178,13 @@ Follow **PEP 8** with these tools:
 
 ```bash
 # Format code (Black)
-black servers/src/
+black server/src/
 
 # Lint code (Pylint)
-pylint servers/src/courier_mcp/
+pylint server/src/courier_mcp/
 
 # Type checking (MyPy)
-mypy servers/src/courier_mcp/
+mypy server/src/courier_mcp/
 ```
 
 ### Code Conventions
@@ -277,7 +274,7 @@ git checkout -b my-feature-tasks
 pytest tests/ -v
 
 # Format code
-black servers/src/
+black server/src/
 
 # Commit changes
 git add .
@@ -330,7 +327,7 @@ test: Add acceptance tests for spec AT-01 through AT-10
 ### Before Submitting
 
 1. **Run all tests**: `pytest tests/ -v`
-2. **Check code style**: `black --check servers/src/`
+2. **Check code style**: `black --check server/src/`
 3. **Update documentation** if needed
 4. **Add tests** for new features
 5. **Update CHANGELOG** (if exists)

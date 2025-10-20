@@ -226,11 +226,11 @@ git clone https://github.com/rjroy/vibe-garden.git
 cd vibe-garden/courier-mcp
 
 # Create virtual environment
-python -m venv servers/venv
-source servers/venv/bin/activate  # On Windows: servers\venv\Scripts\activate
+python -m venv server/venv
+source server/venv/bin/activate  # On Windows: server\venv\Scripts\activate
 
 # Install dependencies
-pip install -e servers/
+pip install -e server/
 
 # Set up OAuth credentials (see docs/SETUP.md)
 export GMAIL_CREDENTIALS_PATH=/path/to/credentials.json

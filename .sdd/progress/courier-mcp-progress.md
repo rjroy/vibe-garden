@@ -18,7 +18,7 @@
   - **Fix**: Added `load_config()` call at start of `CourierServer.__init__()` (before authenticator init)
   - **Impact**: Resolves user's E2E test failure from courier-mcp-error-log.md
   - **Testing**: All 59 unit tests still pass after fix
-  - **Files Modified**: `servers/src/courier_mcp/server.py:90-100`
+  - **Files Modified**: `server/src/courier_mcp/server.py:90-100`
   - **Commit**: `399080f`
 
 - ✅ TASK-017: E2E Testing & Performance Validation
@@ -413,4 +413,3 @@
 - Comprehensive test suite for regression prevention
 - Error logs provide detailed debugging information
 - Plugin follows Claude Code conventions for easy updates
-
