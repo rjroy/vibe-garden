@@ -194,47 +194,136 @@ If .sdd/ directory doesn't exist: Create it first (Bash: mkdir -p .sdd)
 
 ### Phase 2: Parallel Documentation Generation
 
-**Goal**: Generate CLAUDE.md for all pending/failed modules in parallel.
+**Execute these steps in order:**
 
-**Steps**:
-
-1. **Read manifest**: Load `.sdd/module-manifest.json`
-2. **Filter modules**: Get list of modules with `status: "pending"` or `status: "failed"`
-3. **Spawn agents in parallel**:
-   - For each module: spawn `module-doc-synthesizer` agent via Task tool
-   - Use **single message with multiple Task tool calls** (critical for performance)
-   - Agent receives: module path (e.g., "src/auth")
-   - Agent returns: Complete CLAUDE.md markdown content
-
-4. **Write CLAUDE.md files**:
-   - For each successful agent response:
-     - Write content to `[module_path]/CLAUDE.md`
-     - Update manifest: `status: "pending"` → `status: "completed"`
-     - Update manifest: `error: null`
-   - For each failed agent:
-     - Update manifest: `status: "failed"`
-     - Update manifest: `error: "[error message]"`
-     - Log failure for final report
-
-5. **Generate root CLAUDE.md**:
-   - Create project-level `CLAUDE.md` at repository root
-   - Include:
-     - Project purpose and architecture overview
-     - Directory structure
-     - Module index with links: `- [Auth Module](src/auth/CLAUDE.md)`
-     - Getting started guide (how to build, run, test)
-   - Concise overview (≤400 lines)
-
-6. **Update manifest timestamp**: Set `generated_at` to current ISO 8601 timestamp
-
-**Agent invocation example**:
-```markdown
-Task: Generate CLAUDE.md for module at path: src/auth
+**Step 1: Read manifest**
+```
+Use Read tool: .sdd/module-manifest.json
+Parse JSON to extract modules array
 ```
 
-**Progress indicators**:
-- Show progress as agents complete: "Generated 5/10 modules..."
-- Display module names as they complete
+**Step 2: Filter modules for generation**
+```
+Filter modules where status === "pending" OR status === "failed"
+Store in pendingModules array
+Count: N modules to process
+```
+
+**Step 3: Spawn agents in parallel (CRITICAL FOR PERFORMANCE)**
+```
+IMPORTANT: Use SINGLE message with MULTIPLE Task tool calls
+
+For each module in pendingModules:
+  Task tool invocation:
+    description: "Generate CLAUDE.md for [module.path]"
+    prompt: "Generate CLAUDE.md for module at path: [module.path]"
+    subagent_type: "general-purpose"
+
+Example for 3 modules (single message, 3 Task calls):
+  - Task 1: "Generate CLAUDE.md for module at path: src/auth"
+  - Task 2: "Generate CLAUDE.md for module at path: src/api"
+  - Task 3: "Generate CLAUDE.md for module at path: src/db"
+
+Wait for all agents to complete (parallel execution)
+Collect results: successful (markdown content) or failed (error message)
+```
+
+**Step 4: Write module CLAUDE.md files**
+```
+For each successful agent response:
+  1. Extract markdown content from agent output
+  2. Use Write tool: [module.path]/CLAUDE.md
+  3. Update manifest in memory:
+     - modules[i].status = "completed"
+     - modules[i].error = null
+  4. Log: "✓ Generated [module.path]/CLAUDE.md"
+
+For each failed agent response:
+  1. Extract error message
+  2. Update manifest in memory:
+     - modules[i].status = "failed"
+     - modules[i].error = "[error message]"
+  3. Log: "✗ Failed [module.path]: [error message]"
+  4. Continue with remaining modules (don't stop)
+```
+
+**Step 5: Update manifest with results**
+```
+Update manifest in memory:
+  - generated_at = current ISO 8601 timestamp (new Date().toISOString())
+
+Use Write tool: .sdd/module-manifest.json
+Write updated manifest JSON (pretty-printed, indent: 2)
+```
+
+**Step 6: Generate root CLAUDE.md**
+```
+Analyze project structure:
+  - Get project name from package.json/Cargo.toml/go.mod (if exists)
+  - Use Bash: pwd to get project root path
+  - Extract directory structure (top-level dirs only)
+
+Build module index:
+  For each completed module:
+    - Extract module name from path (last segment)
+    - Create markdown link: - [Module Name]([path]/CLAUDE.md)
+
+Construct root CLAUDE.md content:
+  # [Project Name]
+
+  **Last Generated**: [ISO 8601 timestamp]
+
+  ## Purpose
+  [Brief description - infer from README.md if exists, else generic]
+
+  ## Architecture
+  [High-level overview - mention key directories: src/, lib/, etc.]
+
+  ## Directory Structure
+  ```
+  project-root/
+  ├── src/          [Description]
+  ├── lib/          [Description]
+  └── ...
+  ```
+
+  ## Modules
+  [Module index with links to module CLAUDE.md files]
+
+  ## Getting Started
+  [Build/run/test commands - detect from package.json scripts, Makefile, etc.]
+
+  **Total Lines**: Ensure ≤ 400 lines
+
+Use Write tool: CLAUDE.md (at project root)
+```
+
+**Step 7: Display progress summary**
+```
+Output:
+
+## Documentation Generation Complete
+
+**Generated**: [N successful] / [N total] modules
+
+**Successful**:
+- ✓ src/auth/CLAUDE.md
+- ✓ src/api/CLAUDE.md
+...
+
+**Failed** (if any):
+- ✗ src/broken (error: No source files found)
+...
+
+**Root**: CLAUDE.md (project overview)
+
+**Next**: Phase 3 - SDD Integration (if .sdd/specs/ exists)
+```
+
+**Performance notes:**
+- Single message with multiple Task calls = parallel execution
+- Target: 100 modules in <5 minutes
+- Don't wait for each agent sequentially (bottleneck)
 
 ---
 
