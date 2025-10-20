@@ -77,51 +77,118 @@ Before starting synthesis, verify:
 
 ### Phase 1: Module Discovery
 
-**Goal**: Identify logical module boundaries and save to manifest.
+**Execute these steps in order:**
 
-**Heuristics for module detection**:
-- Directories with **package files**: `package.json`, `setup.py`, `go.mod`, `Cargo.toml`, `pom.xml`
-- Directories with **3+ source files** AND a test directory (`tests/`, `__tests__/`, `*_test.*`)
-- Subdirectories under: `src/`, `lib/`, `modules/`, `packages/`, `apps/`
-- Language-specific patterns: Python packages (`__init__.py`), Go modules, Rust crates
+**Step 1: Check for existing manifest**
+```
+If .sdd/module-manifest.json exists:
+  → Skip to Resumability section
+Else:
+  → Continue to Step 2
+```
 
-**Exclusions** (never treat these as modules):
-- `node_modules/`, `vendor/`, `.git/`, `dist/`, `build/`, `target/`, `__pycache__/`, `.pytest_cache/`
-- Hidden directories (starting with `.`)
-- Build artifacts and dependency directories
+**Step 2: Scan for package files** (strongest signal)
+```
+Glob: "**/package.json" (exclude: node_modules/**)
+Glob: "**/setup.py" (exclude: venv/**)
+Glob: "**/go.mod"
+Glob: "**/Cargo.toml" (exclude: target/**)
+Glob: "**/pom.xml" (exclude: target/**)
+Glob: "**/__init__.py" (Python packages, exclude: venv/**,__pycache__/**)
 
-**Steps**:
-1. Use `Glob` tool to scan codebase
-2. Apply heuristics to identify modules
-3. Present list to user in table format:
-   ```
-   Detected Modules:
-   1. src/auth (TypeScript, 8 files, has tests)
-   2. src/api (TypeScript, 12 files, has tests)
-   3. src/db (TypeScript, 5 files, no tests)
-   ...
-   ```
-4. Ask user: "Approve this module list? (You can request additions/removals)"
-5. On approval: Create `.sdd/module-manifest.json`:
-   ```json
-   {
-     "generated_at": "2025-10-20T14:30:00Z",
-     "project_root": "/home/user/projects/my-app",
-     "modules": [
-       {
-         "path": "src/auth",
-         "status": "pending",
-         "claude_md_path": "src/auth/CLAUDE.md",
-         "error": null
-       }
-     ]
-   }
-   ```
+For each match:
+  - Extract directory path
+  - Mark as module candidate (high confidence)
+```
 
-**Edge cases**:
-- **0 modules detected**: Guide user to manually specify module paths
-- **100+ modules**: Warn about long generation time, offer to batch
-- **Existing manifest**: Skip discovery, go to Phase 2 (resumability mode)
+**Step 3: Scan for code-heavy directories** (secondary signal)
+```
+Glob: "src/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}" (exclude exclusions)
+Glob: "lib/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
+Glob: "modules/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
+Glob: "packages/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
+Glob: "apps/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
+
+For each directory with 3+ source files:
+  - Check for test directory: tests/, __tests__/, *_test.*, *_spec.*, *.test.*, *.spec.*
+  - If tests exist: Mark as module candidate (medium confidence)
+  - If no tests: Mark as module candidate (low confidence)
+```
+
+**Exclusions** (apply to all Glob operations):
+```
+node_modules/**, vendor/**, .git/**, dist/**, build/**, target/**,
+__pycache__/**, .pytest_cache/**, .next/**, .nuxt/**, out/**,
+.*/** (hidden directories)
+```
+
+**Step 4: Deduplicate and rank**
+```
+Combine candidates from Step 2 and Step 3
+Remove duplicates (same path)
+Sort by confidence: high → medium → low
+Limit to reasonable scope (if >100 modules, warn user)
+```
+
+**Step 5: Present to user**
+```
+Output format:
+
+## Detected Modules
+
+Found X modules in the codebase:
+
+| # | Path | Language | Files | Tests | Confidence |
+|---|------|----------|-------|-------|------------|
+| 1 | src/auth | TypeScript | 8 | ✓ | High |
+| 2 | src/api | TypeScript | 12 | ✓ | High |
+| 3 | src/utils | TypeScript | 5 | ✗ | Medium |
+...
+
+**Total**: X modules detected
+
+Approve this list? You can:
+- Type "yes" to proceed with generation
+- Type "add src/custom-module" to include additional modules
+- Type "remove src/utils" to exclude specific modules
+- Type "cancel" to exit
+```
+
+**Step 6: Handle user response**
+```
+Parse user input:
+- "yes" / "approve" / "ok" → Proceed to Step 7
+- "add <path>" → Add path to module list, return to Step 5
+- "remove <path>" → Remove path from module list, return to Step 5
+- "cancel" / "no" → Exit command gracefully
+- Other → Ask for clarification, repeat Step 5
+```
+
+**Step 7: Create manifest**
+```
+Use Write tool to create .sdd/module-manifest.json:
+
+{
+  "generated_at": "<current ISO 8601 timestamp>",
+  "project_root": "<absolute path from Bash: pwd>",
+  "modules": [
+    {
+      "path": "<relative path>",
+      "status": "pending",
+      "claude_md_path": "<relative path>/CLAUDE.md",
+      "error": null
+    }
+    // ... repeat for each module
+  ]
+}
+
+If .sdd/ directory doesn't exist: Create it first (Bash: mkdir -p .sdd)
+```
+
+**Edge cases:**
+- **0 modules detected**: "No modules detected. Provide module path manually? (e.g., 'add src/my-module')"
+- **100+ modules**: "Warning: X modules detected. Generation may take Y minutes. Continue?"
+- **User adds invalid path**: Verify with Glob before adding, warn if no source files found
 
 ---
 
