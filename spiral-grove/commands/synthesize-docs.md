@@ -79,40 +79,33 @@ Before starting synthesis, verify:
 
 **Execute these steps in order:**
 
-**Step 1: Check for existing manifest**
+**Step 1: Check for existing manifest** (Resumability)
 ```
-If .sdd/module-manifest.json exists:
-  → Skip to Resumability section
-Else:
-  → Continue to Step 2
+IMPORTANT: Run Resumability section FIRST (after this phase header)
+
+If manifest exists and user chose to continue/regenerate:
+  → Resume from Resumability Step 4 (skip Phase 1, go to Phase 2)
+Else (no manifest or user declined):
+  → Continue to Step 2 below (full Phase 1 execution)
 ```
 
 **Step 2: Scan for package files** (strongest signal)
 ```
-Glob: "**/package.json" (exclude: node_modules/**)
-Glob: "**/setup.py" (exclude: venv/**)
-Glob: "**/go.mod"
-Glob: "**/Cargo.toml" (exclude: target/**)
-Glob: "**/pom.xml" (exclude: target/**)
-Glob: "**/__init__.py" (Python packages, exclude: venv/**,__pycache__/**)
+Glob patterns (with exclusions):
+  package.json (exclude node_modules), setup.py (exclude venv), go.mod,
+  Cargo.toml (exclude target), pom.xml (exclude target), __init__.py (exclude venv/__pycache__)
 
-For each match:
-  - Extract directory path
-  - Mark as module candidate (high confidence)
+For each match: Extract directory → mark as high-confidence candidate
 ```
 
 **Step 3: Scan for code-heavy directories** (secondary signal)
 ```
-Glob: "src/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}" (exclude exclusions)
-Glob: "lib/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
-Glob: "modules/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
-Glob: "packages/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
-Glob: "apps/**/*.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}"
+Glob standard dirs with source files: src/, lib/, modules/, packages/, apps/
+File patterns: *.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}
 
-For each directory with 3+ source files:
-  - Check for test directory: tests/, __tests__/, *_test.*, *_spec.*, *.test.*, *.spec.*
-  - If tests exist: Mark as module candidate (medium confidence)
-  - If no tests: Mark as module candidate (low confidence)
+For each dir with 3+ source files:
+  - Has tests? (tests/, __tests__/, *_test.*, *_spec.*) → medium confidence
+  - No tests? → low confidence
 ```
 
 **Exclusions** (apply to all Glob operations):
@@ -134,24 +127,15 @@ Limit to reasonable scope (if >100 modules, warn user)
 ```
 Output format:
 
-## Detected Modules
+## Detected Modules (X found)
 
-Found X modules in the codebase:
-
-| # | Path | Language | Files | Tests | Confidence |
-|---|------|----------|-------|-------|------------|
-| 1 | src/auth | TypeScript | 8 | ✓ | High |
-| 2 | src/api | TypeScript | 12 | ✓ | High |
-| 3 | src/utils | TypeScript | 5 | ✗ | Medium |
+| Path | Language | Files | Tests | Confidence |
+|------|----------|-------|-------|------------|
+| src/auth | TypeScript | 8 | ✓ | High |
+| src/api | TypeScript | 12 | ✓ | High |
 ...
 
-**Total**: X modules detected
-
-Approve this list? You can:
-- Type "yes" to proceed with generation
-- Type "add src/custom-module" to include additional modules
-- Type "remove src/utils" to exclude specific modules
-- Type "cancel" to exit
+Approve? Options: "yes" | "add <path>" | "remove <path>" | "cancel"
 ```
 
 **Step 6: Handle user response**
@@ -185,10 +169,7 @@ Use Write tool to create .sdd/module-manifest.json:
 If .sdd/ directory doesn't exist: Create it first (Bash: mkdir -p .sdd)
 ```
 
-**Edge cases:**
-- **0 modules detected**: "No modules detected. Provide module path manually? (e.g., 'add src/my-module')"
-- **100+ modules**: "Warning: X modules detected. Generation may take Y minutes. Continue?"
-- **User adds invalid path**: Verify with Glob before adding, warn if no source files found
+**Edge cases**: 0 modules → prompt for manual path | 100+ modules → warn time estimate | Invalid path → verify with Glob
 
 ---
 
@@ -209,23 +190,17 @@ Store in pendingModules array
 Count: N modules to process
 ```
 
-**Step 3: Spawn agents in parallel (CRITICAL FOR PERFORMANCE)**
+**Step 3: Spawn agents in parallel (CRITICAL)**
 ```
-IMPORTANT: Use SINGLE message with MULTIPLE Task tool calls
+IMPORTANT: SINGLE message with MULTIPLE Task tool calls
 
 For each module in pendingModules:
-  Task tool invocation:
-    description: "Generate CLAUDE.md for [module.path]"
-    prompt: "Generate CLAUDE.md for module at path: [module.path]"
-    subagent_type: "general-purpose"
+  Task(description: "Generate CLAUDE.md for [path]",
+       prompt: "Generate CLAUDE.md for module at path: [path]",
+       subagent_type: "general-purpose")
 
-Example for 3 modules (single message, 3 Task calls):
-  - Task 1: "Generate CLAUDE.md for module at path: src/auth"
-  - Task 2: "Generate CLAUDE.md for module at path: src/api"
-  - Task 3: "Generate CLAUDE.md for module at path: src/db"
-
-Wait for all agents to complete (parallel execution)
-Collect results: successful (markdown content) or failed (error message)
+Example: 3 modules → single message with 3 Task calls (src/auth, src/api, src/db)
+Wait for all agents → collect results (markdown or error)
 ```
 
 **Step 4: Write module CLAUDE.md files**
@@ -258,42 +233,16 @@ Write updated manifest JSON (pretty-printed, indent: 2)
 
 **Step 6: Generate root CLAUDE.md**
 ```
-Analyze project structure:
-  - Get project name from package.json/Cargo.toml/go.mod (if exists)
-  - Use Bash: pwd to get project root path
-  - Extract directory structure (top-level dirs only)
+Analyze project:
+  - Project name: package.json/Cargo.toml/go.mod (if exists)
+  - Directory structure: top-level dirs only
+  - Module index: link each completed module → [path]/CLAUDE.md
 
-Build module index:
-  For each completed module:
-    - Extract module name from path (last segment)
-    - Create markdown link: - [Module Name]([path]/CLAUDE.md)
-
-Construct root CLAUDE.md content:
+Construct root CLAUDE.md (≤400 lines):
   # [Project Name]
-
-  **Last Generated**: [ISO 8601 timestamp]
-
-  ## Purpose
-  [Brief description - infer from README.md if exists, else generic]
-
-  ## Architecture
-  [High-level overview - mention key directories: src/, lib/, etc.]
-
-  ## Directory Structure
-  ```
-  project-root/
-  ├── src/          [Description]
-  ├── lib/          [Description]
-  └── ...
-  ```
-
-  ## Modules
-  [Module index with links to module CLAUDE.md files]
-
-  ## Getting Started
-  [Build/run/test commands - detect from package.json scripts, Makefile, etc.]
-
-  **Total Lines**: Ensure ≤ 400 lines
+  **Last Generated**: [timestamp]
+  ## Purpose / ## Architecture / ## Directory Structure / ## Modules / ## Getting Started
+  [Infer from README.md, package.json scripts, Makefile]
 
 Use Write tool: CLAUDE.md (at project root)
 ```
@@ -301,29 +250,14 @@ Use Write tool: CLAUDE.md (at project root)
 **Step 7: Display progress summary**
 ```
 Output:
-
-## Documentation Generation Complete
-
-**Generated**: [N successful] / [N total] modules
-
-**Successful**:
-- ✓ src/auth/CLAUDE.md
-- ✓ src/api/CLAUDE.md
-...
-
-**Failed** (if any):
-- ✗ src/broken (error: No source files found)
-...
-
-**Root**: CLAUDE.md (project overview)
-
-**Next**: Phase 3 - SDD Integration (if .sdd/specs/ exists)
+## Generation Complete: [N successful] / [N total] modules
+**Successful**: ✓ src/auth, ✓ src/api, ...
+**Failed** (if any): ✗ src/broken (error: ...), ...
+**Root**: CLAUDE.md created
+**Next**: Phase 3 (if .sdd/specs/ exists)
 ```
 
-**Performance notes:**
-- Single message with multiple Task calls = parallel execution
-- Target: 100 modules in <5 minutes
-- Don't wait for each agent sequentially (bottleneck)
+**Performance**: Single message with multiple Task calls = parallel (target <5 min for 100 modules)
 
 ---
 
@@ -355,209 +289,175 @@ For each spec path:
 
 **Step 3: Match modules to specs**
 ```
-For each module in manifest where status === "completed":
-  1. Extract module name from path:
-     - "src/auth" → "auth"
-     - "lib/user-service" → "user-service"
-     - "packages/api/routes" → "routes"
-
-  2. Tokenize module name:
-     - "auth" → ["auth"]
-     - "user-service" → ["user", "service"]
-
-  3. Try exact match first (HIGHEST PRIORITY):
-     - Search specIndex for name === module name
-     - Example: module "auth" matches spec "auth.md"
-
-  4. If no exact match, try parent/child hierarchy:
-     - Module: "src/auth/oauth"
-     - Look for: ".sdd/specs/authentication/oauth.md"
-     - Pattern: parent dir in module path → parent dir in specs
-
-  5. If still no match, try fuzzy token matching:
-     - Calculate token overlap for each spec
-     - Overlap = (matching tokens) / (total unique tokens)
-     - Example: module ["auth"] vs spec ["user", "authentication"]
-       → "auth" in "authentication" → 50% overlap
-     - Accept if overlap >= 70%
-
-  6. Store result:
-     - If match found: { module: path, spec: specPath, confidence: "exact"|"hierarchy"|"fuzzy" }
-     - If no match: { module: path, spec: null }
+For each completed module:
+  1. Extract name: "src/auth" → "auth", "lib/user-service" → "user-service"
+  2. Tokenize: "user-service" → ["user", "service"]
+  3. Try 3-tier matching:
+     a) Exact: name === spec name (e.g., "auth" matches "auth.md")
+     b) Hierarchy: "src/auth/oauth" → look for "specs/authentication/oauth.md"
+     c) Fuzzy: token overlap ≥70% (e.g., ["auth"] overlaps 50% with ["user", "authentication"])
+  4. Store: { module, spec, confidence } or { module, spec: null }
 ```
 
 **Step 4: Insert Origin fields**
 ```
 For each matched module:
-  1. Read current CLAUDE.md: Use Read tool: [module.path]/CLAUDE.md
-
-  2. Extract first line (title): Should match pattern "# [Module Name]"
-
-  3. Find insertion point:
-     - After title (line 1)
-     - Before any existing "**Last Generated**" or "**Origin**" lines
-
-  4. Construct Origin line:
-     - Format: "**Origin**: Implemented from [.sdd/specs/[name].md](.sdd/specs/[name].md)"
-     - Example: "**Origin**: Implemented from [.sdd/specs/authentication.md](.sdd/specs/authentication.md)"
-
-  5. Check if Origin already exists:
-     - Search for "**Origin**:" in current content
-     - If exists: Replace existing Origin line
-     - If not: Insert new Origin line after title
-
-  6. Reconstruct CLAUDE.md:
-     - Line 1: # [Module Name]
-     - Line 2: (blank)
-     - Line 3: **Origin**: [spec link]
-     - Line 4: **Last Generated**: [timestamp]
-     - Line 5+: Rest of content
-
-  7. Use Write tool: [module.path]/CLAUDE.md
-     - Overwrites with updated content
-     - Preserves all other content including hand-edited sections
-
-  8. Log: "✓ Linked [module.path] → [spec.path]"
+  1. Read CLAUDE.md at [module.path]
+  2. Extract title (line 1): "# [Module Name]"
+  3. Construct Origin: "**Origin**: Implemented from [.sdd/specs/[name].md](.sdd/specs/[name].md)"
+  4. Check if Origin exists → replace | else → insert after title
+  5. Reconstruct: Line 1: title | Line 2: blank | Line 3: Origin | Line 4: Last Generated | Line 5+: rest
+  6. Write updated CLAUDE.md (preserves hand-edited sections)
+  7. Log: "✓ Linked [module.path] → [spec.path]"
 ```
 
 **Step 5: Report results**
 ```
-Count modules:
-  - linked = modules with spec match
-  - unlinked = modules without spec match
-
 Output:
-
-## SDD Integration Complete
-
-**Linked to specs**: [N linked] / [N total] modules
-- ✓ src/auth → .sdd/specs/authentication.md
-- ✓ src/api → .sdd/specs/api-design.md
-...
-
-**No matching spec** (expected for utility modules):
-- src/utils
-- src/scripts
-...
-
-**Next**: Proceed to Final Output
+## SDD Integration Complete: [N linked] / [N total]
+**Linked**: ✓ src/auth → authentication.md, ✓ src/api → api-design.md, ...
+**Unlinked**: src/utils, src/scripts (expected for utility modules)
+**Next**: Final Output
 ```
 
-**Edge cases:**
-- **Multiple fuzzy matches**: Choose shortest spec path (most specific)
-- **Spec in subdirectory**: Handle parent/child correctly (e.g., specs/auth/oauth.md)
-- **Module already has Origin**: Replace old Origin, don't duplicate
-- **Hand-edited sections**: Preserved during re-write (origin insertion doesn't affect them)
+**Edge cases**: Multiple matches → shortest path | Parent/child specs → handle hierarchy | Existing Origin → replace | Hand-edits → preserved
 
 ---
 
 ## Resumability
 
-**Scenario**: User interrupts generation (timeout, cancellation, error) mid-process.
+Handles interrupted sessions and re-runs. **Execute at command start** (before Phase 1):
 
-**Detection**:
-- On command start: Check if `.sdd/module-manifest.json` exists
-- Read manifest and count statuses:
-  - `completed`: N modules
-  - `pending`: M modules
-  - `failed`: P modules
+**Step 1: Check for existing manifest**
+```
+Use Read tool: .sdd/module-manifest.json
+- If file not found → No manifest, proceed to Phase 1 (first run)
+- If file exists → Parse JSON, proceed to Step 2
+- If parse error → Manifest corrupted, prompt: "Manifest corrupted. Regenerate from scratch? [y/n]"
+```
 
-**Behavior based on manifest state**:
+**Step 2: Count module statuses**
+```
+Parse manifest.modules array, count by status:
+  completedCount = modules.filter(m => m.status === "completed").length
+  failedCount = modules.filter(m => m.status === "failed").length
+  pendingCount = modules.filter(m => m.status === "pending").length
+  totalCount = modules.length
+```
 
-1. **All completed** (0 pending, 0 failed):
-   - Message: "All documentation already generated (X modules). Re-run to regenerate?"
-   - Options: "Yes" (reset all to pending) or "No" (exit)
+**Step 3: Determine resumption scenario**
+```
+Scenario A: All completed (pendingCount === 0 && failedCount === 0)
+  → Output: "All X modules complete. Re-run to regenerate all? [y/n]"
+  → If "y": Reset all to pending (modules[*].status = "pending"), proceed to Phase 2
+  → If "n": Exit gracefully with "No changes made"
 
-2. **Partial completion** (some pending or failed):
-   - Message: "Found existing progress. Continue from where we left off? (X pending, Y failed)"
-   - Options: "Continue" (process pending/failed only) or "Start fresh" (reset all)
+Scenario B: Partial completion (pendingCount > 0 || failedCount > 0)
+  → Output: "Found progress: X completed, Y pending, Z failed. Continue from where we left off? [y/n]"
+  → If "y": Proceed to Phase 2 with pending/failed modules only
+  → If "n": Exit gracefully
 
-3. **No manifest** (first run):
-   - Proceed with Phase 1 (module discovery)
+Scenario C: No manifest (from Step 1)
+  → Proceed to Phase 1 (module discovery)
+```
 
-**Idempotency guarantee**:
-- Re-running on completed modules updates them safely
-- Hand-edited sections always preserved
-- Manifest tracks latest `generated_at` timestamp
+**Step 4: Resume Phase 2 (if Scenario A or B with "y")**
+```
+Filter modules for generation:
+  modulesToProcess = manifest.modules.filter(m => m.status === "pending" || m.status === "failed")
+
+Skip Phase 1 (use existing manifest)
+Run Phase 2 with modulesToProcess (not all modules)
+  - Spawn agents only for modulesToProcess
+  - Update manifest statuses: pending/failed → completed or failed with error
+  - Generate/update root CLAUDE.md (includes all modules, not just processed ones)
+```
+
+**Step 5: Run Phase 3 on ALL modules**
+```
+Run Phase 3 (SDD Integration) on ALL modules in manifest, not just newly processed
+Reason: New specs may have been added since last run
+For each module (regardless of when it was completed):
+  - Try to match to spec
+  - Add/update Origin field if match found
+```
+
+**Step 6: Update manifest timestamp**
+```
+manifest.generated_at = new Date().toISOString()
+Use Write tool: .sdd/module-manifest.json (overwrite with updated manifest)
+```
+
+**Idempotency**: Re-running is safe. Completed modules stay completed unless user chooses "regenerate all". Hand-edits always preserved.
 
 ---
 
 ## Final Output
 
-After completing all three phases, display summary report:
+After all phases complete, display comprehensive summary (per TASK-008):
 
+**Step 1: Calculate metrics**
+```
+Count from manifest:
+  totalGenerated = modules.filter(m => m.status === "completed").length
+  totalFailed = modules.filter(m => m.status === "failed").length
+  linkedCount = modules.filter(m => m has Origin field).length (track during Phase 3)
+  unlinkedModules = modules without Origin field (names only)
+Calculate elapsed time: end_time - start_time (track at command start)
+```
+
+**Step 2: Display report**
 ```
 ✅ Documentation Synthesis Complete
 
-**Generated**:
+**Total Time**: X minutes Y seconds
+
+**Generated Files**:
 - 1 root CLAUDE.md (project overview)
-- 12 module CLAUDE.md files
+- X module CLAUDE.md files
 
-**SDD Integration**:
-- 10 modules linked to specs
-- 2 modules without matching specs (src/utils, src/scripts)
+**Status Breakdown**:
+- Completed: X modules
+- Failed: Y modules (if > 0, list below)
 
-**Status**:
-- 12 successful
-- 0 failed
+**SDD Integration** (if Phase 3 ran):
+- Modules with Origin field: X
+- Modules without specs: Y (expected for utility code)
+  - List: src/utils, src/scripts, ...
 
-**Manifest**: .sdd/module-manifest.json (updated)
-
-**Total time**: 2m 34s
-```
-
-**If failures occurred**:
-```
-⚠️ Documentation Synthesis Completed with Failures
-
-**Generated**: 10/12 modules
-
-**Failed Modules**:
+**Failed Modules** (if any):
 - src/broken-module: No source files found in module directory
-- src/complex-module: Generated CLAUDE.md exceeded 400 lines (suggest splitting)
+- src/complex-module: Generated CLAUDE.md exceeded 400 lines after condensing
+**Retry Guidance**: Re-run `/synthesize-docs` to retry failed modules only
 
-**Guidance**:
-- Review failed modules and fix issues
-- Re-run command to retry failed modules only
+**Manifest**: Progress saved to .sdd/module-manifest.json
+```
+
+**Step 3: Edge case messages**
+```
+If totalGenerated === 0:
+  "⚠️ No modules generated successfully. Review errors above and adjust module detection heuristics."
+
+If all failed (totalFailed === totalCount):
+  "❌ All modules failed. Common causes:
+   - No source files in detected directories
+   - Permission issues
+   - Module structure doesn't match expected patterns
+   Suggestion: Try manual manifest or check heuristics"
 ```
 
 ---
 
 ## Error Handling
 
-### Common Errors
-
-**1. No modules detected**:
-- Message: "No modules detected. Is this a code project?"
-- Guidance: Specify module path manually or adjust detection heuristics
-- Exit gracefully
-
-**2. Module path doesn't exist** (scoped synthesis):
-- Message: "Module path 'src/invalid' not found"
-- Guidance: Check path and try again
-- Exit gracefully
-
-**3. Agent spawn failure**:
-- Cause: Agent unavailable or Task tool error
-- Behavior: Log error, continue with other modules
-- Report in final output
-
-**4. Module CLAUDE.md exceeds 400 lines**:
-- Agent applies condensing strategies
-- If still over: Agent returns with warning
-- Command writes file anyway, reports warning
-- Guidance: "Consider splitting module into smaller submodules"
-
-**5. Manifest corruption**:
-- Cause: Invalid JSON or missing fields
-- Detection: JSON parse error on manifest read
-- Behavior: Prompt user "Manifest corrupted. Regenerate from scratch?"
-- On approval: Delete old manifest, start fresh
-
-**6. Write permission denied**:
-- Cause: Insufficient permissions for target directory
-- Behavior: Log error, mark module as failed
-- Guidance: "Check directory permissions for [path]"
+| Error | Action | Guidance |
+|-------|--------|----------|
+| No modules detected | Exit gracefully | Specify module path manually |
+| Invalid module path | Exit gracefully | Check path and retry |
+| Agent spawn failure | Continue with others | Report in final output |
+| CLAUDE.md exceeds 400 lines | Write with warning | Consider splitting module |
+| Manifest corruption | Prompt to regenerate | Delete old manifest if approved |
+| Write permission denied | Mark module failed | Check directory permissions |
 
 ---
 

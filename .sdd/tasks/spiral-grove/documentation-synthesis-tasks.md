@@ -11,15 +11,15 @@
 ## Summary
 
 **Total Tasks**: 18 (reduced from 23 via consolidation)
-**Completed**: 11/18 (61%)
-**Estimated Remaining**: 8-12 hours
+**Completed**: 12/18 (67%)
+**Estimated Remaining**: 14-22 hours
 
 **Categories**:
-- Foundation (2) - Format specs
-- Agent (3) - Module doc synthesizer
-- Command (6) - Orchestration + review extension
-- Testing (6) - Acceptance validation
-- Release (1) - Version bump
+- Foundation (2) - Format specs ✅ COMPLETE
+- Agent (1) - Module doc synthesizer ✅ COMPLETE
+- Command (6) - Orchestration + review extension - 4/6 complete
+- Testing (7) - Acceptance validation - 0/7 complete
+- Release (2) - Documentation + version bump - 0/2 complete
 
 ---
 
@@ -132,7 +132,7 @@ Add `**Origin**` references linking CLAUDE.md to specs.
 **Commit**: 910a52e
 
 ### TASK-008: Resumability + Reporting
-**Status**: Not Started | **Estimate**: 3h | **Dependencies**: TASK-006, TASK-007
+**Status**: Complete | **Estimate**: 3h | **Actual**: 2h | **Dependencies**: TASK-006, TASK-007
 
 Implement idempotent re-runs and comprehensive output reporting.
 
@@ -179,6 +179,18 @@ Implement idempotent re-runs and comprehensive output reporting.
 - Re-running interrupted session completes only remaining modules
 - All edge cases handled with helpful messages
 - Report shows counts, failures, and next steps
+
+**Completed**: 2025-10-20
+**Files Modified**:
+- `spiral-grove/commands/synthesize-docs.md` (472 lines, +74 from cleanup baseline)
+  - Added Resumability section (6 executable steps, lines 325-389)
+  - Added Final Output section with comprehensive reporting (3 steps, lines 393-445)
+  - Updated Phase 1, Step 1 to reference Resumability section
+
+**Implementation Details**:
+- **Resumability**: 6-step workflow with manifest detection, status counting, user prompts (3 scenarios), filtered module processing, Phase 3 re-run, timestamp updates
+- **Final Output**: 3-step reporting with metric calculation (generated/failed/linked/elapsed), comprehensive display (status breakdown, SDD stats, failed modules with errors, retry guidance), edge case messages
+- **Idempotency**: Safe re-runs, hand-edit preservation guaranteed
 
 ### TASK-009: Review Extension - Spec-vs-Code Mode
 **Status**: Not Started | **Estimate**: 6-8h | **Dependencies**: None (extends review.md)
@@ -460,19 +472,31 @@ Release: 017, 018 (after all tests)
 
 ---
 
-## Progress
+## Progress Tracking
 
-**Completed (7/18)**: 001, 002, 003, 004, 005, 006, 007
+| Task | Status | PR | Notes |
+|------|--------|----|-------|
+| TASK-001 | Complete | - | CLAUDE.md format spec (commit 05b2da3) |
+| TASK-002 | Complete | - | Module manifest schema (commit 05b2da3) |
+| TASK-003 | Complete | - | Module doc synthesizer agent (commits a01a09c, befadee) |
+| TASK-004 | Complete | - | Synthesize-docs command structure (commit fe97e22) |
+| TASK-005 | Complete | - | Phase 1 - Module discovery (commit b0a3c1d) |
+| TASK-006 | Complete | - | Phase 2 - Parallel generation (commit 5f2bdcc) |
+| TASK-007 | Complete | - | Phase 3 - SDD integration (commit 910a52e) |
+| TASK-008 | Complete | - | Resumability + Reporting (2025-10-20) |
+| TASK-009 | Not Started | - | Review extension - spec-vs-code mode (6-8h) |
+| TASK-010 | Not Started | - | Agent standalone test (1h) |
+| TASK-011 | Not Started | - | Full project synthesis test (2h) |
+| TASK-012 | Not Started | - | Resumability test (1h) |
+| TASK-013 | Not Started | - | Hand-edit preservation test (1h) |
+| TASK-014 | Not Started | - | Drift detection test (2h) |
+| TASK-015 | Not Started | - | Lifecycle test (2h) |
+| TASK-016 | Not Started | - | Performance test (2h) |
+| TASK-017 | Not Started | - | Version bump and changelog (1-2h) |
+| TASK-018 | Not Started | - | Documentation completion (2-3h) |
 
-**Remaining (11/18)**:
-- 008: Resumability + Reporting (3h) - Implementation approach documented
-- 009: Review Extension (6-8h) - Semantic matching algorithm detailed
-- 010-016: Testing (8h) - Test cases specified
-- 017-018: Release + Docs (3-5h) - Documentation structure planned
-
-**Total Remaining**: 20-24 hours
-
-**Note**: Tasks 008, 009, and 018 now include detailed implementation approaches with step-by-step HOW guidance.
+**Status Summary**: 8 Complete, 0 In Progress, 10 Not Started (Total: 18 tasks)
+**Estimated Remaining**: 20-25 hours
 
 ---
 

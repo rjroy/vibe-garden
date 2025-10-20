@@ -1,14 +1,14 @@
 # Documentation Synthesis Feature - Implementation Progress
 
 **Last Updated**: 2025-10-20
-**Current Status**: In Progress (11 of 23 tasks, 48% complete)
+**Current Status**: In Progress (12 of 18 tasks, 67% complete)
 **Version**: 1.0.0
 
 ## Current Session
 
 **Date**: 2025-10-20
-**Working On**: Command Implementation Phase (TASK-011 complete)
-**Next Up**: TASK-012 (Resumability Logic)
+**Working On**: Testing phase (TASK-008 complete)
+**Next Up**: TASK-009 (Review Extension - Spec-vs-Code Mode) or TASK-010+ (Testing)
 **Blockers**: None
 
 ## Completed Today
@@ -127,6 +127,11 @@
 - ⚠️ Agent file was initially too verbose (862 lines with teaching material)
   - **Resolved**: Refactored to 581 lines focusing on execution instructions only
 
+- ⚠️ Command file was too long (573 lines, 1.4-2.8× typical commands)
+  - **Resolved**: Cleaned up to 398 lines (-30.5%, -175 lines)
+  - Condensed examples, error handling, phase descriptions
+  - Preserved all functionality and execution steps
+
 ---
 
 ## Overall Progress
@@ -207,12 +212,32 @@
   - Origin field insertion after title
   - Preserves hand-edited sections
 
+- [x] **CLEANUP**: Command file optimization - *Completed 2025-10-20*
+  - Reduced from 573 → 398 lines (-30.5%, -175 lines)
+  - Condensed examples, error handling, phase descriptions
+  - Preserved all functionality
+
+- [x] **TASK-008**: Resumability + Reporting - *Completed 2025-10-20*
+  - File: `spiral-grove/commands/synthesize-docs.md` (now 472 lines after +74 for TASK-008)
+  - **Resumability section** (6 executable steps):
+    - Step 1: Check for manifest existence
+    - Step 2: Count module statuses (completed/pending/failed)
+    - Step 3: Determine scenario (all complete / partial / fresh start)
+    - Step 4: Resume Phase 2 with filtered modules only
+    - Step 5: Run Phase 3 on ALL modules (new specs may exist)
+    - Step 6: Update manifest timestamp
+  - **User prompts**: "Re-run to regenerate all?" / "Continue from where we left off?"
+  - **Final Output section** (3 steps with comprehensive reporting):
+    - Calculate metrics (total generated, failed, linked/unlinked, elapsed time)
+    - Display report (status breakdown, SDD integration stats, failed modules with errors)
+    - Edge case messages (0 modules, all failed)
+  - **Idempotency guarantee**: Safe re-runs, hand-edits always preserved
+  - Updated Phase 1, Step 1 to reference Resumability section
+
 ### In Progress 🚧
-(None - Phase 3 complete)
+(None)
 
 ### Upcoming ⏳
-- [ ] TASK-012: Implement Resumability Logic
-- [ ] TASK-013: Implement Output Reporting and Error Handling
 - [ ] TASK-014: Create Review Command Extension - Spec-vs-Code Mode
 - [ ] TASK-015: Implement Semantic Matching for Drift Detection
 - [ ] TASK-016: Test Agent Standalone (Framework-Agnostic)
