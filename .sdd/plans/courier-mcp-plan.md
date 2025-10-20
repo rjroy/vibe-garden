@@ -1,7 +1,7 @@
 # Courier MCP - Technical Plan
 
 **Specification**: [.sdd/specs/courier-mcp.md](./../specs/courier-mcp.md)
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Status**: Approved
 **Created**: 2025-10-18
 **Last Updated**: 2025-10-19
@@ -12,7 +12,9 @@ Courier MCP is a Python-based stdio MCP server that enables Claude Code users to
 
 The server will be read-only, stateless, and support concurrent message fetches with exponential backoff for Gmail API rate limiting and a 20-second timeout guarantee for all operations.
 
-**v1.1.0 Updates**: This version adds Claude Code plugin packaging, marketplace integration via the vibe-garden repository, and a setup assistance Skill that automatically activates when authentication failures occur, guiding users through OAuth setup troubleshooting.
+**v1.1.0 Updates**: Added Claude Code plugin packaging, marketplace integration via the vibe-garden repository, and a setup assistance Skill that automatically activates when authentication failures occur, guiding users through OAuth setup troubleshooting.
+
+**v1.2.0 Updates**: Clarified invocation directory handling for export path resolution. The launch script now captures the directory where the user invokes the command and passes it to the server via `INVOKE_DIR` environment variable, ensuring relative export paths are resolved from the user's working directory rather than the server installation directory.
 
 ## Architecture
 
@@ -301,6 +303,30 @@ skills/courier-setup-helper/
 - Follows wyrd-gen-mcp precedent (same pattern used successfully)
 - No hardcoded paths in `plugin.json`; all paths relative to plugin root
 - Enables `/plugin install courier-mcp@vibe-garden` to work out-of-box
+
+---
+
+### Decision 13: Export Path Resolution (v1.2.0)
+
+**Context**: Spec FR-17/FR-18 require that relative export paths are resolved relative to where the user invoked the command, not where the server is installed.
+
+**Options Considered**:
+- **Resolve Relative to Server Installation**: Confusing for users, files appear in server directory
+- **Resolve Relative to Current Working Directory (CWD)**: Doesn't work with MCP stdio protocol (CWD is undefined)
+- **Capture Invocation Directory via Launch Script** (selected): Script captures `$(pwd)` before changing to server directory, passes as environment variable
+
+**Decision**: Launch Script Captures Invocation Directory as `INVOKE_DIR`
+**Rationale**:
+- Launch script (`server/scripts/courier.sh`) captures invocation directory via `invoke_directory="$(pwd)"` before any `cd` operations
+- Passes to server as `INVOKE_DIR` environment variable: `env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp`
+- Server uses `INVOKE_DIR` to resolve relative `export_directory` paths from `get-messages` tool
+- Absolute paths in `export_directory` are used as-is (no resolution needed)
+- Follows user expectation: relative paths are relative to where they invoked the command
+- Example:
+  - User runs command from `/home/user/notes/`
+  - Specifies `export_directory="emails/"` (relative)
+  - Files are saved to `/home/user/notes/emails/` (not `<server-install-dir>/emails/`)
+- Implementation: `export.py` reads `os.getenv("INVOKE_DIR")` and uses `pathlib.Path(invoke_dir) / relative_path` for resolution
 
 ---
 
@@ -671,9 +697,72 @@ courier-mcp/
 
 **Key Design Decisions**:
 - `${CLAUDE_PLUGIN_ROOT}` ensures portability across installation locations
-- Version matches spec version (1.1.0)
+- Version matches spec version (1.2.0)
 - MCP server name: "courier" (matches tool namespace)
-- Startup script handles venv activation and Python execution
+- Startup script handles venv activation, path resolution, and Python execution
+
+### Startup Script Implementation (v1.2.0)
+
+**File**: `server/scripts/courier.sh`
+
+The launch script performs critical setup before starting the Python MCP server:
+
+```bash
+#!/bin/bash
+
+# Capture the directory where the script was invoked from (v1.2.0)
+invoke_directory="$(pwd)"
+
+# Navigate to server directory (relative to script location)
+source_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd $source_directory/../
+
+# Setup virtual environment
+if [ ! -d venv ]; then
+    python3 -m venv venv
+fi
+
+venv/bin/pip install --upgrade pip
+venv/bin/pip install -e .
+
+# Launch server with INVOKE_DIR environment variable
+if [ -f $invoke_directory/.env ]; then
+    source $invoke_directory/.env
+    env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp
+elif [ -f $invoke_directory/.env.op ]; then
+    op run --env-file=$invoke_directory/.env.op -- env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp
+else
+    env INVOKE_DIR="$invoke_directory" venv/bin/python -m courier_mcp
+fi
+```
+
+**Key Responsibilities**:
+1. **Invocation Directory Capture** (FR-17):
+   - Captures `$(pwd)` before any directory changes
+   - Preserves user's working directory for relative path resolution
+   - Passes as `INVOKE_DIR` environment variable to Python server
+
+2. **Virtual Environment Management**:
+   - Creates venv if missing
+   - Installs/updates dependencies
+   - Activates venv for Python execution
+
+3. **Environment Variable Loading**:
+   - Sources `.env` from invocation directory (not script directory)
+   - Supports 1Password integration via `.env.op`
+   - Falls back to system environment if no `.env` file
+
+4. **Server Launch**:
+   - Runs server as Python module: `python -m courier_mcp`
+   - Passes `INVOKE_DIR` to all server processes
+   - Enables export path resolution per FR-18
+
+**Path Resolution Flow** (v1.2.0):
+- User invokes from: `/home/user/notes/`
+- Script captures: `INVOKE_DIR="/home/user/notes/"`
+- User specifies: `export_directory="emails/"` (relative)
+- Server resolves: `/home/user/notes/emails/` (invoke dir + relative path)
+- Result: Files appear where user expects them
 
 ### Marketplace Registration
 
@@ -941,6 +1030,56 @@ After addressing the error, try running the Courier MCP command again.
 
 ---
 
+## Version History
+
+### v1.2.0 (2025-10-19)
+**Export Path Resolution Clarification**
+
+- **New Technical Decision**: Decision 13 - Export Path Resolution
+  - Documents INVOKE_DIR environment variable pattern
+  - Launch script captures invocation directory before changing to server directory
+  - Server uses INVOKE_DIR to resolve relative export paths from user's working directory
+  - Ensures files appear where user expects (FR-17, FR-18)
+
+- **Updated Sections**:
+  - Overview: Added v1.2.0 summary
+  - Plugin Distribution: Added "Startup Script Implementation" section with full bash script
+  - Startup Script: Documents 4 key responsibilities including invocation directory capture
+  - Path Resolution Flow: Example showing how relative paths are resolved
+
+- **Implementation Notes**:
+  - Launch script already implemented in `server/scripts/courier.sh:4` with `invoke_directory="$(pwd)"`
+  - Server implementation needs to read `os.getenv("INVOKE_DIR")` in export.py for path resolution
+  - Absolute paths in `export_directory` bypass INVOKE_DIR and are used as-is
+
+### v1.1.0 (2025-10-19)
+**Plugin Distribution and Setup Assistance**
+
+- **New Technical Decisions**: Decisions 11-12 (Plugin packaging, portability strategy)
+- **New Architecture Sections**: Plugin Distribution & Setup Skill Design
+- **Updated Deployment**: Plugin marketplace installation flow
+- **New Components**:
+  - `.claude-plugin/plugin.json` manifest
+  - `skills/courier-setup-helper/SKILL.md` for OAuth troubleshooting
+  - Marketplace registration in vibe-garden
+- **Tool Distribution**: From manual MCP config to marketplace-based plugin installation
+
+### v1.0.0 (2025-10-18)
+**Initial Technical Plan**
+
+- Core architecture design
+- 10 technical decisions (language, auth, concurrency, file export, encoding, config, caching, HTML conversion, tool design, folder handling)
+- Component structure: auth, gmail_service, export, server, config, logger, errors
+- Data model: Gmail message to markdown mapping
+- API design: get-messages, get-folders tools
+- Integration points: Gmail API, local filesystem, Claude Code
+- Testing strategy: unit, integration, E2E
+- Performance targets: <20s for 100 messages
+- Security design: OAuth 2.0, no credential logging
+- Deployment considerations
+
+---
+
 ## Next Phase
 
 Once this plan is approved, proceed to `/task-breakdown` to decompose architecture into implementable tasks with acceptance criteria.
@@ -949,3 +1088,6 @@ Once this plan is approved, proceed to `/task-breakdown` to decompose architectu
 - v1.0.0 tasks (core MCP server implementation)
 - v1.1.0 tasks (plugin packaging, setup Skill, marketplace registration)
 - Dependencies between tasks clearly marked (e.g., Skill creation depends on SETUP.md being complete)
+
+**v1.2.0 Note**: Task breakdown should include:
+- Export path resolution implementation in `export.py` (read INVOKE_DIR, resolve relative paths)
