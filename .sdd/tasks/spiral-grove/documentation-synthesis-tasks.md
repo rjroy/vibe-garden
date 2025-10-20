@@ -1016,7 +1016,7 @@ A task is complete when:
 | TASK-005 | Complete | a01a09c | Hand-edit preservation (part of TASK-003) |
 | TASK-006 | Complete | a01a09c | 400-line validation (part of TASK-003) |
 | TASK-007 | Complete | befadee | Added invocation guide + good/bad examples |
-| TASK-008 | Complete | [pending] | Command structure (325 lines, 3-phase workflow) |
+| TASK-008 | Complete | fe97e22 | Command structure (325 lines, 3-phase workflow) |
 | TASK-009 | Not Started | - | - |
 | TASK-010 | Not Started | - | - |
 | TASK-011 | Not Started | - | - |
