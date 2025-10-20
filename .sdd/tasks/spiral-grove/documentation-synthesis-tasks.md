@@ -1009,9 +1009,9 @@ A task is complete when:
 
 | Task ID | Status | PR | Notes |
 |---------|--------|----|----|
-| TASK-001 | Not Started | - | - |
-| TASK-002 | Not Started | - | - |
-| TASK-003 | Not Started | - | - |
+| TASK-001 | Complete | 05b2da3 | CLAUDE.md format spec (600+ lines) |
+| TASK-002 | Complete | 05b2da3 | Module manifest schema (550+ lines) |
+| TASK-003 | Complete | a01a09c | Agent core structure (600+ lines) |
 | TASK-004 | Not Started | - | - |
 | TASK-005 | Not Started | - | - |
 | TASK-006 | Not Started | - | - |
