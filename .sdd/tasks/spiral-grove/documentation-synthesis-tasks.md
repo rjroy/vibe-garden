@@ -1015,7 +1015,7 @@ A task is complete when:
 | TASK-004 | Complete | a01a09c | Agent routine (part of TASK-003) |
 | TASK-005 | Complete | a01a09c | Hand-edit preservation (part of TASK-003) |
 | TASK-006 | Complete | a01a09c | 400-line validation (part of TASK-003) |
-| TASK-007 | Complete | TBD | Added invocation guide + good/bad examples |
+| TASK-007 | Complete | befadee | Added invocation guide + good/bad examples |
 | TASK-008 | Not Started | - | - |
 | TASK-009 | Not Started | - | - |
 | TASK-010 | Not Started | - | - |
