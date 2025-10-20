@@ -65,11 +65,29 @@ Standalone agent that analyzes a single module and generates/updates CLAUDE.md (
 Orchestrates documentation generation across project by spawning `module-doc-synthesizer` agents.
 
 **Three-phase workflow:**
-1. **Module Discovery**: Scan codebase for module boundaries (heuristics: package files, 3+ source files + tests, standard dirs). Present to user for approval. Save to `.sdd/module-manifest.json`.
-2. **Parallel Generation**: Spawn one `module-doc-synthesizer` agent per module via Task tool (`subagent_type: "module-doc-synthesizer"`). Write agent-returned markdown to `[module]/CLAUDE.md`. Track status in manifest (pending → completed/failed). Generate root CLAUDE.md with project overview and module index.
-3. **SDD Integration**: Match modules to specs by path. Add `**Origin**: .sdd/specs/[name].md` reference to CLAUDE.md header. Handle parent/child spec hierarchies.
 
-**Resumability**: Read manifest on re-run; process only pending/failed modules.
+1. **Module Discovery**:
+   - Scan codebase for module boundaries using heuristics (package files, 3+ source files + tests, standard dirs)
+   - Present detected modules to user for approval/modification
+   - Save approved list to `.sdd/module-manifest.json` (each entry: path, status="pending", claude_md_path)
+
+2. **Parallel Generation**:
+   - For each pending module: spawn `module-doc-synthesizer` agent via Task tool (`subagent_type: "module-doc-synthesizer"`)
+   - Single message with multiple Task calls for parallel execution
+   - Agent returns CLAUDE.md markdown content
+   - Write content to `[module]/CLAUDE.md`
+   - Update manifest status: pending → completed (or failed with error message)
+   - Generate root CLAUDE.md with project overview, directory structure, module index
+
+3. **SDD Integration** (Spiral Grove-specific):
+   - For each completed CLAUDE.md: analyze module path to find matching spec
+   - Fuzzy matching: try exact name, shortened name, directory name against `.sdd/specs/` files
+   - If match found: insert `**Origin**: Implemented from .sdd/specs/[name].md` after title line
+   - Handle parent/child spec hierarchies (child modules link to child specs)
+   - If no match: skip Origin field, warn user (utility modules may not have specs)
+   - Rewrite CLAUDE.md file with Origin field added (preserving hand-edits)
+
+**Resumability**: On re-run, read manifest, skip completed modules, process only pending/failed.
 
 #### 3. Review Command Extension (MODIFY)
 **File**: `spiral-grove/commands/review.md` (add new mode)
