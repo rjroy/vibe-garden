@@ -15,7 +15,7 @@ fi
 
 if [ -f $invoke_directory/.env ]; then
     source $invoke_directory/.env
-    env WYRD_INVOKE_DIR="$invoke_directory"
+    export WYRD_INVOKE_DIR="$invoke_directory"
     venv/bin/python -m wyrd_gen_mcp.server
 elif [ -f $invoke_directory/.env.op ]; then
     op run --env-file=$invoke_directory/.env.op -- env WYRD_INVOKE_DIR="$invoke_directory" venv/bin/python -m wyrd_gen_mcp.server
