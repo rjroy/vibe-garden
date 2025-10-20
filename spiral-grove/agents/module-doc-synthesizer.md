@@ -42,6 +42,40 @@ You are a documentation synthesis agent. Your job is to analyze a single module'
 - **No plan references**: Doesn't assume technical plan exists
 - **Language agnostic**: Works with TypeScript, Python, Go, Rust, Java, etc.
 
+## How to Invoke This Agent
+
+**Direct Invocation** (manual use):
+
+You can invoke this agent directly using Claude Code's Task tool to analyze a single module:
+
+**Step 1**: Tell Claude to follow the agent instructions
+```
+"Follow the instructions in spiral-grove/agents/module-doc-synthesizer.md to generate CLAUDE.md documentation for the module at path: src/auth"
+```
+
+**Step 2**: Agent executes the 7-step routine automatically and returns markdown content
+
+**Step 3**: Write the returned content to `[module_path]/CLAUDE.md`
+
+**Orchestrated Invocation** (via command):
+
+The `/spiral-grove:synthesize-docs` command invokes this agent automatically for multiple modules in parallel:
+
+```
+/spiral-grove:synthesize-docs
+→ Command detects modules (src/auth, src/api, src/db)
+→ Spawns 3 agents in parallel using Task tool
+→ Each agent returns CLAUDE.md content
+→ Command writes all files to disk with Origin field
+```
+
+**Input Format**:
+- **module_path**: Relative path to module directory (e.g., `src/auth`)
+
+**Output Format**:
+- Returns complete CLAUDE.md content as markdown text
+- Orchestrator writes to disk at `[module_path]/CLAUDE.md`
+
 ## Agent Routine
 
 **This routine executes every time you are invoked.** Follow these steps in order:
@@ -534,6 +568,180 @@ npm test string
 ### Example 2: Complex Module with Hand-Edited Section (380 lines)
 
 See `spiral-grove/docs/claude-md-format.md` Example 2 for full example.
+
+---
+
+## Good vs. Bad Examples
+
+### ✅ GOOD: Concise, Actionable Documentation
+
+```markdown
+## Purpose
+
+Provides OAuth 2.0 authentication for Google and Microsoft identity providers with token refresh and session management.
+
+## Key Components
+
+### `src/auth/oauth.ts`
+- **Purpose**: OAuth flow implementation
+- **Key Functions**:
+  - `initiateOAuthFlow()`: Redirects user to provider login
+  - `handleOAuthCallback()`: Exchanges code for tokens
+  - `refreshAccessToken()`: Renews expired tokens
+
+### `src/auth/session.ts`
+- **Purpose**: Session persistence using Redis
+- **Key Functions**:
+  - `createSession()`: Stores user session with 24h expiry
+  - `getSession()`: Retrieves active session
+
+## Public API
+
+- `export function initiateOAuthFlow(provider: 'google' | 'microsoft'): Promise<URL>` - Returns OAuth redirect URL
+- `export function handleOAuthCallback(code: string): Promise<Session>` - Exchanges auth code for session
+- `export class SessionManager` - Manages session lifecycle with Redis backend
+
+## Common Operations
+
+### Authenticating a User
+
+**Steps**:
+1. Call `initiateOAuthFlow('google')` → Get redirect URL
+2. User completes OAuth flow at provider
+3. Call `handleOAuthCallback(code)` → Receive session token
+4. Store session token in client (cookie/localStorage)
+
+**Example**:
+\`\`\`typescript
+const redirectUrl = await initiateOAuthFlow('google');
+window.location.href = redirectUrl.toString();
+// After redirect back...
+const session = await handleOAuthCallback(urlParams.get('code'));
+\`\`\`
+```
+
+**Why this is GOOD**:
+- ✅ Concise (50 lines vs. 400-line budget)
+- ✅ Focuses on WHAT and HOW (not implementation details)
+- ✅ Includes function signatures with types
+- ✅ Provides practical, copy-paste ready examples
+- ✅ Shows common workflows step-by-step
+- ✅ Lists public API exhaustively but briefly
+
+---
+
+### ❌ BAD: Verbose, Implementation-Heavy Documentation
+
+```markdown
+## Purpose
+
+This module is designed to provide a comprehensive authentication solution for our application. It implements the OAuth 2.0 protocol as specified in RFC 6749, supporting multiple identity providers including Google (using their Google Identity Services) and Microsoft (using Microsoft Identity Platform, formerly known as Azure AD v2.0). The module was created to replace our legacy authentication system which used Basic Auth and had security vulnerabilities. We chose OAuth 2.0 because it provides a secure, industry-standard way to authenticate users without storing passwords. The implementation includes token refresh logic to handle expired access tokens automatically, and session management using Redis for distributed session storage across multiple application instances.
+
+## Key Components
+
+### OAuth Implementation (`src/auth/oauth.ts`)
+
+This file contains the core OAuth 2.0 implementation. It was refactored from the original monolithic auth.ts file in PR #234. The code is organized into three main classes:
+
+1. **OAuthProvider** (abstract base class)
+   - This is an abstract base class that defines the interface all OAuth providers must implement
+   - Contains common OAuth logic like state parameter generation, PKCE implementation, and token validation
+   - Uses the crypto module for secure random state generation
+   - Implements PKCE (Proof Key for Code Exchange) as recommended by RFC 7636
+   - Has protected methods: `generateState()`, `generateCodeVerifier()`, `generateCodeChallenge()`
+   - Abstract methods that subclasses must implement: `getAuthorizationUrl()`, `exchangeCodeForToken()`
+
+2. **GoogleOAuthProvider** (extends OAuthProvider)
+   - Implements OAuth for Google Identity Services
+   - Uses the google-auth-library npm package (version 8.9.0)
+   - Configured with client ID and secret from environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+   - Requests scopes: openid, profile, email
+   - Handles Google-specific token response format
+   - Implements token refresh using refresh_token grant type
+   - Error handling for Google-specific error codes (invalid_grant, unauthorized_client)
+   - Implements exponential backoff for token endpoint failures
+
+[... continues for 500+ lines with excessive implementation details ...]
+```
+
+**Why this is BAD**:
+- ❌ Exceeds 400-line limit (would be 500+ lines fully written)
+- ❌ Verbose purpose section (should be 1-2 sentences)
+- ❌ Includes implementation details (PKCE generation, error codes, version numbers)
+- ❌ Explains WHY decisions were made (that's for specs)
+- ❌ Documents internal/private methods (`generateState()`, `generateCodeVerifier()`)
+- ❌ Includes historical context (PR numbers, legacy system references)
+- ❌ Redundant explanations that add no operational value
+- ❌ No practical examples or common workflows
+
+---
+
+### ✅ GOOD: Testing Section
+
+```markdown
+## Testing
+
+**Test Files**:
+- `tests/auth/oauth.test.ts`: OAuth flow (Google, Microsoft)
+- `tests/auth/session.test.ts`: Session lifecycle and Redis integration
+
+**Run Tests**:
+\`\`\`bash
+npm test auth
+\`\`\`
+
+**Key Scenarios**:
+- **Full OAuth flow**: Mocks provider endpoints, validates token exchange
+- **Token refresh**: Tests automatic refresh on 401 responses
+- **Session expiry**: Validates 24h TTL in Redis
+
+**Mocking**:
+- OAuth providers: Mocked using `nock` to intercept HTTP calls
+- Redis: Mocked using `redis-mock` for unit tests
+```
+
+**Why this is GOOD**:
+- ✅ Concise (12 lines)
+- ✅ Actionable (shows exact test command)
+- ✅ Describes what is tested (scenarios)
+- ✅ Explains mocking strategy
+
+---
+
+### ❌ BAD: Testing Section
+
+```markdown
+## Testing
+
+We have comprehensive test coverage for the authentication module. The tests are located in the tests/auth/ directory and are organized by component. We use Jest as our testing framework (version 29.5.0) with ts-jest for TypeScript support. Test coverage is currently at 87% (as of last report on 2024-10-15), with the goal of reaching 90% by end of Q4.
+
+### Test Files
+
+1. **oauth.test.ts** (created by Alice on 2024-08-12, last modified by Bob on 2024-09-20)
+   - Contains 47 test cases covering OAuth flows
+   - Tests Google OAuth flow (15 test cases)
+   - Tests Microsoft OAuth flow (15 test cases)
+   - Tests error scenarios (17 test cases including network failures, invalid state parameter, expired codes, etc.)
+   - Uses Jest mock functions to simulate HTTP requests
+   - Uses nock library to intercept and mock external API calls to Google and Microsoft token endpoints
+   - Originally had flaky tests due to timing issues, fixed in PR #289 by adding proper async/await handling
+
+2. **session.test.ts** (created by Carol on 2024-08-15)
+   - Contains 23 test cases for session management
+   - Tests session creation, retrieval, deletion, and expiry
+   - Uses redis-mock library to simulate Redis in tests
+   - Note: We chose redis-mock over ioredis-mock because it's lighter and faster for unit tests
+
+[... continues with excessive detail about test infrastructure, coverage reports, CI/CD integration ...]
+```
+
+**Why this is BAD**:
+- ❌ Verbose and redundant (would exceed 100 lines)
+- ❌ Includes historical context (authors, dates, PR numbers)
+- ❌ Lists every test case instead of summarizing scenarios
+- ❌ Explains tool choices (that's for technical plans)
+- ❌ Includes coverage metrics and roadmap (not operational documentation)
+- ❌ No clear, copy-paste test command
 
 ---
 

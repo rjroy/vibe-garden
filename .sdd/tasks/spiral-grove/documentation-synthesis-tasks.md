@@ -1012,10 +1012,10 @@ A task is complete when:
 | TASK-001 | Complete | 05b2da3 | CLAUDE.md format spec (600+ lines) |
 | TASK-002 | Complete | 05b2da3 | Module manifest schema (550+ lines) |
 | TASK-003 | Complete | a01a09c | Agent core structure (600+ lines) |
-| TASK-004 | Not Started | - | - |
-| TASK-005 | Not Started | - | - |
-| TASK-006 | Not Started | - | - |
-| TASK-007 | Not Started | - | - |
+| TASK-004 | Complete | a01a09c | Agent routine (part of TASK-003) |
+| TASK-005 | Complete | a01a09c | Hand-edit preservation (part of TASK-003) |
+| TASK-006 | Complete | a01a09c | 400-line validation (part of TASK-003) |
+| TASK-007 | Complete | TBD | Added invocation guide + good/bad examples |
 | TASK-008 | Not Started | - | - |
 | TASK-009 | Not Started | - | - |
 | TASK-010 | Not Started | - | - |
