@@ -1,15 +1,15 @@
 # Spiral Grove: Spec-Driven Development Plugin - Specification
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Status**: Approved
 **Created**: 2025-10-18
-**Last Updated**: 2025-10-18 (Revised prompt length constraint from hard limit to guideline)
+**Last Updated**: 2025-10-20 (Refactored to focus on WHAT capabilities/constraints rather than HOW implementation details)
 **Child Specifications**:
-- [documentation-synthesis.md](./spiral-grove/documentation-synthesis.md) - Lifecycle management commands for spec-code synchronization and CLAUDE.md generation
+- [documentation-synthesis.md](./spiral-grove/documentation-synthesis.md) - Lifecycle management with spec-code drift detection and CLAUDE.md generation
 
 ## Executive Summary
 
-Spiral Grove is a Claude Code plugin that implements Spec-Driven Development (SDD) methodology to enable repeatable, controlled AI-assisted software development. It provides a four-phase workflow (Specification → Planning → Task Breakdown → Implementation) that prevents AI drift by establishing clear checkpoints and separating user strategic decisions from AI tactical execution.
+Spiral Grove enables developers to maintain strategic control over AI-assisted development by providing a structured workflow that separates "what to build" decisions from "how to build it" execution. The system prevents AI drift across long development sessions by enforcing phase boundaries, enabling session resumability, and validating implementation against user-approved requirements.
 
 ## User Story
 
@@ -23,234 +23,215 @@ As a **developer working with AI coding assistants**, I want **a structured meth
 
 ## Success Criteria
 
-1. **High-confidence automation**: `/implementation` and `/task-breakdown` phases complete successfully in one iteration 80%+ of the time when given quality specs and plans
-2. **Phase adherence**: `/spec-writing` produces specifications with no implementation details (HOW) in 95%+ of cases
-3. **Resumability**: Developers can resume work after interruptions by reading `.sdd/` artifacts without re-explaining context
-4. **Scale flexibility**: Supports single-feature projects and large multi-component systems (via parent/child spec references)
-5. **AI drift prevention**: Implementation deviations from approved specs are detected and flagged before merging
-6. **User effort concentration**: 70%+ of user cognitive effort occurs during `/spec-writing` and `/plan-generation` phases, with minimal intervention during `/task-breakdown` and `/implementation`
+1. **High-confidence automation**: Implementation phases complete successfully in one iteration 80%+ of the time when given quality requirements and plans
+2. **Phase boundary enforcement**: Requirements documents contain zero implementation decisions (technology/vendor choices) in 95%+ of cases
+3. **Zero-context resumability**: Developers can resume work after multi-day interruptions without re-explaining context to AI
+4. **Scale flexibility**: System supports both single-feature projects (5-10 tasks) and large multi-component systems (100+ tasks across subsystems)
+5. **Drift detection**: Implementation deviations from approved requirements are automatically detected and require explicit user approval
+6. **Effort front-loading**: 70%+ of user decision-making effort occurs during requirements and planning phases, with minimal intervention during execution
 
 ## Functional Requirements
 
-### Phase 1: Specification Writing (`/spec-writing`)
+### Requirements Definition
 
-**Capabilities:**
-- Guide users through requirements gathering with structured prompts
-- Distinguish between capabilities/constraints (WHAT) and implementation choices (HOW)
-- Generate specification documents with measurable success criteria
-- Identify stakeholders, acceptance tests, and explicit constraints
-- Detect and prevent premature technical decisions (e.g., "use PostgreSQL" vs. "need relational data model")
-- Support versioning and status tracking (Draft → Under Review → Approved → Superseded)
+**Must enable:**
+- Structured requirements gathering that separates user-owned decisions (WHAT) from AI-delegated execution (HOW)
+- Detection and prevention of premature technical decisions during requirements phase
+- Measurable success criteria definition with specific, testable thresholds
+- Stakeholder identification and explicit scope constraints
+- Version tracking across requirement lifecycle (Draft → Approved → Superseded)
 
-**Acceptance Criteria:**
-- Spec documents contain zero implementation technology choices (unless capability-driven)
-- All success criteria are measurable with specific thresholds
-- Explicit "DO NOT" constraints prevent scope creep
-- Acceptance tests map to testable outcomes
+**Must prevent:**
+- Implementation technology choices in requirements documents (unless justified by specific capabilities needed)
+- Vague or unmeasurable success criteria
+- Scope creep through missing "DO NOT" constraints
 
-### Phase 2: Plan Generation (`/plan-generation`)
+### Technical Planning
 
-**Capabilities:**
-- Analyze existing codebase patterns before designing new architecture
-- Document technical decisions with explicit rationale (WHY, not just WHAT)
-- Design for complete system concerns: data model, API design, error handling, security, testing, deployment
-- Identify integration points with existing systems
-- Surface technical risks with mitigation strategies
-- Maintain architectural consistency with project conventions
+**Must enable:**
+- Codebase-aware architecture design that respects existing patterns and conventions
+- Explicit documentation of technical decision rationale (WHY choices were made)
+- Comprehensive system design covering data, APIs, error handling, security, testing, and deployment
+- Integration point identification with existing systems
+- Risk surfacing with mitigation strategies
 
-**Acceptance Criteria:**
-- Plans reference at least 3 existing codebase patterns/utilities
-- All technical decisions include "Options Considered" and "Rationale" sections
-- Integration points with existing systems are explicitly documented
-- Risks are identified with likelihood, impact, and mitigation
-- Plans respect specification constraints (no feature additions)
+**Must enforce:**
+- All technical decisions include alternatives considered and selection rationale
+- Plans remain within approved specification scope (no feature additions)
+- Integration points with existing systems are explicitly identified
+- Architectural consistency with project conventions
 
-### Phase 3: Task Breakdown (`/task-breakdown`)
+### Work Decomposition
 
-**Capabilities:**
-- Decompose plans into independent, testable tasks
-- Map tasks to specification acceptance criteria
-- Identify task dependencies and critical path
-- Ensure tasks are appropriately sized (< 1 day, single PR scope)
-- Generate task acceptance criteria linked to spec requirements
-- Support progress tracking tables
+**Must enable:**
+- Plan decomposition into independent, testable units of work
+- Task-to-requirement traceability (every requirement maps to at least one task)
+- Dependency identification and critical path analysis
+- Progress tracking across task lifecycle
 
-**Acceptance Criteria:**
-- Each task has clear acceptance criteria with checkboxes
-- Task dependency graph shows execution order
-- No task exceeds 1-day estimate
-- All spec acceptance criteria map to at least one task
-- Tasks can be worked independently (minimal blocking dependencies)
+**Must enforce:**
+- Task sizing appropriate for single pull request scope
+- Every task has clear, testable acceptance criteria
+- Tasks are executable with minimal blocking dependencies
+- All requirement acceptance criteria map to implementation tasks
 
-### Phase 4: Implementation (`/implementation`)
+### Implementation Execution & Validation
 
-**Capabilities:**
-- Execute tasks sequentially with real-time progress tracking
-- Validate implementation against specification acceptance criteria
-- Detect and flag deviations from spec/plan before code completion
-- Maintain progress documentation for session resumption
-- Support test-driven development (tests before implementation)
-- Track technical discoveries and deviations with approval workflow
+**Must enable:**
+- Sequential task execution with real-time progress visibility
+- Automated validation of implementation against approved requirements
+- Session resumability after interruptions (hours to days)
+- Test-driven development workflow (tests before implementation)
+- Deviation detection and approval workflow
 
-**Acceptance Criteria:**
-- Progress document updates immediately after task completion (before moving to next task)
-- Spec deviations trigger approval prompt before continuing
-- Test coverage maps back to spec acceptance tests
-- Implementation respects plan's architectural decisions
-- Progress document enables resumption without user re-explanation
+**Must enforce:**
+- Requirement deviations trigger user approval before proceeding
+- Test coverage maps to requirement acceptance criteria
+- Implementation respects approved architectural decisions
+- Progress tracking updates immediately after task completion
+- All code changes traceable to specific tasks and requirements
 
-### Meta Phase: Review (`/review [phase]`)
+### Phase Validation & Quality Assurance
 
-**Capabilities:**
-- Validate phase documents before moving to next phase
-- Check consistency between current phase and previous phase documents
-- Identify open questions that need resolution
-- Verify completion of validation checklists
-- Facilitate approval discussion with user
-- Support all phases: spec, plan, tasks, progress
+**Must enable:**
+- Pre-progression validation before moving between workflow phases
+- Consistency checking between related phase documents
+- Open question identification and resolution tracking
+- User-driven approval checkpoints (no automatic progression)
 
-**Acceptance Criteria:**
-- Command accepts phase argument: `spec`, `plan`, `tasks`, or `progress`
-- Validates document exists for specified phase
-- For specs: checks for HOW details, validates success criteria are measurable, confirms DO NOTs exist
-- For plans: validates spec reference exists, confirms technical decisions have rationale, verifies integration points documented
-- For tasks: confirms all spec acceptance criteria mapped to tasks, validates dependency graph exists, checks task sizing (<1 day)
-- For progress: validates tasks are being tracked, confirms deviations documented, checks test coverage mapping
-- Presents findings to user in structured format
-- Waits for explicit user approval before updating status field
-- Does not proceed automatically - requires user confirmation
+**Must validate per phase:**
+- **Requirements**: No HOW details present, success criteria are measurable, DO NOT constraints exist
+- **Plans**: Requirements reference exists, technical decisions have rationale, integration points documented
+- **Tasks**: All requirement acceptance criteria mapped, dependency graph exists, appropriate task sizing
+- **Progress**: Tasks tracked, deviations documented with approval, test coverage mapped to requirements
 
-**Argument hint:** `[spec|plan|tasks|progress]`
+**Must enforce:**
+- Structured findings presentation to user
+- Explicit user approval required before status changes
+- Phase document existence verification before validation
 
-### Cross-Phase Capabilities
+### Workflow Flexibility
 
-**Bidirectional navigation:**
-- Return to earlier phases when conflicts arise (e.g., `/spec-writing` to clarify requirements during `/implementation`)
-- Update downstream artifacts when upstream documents change
-- Support iterative refinement (living documents)
+**Must support:**
+- Bidirectional phase navigation (return to requirements when conflicts arise during implementation)
+- Downstream artifact updates when upstream documents change
+- Iterative refinement across all phases (living documents)
 
-**Context management for large projects:**
-- Support parent/child specification hierarchies using directory structure
-- Parent specs stored at: `.sdd/specs/[parent-name].md`
-- Child specs stored at: `.sdd/specs/[parent-name]/[child-name].md`
-- Parent specs include "Child Specifications" section listing all children
-- Child specs include "Parent Specification" field referencing parent
-- Enable focused work on subsystems without loading entire project context
-- Plans, tasks, and progress documents follow same directory structure as their specs
+**Must enable for large projects:**
+- Hierarchical organization of related requirements (parent/child relationships)
+- Focused work on subsystems without loading entire project context
+- Consistent cross-referencing between parent and child artifacts
+- Scalability from single features (5-10 tasks) to multi-subsystem projects (100+ tasks)
 
-**Skill integration:**
-- Provide `spiral-grove:spiral-grove-guide` skill for methodology guidance
-- Supply quick reference and theoretical foundations documents
-- Enable plugin extensibility (e.g., directing to project-specific MCP tools)
+**Must provide:**
+- Methodology guidance and quick reference materials
+- Extensibility for project-specific tooling integration
+- Framework-agnostic workflow (works with any tech stack)
 
 ## Non-Functional Requirements
 
 ### Performance
-- Context window efficiency: Each command prompt ≤ 300 lines (excluding reference materials)
-- Workflow efficiency: Phases are designed to concentrate user effort upfront (spec/plan) to minimize rework during implementation
+- **Context efficiency**: Workflow commands must operate within typical LLM context windows without truncation
+- **Workflow efficiency**: System design must concentrate user decision-making upfront (70%+ during requirements/planning) to minimize rework
 
 ### Usability
-- Phase boundaries are explicit (clear when to use each command)
-- Error messages guide users to correct command (e.g., "No spec found, run `/spec-writing` first")
-- Output artifacts are human-readable markdown with consistent formatting
-- Decision trees help users navigate workflow states
+- **Phase clarity**: Users can identify which workflow phase to use for their current need
+- **Error guidance**: System guides users to correct workflow phase when prerequisites missing
+- **Artifact readability**: All output artifacts human-readable without specialized tools
+- **Navigation support**: Users can determine workflow state and next steps from artifact inspection
 
 ### Maintainability
-- All command prompts are markdown files in `commands/` directory
-- Reference materials separated from operational prompts
-- No executable code in plugin (except test/validation scripts)
-- Extensible via Claude Code's skill and agent systems
+- **Separation of concerns**: Operational logic separated from reference/guidance materials
+- **Minimal code footprint**: System relies on prompts and structured artifacts, not executable code (except validation)
+- **Extensibility**: System adapts to project-specific tooling without core modification
 
 ### Compatibility
-- Works with any programming language or project type
-- Integrates with existing project structures (git, CI/CD, issue trackers via direction)
-- Respects project-specific conventions (coding standards, testing frameworks)
-- Does not require specific MCPs but can be directed to use them
+- **Language agnostic**: Works with any programming language or tech stack
+- **Integration neutral**: Respects existing project tooling (git, CI/CD, issue trackers) without requiring specific tools
+- **Convention respecting**: Adapts to project-specific coding standards and testing frameworks
 
 ## Explicit Constraints (DO NOT)
 
-- **Do NOT** provide project management features (issue tracking, sprint planning, team coordination beyond docs)
-- **Do NOT** generate code during `/spec-writing`, `/plan-generation`, or `/task-breakdown` phases
-- **Do NOT** integrate directly with external tools (git, Jira, etc.) - allow direction but don't enforce
-- **Do NOT** enforce specific development methodologies (Agile, Waterfall) - SDD is methodology-agnostic
-- **Do NOT** make implementation decisions during specification phase (e.g., selecting databases, frameworks)
-- **Guideline**: Keep command and skill prompts concise (~200-400 lines) for maintainability; extract verbose examples and reference material using progressive disclosure (skill reference files)
-- **Context efficiency note**: Command prompts typically consume 3-5% of available context budget; prioritize clarity and completeness over arbitrary length limits
-- **Do NOT** replace developer judgment - provide structure, not prescriptive solutions
-- **Do NOT** assume one-size-fits-all - support customization via project-specific skills/conventions
+- **Do NOT** provide project management features (issue tracking, sprint planning, team coordination)
+- **Do NOT** generate code during requirements, planning, or decomposition phases (only during implementation)
+- **Do NOT** require integration with specific external tools (git, Jira, etc.) - must work with or without them
+- **Do NOT** enforce specific development methodologies (Agile, Waterfall) - remain methodology-agnostic
+- **Do NOT** allow implementation technology choices during requirements phase (databases, frameworks, vendors)
+- **Do NOT** replace developer judgment - provide structure and validation, not prescriptive solutions
+- **Do NOT** assume one-size-fits-all - must support customization via project-specific conventions
+- **Do NOT** create hard dependencies on specific file formats, directory structures, or naming conventions (these are implementation choices for planning phase)
 
 ## Technical Context
 
-- **Existing platform**: Claude Code (Anthropic's CLI tool for AI-assisted development)
-- **Plugin system**: Uses Claude Code's `.claude-plugin/` directory structure
-- **Artifact storage**: `.sdd/` directory with subdirectories for specs, plans, tasks, progress
-  - Single-level: `.sdd/specs/feature-name.md`
-  - Parent-child: `.sdd/specs/parent-name.md` with children at `.sdd/specs/parent-name/child-name.md`
-  - Plans, tasks, and progress mirror the spec directory structure
-- **Document format**: GitHub-flavored markdown with structured sections
-- **Integration points**:
-  - Claude Code skill system (for guidance and methodology support)
-  - Claude Code agent system (for complex implementation tasks)
-  - Claude Code command system (for phase execution)
-  - Project-specific MCPs (via user direction, not hardcoded dependency)
+- **Target platform**: Claude Code (Anthropic's CLI for AI-assisted development)
+- **Plugin capabilities available**:
+  - Command system for workflow phase execution
+  - Skill system for methodology guidance
+  - Agent system for complex implementation delegation
+- **Artifact persistence required**: System must maintain structured artifacts across sessions for resumability
+- **Integration opportunities**:
+  - Version control systems (git, etc.)
+  - Project-specific tooling via Model Context Protocol (MCP)
+  - Existing CI/CD and testing infrastructure
 
 ## Acceptance Tests
 
 ### Test 1: Single-feature development workflow
 **Given**: A new feature request ("Add user notification preferences")
-**When**: User runs `/spec-writing` → `/plan-generation` → `/task-breakdown` → `/implementation`
+**When**: User completes full workflow (requirements → planning → decomposition → implementation)
 **Then**:
-- Specification contains no technology choices (only capabilities needed)
-- Plan explores existing codebase and documents 3+ patterns to reuse
-- Tasks complete in one iteration without user intervention
-- Implementation produces working, tested code that passes spec acceptance criteria
+- Requirements document contains zero technology choices (only capabilities and constraints)
+- Plan references existing codebase patterns and documents decision rationale
+- Implementation completes in one iteration (80%+ success rate for quality inputs)
+- All code changes map back to requirements acceptance criteria
+- Automated tests validate requirements fulfillment
 
-### Test 2: Spec-to-code alignment
-**Given**: An approved specification with 5 acceptance criteria
-**When**: Implementation phase completes all tasks
+### Test 2: Requirements-to-code alignment
+**Given**: Approved requirements with 5 acceptance criteria
+**When**: Implementation phase completes
 **Then**:
-- 5/5 acceptance criteria have passing tests
-- No additional features beyond spec scope
-- All deviations from spec are documented with approval records
+- All 5 acceptance criteria have passing automated tests
+- No features implemented beyond approved requirements scope
+- All deviations documented with explicit user approval records
 
 ### Test 3: Session resumption
-**Given**: Implementation interrupted mid-way through task list
-**When**: Developer returns 2 days later and reads `.sdd/progress/[feature]-progress.md`
+**Given**: Implementation interrupted mid-way through task execution
+**When**: Developer returns 2+ days later and reviews progress artifacts
 **Then**:
-- Developer understands current state without asking questions
-- Can continue implementation from exact stopping point
-- No context loss or re-explanation required
+- Developer and AI understand current state without user re-explanation
+- Work continues from exact stopping point
+- Zero context loss across multi-day interruption
 
 ### Test 4: Phase boundary enforcement
-**Given**: User runs `/spec-writing` command
-**When**: AI begins writing implementation code or selecting technologies
+**Given**: User in requirements definition phase
+**When**: System attempts to make technology selection decisions (databases, frameworks, vendors)
 **Then**:
-- Command prompt reminds AI to stay at WHAT level
-- Spec validation checklist flags HOW details
-- User receives warning about premature technical decisions
+- System detects and prevents premature HOW decisions
+- Validation flags technology choices in requirements document
+- User receives guidance to defer implementation decisions to planning phase
 
-### Test 5: Parent-child specification hierarchy
-**Given**: Project with a dashboard controller that manages 5 features
-**When**: User creates `.sdd/specs/dashboard-controller.md` with children at `.sdd/specs/dashboard-controller/feature-a.md`, `.sdd/specs/dashboard-controller/feature-b.md`, etc.
+### Test 5: Hierarchical project organization
+**Given**: Large project with 5 related subsystems
+**When**: User organizes requirements hierarchically (parent + 5 children)
 **Then**:
-- Parent spec includes "Child Specifications" section listing all 5 children
-- Each child spec includes "Parent Specification" field referencing dashboard-controller
-- Plans/tasks/progress documents mirror the same directory structure
-- Can work on single feature without loading all sibling specs
-- Directory structure is readable by both AI and humans
+- Parent requirements include references to all child requirements
+- Each child references parent for context
+- Related artifacts (plans, tasks, progress) maintain consistent hierarchy
+- Developer can work on single subsystem without loading all sibling context
+- System scales from simple (5 tasks) to complex (100+ tasks) projects
 
-### Test 6: Extensibility with project-specific tools
-**Given**: Team provides custom MCP tool for issue tracking
-**When**: User directs `/implementation` to use issue tracker for progress
+### Test 6: Tool integration flexibility
+**Given**: Project has custom tooling (issue tracker, specific CI/CD, etc.)
+**When**: User integrates workflow with project-specific tools
 **Then**:
-- Spiral Grove adapts to use custom tool without plugin modification
-- Core SDD workflow remains intact
-- No hardcoded dependencies introduced
+- System adapts without core modification
+- Workflow integrity maintained regardless of tool choices
+- No hardcoded tool dependencies required
 
 ## Open Questions
 
-- [ ] How should conflicts between multiple specs be handled in large projects (e.g., overlapping requirements)?
-- [ ] Should the plugin provide templates for different project types (web app, CLI tool, library), or remain generic?
+- [x] How should conflicts between multiple specs be handled in large projects (e.g., overlapping requirements)? Escalate to the user.
+- [x] Should the plugin provide templates for different project types (web app, CLI tool, library), or remain generic? NO
 
 ## Out of Scope
 
