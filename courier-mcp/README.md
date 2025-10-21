@@ -1,5 +1,7 @@
 # Courier MCP
 
+<img src="courier-mcp-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
+
 **A lightweight Model Context Protocol (MCP) server for exporting Gmail messages to markdown files**
 
 Courier MCP enables Claude Code users to retrieve, filter, and export Gmail messages as structured markdown files with YAML frontmatter. Perfect for email analysis, note-taking, and archival workflows.
@@ -7,8 +9,6 @@ Courier MCP enables Claude Code users to retrieve, filter, and export Gmail mess
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-
-<img src="courier-mcp-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
 ---
 

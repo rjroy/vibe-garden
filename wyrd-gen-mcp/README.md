@@ -1,5 +1,7 @@
 # Wyrd-Gen MCP
 
+<img src="wyrd-gen-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
+
 **AI-powered image generation for Claude Code via Replicate API**
 
 
@@ -9,8 +11,6 @@ Wyrd-Gen MCP enables Claude Code users to generate stunning AI images through na
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/protocol-MCP-purple.svg)](https://modelcontextprotocol.io/)
-
-<img src="wyrd-gen-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
 ---
 
@@ -266,7 +266,7 @@ Logs are written to `wyrd-gen-mcp.log` in the current working directory.
 - **[MCP Overview](docs/reference/MCP_OVERVIEW.md)** - Understanding the protocol
 - **[Replicate API](docs/reference/REPLICATE_API.md)** - Model details and pricing
 - **[Configuration](docs/reference/CONFIGURATION.md)** - Setup and environment variables
-- **[Server Implementation](servers/README.md)** - Technical implementation details
+- **[Server Implementation](server/README.md)** - Technical implementation details
 
 ---
 
@@ -287,12 +287,12 @@ git clone https://github.com/rjroy/vibe-garden.git
 cd vibe-garden/wyrd-gen-mcp
 
 # Create virtual environment
-python -m venv servers/venv
+python -m venv server/venv
 
 # Activate virtual environment
-source servers/venv/bin/activate  # Linux/macOS
+source server/venv/bin/activate  # Linux/macOS
 # or
-servers\venv\Scripts\activate     # Windows
+server\venv\Scripts\activate     # Windows
 
 # Install dependencies
 cd servers
