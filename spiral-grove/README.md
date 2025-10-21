@@ -6,7 +6,7 @@
 
 Spiral Grove transforms AI-assisted development by providing a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Build production-ready features with clarity, consistency, and comprehensive documentation.
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/platform-Claude%20Code-purple.svg)](https://claude.ai/code)
 
@@ -20,6 +20,7 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 - ⚙️ **Implementation Tracking** - Execute tasks with progress monitoring and deviation tracking
 - ✅ **Validation Command** - Review phase documents before progression
 - 📚 **Documentation Synthesis** - Generate operational CLAUDE.md docs from implementation
+- 🔄 **Specification Synthesis** - Reverse-engineer specs from existing code with drift detection
 - 🎯 **Claude Code Plugin** - Install via `/plugin install spiral-grove@vibe-garden`
 - 🔄 **Parent/Child Hierarchies** - Organize complex projects without context overload
 - 📖 **Integrated Guidance** - Built-in skill provides methodology help when stuck
@@ -126,12 +127,24 @@ You: /review tasks
 ### Post-Implementation Documentation
 
 ```
-You: /synthesize-docs auth
+You: /synthesize-docs
 # Analyzes implementation and generates/updates:
 # - auth/CLAUDE.md (module documentation)
 # - Operational knowledge extracted from code
 # - Integration patterns documented
 # - Framework-agnostic structure
+```
+
+### Legacy Codebase Adoption
+
+```
+You: /synthesize-specs
+# Reverse-engineers specifications from implementation:
+# - .sdd/specs/auth.md (requirements from code)
+# - Functional/non-functional requirements extracted
+# - Acceptance tests from actual test files
+# - Drift detection if existing specs present
+# - Bootstraps SDD workflow on legacy code
 ```
 
 ---
@@ -153,6 +166,7 @@ You: /synthesize-docs auth
 |---------|---------|--------|
 | `/review [spec\|plan\|tasks\|progress]` | Validate phase documents before progression | Validation findings + approval checkpoint |
 | `/synthesize-docs [module]` | Generate operational CLAUDE.md documentation | `[module]/CLAUDE.md` (≤400 lines) |
+| `/synthesize-specs [module]` | Reverse-engineer specs from code with drift detection | `.sdd/specs/[module].md` |
 
 ### Guidance Skill
 
@@ -224,7 +238,7 @@ After using Spiral Grove, your project will have:
 your-project/
 ├── .sdd/
 │   ├── specs/                     # Feature specifications
-│   │   ├── feature-name.md
+│   │   ├── feature-name.md        # Manual or reverse-engineered
 │   │   └── parent-feature/        # Optional: child specs
 │   │       ├── child-a.md
 │   │       └── child-b.md
@@ -238,11 +252,13 @@ your-project/
 │   │   └── parent-feature/
 │   │       ├── child-a-tasks.md
 │   │       └── child-b-tasks.md
-│   └── progress/                  # Implementation tracking
-│       ├── feature-name-progress.md
-│       └── parent-feature/
-│           ├── child-a-progress.md
-│           └── child-b-progress.md
+│   ├── progress/                  # Implementation tracking
+│   │   ├── feature-name-progress.md
+│   │   └── parent-feature/
+│   │       ├── child-a-progress.md
+│   │       └── child-b-progress.md
+│   ├── spec-manifest.json         # Spec synthesis tracking (from /synthesize-specs)
+│   └── module-manifest.json       # Doc synthesis tracking (from /synthesize-docs)
 └── src/
     ├── auth/                      # Implemented modules
     │   ├── CLAUDE.md              # Module documentation (from /synthesize-docs)
