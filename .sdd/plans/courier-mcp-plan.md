@@ -985,7 +985,7 @@ After addressing the error, try running the Courier MCP command again.
 ## Appendix: Existing Code Analysis
 
 ### wyrd-gen-mcp Reference Implementation
-- **Location**: `/home/rjroy/Projects/vibe-garden/wyrd-gen-mcp/servers/src/wyrd_gen_mcp/server.py`
+- **Location**: `/home/rjroy/Projects/vibe-garden/wyrd-gen-mcp/server/src/wyrd_gen_mcp/server.py`
 - **Patterns to Reuse**:
   - MCP Server structure: `Server("courier-mcp")` + async handler registration
   - Tool definition with JSON schemas

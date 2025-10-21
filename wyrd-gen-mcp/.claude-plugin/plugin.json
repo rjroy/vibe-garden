@@ -10,7 +10,7 @@
   "license": "MIT",
   "mcpServers": {
     "wyrd-gen": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/servers/scripts/wyrd-gen.sh",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/scripts/wyrd-gen.sh",
       "args": [""]
     }
   }
