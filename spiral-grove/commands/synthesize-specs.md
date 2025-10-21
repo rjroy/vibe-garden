@@ -83,9 +83,20 @@ Before starting synthesis, verify:
 
 **Execute these steps in order:**
 
+**Step 0: Check scope argument**
+```
+If scope argument provided (e.g., "src/auth"):
+  1. Validate path exists with Glob: [scope_path]/**/*
+  2. If no files found: Exit with error "Module path '[scope_path]' not found or empty"
+  3. If valid: Skip Steps 1-6, create minimal manifest with single module
+  4. Proceed directly to Phase 2
+Else (no scope argument):
+  → Continue to Step 1 (full project synthesis)
+```
+
 **Step 1: Check for existing manifest** (Resumability)
 ```
-IMPORTANT: Run Resumability section FIRST (after this phase header)
+IMPORTANT: Run Resumability section FIRST (see Resumability section below)
 
 If manifest exists and user chose to continue/regenerate:
   → Resume from Resumability Step 4 (skip Phase 1, go to Phase 2)
@@ -167,6 +178,9 @@ Parse user input:
 
 **Step 7: Create .sdd/specs/ directory and manifest**
 ```
+IMPORTANT: This command is responsible for creating .sdd/specs/ directory.
+The agent expects this directory to exist before invocation.
+
 Use Bash to ensure directory exists:
   mkdir -p .sdd/specs
 
@@ -181,6 +195,12 @@ Use Write tool to create .sdd/spec-manifest.json:
       "status": "pending",
       "spec_path": ".sdd/specs/<module-name>.md",
       "drift_detected": false,
+      "drift_summary": {
+        "added": 0,
+        "missing": 0,
+        "modified": 0,
+        "violated_constraints": 0
+      },
       "error": null
     }
     // ... repeat for each module
@@ -238,65 +258,55 @@ Example: 25 modules → 3 batches (10 + 10 + 5)
 Rationale: Limits concurrent agent load while maintaining parallelism
 ```
 
-**Agent Invocation Details**:
+**Agent Invocation**:
 ```
-For each module, construct Task prompt:
+For each module, invoke the spiral-grove:module-spec-synthesizer agent:
 
-"You are a specification synthesis agent. Analyze the module at path: [module_path]
+Task(
+  description: "Generate spec for [module-name]",
+  prompt: "Generate specification for module at path: [module_path]",
+  subagent_type: "spiral-grove:module-spec-synthesizer"
+)
 
-Follow the routine defined in spiral-grove/agents/module-spec-synthesizer.md:
+The agent automatically handles:
+- Checking for existing specs and performing drift detection
+- Analyzing implementation (code, tests, configs)
+- Generating specification following /spiral-grove:spec-writing template
+- Writing to .sdd/specs/[module-name].md
+- Reporting success/failure with drift status
 
-1. Check if .sdd/specs/[module-name].md exists
-   - If exists: Load for drift detection
-   - If not: Fresh synthesis
-
-2. Analyze module implementation:
-   - Discover all source files, tests, configs
-   - Extract user stories from tests and APIs
-   - Identify functional requirements from code capabilities
-   - Extract non-functional requirements (performance, security, reliability)
-   - Find explicit constraints (DO NOT) from validation, comments
-   - Map integration points (dependencies, external APIs)
-   - Convert test cases to acceptance criteria
-
-3. Generate specification following SDD template:
-   - Executive Summary
-   - User Story
-   - Stakeholders
-   - Success Criteria
-   - Functional Requirements
-   - Non-Functional Requirements
-   - Explicit Constraints (DO NOT)
-   - Technical Context
-   - Acceptance Tests
-   - Open Questions
-   - Out of Scope
-
-4. If existing spec found: Perform drift detection
-   - Compare requirements (added, missing, modified)
-   - Identify constraint violations
-   - Generate drift report section
-
-5. Write spec to .sdd/specs/[module-name].md
-   - Include metadata: Reverse-Engineered: true
-   - Include drift report if applicable
-
-Report success or failure with details."
+Note: Module name extracted from path (src/auth → auth, lib/user-service → user-service)
 ```
 
-**Step 4: Update manifest with agent results**
+**Step 4: Parse agent output and update manifest**
 ```
+Agent returns text output in this format:
+✅ Specification written to .sdd/specs/[module-name].md
+- Source: [module_path]
+- Reverse-engineered: true
+- Drift status: [CLEAN|DRIFT DETECTED]
+  - Added: X requirements
+  - Missing: Y requirements
+  - Modified: Z requirements
+  - Violated constraints: N
+
+Parse agent response:
+1. Check for "✅ Specification written" → Success
+2. Extract drift status: "DRIFT DETECTED" → drift = true, else false
+3. Parse drift counts (if present): Added/Missing/Modified/Violated
+
 For each successful agent response:
   1. Verify agent reported success (agent already wrote the file)
-  2. Check if drift was detected (from agent report)
+  2. Parse drift status from agent output
   3. Update manifest in memory:
      - modules[i].status = "completed"
-     - modules[i].drift_detected = true/false (from agent report)
+     - modules[i].drift_detected = true/false (parsed from output)
+     - modules[i].drift_summary = {added, missing, modified, violated} (if drift detected)
      - modules[i].error = null
   4. Log: "✓ [module.spec_path]" + (drift detected? " [DRIFT]" : "")
 
 For each failed agent response:
-  1. Extract error message from agent output
+  1. Extract error message from agent output (look for "❌ ERROR:")
   2. Update manifest in memory:
      - modules[i].status = "failed"
      - modules[i].drift_detected = false
@@ -331,7 +341,7 @@ Output:
 **Next**: Review specs in .sdd/specs/ directory
 ```
 
-**Performance**: Batched parallel execution (10 at a time) = manageable load while maintaining speed (target ~15 min for 100 modules)
+**Performance**: Batched parallel execution (10 at a time) = manageable load while maintaining speed (target ~30-45 min for 100 modules, ~18-27 seconds per module)
 
 ---
 
@@ -567,7 +577,7 @@ After all phases complete, display comprehensive summary (see Phase 3 Step 3 abo
 - **Framework-agnostic**: Works on any codebase (TypeScript, Python, Go, Rust, Java, Unreal Engine, etc.)
 - **SDD bootstrapping**: Enables SDD adoption on legacy codebases
 - **Agent does the work**: This command orchestrates; `module-spec-synthesizer` agent analyzes code
-- **Performance target**: 100 modules in ~15 minutes (batched parallel execution, max 10 concurrent agents)
+- **Performance target**: 100 modules in ~30-45 minutes (batched parallel execution, max 10 concurrent agents)
 - **Spec quality depends on tests**: Better tests = better specs (acceptance criteria from test assertions)
 - **Spec manifest**: Schema similar to module-manifest.json but tracks drift status
 - **Complementary to synthesize-docs**: Use both for complete codebase understanding (WHAT + HOW)
