@@ -253,7 +253,7 @@
 - [x] TASK-020: Plugin Manifest & Directory Structure
   - Created .claude-plugin/plugin.json with v1.1.0 metadata
   - MCP server name: "courier" (fixed from "wyrd-gen")
-  - Launcher script: servers/scripts/courier.sh with ${CLAUDE_PLUGIN_ROOT}
+  - Launcher script: server/scripts/courier.sh with ${CLAUDE_PLUGIN_ROOT}
   - Directory structure follows plugin conventions
   - Venv setup and dependency installation automated
 

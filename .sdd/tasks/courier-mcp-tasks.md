@@ -1045,7 +1045,7 @@ Create Claude Code plugin manifest and directory structure following plugin conv
   - `courier-mcp/server/scripts/courier.sh`
 - Files to reference:
   - `wyrd-gen-mcp/.claude-plugin/plugin.json` (template)
-  - `wyrd-gen-mcp/servers/scripts/wyrd-gen.sh` (launcher template)
+  - `wyrd-gen-mcp/server/scripts/wyrd-gen.sh` (launcher template)
 - Key considerations:
   - `${CLAUDE_PLUGIN_ROOT}` resolves to plugin installation directory
   - Launcher must handle venv activation and Python path resolution

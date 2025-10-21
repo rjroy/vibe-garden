@@ -294,7 +294,7 @@ Without the `cmd /c` wrapper, you’ll encounter “Connection closed” errors 
 
   "database-tools": {
 
-    "command": "${CLAUDE_PLUGIN_ROOT}/servers/db-server",
+    "command": "${CLAUDE_PLUGIN_ROOT}/server/db-server",
 
     "args": ["--config", "${CLAUDE_PLUGIN_ROOT}/config.json"],
 
@@ -320,7 +320,7 @@ Or inline in `plugin.json`:
 
     "plugin-api": {
 
-      "command": "${CLAUDE_PLUGIN_ROOT}/servers/api-server",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/api-server",
 
       "args": ["--port", "8080"]
 

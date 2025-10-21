@@ -299,7 +299,7 @@ vibe-garden/
 │
 ├── wyrd-gen-mcp/               # Image generation MCP server
 │   ├── .claude-plugin/         # Plugin metadata (v0.1.1)
-│   └── servers/                # Python MCP server implementation
+│   └── server/                # Python MCP server implementation
 │
 ├── seeds/                      # Research and brainstorming
 │   ├── brainstorm/

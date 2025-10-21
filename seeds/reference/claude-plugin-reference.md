@@ -147,7 +147,7 @@ Plugins can bundle Model Context Protocol (MCP) servers to connect Claude Code w
 
     "plugin-database": {
 
-      "command": "${CLAUDE_PLUGIN_ROOT}/servers/db-server",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/db-server",
 
       "args": ["--config", "${CLAUDE_PLUGIN_ROOT}/config.json"],
 

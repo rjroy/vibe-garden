@@ -1,5 +1,7 @@
 # Spiral Grove
 
+<img src="spiral-grove-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
+
 **A Spec-Driven Development (SDD) methodology plugin for Claude Code**
 
 Spiral Grove transforms AI-assisted development by providing a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Build production-ready features with clarity, consistency, and comprehensive documentation.
@@ -7,8 +9,6 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 [![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/platform-Claude%20Code-purple.svg)](https://claude.ai/code)
-
-<img src="spiral-grove-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
 ---
 
