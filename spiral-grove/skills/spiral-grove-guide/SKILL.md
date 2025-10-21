@@ -1,6 +1,6 @@
 ---
 name: spiral-grove-guide
-description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove SDD commands (/spec-writing, /plan-generation, /task-breakdown, /implementation), when deciding whether to use SDD for a feature, when stuck during SDD workflow, or when needing clarification about SDD phases and principles.
+description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
 ---
 
 # Spiral Grove Guide
@@ -269,6 +269,51 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 └── progress/       # Implementation tracking
 ```
 
+## Additional Commands
+
+### Review Command (`/review`)
+
+**Purpose:** Validate phase documents before progression (meta-phase validation).
+
+**When to use:**
+- Before moving from one phase to the next
+- Want to verify spec/plan/task quality
+- Need confidence that documents are ready
+
+**What it checks:**
+- Specs: WHAT vs HOW separation, measurable success criteria
+- Plans: Technical rationale, codebase exploration evidence
+- Tasks: Mapping to spec acceptance criteria, proper dependencies
+- Progress: Deviation tracking and documentation
+
+**Command:** `/review [spec|plan|tasks|progress]`
+
+**Key benefit:** Catches issues before they cascade through later phases.
+
+### Retrofit Commands (`/synthesize-docs`, `/synthesize-specs`)
+
+**Purpose:** Enable SDD adoption on legacy codebases by reverse-engineering documentation and specifications from implementation.
+
+**When to use:**
+- Inheriting legacy codebase without documentation
+- Want to adopt SDD on existing project
+- Need compliance/audit documentation
+- Onboarding team members to large codebase
+- Detecting drift between specs and implementation
+
+**Commands:**
+- `/synthesize-docs` - Generate CLAUDE.md files (HOW - operational knowledge)
+- `/synthesize-specs` - Generate specifications (WHAT - requirements)
+
+**Key features:**
+- Automatic module discovery
+- Parallel processing (100 modules in ~10-45 minutes)
+- Drift detection (specs vs implementation)
+- Cross-command integration (reuse manifests)
+- Resumable if interrupted
+
+**See:** SYNTHESIZE-REFERENCE.md for comprehensive guide
+
 ## Resources
 
 This skill includes comprehensive reference documentation:
@@ -318,7 +363,27 @@ This skill includes comprehensive reference documentation:
 - Writing documentation about SDD
 - Justifying SDD adoption to organization
 
-**Usage guideline:** Use QUICK-REFERENCE for "how to use SDD" and FOUNDATIONS for "why SDD exists and how it works."
+### references/SYNTHESIZE-REFERENCE.md
+**Purpose:** Comprehensive guide for retrofitting legacy codebases with SDD documentation and specifications
+
+**Contains:**
+- When to use synthesize commands
+- Detailed command workflows for /synthesize-docs and /synthesize-specs
+- Cross-command integration strategies
+- Practical workflows (onboarding, drift detection, compliance)
+- Performance optimization for large codebases
+- Troubleshooting guide
+- Common scenarios and solutions
+
+**When to use:**
+- Adopting SDD on legacy codebase
+- Need to generate documentation for undocumented code
+- Want to detect drift between specs and implementation
+- Onboarding team to large project
+- Compliance/audit documentation needed
+- Reverse-engineering requirements from code
+
+**Usage guideline:** Use QUICK-REFERENCE for "how to use SDD" and FOUNDATIONS for "why SDD exists and how it works." Use SYNTHESIZE-REFERENCE for "how to adopt SDD on existing code."
 
 ## Tips for Success
 
