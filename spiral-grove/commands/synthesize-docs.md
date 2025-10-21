@@ -43,6 +43,7 @@ Before starting synthesis, verify:
 3. **Check for existing manifest**:
    - If `.sdd/module-manifest.json` exists: Resumability mode (continue from previous run)
    - If missing: First run (full discovery and generation)
+   - Manifest structure documented in: `spiral-grove/docs/module-manifest-schema.md`
 
 **Note**: This command works on ANY codebase, not just Spiral Grove projects. The `.sdd/` integration is optional.
 
@@ -79,14 +80,27 @@ Before starting synthesis, verify:
 
 **Execute these steps in order:**
 
-**Step 1: Check for existing manifest** (Resumability)
+**Step 1: Check for existing manifests** (Resumability & Cross-Command Integration)
 ```
-IMPORTANT: Run Resumability section FIRST (after this phase header)
+IMPORTANT: Check manifests in this order:
 
-If manifest exists and user chose to continue/regenerate:
-  → Resume from Resumability Step 4 (skip Phase 1, go to Phase 2)
-Else (no manifest or user declined):
-  → Continue to Step 2 below (full Phase 1 execution)
+1. Check .sdd/module-manifest.json (this command's manifest)
+   - If exists: Run Resumability section (see below) → may resume or continue
+
+2. If no module-manifest.json, check .sdd/spec-manifest.json (from /synthesize-specs)
+   - If exists:
+     → Output: "Found spec manifest from /synthesize-specs. Use it as starting point? [y/n]"
+     → If "y": Convert spec-manifest.json to module-manifest.json format:
+       - Copy "modules" array (path, spec_path)
+       - Add claude_md_path: "[path]/CLAUDE.md"
+       - Remove drift_detected, drift_summary fields (not needed for docs)
+       - Set all status: "pending"
+       - Write to .sdd/module-manifest.json
+       → Continue to Step 7 (skip discovery Steps 2-6)
+     → If "n": Continue to Step 2 (full discovery)
+
+3. If neither manifest exists:
+   → Continue to Step 2 (full Phase 1 execution - fresh discovery)
 ```
 
 **Step 2: Scan for package files** (strongest signal)
@@ -499,5 +513,7 @@ If all failed (totalFailed === totalCount):
 - **Agent does the work**: This command orchestrates; `module-doc-synthesizer` agent analyzes code
 - **Performance target**: 100 modules in ~10-15 minutes (batched parallel execution, max 10 concurrent agents)
 - **Hand-edit safety**: Agent preserves user content automatically
-- **Module manifest**: Schema documented in `spiral-grove/docs/module-manifest-schema.md`
+- **Cross-command integration**: Can use spec-manifest.json from `/synthesize-specs` as starting point (avoids re-discovery)
+- **Module manifest**: Schema documented in `spiral-grove/docs/module-manifest-schema.md` (tracks documentation generation status)
+- **Spec manifest**: Schema documented in `spiral-grove/docs/spec-manifest-schema.md` (companion for specs synthesis)
 - **CLAUDE.md format**: Specification in `spiral-grove/docs/claude-md-format.md`
