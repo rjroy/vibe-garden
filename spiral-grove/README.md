@@ -6,7 +6,7 @@
 
 Spiral Grove transforms AI-assisted development by providing a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Build production-ready features with clarity, consistency, and comprehensive documentation.
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/platform-Claude%20Code-purple.svg)](https://claude.ai/code)
 
@@ -41,7 +41,7 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 You: I want to build a user authentication system
 
 Claude: [Invokes /spec-writing command]
-Let's start with the specification phase...
+Let's start with the specification phase through Spiral Grove...
 ```
 
 ### 3. Follow the Workflow

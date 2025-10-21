@@ -93,26 +93,39 @@ Else (no manifest or user declined):
 ```
 Glob patterns (with exclusions):
   package.json (exclude node_modules), setup.py (exclude venv), go.mod,
-  Cargo.toml (exclude target), pom.xml (exclude target), __init__.py (exclude venv/__pycache__)
+  Cargo.toml (exclude target), pom.xml (exclude target), __init__.py (exclude venv/__pycache__),
+  *.uproject (Unreal Engine projects)
 
 For each match: Extract directory → mark as high-confidence candidate
+
+Special handling for Unreal Engine:
+  - If *.uproject found at root: Scan Source/ for module directories
+  - Each Source/[ModuleName]/ with *.Build.cs → high-confidence module
+  - Content/ directory → treat as single asset module (medium confidence)
+  - Plugins/[PluginName]/Source/[ModuleName]/ → high-confidence plugin module
 ```
 
 **Step 3: Scan for code-heavy directories** (secondary signal)
 ```
-Glob standard dirs with source files: src/, lib/, modules/, packages/, apps/
-File patterns: *.{ts,js,tsx,jsx,py,go,rs,java,cpp,c}
+Glob standard dirs with source files: src/, lib/, modules/, packages/, apps/, Source/ (Unreal)
+File patterns: *.{ts,js,tsx,jsx,py,go,rs,java,cpp,c,h,cs} (include .h and .cs for Unreal)
 
 For each dir with 3+ source files:
   - Has tests? (tests/, __tests__/, *_test.*, *_spec.*) → medium confidence
   - No tests? → low confidence
+
+Unreal Engine specific:
+  - Source/[ModuleName]/ with *.Build.cs → high confidence (C++ module)
+  - Source/[ModuleName]Editor/ → high confidence (editor module)
+  - Plugins/[Name]/Source/ → high confidence (plugin module)
 ```
 
 **Exclusions** (apply to all Glob operations):
 ```
 node_modules/**, vendor/**, .git/**, dist/**, build/**, target/**,
 __pycache__/**, .pytest_cache/**, .next/**, .nuxt/**, out/**,
-.*/** (hidden directories)
+.*/** (hidden directories),
+Saved/**, Intermediate/**, Binaries/**, DerivedDataCache/** (Unreal Engine)
 ```
 
 **Step 4: Deduplicate and rank**
@@ -190,36 +203,48 @@ Store in pendingModules array
 Count: N modules to process
 ```
 
-**Step 3: Spawn agents in parallel (CRITICAL)**
+**Step 3: Spawn agents in parallel batches (CRITICAL)**
 ```
-IMPORTANT: SINGLE message with MULTIPLE Task tool calls
+IMPORTANT: Process modules in batches of MAX 10 parallel agents
 
-For each module in pendingModules:
-  Task(description: "Generate CLAUDE.md for [path]",
-       prompt: "Generate CLAUDE.md for module at path: [path]",
-       subagent_type: "general-purpose")
+Batch processing loop:
+  1. Split pendingModules into batches of 10
+  2. For each batch:
+     - Send SINGLE message with MULTIPLE Task tool calls (up to 10)
+     - For each module in batch:
+         Task(description: "Generate CLAUDE.md for [path]",
+              prompt: "Generate CLAUDE.md for module at path: [path]",
+              subagent_type: "spiral-grove:module-doc-synthesizer")
+     - Wait for ALL agents in batch to complete
+     - Collect results (success or error reports)
+     - Continue to next batch
 
-Example: 3 modules → single message with 3 Task calls (src/auth, src/api, src/db)
-Wait for all agents → collect results (markdown or error)
+Example: 25 modules → 3 batches (10 + 10 + 5)
+  Batch 1: 10 parallel Task calls → wait → collect results
+  Batch 2: 10 parallel Task calls → wait → collect results
+  Batch 3: 5 parallel Task calls → wait → collect results
+
+Rationale: Limits concurrent agent load while maintaining parallelism
 ```
 
-**Step 4: Write module CLAUDE.md files**
+**Step 4: Update manifest with agent results**
 ```
 For each successful agent response:
-  1. Extract markdown content from agent output
-  2. Use Write tool: [module.path]/CLAUDE.md
-  3. Update manifest in memory:
+  1. Verify agent reported success (agent already wrote the file)
+  2. Update manifest in memory:
      - modules[i].status = "completed"
      - modules[i].error = null
-  4. Log: "✓ Generated [module.path]/CLAUDE.md"
+  3. Log: "✓ [module.path]/CLAUDE.md"
 
 For each failed agent response:
-  1. Extract error message
+  1. Extract error message from agent output
   2. Update manifest in memory:
      - modules[i].status = "failed"
      - modules[i].error = "[error message]"
   3. Log: "✗ Failed [module.path]: [error message]"
   4. Continue with remaining modules (don't stop)
+
+Note: Agents write files directly. This step only updates tracking manifest.
 ```
 
 **Step 5: Update manifest with results**
@@ -234,7 +259,7 @@ Write updated manifest JSON (pretty-printed, indent: 2)
 **Step 6: Generate root CLAUDE.md**
 ```
 Analyze project:
-  - Project name: package.json/Cargo.toml/go.mod (if exists)
+  - Project name: package.json/Cargo.toml/go.mod/*.uproject (if exists)
   - Directory structure: top-level dirs only
   - Module index: link each completed module → [path]/CLAUDE.md
 
@@ -243,6 +268,11 @@ Construct root CLAUDE.md (≤400 lines):
   **Last Generated**: [timestamp]
   ## Purpose / ## Architecture / ## Directory Structure / ## Modules / ## Getting Started
   [Infer from README.md, package.json scripts, Makefile]
+
+For Unreal Engine projects:
+  - Include Unreal version from .uproject
+  - List C++ modules (Source/), Editor modules, and Plugins separately
+  - Note key Config/*.ini files and Content organization
 
 Use Write tool: CLAUDE.md (at project root)
 ```
@@ -257,7 +287,7 @@ Output:
 **Next**: Phase 3 (if .sdd/specs/ exists)
 ```
 
-**Performance**: Single message with multiple Task calls = parallel (target <5 min for 100 modules)
+**Performance**: Batched parallel execution (10 at a time) = manageable load while maintaining speed (target ~10-15 min for 100 modules)
 
 ---
 
@@ -463,10 +493,11 @@ If all failed (totalFailed === totalCount):
 
 ## Notes
 
-- **Framework-agnostic**: Works on any codebase (TypeScript, Python, Go, Rust, Java, etc.)
+- **Framework-agnostic**: Works on any codebase (TypeScript, Python, Go, Rust, Java, Unreal Engine, etc.)
+- **Unreal Engine support**: Detects .uproject files, C++ modules (*.Build.cs), Editor modules, Plugins, and Content
 - **Optional SDD integration**: Phase 3 only runs if `.sdd/` exists
 - **Agent does the work**: This command orchestrates; `module-doc-synthesizer` agent analyzes code
-- **Performance target**: 100 modules in <5 minutes (parallel execution critical)
+- **Performance target**: 100 modules in ~10-15 minutes (batched parallel execution, max 10 concurrent agents)
 - **Hand-edit safety**: Agent preserves user content automatically
 - **Module manifest**: Schema documented in `spiral-grove/docs/module-manifest-schema.md`
 - **CLAUDE.md format**: Specification in `spiral-grove/docs/claude-md-format.md`
