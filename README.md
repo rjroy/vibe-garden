@@ -36,7 +36,7 @@ Vibe Garden combines emerging AI agent theories with practical implementations: 
 - Support for multiple AI models (Flux, Stable Diffusion, etc.)
 - Model parameter discovery
 - File collision prevention
-- **Status**: v0.1.1 (functional, SDD tracking pending)
+- **Status**: v1.1.0 (production-ready ✅)
 
 ### 📚 Research Materials
 
@@ -193,8 +193,8 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 **Purpose**: AI-powered text-to-image generation via Replicate API
 
-**Status**: 🔧 Functional (SDD tracking pending)
-**Version**: v0.1.1
+**Status**: ✅ Production Ready (100% complete)
+**Version**: v1.1.0
 **Location**: `wyrd-gen-mcp/`
 
 **Features**:
@@ -298,7 +298,7 @@ vibe-garden/
 │   └── tests/                  # Test suite (95/95 passing)
 │
 ├── wyrd-gen-mcp/               # Image generation MCP server
-│   ├── .claude-plugin/         # Plugin metadata (v0.1.1)
+│   ├── .claude-plugin/         # Plugin metadata (v1.1.0)
 │   └── server/                # Python MCP server implementation
 │
 ├── seeds/                      # Research and brainstorming

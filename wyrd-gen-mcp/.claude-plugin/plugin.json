@@ -1,7 +1,7 @@
 {
   "name": "wyrd-gen-mcp",
   "description": "Provides a MCP which uses Replicate to provides text-to-image generation. Uses stdio transport to access the MCP.",
-  "version": "0.1.1",
+  "version": "1.1.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"

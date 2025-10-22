@@ -7,7 +7,7 @@
 
 Wyrd-Gen MCP enables Claude Code users to generate stunning AI images through natural language prompts. Simply describe what you want, and Claude will create it using state-of-the-art image generation models.
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/protocol-MCP-purple.svg)](https://modelcontextprotocol.io/)
@@ -309,8 +309,8 @@ python -m wyrd_gen_mcp.server
 
 ## Project Status
 
-**Version**: 0.1.1
-**Status**: Functional (SDD tracking pending)
+**Version**: 1.1.0
+**Status**: Production Ready
 
 **Completed**:
 - ✅ Core image generation functionality
