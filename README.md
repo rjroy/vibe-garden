@@ -22,7 +22,7 @@ Vibe Garden combines emerging AI agent theories with practical implementations: 
 - Parent/child hierarchies for complex projects
 - Built-in validation via `/review` command
 - Documentation synthesis for code-spec alignment
-- **Status**: v0.1.1 (50% complete, active development)
+- **Status**: v1.0.0 (production-ready ✅)
 
 **Courier MCP** - Gmail Integration
 - Export Gmail messages as structured markdown files
@@ -36,7 +36,7 @@ Vibe Garden combines emerging AI agent theories with practical implementations: 
 - Support for multiple AI models (Flux, Stable Diffusion, etc.)
 - Model parameter discovery
 - File collision prevention
-- **Status**: v0.1.1 (functional, SDD tracking pending)
+- **Status**: v1.1.0 (production-ready ✅)
 
 ### 📚 Research Materials
 
@@ -143,8 +143,8 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 **Purpose**: Structured development methodology for Claude Code projects
 
-**Status**: 🔨 Active Development (50% complete)
-**Version**: v0.1.1
+**Status**: ✅ Production Ready (100% complete)
+**Version**: v1.0.0
 **Location**: `spiral-grove/`
 
 **Features**:
@@ -193,8 +193,8 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 **Purpose**: AI-powered text-to-image generation via Replicate API
 
-**Status**: 🔧 Functional (SDD tracking pending)
-**Version**: v0.1.1
+**Status**: ✅ Production Ready (100% complete)
+**Version**: v1.1.0
 **Location**: `wyrd-gen-mcp/`
 
 **Features**:
@@ -286,7 +286,7 @@ Execute and **TRACK** progress
 ```
 vibe-garden/
 ├── spiral-grove/               # Spec-Driven Development plugin
-│   ├── .claude-plugin/         # Plugin metadata (v0.1.1)
+│   ├── .claude-plugin/         # Plugin metadata (v1.0.0)
 │   ├── commands/               # SDD workflow commands
 │   ├── agents/                 # Reusable agent definitions
 │   └── docs/                   # Format specs and guides
@@ -298,7 +298,7 @@ vibe-garden/
 │   └── tests/                  # Test suite (95/95 passing)
 │
 ├── wyrd-gen-mcp/               # Image generation MCP server
-│   ├── .claude-plugin/         # Plugin metadata (v0.1.1)
+│   ├── .claude-plugin/         # Plugin metadata (v1.1.0)
 │   └── server/                # Python MCP server implementation
 │
 ├── seeds/                      # Research and brainstorming
