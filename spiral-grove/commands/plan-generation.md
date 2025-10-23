@@ -46,7 +46,7 @@ This command prompt is intentionally detailed to guide you. **Do NOT mirror this
 Think: "Have I explained HOW to build this and WHY clearly enough that someone could implement it without guessing?"
 
 1. **Deeply analyze the existing codebase**:
-   - Use Glob and Grep to find similar patterns
+   - Find similar patterns and existing implementations
    - Identify existing services, models, utilities to reuse
    - Understand the current architecture and conventions
    - Find integration points mentioned in the spec
@@ -141,15 +141,30 @@ For each major decision:
 - External systems/APIs
 - How they connect
 
-## Error Handling, Performance, Security
-Brief approach for each (not exhaustive):
-- Error strategy
-- Performance targets and approach
-- Security measures
+## Error Handling Strategy
+- Error strategy approach
+- Critical error paths
+
+## Performance Considerations
+- Performance targets (if any)
+- Architectural approaches for performance
+
+## Security Considerations
+- Security boundaries
+- Auth/authz approach
+- Input validation strategy
+- Sensitive data handling
 
 ## Testing Strategy
-- Unit, integration, E2E approach
-- What to test at each level
+- Testing approach (unit, integration, E2E)
+- What needs testing
+- Testability considerations
+
+## Validation Strategy
+- How will this be validated
+- What evidence demonstrates completion
+- What environment(s) require validation
+- Critical components requiring validation
 
 ## Risks & Mitigations
 | Risk | Likelihood | Impact | Mitigation |
@@ -164,11 +179,78 @@ Brief approach for each (not exhaustive):
 - [ ] Unresolved technical decisions
 ```
 
+## Section Guidance: Why These Sections Matter
+
+### Error Handling Strategy
+
+**Why this matters**: Errors discovered during implementation without a defined handling strategy lead to inconsistent error responses, poor user experience, and difficult debugging. Defining the approach upfront ensures coherent error handling across the feature.
+
+**What to document**:
+- Error strategy approach (how errors will be surfaced and handled)
+- Critical error paths (what failures must be handled gracefully)
+
+### Performance Considerations
+
+**Why this matters**: Performance requirements affect architectural decisions (caching strategy, data structure choices, async vs sync operations). Defining targets during planning prevents costly refactoring when performance issues are discovered late.
+
+**What to document**:
+- Performance targets (if any exist for this feature)
+- Architectural approaches that address performance (if relevant)
+
+### Security Considerations
+
+**Why this matters**: Security cannot be retrofitted. Authentication, authorization, input validation, and data protection must be designed into the architecture from the start.
+
+**What to document**:
+- Security boundaries (what needs protection)
+- Auth/authz approach (if applicable)
+- Input validation strategy (if handling user input)
+- Sensitive data handling (if applicable)
+
+### Testing Strategy
+
+**Why this matters**: The testing strategy influences architecture decisions (dependency injection for testability, interface design, component boundaries). Defining what needs testing and at what level helps ensure the architecture is testable and guides implementation priorities.
+
+**What to document**:
+- Testing approach (unit, integration, E2E - which levels apply)
+- What needs testing (critical paths vs nice-to-have coverage)
+- Testability considerations (architectural decisions that enable testing)
+
+### Validation Strategy
+
+**Why this matters**: Without defining "how do we prove this works," features can be marked complete prematurely, leading to bugs discovered after deployment. The validation strategy ensures there's agreement on what "done" means before implementation begins.
+
+**What to document**:
+- How will this feature be validated (what constitutes working correctly)
+- What evidence demonstrates completion (logs, tests passing, manual testing, user review)
+- What environment(s) require validation (local dev, staging, production-like, deployment target)
+- Critical components that require validation before completion
+
+**Key principle**: The project/domain defines WHAT validation looks like (browser testing, integration tests, performance benchmarks, etc.). The plan documents the validation approach so implementers know when to ask "is this validated enough?" vs "is this complete?"
+
+### Risks & Mitigations
+
+**Why this matters**: Identifying risks during planning allows proactive mitigation. Discovering risks during implementation leads to deadline pressure and poor trade-off decisions under stress.
+
+**What to document**:
+- Major technical risks (focus on high/medium likelihood or high impact)
+- Mitigation strategies for each risk
+- When mitigation should occur (upfront vs if-needed)
+
+### Open Questions
+
+**Why this matters**: Documenting unresolved questions prevents implementers from making assumptions that might conflict with user expectations. Surfaces decisions that need user input before coding begins.
+
+**What to document**:
+- Unresolved technical decisions
+- Questions requiring user input or approval
+- Design alternatives that need evaluation
+
 ## Workflow
 
 1. **Read spec**: Understand requirements thoroughly
 2. **Check hierarchy**: If child, read parent spec/plan first for context
-3. **Explore codebase**: Use Glob/Grep to find existing patterns
+3. **Explore codebase**: Find existing patterns and understand current architecture
 4. **Draft architecture**: Create in sections, save periodically
 5. **Document decisions**: Key choices with rationale
 6. **Review & iterate**: Present for feedback, refine

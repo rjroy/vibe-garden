@@ -153,6 +153,43 @@ TASK-001 → TASK-002 → TASK-003
 **Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 ```
 
+## Task Field Guidance: Why These Fields Matter
+
+### Acceptance Criteria
+
+**Why this matters**: Without clear acceptance criteria, tasks get marked "complete" prematurely, leading to bugs discovered later or work that doesn't meet spec requirements. Explicit criteria enable validation before marking done and ensure alignment with the validation strategy defined in the plan.
+
+**What to document**:
+- Specific, testable outcomes (not vague goals like "it works")
+- How to verify the task is complete (what evidence proves it's done)
+- Edge cases that must be handled
+- Integration points that must work correctly
+
+**Key principle**: Acceptance criteria should answer "How do I prove this task is complete?" If the answer is unclear, the criteria need refinement.
+
+### Testing Requirements
+
+**Why this matters**: Defining test requirements during task breakdown ensures testability is designed in, not retrofitted. Tasks without explicit test requirements often get marked complete with inadequate or missing tests, leading to untested code paths and production bugs.
+
+**What to document**:
+- What needs to be tested (unit, integration, E2E as appropriate)
+- Critical paths requiring tests (from plan's validation strategy)
+- Edge cases requiring test coverage
+- Test evidence format (tests passing, coverage metrics, manual test results)
+
+**Key principle**: If a task involves critical path components (identified in the plan), testing is required before task completion, not optional.
+
+### Dependencies
+
+**Why this matters**: Hidden dependencies cause blocking and rework. Explicit dependency mapping enables parallel work and prevents starting tasks that will need to be redone when prerequisites change. Clear dependencies help identify the critical path and realistic timeline.
+
+**What to document**:
+- Which tasks must complete before this one can start
+- Why the dependency exists (data model needed, interface required, etc.)
+- Whether dependency is hard (must wait) or soft (preferred order)
+
+**Key principle**: Tasks with no dependencies can be parallelized. Tasks with many dependencies may indicate the task is too large or architecture needs adjustment.
+
 ## Workflow
 
 1. **Read spec and plan**: Understand requirements and architecture
