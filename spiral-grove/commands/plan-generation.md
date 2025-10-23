@@ -46,7 +46,7 @@ This command prompt is intentionally detailed to guide you. **Do NOT mirror this
 Think: "Have I explained HOW to build this and WHY clearly enough that someone could implement it without guessing?"
 
 1. **Deeply analyze the existing codebase**:
-   - Use Glob and Grep to find similar patterns
+   - Find similar patterns and existing implementations
    - Identify existing services, models, utilities to reuse
    - Understand the current architecture and conventions
    - Find integration points mentioned in the spec
@@ -250,7 +250,7 @@ For each major decision:
 
 1. **Read spec**: Understand requirements thoroughly
 2. **Check hierarchy**: If child, read parent spec/plan first for context
-3. **Explore codebase**: Use Glob/Grep to find existing patterns
+3. **Explore codebase**: Find existing patterns and understand current architecture
 4. **Draft architecture**: Create in sections, save periodically
 5. **Document decisions**: Key choices with rationale
 6. **Review & iterate**: Present for feedback, refine
