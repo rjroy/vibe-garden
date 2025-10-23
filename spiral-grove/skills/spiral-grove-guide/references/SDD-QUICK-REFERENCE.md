@@ -79,12 +79,15 @@
 - Document **technical decisions** with rationale
 - Consider **integration points** and **risks**
 - Design for the **whole system** (data, errors, security, testing)
+- Define **validation strategy** (how to prove it works, evidence format)
 
 ### Task Breakdown Phase
 - Create **independent, testable** tasks
 - Keep tasks **small** (< 1 day each)
 - Map tasks to **spec acceptance criteria**
 - Identify **dependencies** clearly
+- Ensure **acceptance criteria** answer "how do I prove this is complete?"
+- Define **testing requirements** explicitly (not optional for critical paths)
 
 ### Implementation Phase
 - Work **one task at a time**
@@ -138,10 +141,12 @@ Use `/review [phase]` to validate phase documents before progression.
 - ✅ Integration points documented
 - ✅ Existing codebase patterns analyzed
 - ✅ Error handling, security, testing strategies defined
+- ✅ Validation strategy defined (how to prove it works, what evidence, what environment)
 
 **Example issues:**
 - ❌ "Decision: Use Redis" with no explanation
 - ✅ "Decision: Use Redis. Rationale: Existing infra, team familiar, meets <200ms requirement"
+- ❌ No validation strategy → Add: "Validation: Browser testing + deployment on staging"
 
 ### Tasks Review (`/review tasks`)
 **Critical checks:**
@@ -149,11 +154,13 @@ Use `/review [phase]` to validate phase documents before progression.
 - ✅ Task sizing < 1 day each
 - ✅ Dependencies documented
 - ✅ Each task has specific acceptance criteria
-- ✅ Testing requirements explicit
+- ✅ Acceptance criteria include "how to verify" not just "what to build"
+- ✅ Testing requirements explicit (unit, integration, critical paths)
 
 **Example issues:**
 - ❌ Task estimated at 3 days → Break down further
 - ❌ Spec criterion has no corresponding task → Add task
+- ❌ "Acceptance: Code written" → Add: "How verified? Tests passing, deployed to staging"
 
 ### Progress Review (`/review progress`)
 **Critical checks:**
@@ -259,6 +266,7 @@ Tasks: Draft → Ready for Implementation → In Progress → Complete
 - **Tasks can be added** - Discovery is part of the process
 - **Progress docs are for you** - Make them useful for resuming work
 - **Tests are guardrails** - They keep you aligned with specs
+- **Validation is domain-specific** - SDD defines that validation is required, not how to validate (web app vs CLI vs game each validate differently)
 
 ## Remember
 
