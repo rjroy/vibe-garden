@@ -4,7 +4,7 @@
 
 **Companion Document**: See [SDD-QUICK-REFERENCE.md](./SDD-QUICK-REFERENCE.md) for practical usage guide.
 
-**Last Updated**: 2025-10-17
+**Last Updated**: 2025-10-21
 
 ---
 
@@ -320,13 +320,15 @@ Draft → Under Review → Approved → [Updated/Superseded]
 
 **Principle**: Complete and validate each phase before proceeding to the next.
 
-**Validation Gates**:
-- **Spec → Plan**: Spec approved, testable, feasible
-- **Plan → Tasks**: Architecture sound, decisions documented, integration clear
-- **Tasks → Implementation**: Dependencies mapped, acceptance criteria defined
-- **Implementation → Done**: All tests pass, spec criteria met, deviations documented
+**Validation Command**: The `/review [phase]` command provides structured validation before progression.
 
-**Why Boundaries Matter**: Prevents building on shaky foundations. Cheaper to fix specification issues than implementation bugs.
+**Validation Gates**:
+- **Spec → Plan**: Run `/review spec` - Spec approved, testable, feasible, no HOW details
+- **Plan → Tasks**: Run `/review plan` - Architecture sound, decisions documented with rationale
+- **Tasks → Implementation**: Run `/review tasks` - Dependencies mapped, acceptance criteria defined
+- **Implementation → Done**: Run `/review progress` - All tests pass, spec criteria met, deviations documented
+
+**Why Boundaries Matter**: Prevents building on shaky foundations. Cheaper to fix specification issues than implementation bugs. The `/review` command provides objective quality gates.
 
 ---
 
@@ -708,31 +710,61 @@ Spec is source of truth → AI generates code → Validate against spec
 
 ---
 
-#### 4. Validation Checklists
+#### 4. Validation Command and Quality Gates
 
-**Built into commands**:
-- Spec validation: 7-item checklist
-- Plan validation: 8-item checklist
-- Task validation: 8-item checklist
-- Implementation validation: 10-item checklist
+**The `/review [phase]` command provides structured validation**:
+- `/review spec` - Validates specifications before planning
+- `/review plan` - Validates technical plans before task breakdown
+- `/review tasks` - Validates task breakdowns before implementation
+- `/review progress` - Validates implementation progress
 
-**Examples**:
+**Validation Features**:
+- Comprehensive checks for each phase (phase boundaries, content quality, completeness)
+- Nuanced semantic analysis (not just keyword matching)
+- Structured findings presentation (✅ pass / ⚠️ warning / ❌ fail)
+- Advisory approach - presents findings, waits for explicit approval
+- Only updates document status with user confirmation
+
+**Example Spec Validation Checks**:
 ```
-Spec Validation:
-- [ ] Problem clearly articulated
-- [ ] Success criteria are measurable
+Critical Checks:
+- [ ] No HOW details (tech choices like "use PostgreSQL", "deploy on AWS")
+- [ ] Success criteria are measurable (numbers, percentages, time limits)
 - [ ] Stakeholders identified
-- [ ] Constraints explicit
+- [ ] Explicit constraints exist (DO NOTs)
 - [ ] Acceptance tests defined
-- [ ] Non-functional requirements included
-- [ ] Out-of-scope items listed
 ```
 
-**Why**: Quality gates prevent moving to next phase with incomplete work. Reduces rework.
+**Why**: Quality gates prevent moving to next phase with incomplete work. Reduces rework. Provides objective validation criteria.
 
 ---
 
-#### 5. Technical Discovery Logging
+#### 5. Structured Validation Review Output
+
+**The `/review` command presents findings in a structured format**:
+
+```markdown
+# Review Results: [Phase] - [Feature Name]
+
+**Overall Assessment**: ✅ Pass | ⚠️ Warnings | ❌ Issues Found
+
+## Critical Checks
+[Detailed findings for each critical check]
+
+## Recommendation
+- ✅ Ready to approve
+- ⚠️ Approve with caution
+- ❌ Not ready - issues must be resolved
+
+**Update Status?**
+Would you like me to update the status field? (explicit confirmation required)
+```
+
+**Why**: Structured output makes validation findings clear and actionable. Explicit approval prevents premature progression.
+
+---
+
+#### 6. Technical Discovery Logging
 
 **Structured format**:
 ```markdown
@@ -756,7 +788,7 @@ Spec Validation:
 
 ---
 
-#### 6. Deep Codebase Exploration Emphasis
+#### 7. Deep Codebase Exploration Emphasis
 
 **Planning phase mandate**:
 - Use Glob and Grep extensively
@@ -771,7 +803,7 @@ Spec Validation:
 
 ---
 
-#### 7. Document Cross-Referencing
+#### 8. Document Cross-Referencing
 
 **Structure**:
 - Plans reference their originating spec
@@ -788,7 +820,7 @@ Spec Validation:
 
 **Position**: Specification is absolute source of truth. Implementation that differs without approval is "wrong" even if it "works."
 
-**More Absolute** than other SDD implementations, which treat specs as guidance.
+**More Absolute** than other SDD implementations, which treat specs as guidance. Spiral Grove enforces this through the `/review` command's validation checks.
 
 **Rationale**: Prevents scope creep and requirement drift, especially critical with AI agents that might "improve" beyond requirements.
 
@@ -835,7 +867,7 @@ Spec Validation:
 
 **Why**: Each phase builds on the previous. Shaky foundations cause expensive rework.
 
-**Enforcement**: Validation checklists act as gates.
+**Enforcement**: The `/review` command acts as a quality gate between phases, validating completeness before progression.
 
 ---
 
@@ -1218,10 +1250,11 @@ Informal term for ad hoc, prompt-based AI-assisted development without structure
 
 ## Document History
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Created**: 2025-10-17
-**Last Updated**: 2025-10-17
+**Last Updated**: 2025-10-21
 **Author**: Compiled from research report (spec-driven-development-research-report.md)
+**Changes in v1.1.0**: added `/review` command documentation
 **Status**: Complete
 
 ---

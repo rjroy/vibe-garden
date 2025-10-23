@@ -183,9 +183,9 @@ Check: .sdd/specs/auth.md exists? → No → Step 3 (fresh synthesis)
 
 ### Step 4: Generate Specification Content
 
-**Action**: Create specification document following the `/epic-sdd:spec-writing` template structure with reverse-engineering adaptations.
+**Action**: Create specification document following the `/spiral-grove:spec-writing` template structure with reverse-engineering adaptations.
 
-**Template Base**: Use the standard specification format from `/epic-sdd:spec-writing` command.
+**Template Base**: Use the standard specification format from `/spiral-grove:spec-writing` command.
 
 **Reverse-Engineering Modifications**:
 
@@ -424,7 +424,7 @@ Content: [Generated markdown content]
 
 ## Output Example
 
-See `/epic-sdd:spec-writing` for standard specification format.
+See `/spiral-grove:spec-writing` for standard specification format.
 
 **Key differences for reverse-engineered specs**:
 - Metadata includes `**Reverse-Engineered**: true` and `**Source Module**: [path]`
@@ -485,7 +485,7 @@ Proceeding with analysis...
 
 **Scenario**: Target directory doesn't exist.
 
-**Expected Behavior**: The orchestrating slash command (e.g., `/epic-sdd:synthesize-specs`) is responsible for creating `.sdd/specs/` before invoking this agent.
+**Expected Behavior**: The orchestrating slash command (e.g., `/spiral-grove:synthesize-specs`) is responsible for creating `.sdd/specs/` before invoking this agent.
 
 **Response**:
 ```
