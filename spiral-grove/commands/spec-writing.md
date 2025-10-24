@@ -44,19 +44,26 @@ Think: "What's the minimum I need to write for someone to build this correctly?"
    - This avoids API timeouts and allows for refinement as understanding deepens
    - You can always edit and improve earlier sections as you work through later ones
 
-5. **Conciseness checkpoint**:
+5. **Number all requirements** - Enable traceability to plans and tasks:
+   - Functional requirements: **REQ-F-1**, **REQ-F-2**, etc.
+   - Non-functional requirements: **REQ-NF-1**, **REQ-NF-2**, etc.
+   - Format: `**REQ-F-1**: Description of requirement`
+   - This allows plans to explicitly map to requirements
+   - Example: "Authentication system (**REQ-F-3**, **REQ-NF-2**)"
+
+6. **Conciseness checkpoint**:
    - Target: 10-15 pages for typical features
    - If approaching 20+ pages, consider parent/child split
    - Focus on acceptance criteria, not implementation hints
    - **One requirement, one bullet** (not paragraphs per requirement)
 
-6. **Final step - Remove duplication**:
+7. **Final step - Remove duplication**:
    - Before marking spec complete, scan for repetition
    - Ensure constraints (DO NOT) aren't duplicated in requirements
    - Consolidate similar acceptance tests
    - Every line should add new information
 
-7. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
+8. **Stay at "WHAT" not "HOW"** - Focus on capabilities and constraints, not implementation choices:
 
    **Ask about capabilities needed:**
    - ✅ "Does the LLM need to support tool/function calling?"
@@ -117,27 +124,27 @@ As a [user type], I want [capability], so that [benefit].
 
 ## Functional Requirements
 ### [Category 1]
-- Requirement with clear success condition
-- Another specific requirement
+- **REQ-F-1**: Requirement with clear success condition
+- **REQ-F-2**: Another specific requirement
 
 ### [Category 2]
-- ...
+- **REQ-F-3**: ...
 
 ## Non-Functional Requirements
 ### Performance
-- Response time targets
-- Throughput requirements
-- Scalability needs
+- **REQ-NF-1**: Response time targets
+- **REQ-NF-2**: Throughput requirements
+- **REQ-NF-3**: Scalability needs
 
 ### Security
-- Authentication requirements
-- Data protection needs
-- Audit logging
+- **REQ-NF-4**: Authentication requirements
+- **REQ-NF-5**: Data protection needs
+- **REQ-NF-6**: Audit logging
 
 ### Compliance
-- Regulatory requirements
-- Industry standards
-- Legal constraints
+- **REQ-NF-7**: Regulatory requirements
+- **REQ-NF-8**: Industry standards
+- **REQ-NF-9**: Legal constraints
 
 ## Explicit Constraints (DO NOT)
 - Do NOT [thing that's out of scope]
@@ -165,11 +172,30 @@ As a [user type], I want [capability], so that [benefit].
 
 ## Workflow
 
+### New Specifications
 1. **Explore**: Ask questions to understand the feature
 2. **Check hierarchy**: If child spec, read parent first; inherit parent constraints with "(Inherited)" note
 3. **Draft**: Create spec in sections, save periodically
 4. **Review & iterate**: Present for feedback, refine
 5. **Approve**: Update status when ready for planning
+
+### Revising Existing Specifications
+When testing or implementation reveals spec gaps:
+
+1. **Read existing spec**: Understand current requirements and version
+2. **Identify gaps**: What was wrong, missing, or needs changing?
+3. **Major vs Minor revision**:
+   - **Minor** (version bump 1.0.0 → 1.1.0): Add missing requirements, clarify existing ones
+   - **Major** (version bump 1.0.0 → 2.0.0): Fundamental changes to scope or approach
+4. **Update in place**: Edit the existing spec document
+5. **Update version and date**: Increment version, update "Last Updated"
+6. **Optional changelog**: Add "## Revision History" section for major changes
+7. **Cascade to plans**: After spec revision, generate new plan (see below)
+
+**Cascading spec revisions to plans**:
+- Minor spec changes → Update existing plan, note "Revised per spec v1.1.0"
+- Major spec changes → Archive old plan (mark as "**Status**: Archived - Superseded by v2"), create new plan with "-v2" suffix
+- Example: `.sdd/plans/p4-history-plugin-plan.md` (archived) → `.sdd/plans/p4-history-plugin-plan-v2.md` (active)
 
 ## Key Reminders
 
