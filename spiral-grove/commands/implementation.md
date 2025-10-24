@@ -71,10 +71,12 @@ If unclear, **ask the user** before proceeding with test implementation.
    - Test error conditions
    - **⚠️ IMPORTANT**: Unless otherwise specified by the project, spec, or user, writing tests includes fixing any issues the tests discover. Tests that fail indicate incomplete implementation. A task with failing tests is not complete.
 
-5. **Maintain progress documentation**:
-   - Update task status in real-time
-   - Document decisions and discoveries
-   - Note blockers immediately
+5. **Maintain progress documentation in `.sdd/progress/` only**:
+   - **Progress is tracked in `.sdd/progress/[feature]-progress.md` ONLY**
+   - Do NOT update task documents (`.sdd/tasks/`) with status tracking
+   - Update progress file in real-time as you work
+   - Document decisions and discoveries in progress file
+   - Note blockers immediately in progress file
 
 6. **Respect existing patterns**:
    - Follow codebase conventions
@@ -122,8 +124,7 @@ If unclear, **ask the user** before proceeding with test implementation.
    - Either fix the implementation or adjust test expectations (with justification)
    - Document any intentionally skipped tests with clear reasoning
 3. **Check code quality**: Linting, formatting, conventions
-4. **Update task document**: Status, PR link, notes
-5. **Update progress file**: Keep central progress doc current
+4. **Update progress file**: Mark task complete, add PR link, document any notes or discoveries
 
 ## Progress Tracking
 
@@ -240,29 +241,22 @@ Example:
 - [Questions to ask user]
 ```
 
-## Task Update Template
+## ⚠️ IMPORTANT: Task Status Tracking
 
-When completing a task, update the task document:
+**Task documents (`.sdd/tasks/*.md`) are READ-ONLY during implementation.**
 
-```markdown
-### Task X: [Task Name]
-**Status**: Complete ✅
-**PR**: #[PR-number]
-**Completed**: [Date]
+- Task documents define WHAT needs to be done
+- They do NOT track progress or status
+- ALL progress tracking happens in `.sdd/progress/[feature]-progress.md`
 
-**Implementation Notes**:
-- Used existing [utility] instead of creating new one
-- Added extra validation for [edge case]
-- Test coverage: [percentage]
+When completing a task, update ONLY the progress document with:
+- Task completion status
+- PR links
+- Implementation notes
+- Deviations
+- Discoveries
 
-**Deviations**:
-- [Any changes from original task description]
-- Reason: [Why]
-
-**Follow-up Tasks**:
-- [ ] Identified need for [new task]
-- [ ] Performance optimization opportunity in [area]
-```
+**DO NOT edit task documents to add status fields, completion dates, or PR links.**
 
 ## Handling Deviations
 

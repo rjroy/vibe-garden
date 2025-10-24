@@ -1,6 +1,6 @@
 # Spiral Grove
 
-<img src="spiral-grove-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
+<img src="spiral-grove-logo.png" align="right" width="128" height="128" alt="Spiral Grove Logo">
 
 **A Spec-Driven Development (SDD) methodology plugin for Claude Code**
 
@@ -432,6 +432,6 @@ MIT License - see [LICENSE](../LICENSE) for details
 
 ## Acknowledgments
 
-Spiral Grove implements research on AI agent design patterns and cognitive architectures from the Vibe Garden research repository. See `seeds/brainstorm/` for the theoretical foundations.
+Spiral Grove implements research on AI agent design patterns and cognitive architectures for structured software development.
 
 **Built with** ❤️ **for structured, thoughtful development**

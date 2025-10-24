@@ -45,8 +45,9 @@ This command prompt is intentionally detailed to guide you. **Do NOT mirror this
 
 Think: "Have I explained HOW to build this and WHY clearly enough that someone could implement it without guessing?"
 
-1. **Deeply analyze the existing codebase**:
-   - Find similar patterns and existing implementations
+1. **Deeply analyze the existing codebase and spec**:
+   - Read the spec to identify all numbered requirements (REQ-F-1, REQ-NF-1, etc.)
+   - Use Glob and Grep to find similar patterns
    - Identify existing services, models, utilities to reuse
    - Understand the current architecture and conventions
    - Find integration points mentioned in the spec
@@ -57,10 +58,11 @@ Think: "Have I explained HOW to build this and WHY clearly enough that someone c
    - Consider team familiarity with technologies
    - Think about operational maintenance
 
-3. **Make trade-offs explicit**:
-   - "We'll use PostgreSQL instead of MongoDB because the rest of the system uses PostgreSQL"
-   - "We'll embed in the monolith rather than create a microservice to reduce operational complexity"
+3. **Make trade-offs explicit and map to requirements**:
+   - "We'll use PostgreSQL instead of MongoDB because the rest of the system uses PostgreSQL (REQ-NF-1)"
+   - "We'll embed in the monolith rather than create a microservice to reduce operational complexity (REQ-NF-3)"
    - Document WHY decisions were made
+   - **Reference spec requirements** when explaining how plan items satisfy them
 
 4. **Think about the whole system**:
    - Data flows
@@ -124,6 +126,7 @@ Brief technical approach and key decisions (1-2 paragraphs).
 ## Technical Decisions
 For each major decision:
 - **Choice**: Selected option (what you're doing)
+- **Requirements**: Which spec requirements this addresses (REQ-F-1, REQ-NF-2, etc.)
 - **Rationale**: Why this choice over alternatives (as much detail as needed to justify the decision)
 
 ## Data Model (if applicable)
@@ -141,30 +144,15 @@ For each major decision:
 - External systems/APIs
 - How they connect
 
-## Error Handling Strategy
-- Error strategy approach
-- Critical error paths
-
-## Performance Considerations
-- Performance targets (if any)
-- Architectural approaches for performance
-
-## Security Considerations
-- Security boundaries
-- Auth/authz approach
-- Input validation strategy
-- Sensitive data handling
+## Error Handling, Performance, Security
+Brief approach for each (not exhaustive):
+- Error strategy
+- Performance targets and approach
+- Security measures
 
 ## Testing Strategy
-- Testing approach (unit, integration, E2E)
-- What needs testing
-- Testability considerations
-
-## Validation Strategy
-- How will this be validated
-- What evidence demonstrates completion
-- What environment(s) require validation
-- Critical components requiring validation
+- Unit, integration, E2E approach
+- What to test at each level
 
 ## Risks & Mitigations
 | Risk | Likelihood | Impact | Mitigation |
@@ -179,82 +167,33 @@ For each major decision:
 - [ ] Unresolved technical decisions
 ```
 
-## Section Guidance: Why These Sections Matter
-
-### Error Handling Strategy
-
-**Why this matters**: Errors discovered during implementation without a defined handling strategy lead to inconsistent error responses, poor user experience, and difficult debugging. Defining the approach upfront ensures coherent error handling across the feature.
-
-**What to document**:
-- Error strategy approach (how errors will be surfaced and handled)
-- Critical error paths (what failures must be handled gracefully)
-
-### Performance Considerations
-
-**Why this matters**: Performance requirements affect architectural decisions (caching strategy, data structure choices, async vs sync operations). Defining targets during planning prevents costly refactoring when performance issues are discovered late.
-
-**What to document**:
-- Performance targets (if any exist for this feature)
-- Architectural approaches that address performance (if relevant)
-
-### Security Considerations
-
-**Why this matters**: Security cannot be retrofitted. Authentication, authorization, input validation, and data protection must be designed into the architecture from the start.
-
-**What to document**:
-- Security boundaries (what needs protection)
-- Auth/authz approach (if applicable)
-- Input validation strategy (if handling user input)
-- Sensitive data handling (if applicable)
-
-### Testing Strategy
-
-**Why this matters**: The testing strategy influences architecture decisions (dependency injection for testability, interface design, component boundaries). Defining what needs testing and at what level helps ensure the architecture is testable and guides implementation priorities.
-
-**What to document**:
-- Testing approach (unit, integration, E2E - which levels apply)
-- What needs testing (critical paths vs nice-to-have coverage)
-- Testability considerations (architectural decisions that enable testing)
-
-### Validation Strategy
-
-**Why this matters**: Without defining "how do we prove this works," features can be marked complete prematurely, leading to bugs discovered after deployment. The validation strategy ensures there's agreement on what "done" means before implementation begins.
-
-**What to document**:
-- How will this feature be validated (what constitutes working correctly)
-- What evidence demonstrates completion (logs, tests passing, manual testing, user review)
-- What environment(s) require validation (local dev, staging, production-like, deployment target)
-- Critical components that require validation before completion
-
-**Key principle**: The project/domain defines WHAT validation looks like (browser testing, integration tests, performance benchmarks, etc.). The plan documents the validation approach so implementers know when to ask "is this validated enough?" vs "is this complete?"
-
-### Risks & Mitigations
-
-**Why this matters**: Identifying risks during planning allows proactive mitigation. Discovering risks during implementation leads to deadline pressure and poor trade-off decisions under stress.
-
-**What to document**:
-- Major technical risks (focus on high/medium likelihood or high impact)
-- Mitigation strategies for each risk
-- When mitigation should occur (upfront vs if-needed)
-
-### Open Questions
-
-**Why this matters**: Documenting unresolved questions prevents implementers from making assumptions that might conflict with user expectations. Surfaces decisions that need user input before coding begins.
-
-**What to document**:
-- Unresolved technical decisions
-- Questions requiring user input or approval
-- Design alternatives that need evaluation
-
 ## Workflow
 
+### Creating New Plans
 1. **Read spec**: Understand requirements thoroughly
 2. **Check hierarchy**: If child, read parent spec/plan first for context
-3. **Explore codebase**: Find existing patterns and understand current architecture
+3. **Explore codebase**: Use Glob/Grep to find existing patterns
 4. **Draft architecture**: Create in sections, save periodically
 5. **Document decisions**: Key choices with rationale
 6. **Review & iterate**: Present for feedback, refine
 7. **Approve**: Mark ready for task breakdown
+
+### Updating Plans for Revised Specs
+When a spec is revised, determine if plan needs minor update or major revision:
+
+**Minor spec changes (v1.0.0 → v1.1.0)**:
+- Add/clarify requirements without fundamental scope change
+- **Update existing plan in place**
+- Add note at top: "Updated to reflect spec v1.1.0"
+- Add/revise sections as needed to address new requirements
+- Update "Last Updated" date
+
+**Major spec changes (v1.0.0 → v2.0.0)**:
+- Fundamental scope or approach changes
+- **Archive old plan**: Mark "**Status**: Archived - Superseded by v2 plan"
+- **Create new plan** with "-v2" suffix in filename
+- Example: `.sdd/plans/feature-plan.md` (archived) → `.sdd/plans/feature-plan-v2.md` (active)
+- Start fresh with new architecture based on revised spec
 
 ## Key Reminders
 

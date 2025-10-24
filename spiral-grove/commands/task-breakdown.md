@@ -43,6 +43,7 @@ This command prompt is intentionally detailed to guide you. **Do NOT mirror this
 - ❌ Verbose prose when bullets suffice
 - ❌ Repeated patterns across similar tasks
 - ❌ Implementation details better left to developer judgment
+- ❌ **Progress tracking sections** - Progress is tracked in `.sdd/progress/` documents, not in task documents
 
 Think: "Does an implementer have enough detail to complete this task and know when it's done?"
 
@@ -144,51 +145,7 @@ TASK-001 → TASK-002 → TASK-003
 **Phase 1**: TASK-001, TASK-002 (can do in parallel)
 **Phase 2**: TASK-003, TASK-004 (after Phase 1)
 
-## Progress Tracking
-| Task | Status | PR | Notes |
-|------|--------|----|-------|
-| TASK-001 | Not Started | - | - |
-| TASK-002 | Not Started | - | - |
-
-**Status Options**: Not Started | In Progress | Blocked | In Review | Complete
 ```
-
-## Task Field Guidance: Why These Fields Matter
-
-### Acceptance Criteria
-
-**Why this matters**: Without clear acceptance criteria, tasks get marked "complete" prematurely, leading to bugs discovered later or work that doesn't meet spec requirements. Explicit criteria enable validation before marking done and ensure alignment with the validation strategy defined in the plan.
-
-**What to document**:
-- Specific, testable outcomes (not vague goals like "it works")
-- How to verify the task is complete (what evidence proves it's done)
-- Edge cases that must be handled
-- Integration points that must work correctly
-
-**Key principle**: Acceptance criteria should answer "How do I prove this task is complete?" If the answer is unclear, the criteria need refinement.
-
-### Testing Requirements
-
-**Why this matters**: Defining test requirements during task breakdown ensures testability is designed in, not retrofitted. Tasks without explicit test requirements often get marked complete with inadequate or missing tests, leading to untested code paths and production bugs.
-
-**What to document**:
-- What needs to be tested (unit, integration, E2E as appropriate)
-- Critical paths requiring tests (from plan's validation strategy)
-- Edge cases requiring test coverage
-- Test evidence format (tests passing, coverage metrics, manual test results)
-
-**Key principle**: If a task involves critical path components (identified in the plan), testing is required before task completion, not optional.
-
-### Dependencies
-
-**Why this matters**: Hidden dependencies cause blocking and rework. Explicit dependency mapping enables parallel work and prevents starting tasks that will need to be redone when prerequisites change. Clear dependencies help identify the critical path and realistic timeline.
-
-**What to document**:
-- Which tasks must complete before this one can start
-- Why the dependency exists (data model needed, interface required, etc.)
-- Whether dependency is hard (must wait) or soft (preferred order)
-
-**Key principle**: Tasks with no dependencies can be parallelized. Tasks with many dependencies may indicate the task is too large or architecture needs adjustment.
 
 ## Workflow
 
@@ -237,6 +194,7 @@ TASK-001 → TASK-002 → TASK-003
 - Clear pass/fail criteria per task
 - Reviewable PRs (~500 lines max)
 - Mirror spec/plan hierarchy exactly
+- **Do NOT include progress tracking** - That belongs in `.sdd/progress/` documents
 
 ## Validation Checklist
 
