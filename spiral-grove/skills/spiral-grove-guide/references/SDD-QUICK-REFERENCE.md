@@ -70,12 +70,14 @@
 
 ### Specification Phase
 - Focus on **requirements**, not solutions
+- **Number all requirements** (REQ-F-1, REQ-NF-1) for traceability
 - Make success criteria **measurable**
 - Be explicit about **constraints** (DO NOTs)
 - Think about **stakeholders** and **acceptance tests**
 
 ### Planning Phase
 - **Explore the codebase** before designing
+- **Map plan items to spec requirements** (reference REQ-F-1, REQ-NF-2, etc.)
 - Document **technical decisions** with rationale
 - Consider **integration points** and **risks**
 - Design for the **whole system** (data, errors, security, testing)
@@ -92,7 +94,7 @@
 ### Implementation Phase
 - Work **one task at a time**
 - **Refer to the spec** constantly
-- **Update progress** frequently
+- **Update progress document** frequently (`.sdd/progress/` is the single source of truth)
 - **Test everything**
 - **Document deviations** immediately
 
@@ -103,9 +105,13 @@
 /spec-writing → /plan-generation → /task-breakdown → /implementation
 ```
 
-### Updating Requirements
+### Updating Requirements (Spec Iteration)
 ```
-/spec-writing (update spec) → /plan-generation (revise plan)
+# Minor changes (add/clarify requirements)
+/spec-writing (bump version 1.0→1.1) → /plan-generation (update existing plan)
+
+# Major changes (scope/approach fundamentally different)
+/spec-writing (bump version 1.0→2.0) → Archive old plan → /plan-generation (create new -v2 plan)
 ```
 
 ### Architecture Change
@@ -124,6 +130,7 @@ Use `/review [phase]` to validate phase documents before progression.
 
 ### Spec Review (`/review spec`)
 **Critical checks:**
+- ✅ All requirements are numbered (REQ-F-1, REQ-NF-1, etc.)
 - ✅ No HOW details (tech choices like "use PostgreSQL", "deploy on AWS")
 - ✅ Success criteria are measurable (numbers, percentages, time limits)
 - ✅ Explicit constraints documented (DO NOTs)
@@ -133,10 +140,11 @@ Use `/review [phase]` to validate phase documents before progression.
 **Example issues:**
 - ❌ "Use React for frontend" → Should be "Needs interactive UI"
 - ❌ "System should be fast" → Should be "95th percentile < 200ms"
+- ❌ Requirements not numbered → Add REQ-F-1, REQ-F-2, etc.
 
 ### Plan Review (`/review plan`)
 **Critical checks:**
-- ✅ References specification explicitly
+- ✅ References specification explicitly (maps to requirement numbers)
 - ✅ Technical decisions have rationale (WHY, not just WHAT)
 - ✅ Integration points documented
 - ✅ Existing codebase patterns analyzed
@@ -145,8 +153,9 @@ Use `/review [phase]` to validate phase documents before progression.
 
 **Example issues:**
 - ❌ "Decision: Use Redis" with no explanation
-- ✅ "Decision: Use Redis. Rationale: Existing infra, team familiar, meets <200ms requirement"
+- ✅ "Decision: Use Redis. Rationale: Existing infra, team familiar, meets <200ms requirement (REQ-NF-1)"
 - ❌ No validation strategy → Add: "Validation: Browser testing + deployment on staging"
+- ❌ Plan items don't reference spec requirements → Add "(REQ-F-3, REQ-NF-2)" citations
 
 ### Tasks Review (`/review tasks`)
 **Critical checks:**
@@ -198,11 +207,13 @@ Tasks: Draft → Ready for Implementation → In Progress → Complete
 
 ```
 .sdd/
-├── specs/          # Specifications
-├── plans/          # Technical plans
-├── tasks/          # Task breakdowns
-└── progress/       # Progress tracking
+├── specs/          # Specifications (WHAT to build)
+├── plans/          # Technical plans (HOW to build)
+├── tasks/          # Task breakdowns (STEPS to build) - READ-ONLY during implementation
+└── progress/       # Progress tracking (SINGLE source of truth for status)
 ```
+
+**Important**: Tasks define WHAT to do. Progress tracks WHAT has been done. Never mix the two.
 
 ## When to Use SDD vs. Quick Prompts
 
@@ -233,7 +244,7 @@ Tasks: Draft → Ready for Implementation → In Progress → Complete
 - [ ] Acceptance criteria met
 - [ ] Tests written and passing
 - [ ] Code reviewed
-- [ ] Progress doc updated
+- [ ] Progress doc updated (ONLY in `.sdd/progress/`, NOT in task document)
 - [ ] No blockers remaining
 
 ## Emergency Procedures
@@ -264,7 +275,8 @@ Tasks: Draft → Ready for Implementation → In Progress → Complete
 - **Specs are living documents** - Update them as you learn
 - **Plans can be revised** - Architecture isn't set in stone
 - **Tasks can be added** - Discovery is part of the process
-- **Progress docs are for you** - Make them useful for resuming work
+- **Tasks are read-only during implementation** - Don't track status in task documents
+- **Progress docs are for you** - Make them useful for resuming work, track ALL status here
 - **Tests are guardrails** - They keep you aligned with specs
 - **Validation is domain-specific** - SDD defines that validation is required, not how to validate (web app vs CLI vs game each validate differently)
 

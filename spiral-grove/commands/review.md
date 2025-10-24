@@ -71,6 +71,11 @@ If the document doesn't exist, inform the user and suggest running the appropria
   - ✅ Good: "Must handle 10K concurrent users", "Components must be independently scalable"
 
 **Content Quality Checks**:
+- [ ] **Requirements are numbered**: All functional requirements use REQ-F-N format, non-functional use REQ-NF-N format
+  - Look for: **REQ-F-1**, **REQ-F-2**, etc. in Functional Requirements
+  - Look for: **REQ-NF-1**, **REQ-NF-2**, etc. in Non-Functional Requirements
+  - Flag: Requirements without numbered identifiers
+
 - [ ] **Success criteria are measurable**: Each criterion has quantifiable target
   - Look for: Specific numbers, percentages, time limits, concrete outcomes
   - Flag: Vague terms like "fast", "reliable", "user-friendly" without quantification
@@ -96,6 +101,9 @@ If the document doesn't exist, inform the user and suggest running the appropria
 **Spec Alignment Checks** (Critical):
 - [ ] **Spec reference exists**: Plan explicitly references its specification
 - [ ] **All spec requirements addressed**: Each functional and non-functional requirement has corresponding architecture/component
+- [ ] **Requirements are mapped**: Plan items reference spec requirement numbers (REQ-F-1, REQ-NF-2, etc.)
+  - Look for: Requirement citations in Technical Decisions, Architecture sections
+  - Flag: Plan components that don't map back to spec requirements
 
 **Technical Decision Quality**:
 - [ ] **Decisions have rationale**: Each major decision explains WHY, not just WHAT
@@ -289,6 +297,7 @@ Would you like me to update the status field? (Please confirm yes/no)
 
 ### Good Plan Decision:
 ✅ "**Decision**: Use Redis for session storage
+    **Requirements**: REQ-NF-1 (performance), REQ-NF-3 (scalability)
     **Rationale**: Existing infrastructure already runs Redis cluster, team familiar with operations, sub-millisecond latency meets spec requirement of <200ms API response"
 
 ### Bad Plan Decision:
