@@ -1,0 +1,11 @@
+[plugin]
+name = "notify-hook"
+version = "1.0.0"
+description = "Desktop/mobile notifications when Claude needs user attention"
+author = "Ronald Roy"
+email = "gsdwig@gmail.com"
+repository = "https://github.com/rjroy/vibe-garden"
+license = "MIT"
+
+[plugin.tags]
+tags = ["notifications", "productivity", "hooks"]
