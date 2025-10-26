@@ -73,7 +73,7 @@ def main():
 
         # Step 5: Generate topic for ntfy.sh
         try:
-            topic = generate_topic()
+            topic = generate_topic(config)
         except Exception as e:
             print(f"Warning: Failed to generate topic: {e}", file=sys.stderr)
             topic = "claude-unknown-unknown"
