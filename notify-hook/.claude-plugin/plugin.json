@@ -1,0 +1,11 @@
+{
+  "name": "notify-hook",
+  "description": "Desktop/mobile notifications when Claude needs user attention",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden",
+  "license": "MIT"
+}

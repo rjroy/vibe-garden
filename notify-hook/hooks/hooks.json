@@ -1,0 +1,15 @@
+{
+  "description": "Desktop/mobile notifications when Claude needs user attention",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/notify.py"
+          }
+        ]
+      }
+    ]
+  }
+}
