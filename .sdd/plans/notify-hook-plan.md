@@ -14,6 +14,7 @@ The Notify Hook plugin provides desktop/mobile notifications when Claude Code ne
 - **Privacy by default** - Strip sensitive data before transmission
 - **Sensible defaults** - Work out-of-box with ntfy.sh, no authentication
 - **Configuration hierarchy** - Env vars > repo config > user config > defaults
+- **Keep it simple** - Lightweight script (~600 lines), stdlib only, no bloat
 
 ## Architecture
 
@@ -49,45 +50,58 @@ The plugin integrates with Claude Code's hook system as a `Notification` event h
 
 ### Components
 
+**Simple 4-file architecture** (~600 lines total):
+
 1. **Hook Registration** (`hooks/hooks.json`)
    - Registers for `Notification` events
    - Invokes `scripts/notify.py` with hook input JSON
 
-2. **Configuration Manager** (Python module)
-   - Loads config from multiple sources (hierarchy: env > repo > user > defaults)
-   - Validates configuration schema
-   - Provides type-safe accessors
-
-3. **Message Sanitizer** (Python module)
-   - Removes file paths, code snippets, error traces
-   - Truncates messages to max length (100 chars)
-   - Applies privacy rules from config
-
-4. **Message Filter** (Python module)
-   - Applies regex include/exclude patterns
-   - Short-circuits processing if message filtered out
-
-5. **Rate Limiter** (Python module)
-   - Tracks last notification timestamp (in-memory, per-backend)
-   - Enforces max 1 notification/minute per backend
-   - Logs dropped notifications
-
-6. **Git Repository Detector** (Python module)
-   - Extracts git remote URL (HTTPS or SSH format)
-   - Parses owner/repo from GitHub URLs
-   - Provides fallback topic if not in git repo
-
-7. **Backend Dispatcher** (Python module)
-   - Sends notifications to enabled backends (ntfy, Discord, Slack)
-   - Async/parallel dispatch with timeout (5s per backend)
-   - Logs failures without blocking
-
-8. **Main Script** (`scripts/notify.py`)
+2. **Main Script** (`scripts/notify.py`, ~200 lines)
    - Entry point invoked by hook
    - Orchestrates: config load → filter → sanitize → rate limit → dispatch
    - Handles all errors gracefully (log and exit 0)
 
+3. **Core Library** (`scripts/lib.py`, ~250 lines)
+   - **Config loading**: Hierarchical (env > repo > user > defaults), validation
+   - **Message sanitization**: Remove paths, code, error traces; truncate to 100 chars
+   - **Message filtering**: Regex include/exclude patterns
+   - **Rate limiting**: In-memory timestamp tracking per backend
+
+4. **Backend Dispatchers** (`scripts/backends.py`, ~100 lines)
+   - **ntfy.sh**: POST to ntfy.sh with topic, headers, timeout
+   - **Discord**: POST to webhook with JSON payload
+   - **Slack**: POST to webhook with JSON payload
+   - **Orchestration**: Sequential dispatch with error isolation
+
+5. **Git Repository Detector** (`scripts/git.py`, ~50 lines)
+   - Extracts git remote URL (HTTPS or SSH format)
+   - Parses owner/repo from GitHub URLs
+   - Provides fallback topic if not in git repo
+
 ## Technical Decisions
+
+### Simplicity Over Abstraction
+
+**Choice**: Keep implementation simple—4 files, ~600 lines, stdlib only
+
+**Rationale**:
+- **This is "just a script"**: Not a framework, service, or complex system
+- **Fast execution**: Lightweight code executes quickly, meets <2s requirement
+- **Easy to maintain**: Single contributor can understand entire codebase
+- **No dependency hell**: Stdlib only means no version conflicts, pip install issues
+- **Avoid premature optimization**: Don't add complexity for hypothetical future needs
+
+**Explicit anti-patterns to avoid**:
+- ❌ Factory patterns, dependency injection, plugin architectures
+- ❌ External dependencies (requests, pydantic, etc.)
+- ❌ Dataclasses for simple config (plain dicts are fine)
+- ❌ Splitting logic across 10+ modules (cohesion > granularity)
+- ❌ Persistent state, databases, caching layers
+
+**Target metrics**:
+- Total Python code: ≤700 lines (excluding tests)
+- External dependencies: 0 (stdlib only)
+- Module count: 4 files (notify.py, lib.py, backends.py, git.py)
 
 ### Python Over Shell Script
 
@@ -103,6 +117,8 @@ The plugin integrates with Claude Code's hook system as a `Notification` event h
 
 **Trade-off**: Requires Python 3.x in environment (acceptable for Claude Code users)
 
+**Why not use `requests` library**: Stdlib `urllib` or `subprocess + curl` is sufficient for simple HTTP POST. Adding `requests` would violate the "no external dependencies" constraint and add ~50KB of dependencies for functionality we can achieve in ~20 lines of stdlib code.
+
 ### Configuration System Design
 
 **Choice**: Hierarchical config (env vars > repo > user > defaults) with JSON format
@@ -114,10 +130,11 @@ The plugin integrates with Claude Code's hook system as a `Notification` event h
 - **JSON over YAML**: Simpler parsing (stdlib `json` module), matches hook input format
 - **Follows Courier MCP pattern**: Similar 3-tier config (env > file > defaults), proven approach
 
-**Implementation**: Python `Config` class (similar to courier-mcp/server/src/courier_mcp/config.py:26-275) with:
-- `_load_config()` method merging defaults → user file → repo file → env vars
-- Type-safe getters (`get_str`, `get_int`, `get_bool`)
-- Validation method checking required fields
+**Implementation**: Python functions in `lib.py` (~100 lines for config):
+- `load_config()` function merging defaults → user file → repo file → env vars
+- Returns dict-based config structure (no complex classes)
+- Validation inline with config loading
+- Keep it simple: avoid over-abstraction (no factory patterns, DI, etc.)
 
 ### Message Sanitization Strategy
 
@@ -276,24 +293,24 @@ def dispatch_to_backends(message, config):
 
 ### Internal Data Structures
 
-**Config class**:
+**Config structure** (simple dict, no dataclasses for simplicity):
 ```python
-@dataclass
-class BackendConfig:
-    enabled: bool
-    # Backend-specific fields (topic, webhook_url, etc.)
-
-@dataclass
-class NotifyConfig:
-    backends: dict[str, BackendConfig]
-    filtering: FilterConfig
-    privacy: PrivacyConfig
-    rate_limiting: RateLimitConfig
+config = {
+    "backends": {
+        "ntfy": {"enabled": True, "topic": "...", "priority": "default", "tags": [...]},
+        "discord": {"enabled": False, "webhook_url": None},
+        "slack": {"enabled": False, "webhook_url": None}
+    },
+    "filtering": {"exclude_patterns": [...], "include_patterns": [...]},
+    "privacy": {"max_message_length": 100, "strip_paths": True, "strip_code": True},
+    "rate_limiting": {"enabled": True, "max_per_minute": 1}
+}
 ```
 
 **Message flow**:
 ```python
-HookInput (JSON) → ConfigManager → MessageFilter → MessageSanitizer → RateLimiter → BackendDispatcher → HTTP POST
+HookInput (JSON) → lib.load_config() → lib.filter_message() → lib.sanitize_message()
+→ lib.check_rate_limit() → backends.dispatch() → HTTP POST
 ```
 
 ## Integration Points
@@ -478,17 +495,20 @@ if discord_enabled and not discord_webhook.startswith("https://"):
 
 **Framework**: `pytest` (standard in Python ecosystem)
 
-**Test structure**:
+**Test structure** (aligned with simplified architecture):
 ```
 notify-hook/
 ├── scripts/
-│   └── notify.py
+│   ├── notify.py      (~200 lines)
+│   ├── lib.py         (~250 lines)
+│   ├── backends.py    (~100 lines)
+│   └── git.py         (~50 lines)
 ├── tests/
-│   ├── test_config.py
-│   ├── test_sanitizer.py
-│   ├── test_filter.py
-│   ├── test_rate_limiter.py
-│   └── test_git_detector.py
+│   ├── test_lib.py         (config, sanitization, filtering, rate limiting)
+│   ├── test_backends.py    (ntfy, discord, slack dispatchers)
+│   ├── test_git.py         (repo detection)
+│   ├── test_notify.py      (main script integration)
+│   └── test_integration.py (end-to-end scenarios)
 └── pyproject.toml (pytest config)
 ```
 

@@ -112,6 +112,7 @@ As a Claude Code user performing lengthy tasks, I want to receive notifications 
 
 ## Explicit Constraints (DO NOT)
 
+### Privacy & Security Constraints
 - Do NOT send notification content that includes:
   - Code snippets or diffs
   - File paths or directory structures
@@ -119,10 +120,24 @@ As a Claude Code user performing lengthy tasks, I want to receive notifications 
   - Error stack traces or debug output
   - User data or business logic
 - Do NOT require authentication for default backend (ntfy.sh)
+
+### Performance & Execution Constraints
 - Do NOT block Claude Code execution while sending notifications
 - Do NOT retry failed notifications (log and move on)
+
+### Scope Constraints
 - Do NOT support email notifications (out of scope for v1.0)
 - Do NOT create UI for configuration management (config files only)
+
+### Simplicity & Bloat Constraints
+This is **"just a script"**—keep it simple, fast, and maintainable:
+- Do NOT introduce external Python dependencies (stdlib only: `json`, `re`, `subprocess`, `dataclasses`, `pathlib`)
+- Do NOT use frameworks or libraries (no Flask, FastAPI, requests, etc.)
+- Do NOT split into many small modules unnecessarily (prefer cohesion over granularity)
+- Do NOT over-engineer abstractions (e.g., factory patterns, dependency injection, plugin architectures)
+- Do NOT create persistent state or databases (in-memory rate limiting is sufficient)
+- Do NOT implement complex config formats (JSON is enough, no YAML parsers)
+- **Target**: Single executable script (~300-500 lines) with minimal supporting modules (~100-200 lines each)
 
 ## Technical Context
 
