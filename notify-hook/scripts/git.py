@@ -8,7 +8,10 @@ Stdlib only - no external dependencies.
 import re
 import subprocess
 import sys
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lib import Config
 
 
 def get_repo_info() -> Tuple[str, str]:
@@ -80,18 +83,22 @@ def parse_git_url(url: str) -> Tuple[str, str]:
     return "unknown", "unknown"
 
 
-def generate_topic(owner: str = None, repo: str = None) -> str:
+def generate_topic(config: "Config" = None, owner: str = None, repo: str = None) -> str:
     """
-    Generate ntfy.sh topic from repository info.
+    Generate topic from repository info using config template.
 
     Args:
+        config: Configuration object with topic_template (optional, uses default if None)
         owner: Repository owner (optional, will auto-detect if None)
         repo: Repository name (optional, will auto-detect if None)
 
     Returns:
-        Topic string in format: claude-{owner}-{repo}
+        Topic string interpolated from template with owner/repo values
     """
     if owner is None or repo is None:
         owner, repo = get_repo_info()
 
-    return f"claude-{owner}-{repo}"
+    # Use default template if no config provided
+    template = config.topic_template if config else "claude-{owner}-{repo}"
+
+    return template.format(owner=owner, repo=repo)

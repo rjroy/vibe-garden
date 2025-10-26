@@ -17,54 +17,41 @@ from typing import Dict, List, Optional, Any
 
 # Default configuration
 DEFAULT_CONFIG = {
+    "topic_template": "claude-{owner}-repos",
     "backends": {
         "ntfy": {
             "enabled": True,
-            "topic": "claude-{owner}-{repo}",
             "priority": "default",
-            "tags": ["computer", "claude"]
+            "tags": ["computer", "claude"],
         },
-        "discord": {
-            "enabled": False,
-            "webhook_url": ""
-        },
-        "slack": {
-            "enabled": False,
-            "webhook_url": ""
-        }
+        "discord": {"enabled": False, "webhook_url": ""},
+        "slack": {"enabled": False, "webhook_url": ""},
     },
-    "filtering": {
-        "exclude_patterns": ["^Debug:", "^Trace:"],
-        "include_patterns": []
-    },
-    "privacy": {
-        "max_message_length": 100,
-        "strip_paths": True,
-        "strip_code": True
-    },
-    "rate_limiting": {
-        "enabled": True,
-        "max_per_minute": 1
-    }
+    "filtering": {"exclude_patterns": ["^Debug:", "^Trace:"], "include_patterns": []},
+    "privacy": {"max_message_length": 100, "strip_paths": True, "strip_code": True},
+    "rate_limiting": {"enabled": True, "max_per_minute": 1},
 }
 
 
 @dataclass
 class Config:
     """Configuration data class."""
+
+    topic_template: str
     backends: Dict[str, Dict[str, Any]]
     filtering: Dict[str, List[str]]
     privacy: Dict[str, Any]
     rate_limiting: Dict[str, Any]
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Config':
+    def from_dict(cls, data: Dict[str, Any]) -> "Config":
         """Create Config from dictionary."""
         return cls(
+            topic_template=data.get("topic_template", DEFAULT_CONFIG["topic_template"]),
             backends=data.get("backends", DEFAULT_CONFIG["backends"]),
             filtering=data.get("filtering", DEFAULT_CONFIG["filtering"]),
             privacy=data.get("privacy", DEFAULT_CONFIG["privacy"]),
-            rate_limiting=data.get("rate_limiting", DEFAULT_CONFIG["rate_limiting"])
+            rate_limiting=data.get("rate_limiting", DEFAULT_CONFIG["rate_limiting"]),
         )
 
 
@@ -106,7 +93,7 @@ def load_config() -> Config:
     # Apply environment variable overrides
     env_topic = os.getenv("VIBE_GARDEN_NTFY_TOPIC")
     if env_topic:
-        config["backends"]["ntfy"]["topic"] = env_topic
+        config["topic_template"] = env_topic
 
     env_discord_webhook = os.getenv("VIBE_GARDEN_NTFY_DISCORD_WEBHOOK")
     if env_discord_webhook:
@@ -157,24 +144,26 @@ def sanitize_message(message: str, config: Config) -> str:
     # Strip file paths (absolute and relative)
     if privacy.get("strip_paths", True):
         # Match absolute paths (starting with / or ~)
-        sanitized = re.sub(r'[/~][^\s:,;\'\"]+', '[path]', sanitized)
+        sanitized = re.sub(r"[/~][^\s:,;\'\"]+", "[path]", sanitized)
         # Match relative paths (./path or ../path)
-        sanitized = re.sub(r'\./[^\s:,;\'\"]+', '[path]', sanitized)
-        sanitized = re.sub(r'\.\./[^\s:,;\'\"]+', '[path]', sanitized)
+        sanitized = re.sub(r"\./[^\s:,;\'\"]+", "[path]", sanitized)
+        sanitized = re.sub(r"\.\./[^\s:,;\'\"]+", "[path]", sanitized)
 
     # Strip code blocks
     if privacy.get("strip_code", True):
         # Remove code blocks (```...```)
-        sanitized = re.sub(r'```[^`]*```', '[code]', sanitized)
+        sanitized = re.sub(r"```[^`]*```", "[code]", sanitized)
         # Remove inline code (`...`)
-        sanitized = re.sub(r'`[^`]+`', '[code]', sanitized)
+        sanitized = re.sub(r"`[^`]+`", "[code]", sanitized)
         # Remove common error traces (lines starting with "at " or "Traceback")
-        sanitized = re.sub(r'(?m)^\s*(at |Traceback|File ")[^\n]*', '[trace]', sanitized)
+        sanitized = re.sub(
+            r'(?m)^\s*(at |Traceback|File ")[^\n]*', "[trace]", sanitized
+        )
 
     # Truncate to max length
     max_length = privacy.get("max_message_length", 100)
     if len(sanitized) > max_length:
-        sanitized = sanitized[:max_length - 3] + "..."
+        sanitized = sanitized[: max_length - 3] + "..."
 
     return sanitized.strip()
 
