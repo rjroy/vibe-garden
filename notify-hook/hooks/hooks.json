@@ -1,11 +1,15 @@
 {
-  "hooks": [
-    {
-      "name": "notify-on-notification",
-      "event": "Notification",
-      "description": "Send desktop/mobile notification when Claude needs attention",
-      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/notify.py",
-      "enabled": true
-    }
-  ]
+  "description": "Desktop/mobile notifications when Claude needs user attention",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/notify.py"
+          }
+        ]
+      }
+    ]
+  }
 }
