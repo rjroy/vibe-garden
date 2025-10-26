@@ -282,8 +282,11 @@ class TestShouldFilterMessage:
 class TestIsRateLimited:
     """Test rate limiting."""
 
-    def setup_method(self):
-        """Clear rate limit state before each test."""
+    @pytest.fixture(autouse=True)
+    def reset_state(self):
+        """Clear rate limit state before and after each test."""
+        _rate_limit_state.clear()
+        yield
         _rate_limit_state.clear()
 
     def test_rate_limit_first_send(self):
