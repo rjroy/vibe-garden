@@ -1,6 +1,8 @@
 ---
 description: Reverse engineers a specification from a single module's implementation by analyzing code, tests, and behavior. Generates .sdd/specs/[module-name].md with requirements extracted from actual code. Framework-agnostic (works on any codebase).
 capabilities: ["spec-synthesis", "reverse-engineering", "drift-detection"]
+tools: Read, Glob, Grep, Write, Task, Skill(spiral-grove:sdd-templates), SlashCommand
+model: Sonnet
 ---
 
 # Module Specification Synthesizer
@@ -183,9 +185,9 @@ Check: .sdd/specs/auth.md exists? → No → Step 3 (fresh synthesis)
 
 ### Step 4: Generate Specification Content
 
-**Action**: Create specification document following the `/spiral-grove:spec-writing` template structure with reverse-engineering adaptations.
+**Action**: Create specification document following the SDD specification template structure with reverse-engineering adaptations.
 
-**Template Base**: Use the standard specification format from `/spiral-grove:spec-writing` command.
+**Template Base**: Use the `sdd-templates` skill to read `templates/spec-template.md` for the standard specification structure.
 
 **Reverse-Engineering Modifications**:
 

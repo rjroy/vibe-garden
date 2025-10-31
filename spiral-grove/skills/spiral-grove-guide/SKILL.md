@@ -1,6 +1,6 @@
 ---
 name: spiral-grove-guide
-description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
+description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the Spiral Grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
 ---
 
 # Spiral Grove Guide
@@ -10,6 +10,10 @@ description: Guide for Spec-Driven Development (SDD) methodology. This skill sho
 Spiral Grove is a Spec-Driven Development (SDD) methodology implementation that transforms how AI coding agents and developers work together. SDD treats AI agents as literal-minded but highly capable pair programmers who excel when given explicit, detailed instructions through a four-phase workflow: Specification → Planning → Task Breakdown → Implementation.
 
 This skill provides guidance on when and how to use SDD, explains the methodology's principles, and helps navigate the workflow phases.
+
+**Version:** 2.0.0 introduces template externalization, metadata automation, and agent delegation for improved modularity and maintainability.
+
+**Project Charter:** For Spiral Grove's foundational philosophy, mission, and design principles, see **references/CHARTER.md**. The charter defines what Spiral Grove is, why it exists, and provides decision-making guidance grounded in v2.0.0 implementation experience.
 
 ## When to Use SDD vs. Quick Prompts
 
@@ -269,24 +273,76 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 └── progress/       # Implementation tracking
 ```
 
+## v2.0.0 Architecture
+
+Spiral Grove v2.0.0 introduces a modular architecture with external templates, automated metadata, and agent delegation:
+
+### Skills for Resource Bundling
+
+**sdd-templates skill:** Bundles document structure templates (spec, plan, tasks, progress)
+- Commands/agents invoke skill to access templates
+- Enables template updates without modifying command prompts
+- Location: `spiral-grove/skills/sdd-templates/templates/`
+
+**sdd-metadata skill:** Provides zero-token metadata detection
+- Auto-detects author (Git → P4 → ENV → Unknown)
+- Auto-generates dates (ISO 8601 format)
+- Populates frontmatter YAML automatically
+- Location: `spiral-grove/skills/sdd-metadata/scripts/`
+
+**sdd-format-docs skill:** Bundles format specifications and schemas
+- CLAUDE.md format specification
+- Manifest schemas (module, spec)
+- Used by synthesis commands and agents
+- Location: `spiral-grove/skills/sdd-format-docs/docs/`
+
+### Agent Delegation Pattern
+
+Commands orchestrate workflows by delegating to specialized agents:
+
+**Validator Agents:**
+- `spec-validator` - Phase boundary compliance (WHAT vs HOW)
+- `plan-validator` - Requirements coverage, rationale presence
+- `tasks-validator` - Task sizing, dependencies, acceptance criteria
+- `progress-validator` - Status accuracy, deviation tracking
+
+**Implementation Agents:**
+- `spec-acceptance-validator` - Validates implementation against spec criteria
+- `module-discovery-agent` - Detects module boundaries for synthesis
+
+**Synthesis Agents:**
+- `module-doc-synthesizer` - Generates CLAUDE.md for single module
+- `module-spec-synthesizer` - Reverse-engineers spec from module code
+
+### Benefits of v2.0.0 Architecture
+
+- **Modularity:** Templates, metadata, and validation logic externalized
+- **Maintainability:** Update templates/agents without changing commands
+- **Composability:** Agents reusable across multiple commands
+- **Consistency:** Centralized templates ensure uniform document structure
+- **Performance:** Parallel agent execution for faster synthesis
+- **Zero-token operations:** Metadata detection happens outside context window
+
 ## Additional Commands
 
 ### Review Command (`/review`)
 
-**Purpose:** Validate phase documents before progression (meta-phase validation).
+**Purpose:** Validate phase documents before progression using specialized validator agents.
 
 **When to use:**
 - Before moving from one phase to the next
 - Want to verify spec/plan/task quality
 - Need confidence that documents are ready
 
-**What it checks:**
-- Specs: WHAT vs HOW separation, measurable success criteria
-- Plans: Technical rationale, codebase exploration evidence
-- Tasks: Mapping to spec acceptance criteria, proper dependencies
-- Progress: Deviation tracking and documentation
+**What it checks (via agents):**
+- Specs: WHAT vs HOW separation, measurable success criteria (spec-validator agent)
+- Plans: Technical rationale, codebase exploration evidence (plan-validator agent)
+- Tasks: Mapping to spec acceptance criteria, proper dependencies (tasks-validator agent)
+- Progress: Deviation tracking and documentation (progress-validator agent)
 
 **Command:** `/review [spec|plan|tasks|progress]`
+
+**Agent Delegation (v2.0.0):** Command spawns specialized validator agents to perform comprehensive checks and present structured reports to user.
 
 **Key benefit:** Catches issues before they cascade through later phases.
 
@@ -317,6 +373,25 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 ## Resources
 
 This skill includes comprehensive reference documentation:
+
+### references/CHARTER.md
+**Purpose:** Project charter defining Spiral Grove's mission, core pillars, and design philosophy
+
+**Contains:**
+- Mission statement (why Spiral Grove exists)
+- 5 core pillars (foundational principles)
+- 8 design philosophy principles (decision-making rules)
+- Boundaries (what Spiral Grove is NOT)
+- Key differentiators (what makes us unique)
+- Practical usage guidance (how to apply the charter)
+
+**When to use:**
+- Need to understand Spiral Grove's foundational philosophy
+- Making architectural decisions (check against pillars and principles)
+- Onboarding contributors to project vision
+- Evaluating feature proposals for alignment
+- Understanding design rationale behind v2.0.0 refactor
+- Explaining Spiral Grove's unique approach vs other implementations
 
 ### references/SDD-QUICK-REFERENCE.md
 **Purpose:** Practical operational guide for day-to-day SDD usage

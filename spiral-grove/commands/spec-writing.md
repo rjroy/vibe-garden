@@ -1,3 +1,8 @@
+---
+argument-hint: [optional: feature brief or parent spec context]
+description: Generate SDD spec documentation for a feature
+allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
+---
 # Specification Writing Mode
 
 You are now in **Spec-Writing Mode**. Your role is to help create comprehensive, actionable specifications for development projects using the Spec-Driven Development (SDD) methodology.
@@ -92,83 +97,20 @@ For large projects (3+ related sub-features), organize hierarchically to avoid c
 
 ## Output Format
 
-Create a specification document in `.sdd/specs/[feature-name].md` with this structure:
+Create a specification document in `.sdd/specs/[feature-name].md` with filename format: `YYYY-MM-DD-[feature-name].md`.
 
-```markdown
-# [Feature Name] Specification
+**For parent/child hierarchies**:
+- Parent spec: `.sdd/specs/parent-feature.md`
+- Child specs: `.sdd/specs/parent-feature/child-a.md`
 
-**Version**: 1.0.0
-**Status**: Draft | Under Review | Approved
-**Created**: [Date]
-**Last Updated**: [Date]
-**Parent Specification**: [Path to parent spec, if this is a child] _(optional)_
-**Child Specifications**: _(optional, for parent specs)_
-- [child-a.md](./feature-name/child-a.md) - Brief description
-- [child-b.md](./feature-name/child-b.md) - Brief description
+**Template Structure**:
+Use the `sdd-templates` skill to read `templates/spec-template.md` for the complete document structure. Follow the template exactly for section organization and frontmatter YAML format.
 
-## Executive Summary
-Brief 2-3 sentence overview of the feature and its purpose.
-
-## User Story
-As a [user type], I want [capability], so that [benefit].
-
-## Stakeholders
-- **Primary**: [Who directly uses this?]
-- **Secondary**: [Who is indirectly impacted?]
-- **Tertiary**: [Who needs to know about this?]
-
-## Success Criteria
-1. [Measurable outcome 1]
-2. [Measurable outcome 2]
-3. [Measurable outcome 3]
-
-## Functional Requirements
-### [Category 1]
-- **REQ-F-1**: Requirement with clear success condition
-- **REQ-F-2**: Another specific requirement
-
-### [Category 2]
-- **REQ-F-3**: ...
-
-## Non-Functional Requirements
-### Performance
-- **REQ-NF-1**: Response time targets
-- **REQ-NF-2**: Throughput requirements
-- **REQ-NF-3**: Scalability needs
-
-### Security
-- **REQ-NF-4**: Authentication requirements
-- **REQ-NF-5**: Data protection needs
-- **REQ-NF-6**: Audit logging
-
-### Compliance
-- **REQ-NF-7**: Regulatory requirements
-- **REQ-NF-8**: Industry standards
-- **REQ-NF-9**: Legal constraints
-
-## Explicit Constraints (DO NOT)
-- Do NOT [thing that's out of scope]
-- Do NOT [common mistake to avoid]
-- Do NOT [feature for later phase]
-
-## Technical Context
-- Existing stack: [technologies]
-- Integration points: [systems to connect with]
-- Must respect: [existing patterns/conventions]
-
-## Acceptance Tests
-1. [Test scenario 1]
-2. [Test scenario 2]
-3. [Test scenario 3]
-
-## Open Questions
-- [ ] Question that needs resolution
-- [ ] Decision that needs stakeholder input
-
-## Out of Scope
-- [Feature explicitly deferred to future]
-- [Related work not part of this project]
-```
+**Metadata Auto-Population**:
+Use the `sdd-metadata` skill to populate frontmatter fields:
+- `created`: Run `date +%Y-%m-%d` via Bash
+- `authored_by`: Run `scripts/detect-author.sh` via Bash
+- `last_updated`: Same as created for new specs
 
 ## Workflow
 
@@ -205,7 +147,7 @@ When testing or implementation reveals spec gaps:
 - Check for parent/child hierarchies
 - Version control - specs evolve
 
-## Validation Checklist
+## Validation
 
 Before marking a spec as complete, verify:
 - [ ] Success criteria are measurable and testable
@@ -215,6 +157,19 @@ Before marking a spec as complete, verify:
 - [ ] Acceptance tests cover happy path and edge cases
 - [ ] Non-functional requirements are quantified
 - [ ] Open questions are documented (or resolved)
+- [ ] **Spec validator spawned and passed**
+
+### Validator Agent (Always Run)
+
+After drafting the spec, ALWAYS spawn the spec-validator agent in silent mode. This provides a second set of eyes (fresh context) to catch issues:
+
+```markdown
+Spawning spec-validator for validation...
+
+[Use Task tool with subagent_type=spec-validator, mode=silent]
+```
+
+Address any issues the validator identifies before marking the spec complete.
 
 ## Next Phase
 

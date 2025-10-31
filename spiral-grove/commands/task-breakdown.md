@@ -1,3 +1,8 @@
+---
+argument-hint: [optional: plan context]
+description: Generate SDD tasks documentation for a feature based on an existing plan
+allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
+---
 # Task Breakdown Mode
 
 You are now in **Task-Breakdown Mode**. Your role is to decompose the technical plan into concrete, implementable tasks that can be executed independently and reviewed as individual pull requests.
@@ -7,7 +12,7 @@ You are now in **Task-Breakdown Mode**. Your role is to decompose the technical 
 - **Decomposition**: Break architecture into discrete work units
 - **Dependency mapping**: Identify what must be done first
 - **Acceptance criteria**: Define "done" for each task
-- **Estimation**: Provide realistic time estimates
+- **Complexity sizing**: Rate each task using t-shirt sizes (S/M/L preferred)
 - **Test planning**: Map spec acceptance tests to task tests
 
 ## Prerequisites
@@ -82,7 +87,7 @@ Think: "Does an implementer have enough detail to complete this task and know wh
 
 7. **Task count reality check**:
    - Typical feature: 10-20 tasks (not 40+)
-   - Each task: 2-8 hours of work (not 30 minutes, not 3 days)
+   - Each task: S/M/L complexity (not XS/trivial, not XL/XXL/epic-sized)
    - **If you have >25 tasks, stop and check**:
      - Are tasks too granular? (Combine related work into single PRs)
      - Are you creating tasks for trivial helpers? (Skip these)
@@ -96,56 +101,20 @@ Think: "Does an implementer have enough detail to complete this task and know wh
 
 ## Output Format
 
-Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md`.
+Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md` with filename format: `YYYY-MM-DD-[feature-name]-tasks.md`.
 
 **For parent/child hierarchies**: Mirror the spec directory structure:
 - Parent tasks: `.sdd/tasks/parent-feature-tasks.md`
 - Child tasks: `.sdd/tasks/parent-feature/child-a-tasks.md`, `.sdd/tasks/parent-feature/child-b-tasks.md`
 
-**Template**:
+**Template Structure**:
+Use the `sdd-templates` skill to read `templates/tasks-template.md` for the complete document structure. Follow the template exactly for section organization and frontmatter YAML format.
 
-```markdown
-# [Feature Name] - Task Breakdown
-
-**Specification**: [link to spec]
-**Plan**: [link to plan]
-**Status**: Draft | Ready for Implementation
-
-## Task Summary
-Total: [number] tasks, Estimated: [total hours/days]
-
-## Tasks (organized by category as needed: Foundation, Services, API, Integration, Testing, Documentation)
-
-### TASK-001: [Task Name]
-**Category**: [category]
-**Priority**: Critical | High | Medium | Low
-**Estimate**: [hours]
-**Dependencies**: [TASK-IDs or None]
-
-**Description**: What needs to be done (1-2 sentences)
-
-**Acceptance Criteria**:
-- [ ] Specific, testable outcome 1
-- [ ] Specific, testable outcome 2
-
-**Files**: Create/modify [list]
-**Testing**: [What to test]
-
----
-
-[Repeat for each task]
-
-## Dependency Graph (if helpful for complex features)
-```
-TASK-001 → TASK-002 → TASK-003
-         └→ TASK-004
-```
-
-## Implementation Order
-**Phase 1**: TASK-001, TASK-002 (can do in parallel)
-**Phase 2**: TASK-003, TASK-004 (after Phase 1)
-
-```
+**Metadata Auto-Population**:
+Use the `sdd-metadata` skill to populate frontmatter fields:
+- `created`: Run `date +%Y-%m-%d` via Bash
+- `authored_by`: Run `scripts/detect-author.sh` via Bash
+- `last_updated`: Same as created for new task breakdowns
 
 ## Workflow
 
@@ -154,7 +123,7 @@ TASK-001 → TASK-002 → TASK-003
 3. **Identify components**: List all pieces to build
 4. **Create tasks**: Write specific tasks in sections, save periodically
 5. **Map dependencies**: Identify what blocks what
-6. **Estimate**: Realistic time per task
+6. **Size complexity**: Rate each task S/M/L based on complexity
 7. **Review & refine**: Present for feedback, adjust
 8. **Mark ready**: Update to "Ready for Implementation"
 
@@ -189,24 +158,37 @@ TASK-001 → TASK-002 → TASK-003
 
 ## Key Reminders
 
-- Tasks take hours/days (not weeks or minutes)
+- Tasks should be S/M/L complexity (not XS/trivial, not XL/XXL/epic-sized)
 - Minimize dependencies between tasks
 - Clear pass/fail criteria per task
 - Reviewable PRs (~500 lines max)
 - Mirror spec/plan hierarchy exactly
 - **Do NOT include progress tracking** - That belongs in `.sdd/progress/` documents
 
-## Validation Checklist
+## Validation
 
 Before marking breakdown as complete:
 - [ ] Every component in the plan has corresponding tasks
 - [ ] All spec acceptance criteria are mapped to tasks
 - [ ] Dependencies are clearly documented
-- [ ] Estimates are realistic
+- [ ] Complexity ratings are appropriate (S/M/L)
 - [ ] Testing requirements are explicit
 - [ ] Foundation tasks come before dependent tasks
-- [ ] No task is too large (>1 day estimate)
-- [ ] No task is too small (<30 min estimate)
+- [ ] No task is too large (XL/XXL - must be broken down)
+- [ ] No task is too small (XS - must be consolidated)
+- [ ] **Tasks validator spawned and passed**
+
+### Validator Agent (Always Run)
+
+After drafting the task breakdown, ALWAYS spawn the tasks-validator agent in silent mode. This provides a second set of eyes (fresh context) to catch issues:
+
+```markdown
+Spawning tasks-validator for validation...
+
+[Use Task tool with subagent_type=tasks-validator, mode=silent]
+```
+
+Address any issues the validator identifies before marking the breakdown complete.
 
 ## Next Phase
 

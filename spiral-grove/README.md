@@ -6,8 +6,7 @@
 
 Spiral Grove transforms AI-assisted development by providing a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Build production-ready features with clarity, consistency, and comprehensive documentation.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![Claude Code](https://img.shields.io/badge/platform-Claude%20Code-purple.svg)](https://claude.ai/code)
 
 ---
@@ -20,7 +19,7 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 - ⚙️ **Implementation Tracking** - Execute tasks with progress monitoring and deviation tracking
 - ✅ **Validation Command** - Review phase documents before progression
 - 📚 **Documentation Synthesis** - Generate operational CLAUDE.md docs from implementation
-- 🎯 **Claude Code Plugin** - Install via `/plugin install spiral-grove@vibe-garden`
+- 🎯 **Claude Code Plugin** - Install via `/plugin` menu (see Quick Start below)
 - 🔄 **Parent/Child Hierarchies** - Organize complex projects without context overload
 - 📖 **Integrated Guidance** - Built-in skill provides methodology help when stuck
 
@@ -30,10 +29,11 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 
 ### 1. Install Plugin
 
-```bash
-# In Claude Code, run:
-/plugin install spiral-grove@vibe-garden
-```
+1. Open Claude Code
+2. Type: `/plugin`
+3. Follow the prompts to **'add marketplace'**
+4. Enter: `https://github.com/rjroy/vibe-garden`
+5. Follow the prompts and make sure **"Spiral Grove"** is installed
 
 ### 2. Start Your First Feature
 
@@ -262,13 +262,12 @@ Located in `spiral-grove/.claude-plugin/plugin.json`:
 {
   "name": "spiral-grove",
   "description": "A Spec Driven Development (SDD) set of Claude commands.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
   },
-  "repository": "https://github.com/rjroy/vibe-garden.git",
-  "license": "MIT"
+  "repository": "https://github.com/rjroy/vibe-garden"
 }
 ```
 
@@ -416,17 +415,11 @@ Contributions are welcome! Please see the main repository's [CONTRIBUTING.md](..
 
 ---
 
-## License
-
-MIT License - see [LICENSE](../LICENSE) for details
-
----
-
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/rjroy/vibe-garden/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/rjroy/vibe-garden/discussions)
-- **Documentation**: [Vibe Garden Docs](https://github.com/rjroy/vibe-garden)
+- **Documentation**: [Vibe Garden](https://github.com/rjroy/vibe-garden)
 
 ---
 

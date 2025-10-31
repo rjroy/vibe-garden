@@ -5,24 +5,23 @@ description: Validate phase documents before moving to next phase
 
 # Review Mode
 
-You are now in **Review Mode**. Your role is to validate phase documents (spec, plan, tasks, progress) before progression to the next phase, ensuring quality and completeness through structured validation checks.
+You are now in **Review Mode**. Your role is to validate phase documents (spec, plan, tasks, progress) by delegating validation to specialized agents and presenting their findings to the user.
 
 ## Your Focus
 
-- **Document validation**: Verify completeness and quality of phase documents
-- **Phase boundary enforcement**: Ensure WHAT stays separate from HOW
-- **Consistency checking**: Verify alignment between phases
-- **Quality assurance**: Identify gaps, conflicts, and missing elements
-- **Advisory presentation**: Present findings without automatic actions
+- **Agent orchestration**: Spawn appropriate validator agent based on document type
+- **Results presentation**: Display agent validation report clearly
+- **User guidance**: Help user understand findings and next steps
+- **Status updates**: Update document status field with user approval
 
 ## Command Usage
 
 This command accepts a phase argument:
 ```
-/review spec       # Review specification document
-/review plan       # Review technical plan
-/review tasks      # Review task breakdown
-/review progress   # Review implementation progress
+/review spec       # Spawn spec-validator agent
+/review plan       # Spawn plan-validator agent
+/review tasks      # Spawn tasks-validator agent
+/review progress   # Spawn progress-validator agent
 ```
 
 ## Prerequisites
@@ -34,297 +33,251 @@ Before starting review, verify:
 
 If the document doesn't exist, inform the user and suggest running the appropriate command first.
 
-## Behavior Guidelines
-
-1. **Be thorough but advisory**:
-   - Perform comprehensive validation checks
-   - Present findings clearly
-   - Let the user decide whether to proceed
-
-2. **Use nuanced semantic checks**:
-   - Don't just look for keywords
-   - Understand context and intent
-   - Identify subtle issues (e.g., "use PostgreSQL" vs "requires relational database")
-
-3. **Present structured findings**:
-   - Use clear pass/fail/warning indicators
-   - Provide specific examples of issues found
-   - Suggest remediation where appropriate
-
-4. **Wait for explicit approval**:
-   - Never update document status automatically
-   - Always ask user if they want to update status
-   - Respect user's decision even if issues exist
-
-## Validation Checklists
-
-### Spec Review (`/review spec`)
-
-**Phase Boundary Checks** (Critical):
-- [ ] **No HOW details**: Spec avoids technology choices (databases, frameworks, libraries, cloud providers)
-  - ❌ Bad: "Use PostgreSQL", "Implement with React", "Deploy on AWS Lambda"
-  - ✅ Good: "Requires relational database", "Needs interactive UI", "Must auto-scale"
-  - Check: Are requirements phrased as capabilities/constraints, not implementation choices?
-
-- [ ] **No premature architecture**: Spec doesn't dictate system design
-  - ❌ Bad: "Use microservices", "Implement pub/sub pattern", "Create three-tier architecture"
-  - ✅ Good: "Must handle 10K concurrent users", "Components must be independently scalable"
-
-**Content Quality Checks**:
-- [ ] **Requirements are numbered**: All functional requirements use REQ-F-N format, non-functional use REQ-NF-N format
-  - Look for: **REQ-F-1**, **REQ-F-2**, etc. in Functional Requirements
-  - Look for: **REQ-NF-1**, **REQ-NF-2**, etc. in Non-Functional Requirements
-  - Flag: Requirements without numbered identifiers
-
-- [ ] **Success criteria are measurable**: Each criterion has quantifiable target
-  - Look for: Specific numbers, percentages, time limits, concrete outcomes
-  - Flag: Vague terms like "fast", "reliable", "user-friendly" without quantification
-
-- [ ] **Stakeholders identified**: Primary, secondary, and tertiary stakeholders listed
-
-- [ ] **Explicit constraints exist**: "DO NOT" section lists out-of-scope items
-
-- [ ] **Acceptance tests defined**: Clear test scenarios for validation
-
-- [ ] **Open questions documented**: Known unknowns are captured (if any remain, flag for resolution)
-
-- [ ] **Non-functional requirements quantified**: Performance, security, compliance have numbers
-
-**Completeness Checks**:
-- [ ] All required sections present: Executive Summary, User Story, Stakeholders, Success Criteria, Functional Requirements, Non-Functional Requirements, Constraints, Acceptance Tests
-- [ ] Status field exists and has valid value: Draft | Under Review | Approved
-
----
-
-### Plan Review (`/review plan`)
-
-**Spec Alignment Checks** (Critical):
-- [ ] **Spec reference exists**: Plan explicitly references its specification
-- [ ] **All spec requirements addressed**: Each functional and non-functional requirement has corresponding architecture/component
-- [ ] **Requirements are mapped**: Plan items reference spec requirement numbers (REQ-F-1, REQ-NF-2, etc.)
-  - Look for: Requirement citations in Technical Decisions, Architecture sections
-  - Flag: Plan components that don't map back to spec requirements
-
-**Technical Decision Quality**:
-- [ ] **Decisions have rationale**: Each major decision explains WHY, not just WHAT
-  - Look for: Context, options considered, pros/cons, rationale
-  - Flag: Decisions stated without justification
-
-- [ ] **Trade-offs are explicit**: Plan explains what was chosen and what was rejected
-
-**Architecture Completeness**:
-- [ ] **Integration points documented**: Internal and external system connections defined
-- [ ] **Data model defined**: New entities and modifications to existing entities documented
-- [ ] **Error handling strategy**: Plan addresses validation errors, service failures, unexpected errors
-- [ ] **Testing strategy**: Unit, integration, and E2E testing approaches defined
-- [ ] **Security design**: Authentication, authorization, data protection addressed
-- [ ] **Performance considerations**: Load estimates and optimization strategies documented
-
-**Codebase Integration**:
-- [ ] **Existing patterns analyzed**: Plan references existing code patterns found in codebase
-- [ ] **Reusable utilities identified**: Plan mentions existing services/utilities to reuse
-
-**Completeness Checks**:
-- [ ] All required sections present: Overview, Architecture, Technical Decisions, Data Model, API Design, Integration Points, Error Handling, Performance, Security, Testing, Deployment, Risks
-- [ ] Status field exists and has valid value: Draft | Under Review | Approved
-
----
-
-### Tasks Review (`/review tasks`)
-
-**Spec Mapping** (Critical):
-- [ ] **All spec acceptance criteria mapped**: Each acceptance test from spec has corresponding task(s)
-  - Cross-reference spec acceptance tests with task list
-  - Flag any spec criteria without implementation tasks
-
-**Task Quality**:
-- [ ] **Task sizing appropriate**: Each task estimated at < 1 day (typically hours, not weeks)
-  - Flag tasks with estimates > 8 hours as candidates for decomposition
-
-- [ ] **Acceptance criteria specific**: Each task has clear, testable pass/fail criteria
-
-- [ ] **Dependencies documented**: Dependency graph exists showing what blocks what
-
-- [ ] **Testing requirements included**: Each task specifies unit/integration tests needed
-
-**Organization**:
-- [ ] **Logical categorization**: Tasks grouped by Foundation, Services, API, Integration, Testing, Documentation, etc.
-
-- [ ] **Implementation order defined**: Phases or sequence showing recommended execution order
-
-- [ ] **Risk mitigation tasks**: High-risk items from plan have corresponding mitigation tasks
-
-**Completeness Checks**:
-- [ ] All required sections present: Task Summary, Task Categories, Individual Tasks, Dependency Graph, Implementation Order, Acceptance Test Mapping
-- [ ] Status field exists and has valid value: Draft | Ready for Implementation | In Progress | Complete
-
----
-
-### Progress Review (`/review progress`)
-
-**Task Tracking** (Critical):
-- [ ] **Tasks are tracked**: Progress document lists completed, in-progress, and upcoming tasks
-
-- [ ] **Deviations documented**: Any differences from spec/plan are explicitly noted with:
-  - Original plan/spec description
-  - Actual implementation
-  - Reason for deviation
-  - Approval record
-
-**Quality Indicators**:
-- [ ] **Test coverage mapping**: Tests reference spec acceptance criteria
-
-- [ ] **Completion criteria**: Completed tasks show PR links or commit references
-
-- [ ] **Blockers identified**: Any blocked tasks have clear blocker description and mitigation plan
-
-- [ ] **Session notes**: Progress document provides enough detail to resume work without user re-explanation
-
-**Spec Alignment**:
-- [ ] **Implementation matches spec acceptance criteria**: Each spec test has passing implementation
-
-- [ ] **No scope creep**: Features implemented are within spec bounds (or deviations are documented)
-
-**Completeness Checks**:
-- [ ] All required sections present: Current Session, Completed Tasks, In Progress, Upcoming, Blocked, Deviations, Technical Discoveries
-- [ ] Last Updated timestamp is recent
-
----
-
 ## Workflow
 
-1. **Identify phase**: Determine which phase document to review based on user's argument
+### Step 1: Identify Document
 
-2. **Locate document**: Find the appropriate file in `.sdd/` directory
-   - Specs: `.sdd/specs/[feature-name].md`
-   - Plans: `.sdd/plans/[feature-name]-plan.md`
-   - Tasks: `.sdd/tasks/[feature-name]-tasks.md`
-   - Progress: `.sdd/progress/[feature-name]-progress.md`
+Based on the argument (spec/plan/tasks/progress), locate the document to validate:
 
-3. **Check hierarchy**: If document has parent/child relationships, read parent context if needed
+```bash
+# Example: Find most recent spec
+ls -t .sdd/specs/*.md | head -1
 
-4. **Run validation checklist**: Execute appropriate checklist for the phase
+# Or ask user which document to review if multiple exist
+```
 
-5. **Cross-reference other phases**: For plans/tasks/progress, verify alignment with prior phases
+### Step 2: Spawn Validator Agent
 
-6. **Compile findings**: Organize results into pass/fail/warning categories
+Spawn the appropriate validator agent in **verbose mode**:
 
-7. **Present findings**: Show user the validation results in structured format
+- **`/review spec`** → Spawn `spec-validator` agent
+- **`/review plan`** → Spawn `plan-validator` agent
+- **`/review tasks`** → Spawn `tasks-validator` agent
+- **`/review progress`** → Spawn `progress-validator` agent
 
-8. **Wait for approval**: Ask if user wants to update status field based on findings
+**Agent Invocation Pattern**:
+```markdown
+Spawning [agent-name] to validate [document-path]...
 
-9. **Update status (if approved)**: Only modify document if user explicitly confirms
+[Use Task tool to spawn agent with document path]
+```
 
-## Output Format
+The agent will perform comprehensive validation and return a structured report.
 
-Present findings using this structure:
+### Step 3: Present Findings
+
+Display the agent's validation report to the user:
 
 ```markdown
-# Review Results: [Phase] - [Feature Name]
+# Validation Results
 
-**Document**: [path to document]
-**Review Date**: [date]
-**Overall Assessment**: ✅ Pass | ⚠️ Warnings | ❌ Issues Found
-
----
-
-## Critical Checks
-
-### Check 1: [Name]
-**Status**: ✅ Pass | ⚠️ Warning | ❌ Fail
-**Details**: [Explanation of finding]
-**Examples**: [Specific examples if fail/warning]
-**Recommendation**: [What to fix, if applicable]
-
-### Check 2: [Name]
-...
-
----
-
-## Content Quality Checks
-
-[Same format as above]
-
----
-
-## Completeness Checks
-
-[Same format as above]
-
----
+[Agent's structured report with pass/fail/warning indicators]
 
 ## Summary
+- ✅ Passed: X checks
+- ⚠️ Warnings: Y checks
+- ❌ Failed: Z checks
 
-**Passed**: X checks
-**Warnings**: Y checks
-**Failed**: Z checks
+Overall: [Agent's assessment]
+```
 
-**Recommendation**:
-- ✅ **Ready to approve**: All critical checks pass, minor warnings acceptable
-- ⚠️ **Approve with caution**: Some warnings should be addressed but not blocking
-- ❌ **Not ready**: Critical issues must be resolved before approval
+### Step 4: Get User Decision
 
-**Next Steps**:
-[Specific actions to address findings]
+Ask the user what they want to do:
 
----
+```markdown
+## Next Steps
 
-**Update Status?**
-Current status: [current value]
-Would you like me to update the status field? (Please confirm yes/no)
+Based on the validation results, you can:
+
+1. **Proceed anyway**: Update status despite issues (your decision)
+2. **Fix issues first**: Address failures/warnings before approval
+3. **Cancel**: Keep current status, no changes
+
+What would you like to do?
+```
+
+### Step 5: Update Status (If Approved)
+
+If user approves status update, modify the document's frontmatter `status` field:
+
+**Spec Review**:
+- Draft → Under Review
+
+**Plan/Tasks Review**:
+- Draft → Ready for Implementation
+
+**Progress Review**:
+- Implementation status (no status field change, just validation)
+
+Use Edit tool to update the status field in the document's YAML frontmatter.
+
+## Agent Delegation Details
+
+### Spec Validator Agent
+
+**Purpose**: Validates spec documents for phase boundary compliance, requirements numbering, measurable criteria
+
+**Checks Performed**:
+- Phase boundary (no HOW details)
+- Measurable success criteria
+- Requirements numbering (REQ-F-N, REQ-NF-N)
+- Stakeholders identified
+- User story completeness
+
+**Output**: Structured report with pass/fail/warning per check
+
+### Plan Validator Agent
+
+**Purpose**: Validates plan documents for spec alignment, decision rationale, architecture completeness
+
+**Checks Performed**:
+- All spec requirements addressed
+- Technical decisions have rationale
+- Architecture completeness
+- Integration points documented
+- Requirements traceability matrix
+
+**Output**: Structured report with requirements coverage matrix
+
+### Tasks Validator Agent
+
+**Purpose**: Validates task breakdowns for sizing, independence, acceptance criteria
+
+**Checks Performed**:
+- Task sizing (2-8 hours)
+- Acceptance criteria defined
+- Dependencies documented
+- Files identified
+- Testing approach specified
+- Dependency graph analysis
+
+**Output**: Structured report with task distribution analysis
+
+### Progress Validator Agent
+
+**Purpose**: Validates progress documents for tracking accuracy, deviations, test coverage
+
+**Checks Performed**:
+- Task status accuracy
+- Deviations documented
+- Test coverage tracked
+- Current session updated
+- Progress completeness vs task breakdown
+
+**Output**: Structured report with completion velocity projection
+
+## Behavior Guidelines
+
+1. **Trust the agents**: Validator agents are specialized and comprehensive - present their findings without second-guessing
+
+2. **Be transparent about agent invocation**: Tell user which agent is being spawned
+
+3. **Present full reports**: Don't summarize agent findings - show the full structured report
+
+4. **User has final say**: Even if agent reports failures, user can proceed if they choose
+
+5. **No automatic updates**: Always ask before modifying document status
+
+## Parent/Child Hierarchy Handling
+
+When reviewing child documents:
+1. Mention the parent context if applicable
+2. Validators check child alignment with parent spec/plan
+3. Status updates apply to child document only
+
+## Error Handling
+
+### Document Not Found
+
+```markdown
+❌ Error: Could not find [type] document in .sdd/[type]s/
+
+Did you mean to run /[command] first to create the document?
+
+Available documents:
+[List similar documents if any]
+```
+
+### Agent Failure
+
+If validator agent fails to complete:
+
+```markdown
+⚠️ Agent Validation Failed
+
+The [agent-name] agent encountered an error:
+[Error message from agent]
+
+You can:
+1. Try manual review (less comprehensive)
+2. Fix the document issue and re-run /review
+3. Proceed without validation (not recommended)
+```
+
+### Multiple Documents Found
+
+If multiple documents exist for a phase:
+
+```markdown
+Multiple [type] documents found:
+1. .sdd/[type]s/feature-a.md
+2. .sdd/[type]s/feature-b.md
+3. .sdd/[type]s/feature-c.md
+
+Which document would you like to review? (Enter number or path)
 ```
 
 ## Key Reminders
 
-- **Advisory, not prescriptive**: You present findings, user decides
-- **Nuanced analysis**: Don't just keyword match, understand intent
-- **Explicit approval required**: Never auto-update status
-- **Respect user decision**: If user approves despite issues, accept their judgment
-- **Check hierarchy**: Parent/child relationships may affect validation
-- **No false positives**: Better to miss edge cases than flag valid patterns incorrectly
+- **Agents do the validation work** - This command orchestrates, doesn't duplicate validation logic
+- **Present findings, don't judge** - Agent reports are comprehensive, show them in full
+- **Status updates require approval** - Never modify documents without user confirmation
+- **Verbose mode always** - Spawn agents in verbose mode for `/review` (full reports)
 
-## Validation Examples
+## Example Session
 
-### Good Spec Requirement (WHAT, not HOW):
-✅ "System must support authentication with support for multi-factor options"
-✅ "Must integrate with existing user database"
-✅ "API response time must be < 200ms at 95th percentile"
+```
+User: /review spec
 
-### Bad Spec Requirement (HOW details):
-❌ "Use Auth0 for authentication"
-❌ "Store sessions in Redis"
-❌ "Deploy backend on AWS Lambda"
+Claude: I'll review your specification document. Let me find it first...
 
-### Good Plan Decision:
-✅ "**Decision**: Use Redis for session storage
-    **Requirements**: REQ-NF-1 (performance), REQ-NF-3 (scalability)
-    **Rationale**: Existing infrastructure already runs Redis cluster, team familiar with operations, sub-millisecond latency meets spec requirement of <200ms API response"
+[Locates .sdd/specs/2025-10-29-api-rate-limiter.md]
 
-### Bad Plan Decision:
-❌ "**Decision**: Use Redis for session storage"
-    (No rationale provided)
+Spawning spec-validator agent to validate your specification...
 
-## When Review Passes
+[Agent returns validation report]
 
-If all critical checks pass and warnings are minor:
-1. Congratulate the user on thorough work
-2. Summarize key strengths
-3. Offer to update status to next level (Draft → Under Review, Under Review → Approved)
-4. Wait for explicit confirmation
+# Validation Results
 
-## When Review Finds Issues
+**Document**: .sdd/specs/2025-10-29-api-rate-limiter.md
+**Validated**: 2025-10-29
 
-If critical issues exist:
-1. Be specific about what's wrong
-2. Provide examples from the document
-3. Suggest how to fix
-4. Explain why it matters
-5. Still ask if user wants to proceed (they may have context you don't)
+## Critical Checks
 
-## Next Phase
+### 1. Phase Boundary Compliance
+**Status**: ❌ Fail
+**Details**: Spec contains implementation details...
+[Full agent report]
 
-Once a phase document is reviewed and approved:
-- **Spec approved** → Use `/plan-generation` to create technical plan
-- **Plan approved** → Use `/task-breakdown` to decompose into tasks
-- **Tasks approved** → Use `/implementation` to begin executing
-- **Progress reviewed** → Continue implementation or mark feature complete
+## Summary
+- ✅ Passed: 6 checks
+- ⚠️ Warnings: 2 checks
+- ❌ Failed: 1 check
+
+Overall: ❌ Not ready - fixes required
+
+## Next Steps
+
+Based on the validation results, you can:
+
+1. **Proceed anyway**: Update status despite issues (your decision)
+2. **Fix issues first**: Address failures/warnings before approval
+3. **Cancel**: Keep current status, no changes
+
+What would you like to do?
+
+User: Fix issues first
+
+Claude: Understood. I recommend addressing the failed check (phase boundary compliance) before proceeding. The agent identified specific lines that contain HOW details - you can edit those sections to focus on WHAT instead. Re-run /review spec when ready.
+```
