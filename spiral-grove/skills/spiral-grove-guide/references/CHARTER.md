@@ -8,9 +8,9 @@
 
 ## Mission
 
-Spiral Grove addresses the need for a paradigm shift in development. AI can be the tool which provides the implementation. The user can now focus on the specifications and the architecture. They can direct the implementation, but don't need to treat the implementation as the source of truth. With this paradigm shift, a bad generated implementation can just be deleted out right, and regenerated from the plan.
+Spiral Grove addresses the need for a paradigm shift in development. AI can be the tool which provides the implementation. The user can now focus on the specifications and the architecture. They can direct the implementation, but don't need to treat the implementation as the source of truth. With this paradigm shift, a bad generated implementation can just be deleted outright, and regenerated from the plan.
 
-Spiral Grove addresses the **"vibe coding" problem** in AI-assisted development—where to have consistent results the user must focus and refine at the generated implementation level. In reality the new paradigm should have the user focusing on the specificiation and architecture level and not at the detailed implementation. Shifting the focus there allows the implementation be less precious. If there's something wrong with the implementation, but the specs are sound, simply start over from the plan.
+Spiral Grove addresses the **"vibe coding" problem** in AI-assisted development—where to have consistent results the user must focus and refine at the generated implementation level. In reality the new paradigm should have the user focusing on the specification and architecture level and not at the detailed implementation. Shifting the focus there allows the implementation be less precious. If there's something wrong with the implementation, but the specs are sound, simply start over from the plan.
 
 **Our Mission**: Provide a structured, four-phase methodology where **specifications serve as the source of truth** for AI-assisted development, enabling predictable, validatable, and coherent outcomes through explicit requirements, living documents, and phase-gated validation.
 
@@ -72,13 +72,13 @@ If peer reviews are good then agents should do them. Using sub-agents allows the
 
 ### 3. T-Shirt Sizes Over Time Estimates
 
-AI is trained on existing data. Time estimates are based on human development times. This doesn't translate to what the actualy development time will be for the AI. Using T-Shirt sizes allows the user to have a glimpse into how complicated the AI thinks the problem is.
+AI is trained on existing data. Time estimates are based on human development times. This doesn't translate to what the actual development time will be for the AI. Using T-Shirt sizes allows the user to have a glimpse into how complicated the AI thinks the problem is.
 
 ---
 
 ### 4. Declarative Requirements (WHAT, Not HOW)
 
-Each phase is scoped and the prompts for the command tell the AI this. The specification is WHAT not HOW. The plan contains HOW and WHY, but not details. This scope constrained allows the AI to specialize and focus. There is a lot of reason why this is important for the LLM, but it also helps to keep the documentation clearer. Constraint is a good thing.
+Each phase is scoped and the prompts for the command tell the AI this. The specification is WHAT not HOW. The plan contains HOW and WHY, but not details. This scope constraint allows the AI to specialize and focus. There is a lot of reason why this is important for the LLM, but it also helps to keep the documentation clearer. Constraint is a good thing.
 
 ---
 
@@ -96,7 +96,7 @@ If it wasn't clear, decisions made during any phase of the process that might le
 
 ### 7. Stay in Phase
 
-Each phase is scoped. It's already been said. Complete a phase before revisiting other phases. Note open questions, discoveries, and changes. Then `/spiral-grove:review` the phase and decide how this impacts the current or previous phases.
+Each phase is scoped. Complete a phase before revisiting other phases. Note open questions, discoveries, and changes. Then `/spiral-grove:review` the phase and decide how this impacts the current or previous phases.
 
 
 ---
@@ -135,8 +135,8 @@ Ask: "Does this align with our core pillars? Which design philosophy principle a
 
 **Example**: Considering adding a new feature to the implementation command?
 - Check Pillar 4 (Delegation): Should this be an agent instead?
-- Check Principle 2 (Commands ARE Orchestrators): Is this orchestration or discrete work?
-- Check Principle 3 (Fresh Eyes): Would agent delegation enable better review?
+- Check Principle 8 (Commands ARE Orchestrators): Is this orchestration or discrete work?
+- Check Principle 2 (Fresh Eyes): Would agent delegation enable better review?
 
 ---
 
@@ -163,7 +163,6 @@ Start here: Read Mission → Core Pillars → Boundaries → Skim Principles
 This is a living document. Update when:
 - New architectural principles emerge from implementation
 - Boundaries need clarification based on user feedback
-- Differentiators change as industry evolves
 
 Process: Propose change → Review against existing pillars → Update with rationale → Bump version
 
