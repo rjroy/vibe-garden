@@ -8,7 +8,9 @@
 
 ## Mission
 
-Spiral Grove addresses the **"vibe coding" problem** in AI-assisted development—where ad hoc prompts produce inconsistent, scope-creeping implementations that drift from intent. Language models excel at pattern completion, not mind reading. Without explicit specifications, AI agents interpret ambiguity based on statistical patterns, leading to iterative "vibe checks" without objective criteria, inconsistency across sessions, and difficulty maintaining coherence in large codebases.
+Spiral Grove addresses the need for a paradigm shift in development. AI can be the tool which provides the implementation. The user can now focus on the specifications and the architecture. They can direct the implementation, but don't need to treat the implementation as the source of truth. With this paradigm shift, a bad generated implementation can just be deleted out right, and regenerated from the plan.
+
+Spiral Grove addresses the **"vibe coding" problem** in AI-assisted development—where to have consistent results the user must focus and refine at the generated implementation level. In reality the new paradigm should have the user focusing on the specificiation and architecture level and not at the detailed implementation. Shifting the focus there allows the implementation be less precious. If there's something wrong with the implementation, but the specs are sound, simply start over from the plan.
 
 **Our Mission**: Provide a structured, four-phase methodology where **specifications serve as the source of truth** for AI-assisted development, enabling predictable, validatable, and coherent outcomes through explicit requirements, living documents, and phase-gated validation.
 
@@ -18,43 +20,37 @@ Spiral Grove addresses the **"vibe coding" problem** in AI-assisted development�
 
 ### 1. Specifications as Source of Truth
 
-Requirements define correctness, not code execution. Implementation that deviates without approval is "wrong" even if it "works." Specifications create contracts between stakeholders, developers, AI agents, and future teams.
-
-**In Practice**: The `/review` command enforces spec compliance through validation gates. Code that passes tests but violates spec criteria fails validation.
+If the specification is the source of truth then everyone on the team can understand what the system does. There is no more "let me check what was actually implemented". The implementation can just be re-generated.
 
 ---
 
 ### 2. Explicit Over Implicit Knowledge
 
-Make all assumptions, constraints, and requirements explicit in writing. This reduces interpretation variance in AI agents, prevents context loss across sessions, and enables team transitions without tribal knowledge.
-
-**In Practice**: Frontmatter metadata (author, dates, version) is auto-populated with zero friction. No silent assumptions—if it matters, it's documented.
+Defining all requirements, constraints, and assumptions within the documentation disambiguates what the system does and what the AI needs to implement. If the AI needs to answer a design or architecture question then it needs to be documented.
 
 ---
 
 ### 3. Living Documents with Phase-Gated Evolution
 
-Specifications evolve through managed updates, not frozen Waterfall artifacts. Four distinct phases—Spec (WHAT) → Plan (HOW) → Tasks (STEPS) → Implementation (BUILD)—with validation gates between phases prevent building on shaky foundations.
-
-**In Practice**: `/review [phase]` validates completeness before progression. Deviation tracking makes changes explicit and approved, not silent drift.
+Each phase of the documentation process is scoped: specification (WHAT), plan (HOW), task breakdown (STEPS), and implementation (BUILD). This constrains the problem space allowing for documentation to be focused and concise. As the scope changes through the phases of the system, the questions and answers can reveal changes that need to be made to previous scopes. Each of the documents is living long after the implementation is complete.
 
 ---
 
 ### 4. Delegation Over Inline Execution
 
-**Commands orchestrate**: Provide user guidance, spawn agents, coordinate validation, maintain context across workflows.
-**Agents do discrete work**: Analysis, validation, synthesis in fresh context with objective review.
-**Skills serve resources**: Bundle templates, schemas, reference docs that commands/agents access.
+Context engineering is one of the most important benefits a plugin can provide the user. This is done by controlling the scope of each of the types of prompts involved.
 
-**In Practice**: Commands reduced by 14-67% through agent delegation in v2.0.0. Fresh context per agent prevents bloat and enables "review with fresh eyes." This is the universal architectural principle proven through implementation.
+**User requests**: The user initiates a command to enter a phase.
+**Commands orchestrate**: Commands manage the steps of a phase and communicate to the user, agents, and skills as needed.
+**Agents do discrete work**: Agents provide context isolation to keep the main context concise. This is especially useful when mass documentation is needed for say 100+ modules. They also provide a fresh look at the problem when a validation step is needed.
+**Skills serve resources**: Skills are a new feature which interacts nicely with plugins. These allow us to keep reference documentation out of the command prompts. They also allow us to hard code scripts when that allows us to have consistent implementation.
 
 ---
 
-### 5. Composability and Context Isolation
+### 5. Composability
 
-Agents are stateless, focused (100-200 lines), reusable across commands. Three invocation modes enable flexible use: verbose (full report), silent (inline suggestions), gate (pass/fail). Parallel execution supports 100+ agents for large codebases.
+Each tool within the plugin should be written concisely and allowed to be used in different contexts. A concrete example of this is the `@spiral-grove:module-spec-synthesizer` which uses `/spiral-grove:spec-writing` to generate the specification. This agent will make all the decisions the user would.
 
-**In Practice**: `spec-validator` is reused by `/spec-writing`, `/review spec`, and `/implementation`. Synthesis commands spawn multiple agents concurrently for performance.
 
 ---
 
@@ -64,65 +60,51 @@ These principles guide architectural decisions and emerged from v2.0.0 implement
 
 ### 1. Templates = Scaffolding, Not Documentation
 
-Templates provide minimal structure (section headers + essential placeholders). Commands provide comprehensive guidance. Users customize, don't fight templates.
-
-**Evidence**: Plan template reduced from 204 to 63 lines (69%). Kept essential structure, removed verbose guidance that duplicated command instructions.
+Templates provide consistency in structure not in detail. By leaving the templates as just structure this allows for variation by the LLM. It also allows for improvements in the LLM to improve the results.
 
 ---
 
-### 2. Commands ARE Orchestrators
+### 2. Validate Continuously with Fresh Eyes
 
-Never create orchestrator agents—commands maintain context and coordinate workflows. Agents are for discrete, specialized tasks that benefit from fresh context. Commands have unique value: persistent context across multiple agent invocations and user interactions.
-
-**Evidence**: Deleted orchestrator agents in v2.0.0 after recognizing they defeated command purpose. Orchestration belongs in commands, not transient agents.
+If peer reviews are good then agents should do them. Using sub-agents allows the agents to have a peer without needing to go to a fully external resource because sub-agents have their own context.
 
 ---
 
-### 3. Validate Continuously with Fresh Eyes
+### 3. T-Shirt Sizes Over Time Estimates
 
-Agent implements → Command reviews objectively → Validators check. Fresh context per task prevents accumulation and enables critical review. Quality through multiple perspectives, not just a final gate.
-
-**Evidence**: Implementation command now spawns a general-purpose agent per task. Command reviews agent's work before validators run, providing objective oversight.
+AI is trained on existing data. Time estimates are based on human development times. This doesn't translate to what the actualy development time will be for the AI. Using T-Shirt sizes allows the user to have a glimpse into how complicated the AI thinks the problem is.
 
 ---
 
-### 4. T-Shirt Sizes Over Time Estimates
+### 4. Declarative Requirements (WHAT, Not HOW)
 
-LLMs lack training data to rationally estimate implementation time. Complexity ratings (XS/S/M/L/XL/XXL) provide best-guess assessments users can judge against their own experience. Point system (S=2, M=3, L=5) enables complexity-weighted progress tracking.
-
-**Evidence**: Replaced all time-based estimates (2-8 hours, <1 day) with t-shirt sizes across 8 files in v2.0.0. More honest than false precision.
+Each phase is scoped and the prompts for the command tell the AI this. The specification is WHAT not HOW. The plan contains HOW and WHY, but not details. This scope constrained allows the AI to specialize and focus. There is a lot of reason why this is important for the LLM, but it also helps to keep the documentation clearer. Constraint is a good thing.
 
 ---
 
-### 5. Stay in Phase
+### 5. Document Trade-offs with Rationale
 
-Complete and validate current phase before moving to next. Each phase builds on previous—shaky foundations cause expensive rework. The `/review` command acts as a quality gate between phases.
-
-**Evidence**: Validation made mandatory in `spec-writing`, `plan-generation`, and `task-breakdown` commands. "Always spawn" language replaces "optional verification."
+Knowing why a task needs to be done a certain way is as helpful to an LLM as it is a human. It'll help the AI get to the proper implementation. All decisions need to be documented. This will also help if the implementation needs to be scrapped.
 
 ---
 
-### 6. Declarative Requirements (WHAT, Not HOW)
+### 6. Track Discoveries and Changes
 
-Specify desired outcomes and constraints, not implementation steps. Allows AI agents to apply expertise in choosing optimal strategies. Phase boundary enforcement ensures specs don't contain tech choices.
-
-**Evidence**: `spec-validator` checks for HOW details like "use PostgreSQL" or "deploy on AWS" and flags them as violations.
+If it wasn't clear, decisions made during any phase of the process that might lead to revisiting previous phases need to be documented. This is an extension of "documenting trade-offs with rationale". This includes changes as well as newly discovered requirements.
 
 ---
 
-### 7. Document Trade-offs with Rationale
+### 7. Stay in Phase
 
-All technical decisions include: options considered, pros/cons, rationale, constraints. Creates decision audit trail, prevents repeating analysis, explains choices to future developers or AI agents.
+Each phase is scoped. It's already been said. Complete a phase before revisiting other phases. Note open questions, discoveries, and changes. Then `/spiral-grove:review` the phase and decide how this impacts the current or previous phases.
 
-**Evidence**: Plan validator checks for rationale presence. Implementation command prompts user for decisions when implementation differs from plan.
 
 ---
 
-### 8. Track Discoveries and Changes
+### 8. Commands ARE Orchestrators
 
-Changes from spec/plan must be made visible through documentation in progress files. Process: Detect → Document → Explain → Get approval → Update source documents if needed. Creates audit trail, prevents silent drift.
+The main entry point into this system are the commands. These commands can and should be the orchestrators, not skills or agents. This is primarily a user driven system and needs to stay that way.
 
-**Evidence**: Progress files include "Technical Discoveries" section where implementation learnings and decisions are captured in real-time during `/implementation`.
 
 ---
 
@@ -130,44 +112,18 @@ Changes from spec/plan must be made visible through documentation in progress fi
 
 Understanding what we're **not** building is as important as what we are:
 
-- ❌ **Not Waterfall**: Requirements are living documents that evolve with managed updates, not frozen artifacts that resist change
-- ❌ **Not Big Design Up Front**: Emphasis on managed iteration and phase-gated validation, not exhaustive upfront planning
-- ❌ **Not Formal Methods**: Trades mathematical rigor for practical validation—markdown specs, not theorem provers
-- ❌ **Not Anti-Agile**: Compatible with agile practices; can be used within sprint frameworks
-- ❌ **Not a Replacement for Testing**: Specs complement tests; acceptance criteria enable TDD synergy (specs + tests = better than either alone)
-- ❌ **Not for Simple Tasks**: Overhead exceeds benefit for bug fixes, UI tweaks, one-off scripts, prototypes
-- ❌ **Not About Automation**: Commands orchestrate and guide, but human judgment drives decisions (no auto-migration, no forced workflows)
-- ❌ **Not Time-Based Estimation**: LLMs cannot rationally predict time; uses complexity metaphors instead
-
----
-
-## Key Differentiators
-
-What makes Spiral Grove unique compared to industry implementations (GitHub Spec Kit, Kiro IDE):
-
-1. **Explicit Status Tracking**: Formal lifecycle states (Draft → Under Review → Approved → Superseded/Updated)
-2. **Progress Artifacts**: Separate `.sdd/progress/` documents for long-running features with session resumability
-3. **Validation Command**: `/review [phase]` provides structured quality gates with semantic analysis (not keyword matching)
-4. **Technical Discovery Logging**: Structured format captures learning during implementation for future reference
-5. **Deep Codebase Exploration**: Planning phase mandate to use Glob/Grep extensively, find similar patterns
-6. **Document Cross-Referencing**: Plans reference specs, tasks reference plans, progress references tasks (full traceability)
-7. **Agent Delegation Architecture** (v2.0.0): 8 composable agents, 3 invocation modes, parallel execution support
-8. **Template Externalization** (v2.0.0): Lightweight scaffolding, independent variation, hand-writing support
-9. **Metadata Automation** (v2.0.0): Zero-friction author detection (Git → P4 → ENV → fallback); date-prefixed filenames for chronological sorting
+- ❌ **Not Waterfall**: Rerunning past phases should be allowed and encouraged. Real world development doesn't go in a straight line.
+- ❌ **Not Formal Methods**: This is not a "provable" methodology. There are gaps to allow for both user and AI inspiration and growth.
+- ❌ **Not Anti-Agile**: This is a tool for working with AI not to replace project management.
+- ❌ **Not a Replacement for Testing**: This improves consistency not fixes it. The specs help define what the tests should test for but doesn't replace them.
+- ❌ **Not for Simple Tasks**: Each document adds context. The more context the larger the final output. Using this for simple tasks will lead the AI to over engineer.
+- ❌ **Not About Automation**: This is not about replacing the human, but about placing them in the right point of the development process.
 
 ---
 
 ## The Two-Minute Pitch
 
-**Spiral Grove is a structured, four-phase methodology optimized for AI-assisted development where:**
-
-1. **Specifications define success** (not code execution)—implementation that deviates is "wrong" even if it works
-2. **Explicit beats implicit**—write down all assumptions, constraints, requirements to prevent LLM interpretation variance
-3. **Living documents evolve**—through validation gates and deviation tracking, not frozen Waterfall artifacts
-4. **Commands orchestrate, agents work, skills serve**—delegation maximizes context management and enables objective review
-5. **Fresh context = better quality**—agents implement in isolation, commands review objectively, validators check systematically
-
-**Key insight from v2.0.0**: The refactor revealed a fundamental architectural principle: **Delegation over inline execution**. This pattern maximizes Claude's effectiveness through careful context management and objective review at every step.
+**Spiral Grove shifts where you spend your energy in AI-assisted development.** Instead of refining generated code line-by-line, you focus on specifications and architecture. When implementation goes wrong but the specs are sound, just regenerate from the plan. The methodology uses four phases—spec, plan, tasks, implementation—where documentation serves double duty: it instructs the AI and clarifies understanding for everyone on the team. AI agents validate each other's work through peer review. Commands orchestrate, agents execute, and skills provide resources. The result? Choices that work well for humans work well for AI too, and context stays manageable throughout.
 
 ---
 
@@ -198,7 +154,7 @@ Filter through boundaries: "Is this Spiral Grove's responsibility?"
 
 Start here: Read Mission → Core Pillars → Boundaries → Skim Principles
 
-**Then**: Review `.sdd/progress/2025-10-29-spiral-grove-v2-refactor-progress.md` for 9 discoveries that prove these principles through implementation experience.
+**Then**: Ask Claude to answer the rest of the questions you have about Spiral Grove.
 
 ---
 
