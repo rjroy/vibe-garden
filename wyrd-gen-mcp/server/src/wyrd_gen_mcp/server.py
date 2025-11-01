@@ -339,6 +339,14 @@ async def list_image_models(arguments: dict[str, Any]) -> list[TextContent]:
             "quality": 5,
             "cost_efficiency": 1250.0,
         },
+        {
+            "model": "bria/fibo",
+            "description": "State-of-the-art open-source 8B parameter model with precise control via JSON-native prompting. Enterprise-focused with licensed training data.",
+            "best_for": "Iterative refinement workflows, precise control over lighting/composition/color/camera, enterprise applications requiring rights-clear data, both text-to-image and image-to-image",
+            "cost": 0.04,
+            "quality": 7,
+            "cost_efficiency": 175.0,
+        },
     ]
 
     return [TextContent(type="text", text=json.dumps(popular_models, indent=2))]
@@ -484,6 +492,44 @@ async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
                     "description": "Magic prompt enhancement option",
                     "options": ["Auto", "On", "Off"],
                     "default": "Auto",
+                },
+            },
+        },
+        "bria/fibo": {
+            "model": "bria/fibo",
+            "parameters": {
+                "aspect_ratio": {
+                    "type": "string",
+                    "description": "Aspect ratio of the generated image",
+                    "options": ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
+                    "default": "1:1",
+                },
+                "image": {
+                    "type": "string",
+                    "description": "Input image URL for refinement/inspiration (optional for text-to-image, required for image-to-image)",
+                    "optional": True,
+                },
+                "seed": {
+                    "type": "integer",
+                    "description": "Random seed for reproducible generation",
+                    "optional": True,
+                },
+                "guidance_scale": {
+                    "type": "integer",
+                    "description": "How strongly the model follows the prompt (3-5, higher = stronger adherence)",
+                    "range": [3, 5],
+                    "optional": True,
+                },
+                "negative_prompt": {
+                    "type": "string",
+                    "description": "Elements to avoid in the generated image",
+                    "optional": True,
+                },
+                "structured_prompt": {
+                    "type": "string",
+                    "description": "JSON-formatted detailed prompt for precise control over lighting, composition, color, camera settings",
+                    "optional": True,
+                    "default": "",
                 },
             },
         },
