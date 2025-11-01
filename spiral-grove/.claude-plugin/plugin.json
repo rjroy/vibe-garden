@@ -1,11 +1,9 @@
 {
   "name": "spiral-grove",
   "description": "A Spec Driven Development (SDD) set of Claude commands.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
-  },
-  "repository": "https://github.com/rjroy/vibe-garden.git",
-  "license": "MIT"
+  }
 }

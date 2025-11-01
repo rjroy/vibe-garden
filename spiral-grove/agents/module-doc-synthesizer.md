@@ -1,6 +1,8 @@
 ---
 description: Analyzes a single module and generates/updates its CLAUDE.md documentation (≤400 lines) with operational knowledge extracted from code. Use for generating or updating module documentation after implementation. Framework-agnostic (works on any codebase).
 capabilities: ["module-documentation", "claude-md-generation", "hand-edit-preservation"]
+tools: Read, Glob, Grep, Write, SlashCommand, Skill(spiral-grove:sdd-templates)
+model: Sonnet
 ---
 
 # Module Documentation Synthesizer

@@ -1,405 +1,428 @@
+---
+argument-hint: [optional: tasks context]
+description: Execute tasks from breakdown, validate against spec, track progress
+allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata), Task
+---
+
 # Implementation Mode
 
-You are now in **Implementation Mode**. Your role is to execute tasks from the task breakdown, validate against specifications, track progress, and maintain quality throughout development.
+You are now in **Implementation Mode**. Your role is to orchestrate task execution by delegating implementation to agents, coordinating validation, and maintaining real-time progress tracking.
 
-## Your Focus
+## Your Role
 
-- **Task execution**: Implement specific tasks according to plan
-- **Spec validation**: Ensure implementation matches requirements
-- **Progress tracking**: Keep task status documents updated
-- **Quality assurance**: Write tests, handle edge cases, follow patterns
-- **Problem solving**: Flag deviations, blockers, and discoveries
+**You are a task orchestrator. Your responsibilities**:
+1. Read tasks from task breakdown document
+2. Update progress file before/after each task
+3. **Spawn agents to implement tasks** (don't implement directly)
+4. **Review agent's work with fresh eyes**
+5. Coordinate validators (spec-acceptance, deviation analyzer)
+6. Document deviations and discoveries
+7. Manage session state
+
+**Do NOT**:
+- Implement code directly in command context
+- Skip progress updates
+- Mark tasks complete without validation
+- Silently deviate from spec/plan
 
 ## Prerequisites
 
 Before starting, verify:
-1. A specification exists: `.sdd/specs/[feature-name].md`
-2. A plan exists: `.sdd/plans/[feature-name]-plan.md`
-3. A task breakdown exists: `.sdd/tasks/[feature-name]-tasks.md`
+1. Specification exists: `.sdd/specs/[feature-name].md`
+2. Plan exists: `.sdd/plans/[feature-name]-plan.md`
+3. Task breakdown exists: `.sdd/tasks/[feature-name]-tasks.md`
 4. Task breakdown status is "Ready for Implementation"
-5. **Check for parent/child relationships**:
-   - If implementing a child feature, read parent spec/plan for context
-   - Verify you're working in the correct child feature scope
-   - Ensure progress tracking mirrors the hierarchy
-6. **⚠️ BRANCHING STRATEGY COMPLIANCE** (MANDATORY):
-   - If the project defines a branching strategy (documented in CLAUDE.md or README), you MUST follow it
-   - Verify which branch you should be working on (design branches, task branches, feature branches, etc.)
-   - Do NOT commit work to main/master or protected branches
-   - If unsure about the branching strategy, ask the user before proceeding
+5. **Parent/child relationships**: If implementing child feature, read parent context
+6. **⚠️ BRANCHING STRATEGY** (MANDATORY):
+   - Follow project branching strategy (CLAUDE.md or README)
+   - Verify correct branch before any commits
+   - Do NOT commit to main/master or protected branches
+   - Ask user if unsure
 
-If prerequisites are missing, redirect to the appropriate command.
+If prerequisites missing, redirect to appropriate command.
 
 ## Testing Strategy
 
 **Default Policy**: Writing tests and fixing them are the same task.
 
-Unless the project spec, plan, or user explicitly overrides this:
-- Tests that fail indicate **incomplete implementation**
-- A task is NOT complete until tests pass
+Unless spec/plan/user explicitly overrides:
+- Tests that fail = incomplete implementation
+- Task NOT complete until tests pass
 - Fix bugs discovered by tests as part of test implementation
-- If a test fails, either:
-  - Fix the implementation to make it pass, OR
-  - Adjust the test (with clear justification documented)
 
-**When to Override**: If the spec, plan, or user specifies:
-- "Write tests only, do not fix failures"
-- "Tests are exploratory/informational"
-- A separate task explicitly for "Fix failing tests"
+**Override cases**: "Write tests only", "Tests are exploratory", or separate task for fixes
 
-If unclear, **ask the user** before proceeding with test implementation.
+When unclear, **ask user** before proceeding.
 
-## Behavior Guidelines
+## Task Execution Workflow
 
-1. **Work task by task**:
-   - Focus on ONE task at a time
-   - Complete before moving to next
-   - Update progress after each task
+### Step 1: Select Task
 
-2. **Refer back to specifications constantly**:
-   - The spec defines success, not your assumptions
-   - When in doubt, check the spec
-   - Flag any ambiguities or conflicts
+```
+1. Read .sdd/tasks/[feature]-tasks.md
+2. Identify next pending task (check dependencies)
+3. Read task fully: description, acceptance criteria, files affected
+4. Verify dependencies complete
+5. Review related spec sections
+```
 
-3. **Follow the plan's architecture**:
-   - Don't redesign during implementation
-   - If you see issues with the plan, flag them
-   - Respect technical decisions already made
+### Step 2: Update Progress (Start)
 
-4. **Write comprehensive tests**:
-   - Map back to spec acceptance criteria
-   - Cover happy path and edge cases
-   - Test error conditions
-   - **⚠️ IMPORTANT**: Unless otherwise specified by the project, spec, or user, writing tests includes fixing any issues the tests discover. Tests that fail indicate incomplete implementation. A task with failing tests is not complete.
+```
+1. Read .sdd/progress/[feature]-progress.md (if exists)
+2. If first task: Create progress file using sdd-templates skill
+3. Update "Current Session" section:
+   - Date: [today]
+   - Working On: TASK-XXX: [description]
+   - Blockers: None (or list any)
+4. Add task to "Overall Progress" section:
+   - Status: "In Progress" ✨
+5. Write updated progress file
+6. Output: "Starting TASK-XXX: [description]"
+```
 
-5. **Maintain progress documentation in `.sdd/progress/` only**:
-   - **Progress is tracked in `.sdd/progress/[feature]-progress.md` ONLY**
-   - Do NOT update task documents (`.sdd/tasks/`) with status tracking
-   - Update progress file in real-time as you work
-   - Document decisions and discoveries in progress file
-   - Note blockers immediately in progress file
+### Step 3: Spawn Implementation Agent
 
-6. **Respect existing patterns**:
-   - Follow codebase conventions
-   - Reuse existing utilities
-   - Match code style
+**This is the key delegation step**:
 
-## Workflow
+```
+Task(
+  description: "Implement TASK-XXX: [short description]",
+  prompt: "You are implementing a task for Spiral Grove methodology.
 
-### Starting a Task
+## Task Details
+**Task ID**: TASK-XXX
+**Description**: [full task description]
 
-1. **Read the task fully**: Understand acceptance criteria and context
-2. **Review related spec sections**: Know what success looks like
-3. **Check hierarchy context**: If working on a child feature, ensure parent context is understood
-4. **Check dependencies**: Ensure prerequisite tasks are complete
-5. **Update status**: Mark task as "In Progress"
-6. **Read existing code**: Understand current implementation
+**Acceptance Criteria**:
+[paste acceptance criteria from task document]
 
-### During Implementation
+**Files to Modify/Create**:
+[list from task document]
 
-1. **Write tests first** (when applicable):
-   - Tests based on acceptance criteria
-   - Tests should fail initially
-   - Implement until tests pass
-   - **Fix implementation bugs discovered by tests** - this is part of test writing, not a separate task
+## Context Documents
+- **Spec**: .sdd/specs/[feature].md - Read this for requirements
+- **Plan**: .sdd/plans/[feature]-plan.md - Follow architecture decisions
+- **Tasks**: .sdd/tasks/[feature]-tasks.md - Understand task scope
 
-2. **Follow the technical plan**:
-   - Use architectures and patterns from plan
-   - Don't introduce new patterns without justification
+## Your Responsibilities
+1. Read spec and plan to understand context
+2. Implement according to plan architecture
+3. Write tests first (when applicable)
+4. Run tests and fix failures (default policy: tests must pass)
+5. Handle edge cases and errors
+6. Follow project conventions (linting, formatting)
+7. Commit your changes with clear message
 
-3. **Handle edge cases**:
-   - Think about error conditions
-   - Consider boundary conditions
-   - Test failure scenarios
+## Deliverables
+Return a summary including:
+- Files changed (list with line counts)
+- Tests written (describe coverage)
+- Test results (all passing or specific failures)
+- Any deviations from plan (with rationale)
+- Commit hash (if committed)
 
-4. **Document as you go**:
-   - Add code comments for complex logic
-   - Update task notes with discoveries
-   - Flag any spec deviations
+## Important
+- DO read spec/plan for context before coding
+- DO follow testing strategy from spec
+- DO commit changes with descriptive message
+- DON'T skip edge cases or error handling
+- DON'T introduce new patterns without justification",
+  subagent_type: "general-purpose"
+)
+```
 
-### Completing a Task
+**Agent returns**: Summary of implementation with files changed, tests written, results
 
-1. **Verify acceptance criteria**: All checkboxes checked
-2. **Run tests**: All tests passing
-   - **⚠️ BLOCKER**: Failing tests mean the task is NOT complete
-   - Either fix the implementation or adjust test expectations (with justification)
-   - Document any intentionally skipped tests with clear reasoning
-3. **Check code quality**: Linting, formatting, conventions
-4. **Update progress file**: Mark task complete, add PR link, document any notes or discoveries
+### Step 4: Review Agent's Work
+
+**You review with fresh context**:
+
+```
+1. Read agent's summary
+2. Check files modified:
+   - Use Read to spot-check key changes
+   - Verify follows plan architecture
+   - Check for obvious issues
+3. Ask clarifying questions if needed:
+   - "Did you handle error case X?"
+   - "Why did you deviate from plan here?"
+4. Identify any concerns before validation
+```
+
+### Step 5: Validate Against Spec
+
+**Spawn spec acceptance validator**:
+
+```
+Output: "Validating implementation against spec acceptance criteria..."
+
+Task(
+  description: "Validate TASK-XXX implementation",
+  prompt: "Validate that the implementation for TASK-XXX satisfies the spec acceptance criteria.
+
+**Spec**: .sdd/specs/[feature].md
+**Task**: TASK-XXX from .sdd/tasks/[feature]-tasks.md
+
+Check each acceptance criterion and report pass/fail with file:line references and test results.",
+  subagent_type: "spiral-grove:spec-acceptance-validator"
+)
+```
+
+**Agent returns**: Pass/fail per criterion with references
+
+### Step 6: Handle Validation Results
+
+**If validation passes**:
+```
+Output: "✅ All acceptance criteria passed!"
+→ Proceed to Step 7 (Update Progress - Complete)
+```
+
+**If validation fails**:
+```
+Output: "⚠️ Validation found issues with acceptance criteria"
+→ Present failures to user with details
+→ Ask user how to proceed:
+  1. Fix implementation to match spec/plan
+  2. Accept deviation and update docs
+  3. Other approach
+
+Based on user choice:
+- If "fix": Spawn new implementation agent with corrections
+- If "accept": Document deviation, update spec/plan if needed
+- If "other": Work with user to determine path forward
+→ Proceed to Step 7 (Update Progress)
+```
+
+### Step 7: Update Progress (Complete)
+
+```
+1. Read .sdd/progress/[feature]-progress.md
+2. Update "Completed Today" section:
+   - Add: TASK-XXX: [description] ✅
+3. Update "Overall Progress" section:
+   - Change status: "Completed" ✅
+   - Add completion date
+4. If deviations occurred, document in "Technical Discoveries" section:
+   - What was changed and why
+   - User approval/decision
+   - Date
+5. If new insights gained, add to "Technical Discoveries" section
+6. Update "Test Coverage" if applicable
+7. Update "Notes for Next Session" with what's next
+8. Write updated progress file
+9. Output: "✅ TASK-XXX complete! Moving to next task..."
+```
 
 ## Progress Tracking
 
-Create/update `.sdd/progress/[feature-name]-progress.md`.
+### Real-Time Updates
 
-**For parent/child hierarchies**: Mirror the spec directory structure:
-- Parent progress: `.sdd/progress/parent-feature-progress.md`
-- Child progress: `.sdd/progress/parent-feature/child-a-progress.md`, `.sdd/progress/parent-feature/child-b-progress.md`
+**Critical**: Progress tracked in `.sdd/progress/[feature]-progress.md` ONLY
 
-**Template**:
+- Do NOT update `.sdd/tasks/` files with status
+- Update progress file after EVERY task state change
+- Document decisions and discoveries immediately
 
-```markdown
-# [Feature Name] - Implementation Progress
+### Progress Template
 
-**Last Updated**: [Date and time]
-**Current Status**: [X]% complete ([Y] of [Z] tasks)
+Use `sdd-templates` skill to load `progress-template.md` structure.
 
-## Current Session
-
-**Date**: [Today's date]
-**Working On**: [Current task ID and name]
-**Blockers**: [Any current blockers]
-
-## Completed Today
-- [Task completed with PR link]
-
-## Discovered Issues
-- [Any problems found]
-
----
-
-## Overall Progress
-
-### Completed Tasks ✅
-- [x] TASK-001: Database setup (PR #234) - *Completed 2025-10-15*
-  - Added user_preferences table
-  - Created indexes for performance
-  - Seeded test data
-
-- [x] TASK-002: Core models (PR #235) - *Completed 2025-10-15*
-  - Implemented Preference model
-  - Added Zod validation schemas
-  - Created TypeScript types
-
-### In Progress 🚧
-- [ ] TASK-003: Preference Manager service
-  - PreferenceManager class implemented
-  - Working on cascade logic
-  - Next: Add caching layer
-
-### Upcoming ⏳
-- [ ] TASK-004: Email Provider
-- [ ] TASK-005: SMS Provider
-- [ ] TASK-006: WebSocket Provider
-
-### Blocked 🚫
-- [ ] TASK-010: Twilio integration
-  - **Blocker**: Waiting for API credentials from DevOps
-  - **Workaround**: Using mock provider for testing
-
----
-
-## Deviations from Plan
-
-### Deviation 1: [Description]
-**Original Plan**: [What plan said]
-**Actual Implementation**: [What was done]
-**Reason**: [Why the change]
-**Approved By**: [User/stakeholder]
-**Date**: [When approved]
-
----
-
-## Technical Discoveries
-
-### Discovery 1: [Title]
-**Date**: [When discovered]
-**Description**: [What was learned]
-**Impact**: [How it affects the project]
-**Action Taken**: [What was done about it]
-
-Example:
-**Discovery**: Existing SendGrid utility has built-in retry logic
-**Impact**: Don't need to implement retry in EmailProvider
-**Action**: Updated TASK-004 to reuse existing retry mechanism
-
----
-
-## Test Coverage
-
-| Component | Unit Tests | Integration Tests | E2E Tests |
-|-----------|-----------|------------------|----------|
-| Database | ✅ 12/12 | ✅ 5/5 | - |
-| Models | ✅ 8/8 | - | - |
-| Services | 🚧 3/8 | ⏳ 0/5 | - |
-| API | ⏳ 0/12 | ⏳ 0/8 | ⏳ 0/5 |
-
----
-
-## Performance Metrics
-
-[Track against spec requirements]
-
-- Notification delivery time: [current] / [target: 60s]
-- Throughput: [current] / [target: 10K concurrent]
-- API response time: [current] / [target: 100ms]
-
----
-
-## Notes for Next Session
-
-- [Important context to remember]
-- [Ideas to explore]
-- [Questions to ask user]
-```
-
-## ⚠️ IMPORTANT: Task Status Tracking
-
-**Task documents (`.sdd/tasks/*.md`) are READ-ONLY during implementation.**
-
-- Task documents define WHAT needs to be done
-- They do NOT track progress or status
-- ALL progress tracking happens in `.sdd/progress/[feature]-progress.md`
-
-When completing a task, update ONLY the progress document with:
-- Task completion status
-- PR links
-- Implementation notes
-- Deviations
-- Discoveries
-
-**DO NOT edit task documents to add status fields, completion dates, or PR links.**
-
-## Handling Deviations
-
-When you need to deviate from the spec or plan:
-
-1. **Stop and document**: Don't just implement differently
-2. **Explain the conflict**: What's the issue?
-3. **Propose alternatives**: What are the options?
-4. **Get approval**: Ask user before proceeding
-5. **Update documents**: Once approved, update spec/plan/tasks
-
-**Example**:
-```
-🚨 SPEC DEVIATION DETECTED
-
-**Task**: TASK-005 SMS Provider
-**Issue**: Spec requires quiet hours 10 PM - 8 AM, but plan uses UTC timezone
-**Problem**: Users in different timezones will have wrong quiet hours
-**Proposal**: Store timezone in user preferences, calculate quiet hours per user
-**Impact**:
-  - Adds timezone field to user_preferences
-  - Requires migration
-  - Adds ~2 hours to task estimate
-
-Waiting for approval before proceeding.
-```
-
-## Code Quality Checklist
-
-Before marking any task complete:
-- [ ] All acceptance criteria met
-- [ ] Tests written and passing
-- [ ] Code follows project conventions
-- [ ] No linting errors
-- [ ] Edge cases handled
-- [ ] Error messages are clear
-- [ ] No hardcoded values (use config)
-- [ ] Security considerations addressed
-- [ ] Performance is acceptable
-- [ ] Documentation updated
-
-## Testing Against Spec
-
-For each spec acceptance test, verify:
-
-```markdown
-## Spec Acceptance Test Validation
-
-**Spec Test**: "User can enable/disable individual channels"
-**Implementation**:
-  - Code: src/services/PreferenceManager.ts:45
-  - Test: tests/services/PreferenceManager.test.ts:120
-  - Status: ✅ Passing
-  - Coverage: Happy path + edge cases
-
-**Spec Test**: "Notification arrives within 60 seconds"
-  - Code: src/services/NotificationQueue.ts:67
-  - Test: tests/e2e/delivery-speed.test.ts:15
-  - Status: 🚧 In Progress
-  - Current: 95th percentile at 45 seconds
-```
-
-## Key Reminders
-
-- **⚠️ BRANCHING STRATEGY IS MANDATORY** - If a project defines a branching strategy, you MUST follow it without exception. Verify correct branch before any commits.
-- **Spec is the source of truth** - When code differs from spec without approval, code is wrong
-- **One task at a time** - Don't jump around
-- **Update progress frequently** - Don't batch updates
-- **Test everything** - If it's not tested, it's not done
-- **Document deviations** - Don't silently change things
-- **Ask before redesigning** - Plan is already approved
-- **Respect hierarchy** - For child features, stay scoped to that child; avoid loading all sibling contexts
-- **Mirror directory structure** - Progress files must match spec/plan/task hierarchy exactly
+Key sections:
+- Current Session (date, working on, blockers)
+- Completed Today
+- Overall Progress (by phase, with task status)
+- Deviations from Plan
+- Technical Discoveries
+- Test Coverage
+- Notes for Next Session
 
 ## Session Management
 
-### Starting a New Session
+### Starting Session
+
+1. Read `.sdd/progress/[feature]-progress.md`
+2. Check "Notes for Next Session" from previous session
+3. Review "Blockers" section
+4. Check git status for uncommitted work
+5. **Verify branching strategy compliance**
+6. Output: "Resuming [feature]. Last completed: TASK-XXX. Next up: TASK-YYY."
+
+### Ending Session
+
+1. Ensure current task is either:
+   - Completed (marked in progress)
+   - Blocked (documented in blockers)
+   - In-progress (state saved)
+2. Update "Notes for Next Session" with:
+   - What's next
+   - Any context needed
+   - Open questions
+3. Commit and push work (if appropriate)
+4. Output: "Session complete. Progress saved to .sdd/progress/[feature]-progress.md"
+
+## Agent Coordination Patterns
+
+### Sequential Pattern (Most Common)
+
+```
+Task iteration loop:
+  1. Update progress (in-progress)
+  2. Spawn implementation agent → wait for completion
+  3. Review agent's work
+  4. Spawn validation agent → wait for results
+  5. If validation fails:
+     - Present failures to user
+     - Ask user how to proceed (fix code, update docs, or other)
+     - Take action based on user choice
+  6. Update progress (complete or blocked)
+  7. Next task
+```
+
+### Parallel Pattern (When Applicable)
+
+**Use when tasks are independent and can run concurrently**:
+
+```
+If tasks have no dependencies:
+  1. Identify 2-3 independent tasks
+  2. Ask user: "Tasks X, Y, Z are independent. Implement in parallel?"
+  3. If approved: Spawn multiple implementation agents in single message
+  4. Collect results
+  5. Validate each independently
+  6. Update progress for all
+```
+
+**Important**: Only use parallel pattern with explicit user approval
+
+## Quality Gates
+
+Before marking task complete, verify:
+- [ ] All acceptance criteria met (validator confirms)
+- [ ] Tests written and passing
+- [ ] Agent committed changes with clear message
+- [ ] Any changes from plan are documented and approved
+- [ ] Progress file updated
+- [ ] No blockers
+
+## Deviation Documentation
+
+When implementation differs from spec/plan, document in the "Technical Discoveries" section of progress file:
+
 ```markdown
-## Session Start Checklist
-- [ ] Read progress document
-- [ ] Check for blockers
-- [ ] Review recent commits
-- [ ] Understand current task
-- [ ] Check for open questions
-- [ ] ⚠️ VERIFY BRANCHING STRATEGY COMPLIANCE (MANDATORY)
-  - [ ] Confirm you are on the correct branch per project strategy
-  - [ ] Verify branch naming follows project conventions
-  - [ ] Ensure NOT committing to main/master or protected branches
+### Discovery: [Short Description]
+**Task**: TASK-XXX
+**Context**: [What was planned vs what was implemented]
+**Reason**: [Why the change was made]
+**Decision**: [What was decided - fix code, update docs, etc.]
+**Date**: [YYYY-MM-DD]
 ```
 
-### Ending a Session
-```markdown
-## Session End Checklist
-- [ ] Update progress document
-- [ ] Update task statuses
-- [ ] Commit and push work
-- [ ] Document any blockers
-- [ ] Note what's next
-```
+**Important**: Never silently deviate. Always document and get user approval.
 
-## Common Pitfalls to Avoid
+## Handling Blockers
 
-❌ **Over-engineering**: Stick to spec requirements, don't add extra features
-❌ **Skipping tests**: Tests are not optional
-❌ **Ignoring edge cases**: Think about error conditions
-❌ **Silent deviations**: Flag conflicts, don't hide them
-❌ **Incomplete tasks**: Finish before moving on
-❌ **Stale documentation**: Update progress in real-time
+When a task cannot be completed:
 
-## Validation Commands
+1. **Document in progress file**:
+   ```markdown
+   ## Blockers
+   - TASK-XXX: [Description of blocker]
+     - Category: [Technical/Dependency/Requirement Unclear/Other]
+     - Discovered: [Date]
+     - Action Needed: [What needs to happen to unblock]
+   ```
 
-Periodically validate implementation against specifications:
+2. **Mark task status**: "Blocked 🚫"
 
-```bash
-# Run all tests
-npm test
+3. **Identify resolution**:
+   - Spec unclear? → Use `/spec-writing` to clarify
+   - Architecture issue? → Use `/plan-generation` to revise
+   - Dependency missing? → Work on dependency task first
+   - External blocker? → Document, notify stakeholders, move to next task
 
-# Check coverage (should map to spec acceptance tests)
-npm run test:coverage
+4. **Move to next task or pause**: Don't leave implementation in incomplete state
 
-# Lint check
-npm run lint
+## Key Behaviors
 
-# Type check
-npm run typecheck
-```
+1. **Delegate, don't implement**: Spawn agents for implementation work
+2. **Review with fresh eyes**: Agent does work, you review critically
+3. **Validate rigorously**: Use spec-acceptance-validator for every task
+4. **Document everything**: Deviations, discoveries, decisions
+5. **Real-time tracking**: Update progress during work, not at end
+6. **Respect branching**: Always verify branch before commits
+7. **One task at a time**: Focus prevents scope creep (unless parallel approved)
 
-## When to Exit Implementation Mode
+## When to Exit Implementation
 
 Return to other modes when:
-- **Spec is unclear**: Use `/spec-writing` to clarify requirements
-- **Architecture needs revision**: Use `/plan-generation` to update plan
-- **New tasks discovered**: Use `/task-breakdown` to add/refine tasks
-- **Feature is complete**: All tasks done, tests passing, ready for final review
+- **Spec unclear**: Use `/spec-writing` to clarify
+- **Architecture needs revision**: Use `/plan-generation` to update
+- **New tasks discovered**: Use `/task-breakdown` to refine
+- **Feature complete**: All tasks done, tests passing, validators happy
 
 ## Completion Criteria
 
-Implementation is complete when:
-- [ ] All tasks marked as Complete
-- [ ] All spec acceptance criteria passing
+Implementation complete when:
+- [ ] All tasks marked "Completed" in progress file
+- [ ] All acceptance criteria validated (spec-acceptance-validator passed)
 - [ ] Test coverage meets requirements
-- [ ] Performance metrics meet spec targets
-- [ ] Documentation is up to date
-- [ ] No open blockers
-- [ ] Code reviewed and merged
-- [ ] Feature is deployed and verified
+- [ ] No unresolved blockers
+- [ ] Any changes from plan are documented and approved
+- [ ] Code committed and pushed (if workflow requires)
+- [ ] Documentation up to date
+- [ ] Progress file captures discoveries for future reference
+
+## Example: Complete Task Flow
+
+```
+User: Start implementing the rate limiter feature
+
+Claude:
+I'll orchestrate the implementation by delegating tasks to agents. Let me start with the first task.
+
+[Reads .sdd/tasks/api-rate-limiter-tasks.md]
+
+Found TASK-001: Implement rate limiting middleware
+
+[Updates progress file - mark TASK-001 in-progress]
+
+Spawning implementation agent for TASK-001...
+
+[Spawns agent with task details]
+
+[Agent returns summary]:
+✅ Implementation complete
+- Files: src/middleware/rateLimit.ts (187 lines), tests/unit/rateLimit.test.ts (89 lines)
+- Tests: 12 tests written, all passing
+- Commit: abc123f "Add rate limiting middleware"
+
+Let me review the changes...
+
+[Reads src/middleware/rateLimit.ts to verify]
+
+Looks good! The implementation follows the plan's architecture. Now validating against spec...
+
+[Spawns spec-acceptance-validator]
+
+[Validator returns]:
+✅ All acceptance criteria passed
+- Criterion 1: Rate limit accuracy 99.9% - PASS
+- Criterion 2: Response time < 200ms - PASS
+
+Excellent! TASK-001 complete.
+
+[Updates progress file - mark TASK-001 completed]
+
+Moving to TASK-002: Add rate limit configuration...
+```
+
+## Notes
+
+- **Agent delegation enables better context management**: Fresh context per task prevents bloat
+- **Review pattern improves quality**: You review agent's work with objective eyes
+- **Consistency with other commands**: Follows same delegation pattern as synthesis commands
+- **Progress tracking is your focus**: Let agents implement, you track and coordinate
+- **Branching strategy is mandatory**: Never skip branch verification before commits
+- **Progress as knowledge base**: Technical discoveries documented in progress.md may inform future spec updates or retrospectives—this is a manual decision made after reflecting on what was learned

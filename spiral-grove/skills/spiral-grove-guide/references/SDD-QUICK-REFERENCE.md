@@ -160,14 +160,14 @@ Use `/review [phase]` to validate phase documents before progression.
 ### Tasks Review (`/review tasks`)
 **Critical checks:**
 - ✅ All spec acceptance criteria mapped to tasks
-- ✅ Task sizing < 1 day each
+- ✅ Task complexity is S/M/L (not XS/XL/XXL)
 - ✅ Dependencies documented
 - ✅ Each task has specific acceptance criteria
 - ✅ Acceptance criteria include "how to verify" not just "what to build"
 - ✅ Testing requirements explicit (unit, integration, critical paths)
 
 **Example issues:**
-- ❌ Task estimated at 3 days → Break down further
+- ❌ Task sized XL/XXL → Break down into S/M/L tasks
 - ❌ Spec criterion has no corresponding task → Add task
 - ❌ "Acceptance: Code written" → Add: "How verified? Tests passing, deployed to staging"
 
@@ -189,7 +189,7 @@ Use `/review [phase]` to validate phase documents before progression.
 
 🚩 **Writing code during spec-writing** - Too early!
 🚩 **Skipping codebase exploration in planning** - You'll miss existing patterns
-🚩 **Tasks taking > 1 day** - Break them down further
+🚩 **Tasks sized XL/XXL** - Break them down into S/M/L tasks
 🚩 **Implementing without tests** - Tests are not optional
 🚩 **Deviating from spec silently** - Flag and discuss first
 🚩 **Stale progress docs** - Update in real-time

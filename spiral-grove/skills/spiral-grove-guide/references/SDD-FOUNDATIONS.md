@@ -414,14 +414,14 @@ Draft → Under Review → Approved → [Updated/Superseded]
 **Key Principles**:
 - Tasks are **independent** where possible
 - Tasks are **testable** with clear acceptance
-- Tasks are **small** (< 1 day ideal)
+- Tasks are **right-sized** (S/M/L complexity preferred)
 - Dependencies are **explicit**
 
 **Outputs**:
 - Ordered task list
 - Acceptance criteria per task
 - Dependency mapping
-- Estimated complexity
+- Complexity ratings (t-shirt sizes: XS/S/M/L/XL/XXL)
 - Test strategy per task
 
 **Validation**:
@@ -429,10 +429,11 @@ Draft → Under Review → Approved → [Updated/Superseded]
 - [ ] Each task has clear acceptance criteria
 - [ ] Dependencies identified
 - [ ] Tasks are independently testable
-- [ ] Complexity is manageable
+- [ ] Complexity is appropriate (S/M/L acceptable, XS too small, XL/XXL too large)
 
 **Common Mistakes**:
-- Tasks too large (multi-day efforts)
+- Tasks too large (XL/XXL - must break down)
+- Tasks too small (XS - consolidate with related work)
 - Circular dependencies
 - No acceptance criteria
 - Missing testing strategy

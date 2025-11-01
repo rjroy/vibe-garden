@@ -1,3 +1,8 @@
+---
+argument-hint: [optional: spec context]
+description: Generate SDD plan documentation for a feature based on an existing spec
+allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
+---
 # Plan Generation Mode
 
 You are now in **Plan-Generation Mode**. Your role is to create comprehensive technical plans that bridge the gap between specifications (the "what") and implementation (the "how").
@@ -101,71 +106,20 @@ Think: "Have I explained HOW to build this and WHY clearly enough that someone c
 
 ## Output Format
 
-Create a plan document in `.sdd/plans/[feature-name]-plan.md`.
+Create a plan document in `.sdd/plans/[feature-name]-plan.md` with filename format: `YYYY-MM-DD-[feature-name]-plan.md`.
 
 **For parent/child hierarchies**: Mirror the spec directory structure:
 - Parent plan: `.sdd/plans/parent-feature-plan.md`
 - Child plans: `.sdd/plans/parent-feature/child-a-plan.md`, `.sdd/plans/parent-feature/child-b-plan.md`
 
-**Template** (use sections as needed, not all required):
+**Template Structure**:
+Use the `sdd-templates` skill to read `templates/plan-template.md` for the complete document structure. Follow the template exactly for section organization and frontmatter YAML format.
 
-```markdown
-# [Feature Name] - Technical Plan
-
-**Specification**: [link]
-**Status**: Draft | Under Review | Approved
-
-## Overview
-Brief technical approach and key decisions (1-2 paragraphs).
-
-## Architecture
-- **System Context**: How this fits into larger system
-- **Components**: High-level components and responsibilities
-- **Diagram**: ASCII/Mermaid showing relationships (optional)
-
-## Technical Decisions
-For each major decision:
-- **Choice**: Selected option (what you're doing)
-- **Requirements**: Which spec requirements this addresses (REQ-F-1, REQ-NF-2, etc.)
-- **Rationale**: Why this choice over alternatives (as much detail as needed to justify the decision)
-
-## Data Model (if applicable)
-- New entities (key fields only, not full schemas)
-- Modified entities
-- Data flow
-
-## API Design (if applicable)
-- Approach (REST/GraphQL/RPC/etc.)
-- Key endpoints (not every endpoint)
-- Auth/authorization approach
-
-## Integration Points
-- Internal systems to integrate with
-- External systems/APIs
-- How they connect
-
-## Error Handling, Performance, Security
-Brief approach for each (not exhaustive):
-- Error strategy
-- Performance targets and approach
-- Security measures
-
-## Testing Strategy
-- Unit, integration, E2E approach
-- What to test at each level
-
-## Risks & Mitigations
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| [Major risks only] | H/M/L | H/M/L | [How to address] |
-
-## Dependencies
-- Technical (libraries, infrastructure)
-- Team (approvals, coordination)
-
-## Open Questions
-- [ ] Unresolved technical decisions
-```
+**Metadata Auto-Population**:
+Use the `sdd-metadata` skill to populate frontmatter fields:
+- `created`: Run `date +%Y-%m-%d` via Bash
+- `authored_by`: Run `scripts/detect-author.sh` via Bash
+- `last_updated`: Same as created for new plans
 
 ## Workflow
 
@@ -206,7 +160,7 @@ When a spec is revised, determine if plan needs minor update or major revision:
 - Conciseness means removing redundancy, not removing essential HOW/WHY
 - Respect hierarchy - plans mirror spec structure
 
-## Validation Checklist
+## Validation
 
 Before marking a plan as complete:
 - [ ] All spec requirements are addressed in the plan
@@ -217,6 +171,19 @@ Before marking a plan as complete:
 - [ ] Testing strategy is defined
 - [ ] Risks are identified with mitigations
 - [ ] Data model supports all use cases
+- [ ] **Plan validator spawned and passed**
+
+### Validator Agent (Always Run)
+
+After drafting the plan, ALWAYS spawn the plan-validator agent in silent mode. This provides a second set of eyes (fresh context) to catch issues:
+
+```markdown
+Spawning plan-validator for validation...
+
+[Use Task tool with subagent_type=plan-validator, mode=silent]
+```
+
+Address any issues the validator identifies before marking the plan complete.
 
 ## Next Phase
 

@@ -1,6 +1,8 @@
 ---
 description: Reverse engineers a specification from a single module's implementation by analyzing code, tests, and behavior. Generates .sdd/specs/[module-name].md with requirements extracted from actual code. Framework-agnostic (works on any codebase).
 capabilities: ["spec-synthesis", "reverse-engineering", "drift-detection"]
+tools: Read, Glob, Grep, Write, Task, Skill(spiral-grove:sdd-templates), SlashCommand
+model: Sonnet
 ---
 
 # Module Specification Synthesizer
@@ -183,9 +185,13 @@ Check: .sdd/specs/auth.md exists? → No → Step 3 (fresh synthesis)
 
 ### Step 4: Generate Specification Content
 
-**Action**: Create specification document following the `/spiral-grove:spec-writing` template structure with reverse-engineering adaptations.
+**Action**: Create specification document following the SDD specification template structure with reverse-engineering adaptations.
 
-**Template Base**: Use the standard specification format from `/spiral-grove:spec-writing` command.
+**Template Access**: Use the Skill tool to read the official template structure:
+```
+Skill: spiral-grove:sdd-templates
+```
+Then read `templates/spec-template.md` to get the standard specification structure. This ensures the spec structure matches the official template used by `/spec-writing`.
 
 **Reverse-Engineering Modifications**:
 
@@ -319,6 +325,31 @@ For each capability found in code (Step 3):
 
 **IMPORTANT**: This agent MUST write the file. Do NOT just return markdown content.
 
+**Metadata Auto-Population**:
+Use the `sdd-metadata` skill to populate YAML frontmatter fields:
+
+```bash
+# Invoke sdd-metadata skill
+Skill: spiral-grove:sdd-metadata
+
+# Get author
+bash spiral-grove/skills/sdd-metadata/scripts/detect-author.sh
+
+# Get current date
+date +%Y-%m-%d
+```
+
+Populate YAML frontmatter:
+- `version`: 1.0.0
+- `status`: Draft
+- `created`: [Current date from date command]
+- `last_updated`: [Current date from date command]
+- `authored_by`: [Detected author from script]
+
+**Additional reverse-engineering fields** (in document body, not frontmatter):
+- `**Reverse-Engineered**: true`
+- `**Source Module**: [module_path]`
+
 **Steps**:
 1. Ensure `.sdd/specs/` directory exists (if not, note in error - command should create it)
 2. Construct file path: `.sdd/specs/[module-name].md`
@@ -347,6 +378,49 @@ For each capability found in code (Step 3):
   - Violated constraints: N
 - Recommendation: Review drift report and update spec or code
 ```
+
+---
+
+### Step 7: Validate Specification (Optional but Recommended)
+
+**Action**: Spawn spec-validator agent to check the specification that was just written to disk.
+
+**Purpose**: Ensures the synthesized spec meets SDD quality standards:
+- Phase boundary compliance (WHAT vs HOW separation)
+- Measurable success criteria
+- Properly numbered requirements (REQ-F-N, REQ-NF-N format)
+- Complete sections
+- Valid markdown syntax
+
+**Why After Writing**:
+- Allows large specs to be saved without context limits
+- Validator reads from disk (cleaner, more efficient)
+- Issues can be addressed via edits to the saved file
+- Mirrors the `/spec-writing` workflow
+
+**Validation Process**:
+```
+Task(
+  description: "Validate reverse-engineered spec",
+  prompt: "Validate specification at .sdd/specs/[module-name].md for phase boundary compliance, measurable criteria, numbered requirements, and completeness. Report any critical issues.",
+  subagent_type: "spiral-grove:spec-validator"
+)
+```
+
+**Handling Results**:
+- **Pass**: Note validation success in final output
+- **Warnings**: Include warnings in final output
+- **Critical issues**: Include issues in final output, recommend fixes
+
+**Final Output Enhancement** (if validation ran):
+```
+✅ Specification written to .sdd/specs/[module-name].md
+...
+- Validation: [Passed | Warnings | Issues found]
+  [If issues]: Review validation report for recommended fixes
+```
+
+**Note**: This validation step mirrors the validation performed by `/spec-writing` command, ensuring consistency across both interactive and reverse-engineered specs.
 
 ---
 
@@ -424,7 +498,7 @@ Content: [Generated markdown content]
 
 ## Output Example
 
-See `/spiral-grove:spec-writing` for standard specification format.
+See `sdd-templates` skill (`templates/spec-template.md`) for standard specification format.
 
 **Key differences for reverse-engineered specs**:
 - Metadata includes `**Reverse-Engineered**: true` and `**Source Module**: [path]`
@@ -522,7 +596,7 @@ Proceeding with fresh synthesis...
 
 ## Quality Checklist
 
-Before writing spec to disk, verify:
+Before finalizing spec generation, verify:
 
 - [ ] All required sections present (Executive Summary, User Story, Stakeholders, Success Criteria, Functional/Non-Functional Requirements, Constraints, Technical Context, Acceptance Tests, Open Questions, Out of Scope)
 - [ ] Reverse-Engineered metadata field is set to true
@@ -550,10 +624,10 @@ Task: Generate specification for module at path: src/auth
 1. Check: .sdd/specs/auth.md exists → Yes
 2. Load existing spec → Prepared for drift detection
 3. Analyze: src/auth/*.ts, tests/auth/*.test.ts
-4. Generate: New spec content with all sections
-5. Compare: Existing spec vs. synthesized spec → Drift detected
-6. Insert: Drift report section with differences
-7. Write: Use Write tool to save `.sdd/specs/auth.md`
+4. Generate: New spec content with all sections (using sdd-templates skill)
+5. Compare: Existing spec vs. synthesized spec → Drift detected, insert drift report
+6. Write: Use Write tool to save `.sdd/specs/auth.md` (using sdd-metadata skill for frontmatter)
+7. Validate: Spawn spec-validator agent to check quality (optional)
 
 **Agent reports**:
 ```
@@ -565,6 +639,7 @@ Task: Generate specification for module at path: src/auth
   - Missing: 0 requirements
   - Modified: 1 requirement (response time: 100ms → 200ms)
   - Violated constraints: 0
+- Validation: Passed with warnings
 - Recommendation: Review drift report and update spec or code
 ```
 
