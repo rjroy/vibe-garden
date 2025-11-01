@@ -71,6 +71,14 @@
       "cost_efficiency": 175.0
     },
     {
+      "model": "stability-ai/stable-diffusion-3.5-large-turbo",
+      "description": "Fast text-to-image model generating high-resolution images with fine details. Turbo variant prioritizes speed over maximum quality.",
+      "best_for": "Rapid prototyping, iterative creative work, artistic variations, and when speed matters for detailed imagery",
+      "cost": 0.04,
+      "quality": 6,
+      "cost_efficiency": 150.0
+    },
+    {
       "model": "black-forest-labs/flux-1.1-pro-ultra",
       "description": "Premium FLUX model supporting up to 4MP resolution with excellent image quality and prompt adherence.",
       "best_for": "Ultra high-resolution professional work, detailed compositions, and when maximum quality is needed",
@@ -336,6 +344,60 @@
           "description": "JSON-formatted detailed prompt for precise control over lighting, composition, color, camera settings",
           "optional": true,
           "default": ""
+        }
+      }
+    },
+    "stability-ai/stable-diffusion-3.5-large-turbo": {
+      "model": "stability-ai/stable-diffusion-3.5-large-turbo",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Output dimensions for the generated image",
+          "options": [
+            "1:1",
+            "16:9",
+            "21:9",
+            "3:2",
+            "2:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "9:21"
+          ],
+          "default": "1:1"
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Format of the output image",
+          "options": ["webp", "jpg", "png"],
+          "default": "webp"
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "Text describing what to exclude from the image",
+          "optional": true
+        },
+        "cfg": {
+          "type": "number",
+          "description": "Guidance scale controlling prompt adherence (1-10, higher = stronger adherence)",
+          "range": [1, 10],
+          "default": 1
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "image": {
+          "type": "string",
+          "description": "Input image URL for image-to-image mode",
+          "optional": true
+        },
+        "prompt_strength": {
+          "type": "number",
+          "description": "Denoising intensity for image-to-image (0-1, higher = more transformation)",
+          "range": [0, 1],
+          "default": 0.85
         }
       }
     }
