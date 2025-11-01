@@ -2,129 +2,174 @@
   "metadata": {
     "last_updated": "2025-11-01",
     "data_source": "https://replicate.com/pricing",
-    "schema_version": "1.0",
-    "notes": "Model pricing and quality ratings verified from Replicate pricing pages. Quality ratings (1-10) are subjective developer assessments. Cost-efficiency = quality / cost (higher is better value)."
+    "schema_version": "2.0",
+    "notes": "Model pricing verified from Replicate pricing pages. Dimensional ratings (1-100) based on art-styles-and-model-selection.md research: photorealism (material accuracy, lighting realism), artistic_quality (creative expression, style range), consistency (brand reliability, reproducibility), speed (iteration capability), style_versatility (genre/use-case flexibility). Cost-efficiency = calculated value (higher is better)."
   },
   "models": [
     {
       "model": "black-forest-labs/flux-schnell",
       "description": "Fastest FLUX model optimized for speed and cost. Great for rapid iteration and local development.",
-      "best_for": "Rapid prototyping, high-volume generation, personal projects, and when speed matters most",
       "cost": 0.003,
-      "quality": 5,
-      "cost_efficiency": 1666.67
+      "photorealism": 40,
+      "artistic_quality": 35,
+      "consistency": 50,
+      "speed": 95,
+      "style_versatility": 50,
+      "cost_efficiency": 180
     },
     {
       "model": "stability-ai/sdxl",
       "description": "Stable Diffusion XL - highly cost-effective open-source model with good quality for the price.",
-      "best_for": "Budget-conscious projects, high-volume generation, experimentation, and learning",
       "cost": 0.004,
-      "quality": 5,
-      "cost_efficiency": 1250.0
+      "photorealism": 50,
+      "artistic_quality": 55,
+      "consistency": 50,
+      "speed": 65,
+      "style_versatility": 75,
+      "cost_efficiency": 148
     },
     {
       "model": "bytedance/seedream-4",
       "description": "State-of-the-art model with excellent prompt following, visual quality, and output diversity. Supports up to 4096x4096 resolution.",
-      "best_for": "High-resolution outputs, complex compositions, multi-reference generation, and when you need the absolute best quality",
       "cost": 0.03,
-      "quality": 9,
-      "cost_efficiency": 300.0
+      "photorealism": 90,
+      "artistic_quality": 92,
+      "consistency": 80,
+      "speed": 30,
+      "style_versatility": 90,
+      "cost_efficiency": 26
     },
     {
       "model": "google/imagen-4",
       "description": "Google's latest text-to-image model with exceptional photorealism and ease of prompting.",
-      "best_for": "Photorealistic images, marketing materials, professional content, product photography, and architectural visualizations",
       "cost": 0.04,
-      "quality": 8,
-      "cost_efficiency": 200.0
+      "photorealism": 92,
+      "artistic_quality": 60,
+      "consistency": 80,
+      "speed": 55,
+      "style_versatility": 70,
+      "cost_efficiency": 18
     },
     {
       "model": "ideogram-ai/ideogram-v3-turbo",
       "description": "Fast, creative generation with strong text rendering capabilities at an economical price.",
-      "best_for": "Text-heavy designs, posters, graphic design, advertising materials, and rapid iterations with text overlays",
       "cost": 0.03,
-      "quality": 6,
-      "cost_efficiency": 200.0
+      "photorealism": 42,
+      "artistic_quality": 55,
+      "consistency": 55,
+      "speed": 90,
+      "style_versatility": 65,
+      "cost_efficiency": 20
     },
     {
       "model": "google/imagen-3-fast",
       "description": "Faster, more economical version of Imagen when price or speed are more important than final image quality.",
-      "best_for": "Quick iterations, high-volume work, prototyping, and when good quality at lower cost is acceptable",
       "cost": 0.03,
-      "quality": 6,
-      "cost_efficiency": 200.0
+      "photorealism": 68,
+      "artistic_quality": 50,
+      "consistency": 65,
+      "speed": 80,
+      "style_versatility": 60,
+      "cost_efficiency": 21
     },
     {
       "model": "black-forest-labs/flux-kontext-pro",
       "description": "Strong prompt following and style control for both photoreal and illustrated outputs with character consistency.",
-      "best_for": "Character consistency across multiple scenes, visual storytelling, in-context editing, and style preservation",
       "cost": 0.04,
-      "quality": 7,
-      "cost_efficiency": 175.0
+      "photorealism": 88,
+      "artistic_quality": 60,
+      "consistency": 85,
+      "speed": 55,
+      "style_versatility": 72,
+      "cost_efficiency": 18
     },
     {
       "model": "bria/fibo",
       "description": "State-of-the-art open-source 8B parameter model with precise control via JSON-native prompting. Enterprise-focused with licensed training data.",
-      "best_for": "Iterative refinement workflows, precise control over lighting/composition/color/camera, enterprise applications requiring rights-clear data, both text-to-image and image-to-image",
       "cost": 0.04,
-      "quality": 7,
-      "cost_efficiency": 175.0
+      "photorealism": 70,
+      "artistic_quality": 60,
+      "consistency": 90,
+      "speed": 60,
+      "style_versatility": 75,
+      "cost_efficiency": 18
     },
     {
       "model": "stability-ai/stable-diffusion-3.5-large-turbo",
       "description": "Fast text-to-image model generating high-resolution images with fine details. Turbo variant prioritizes speed over maximum quality.",
-      "best_for": "Rapid prototyping, iterative creative work, artistic variations, and when speed matters for detailed imagery",
       "cost": 0.04,
-      "quality": 6,
-      "cost_efficiency": 150.0
+      "photorealism": 55,
+      "artistic_quality": 58,
+      "consistency": 55,
+      "speed": 92,
+      "style_versatility": 75,
+      "cost_efficiency": 17
     },
     {
       "model": "black-forest-labs/flux-1.1-pro-ultra",
       "description": "Premium FLUX model supporting up to 4MP resolution with excellent image quality and prompt adherence.",
-      "best_for": "Ultra high-resolution professional work, detailed compositions, and when maximum quality is needed",
       "cost": 0.06,
-      "quality": 8,
-      "cost_efficiency": 133.33
+      "photorealism": 88,
+      "artistic_quality": 75,
+      "consistency": 82,
+      "speed": 35,
+      "style_versatility": 72,
+      "cost_efficiency": 12
     },
     {
       "model": "black-forest-labs/flux-1.1-pro",
       "description": "Improved FLUX model with more consistent image quality and diversity. Great all-around choice.",
-      "best_for": "General-purpose high-quality generation, complex scenes with fine details, creative content, and e-commerce visuals",
       "cost": 0.055,
-      "quality": 7,
-      "cost_efficiency": 127.27
+      "photorealism": 82,
+      "artistic_quality": 70,
+      "consistency": 78,
+      "speed": 60,
+      "style_versatility": 80,
+      "cost_efficiency": 14
     },
     {
       "model": "ideogram-ai/ideogram-v3-balanced",
       "description": "Optimal balance between speed, cost, and quality with excellent text rendering.",
-      "best_for": "General text-heavy designs, balanced quality/speed needs, and iterative design work",
       "cost": 0.06,
-      "quality": 7,
-      "cost_efficiency": 116.67
+      "photorealism": 60,
+      "artistic_quality": 68,
+      "consistency": 70,
+      "speed": 75,
+      "style_versatility": 75,
+      "cost_efficiency": 12
     },
     {
       "model": "ideogram-ai/ideogram-v3-quality",
       "description": "Highest quality Ideogram model with stunning realism and exceptional text rendering capabilities.",
-      "best_for": "Professional designs with text, posters, advertisements, and when text legibility is critical",
       "cost": 0.09,
-      "quality": 8,
-      "cost_efficiency": 88.89
+      "photorealism": 72,
+      "artistic_quality": 80,
+      "consistency": 78,
+      "speed": 50,
+      "style_versatility": 75,
+      "cost_efficiency": 8
     },
     {
       "model": "recraft-ai/recraft-v3",
       "description": "Versatile model capable of generating long texts and images in a wide variety of styles. SOTA on text-to-image benchmarks.",
-      "best_for": "Multi-style generation, long text rendering, creative compositions, and style-flexible projects",
       "cost": 0.08,
-      "quality": 7,
-      "cost_efficiency": 87.5
+      "photorealism": 75,
+      "artistic_quality": 78,
+      "consistency": 72,
+      "speed": 65,
+      "style_versatility": 88,
+      "cost_efficiency": 9
     },
     {
       "model": "recraft-ai/recraft-v3-svg",
       "description": "First major text-to-image model with high-quality SVG output capability. Perfect for scalable graphics.",
-      "best_for": "Logos, icons, vector graphics, scalable designs, and when you need SVG format output",
       "cost": 0.08,
-      "quality": 6,
-      "cost_efficiency": 75.0
+      "photorealism": 25,
+      "artistic_quality": 70,
+      "consistency": 82,
+      "speed": 65,
+      "style_versatility": 55,
+      "cost_efficiency": 7
     }
   ],
   "parameters": {

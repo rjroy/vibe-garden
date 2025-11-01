@@ -38,7 +38,12 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
     if not models:
         raise ValueError("'models' array cannot be empty")
 
-    required_model_fields = {"model", "description", "best_for", "cost", "quality", "cost_efficiency"}
+    required_model_fields = {
+        "model", "description", "cost", "cost_efficiency",
+        "photorealism", "artistic_quality", "consistency", "speed", "style_versatility"
+    }
+    rating_fields = ["photorealism", "artistic_quality", "consistency", "speed", "style_versatility"]
+
     for idx, model in enumerate(models):
         if not isinstance(model, dict):
             raise ValueError(f"Model at index {idx} is not an object")
@@ -52,8 +57,16 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
             raise ValueError(f"Model '{model['model']}' has non-string model ID")
         if not isinstance(model["cost"], (int, float)):
             raise ValueError(f"Model '{model['model']}' has non-numeric cost")
-        if not isinstance(model["quality"], (int, float)):
-            raise ValueError(f"Model '{model['model']}' has non-numeric quality")
+        if not isinstance(model["cost_efficiency"], (int, float)):
+            raise ValueError(f"Model '{model['model']}' has non-numeric cost_efficiency")
+
+        # Validate dimensional ratings
+        for rating_field in rating_fields:
+            value = model[rating_field]
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"Model '{model['model']}' has non-numeric {rating_field}")
+            if not (1 <= value <= 100):
+                raise ValueError(f"Model '{model['model']}' has {rating_field}={value} out of range (must be 1-100)")
 
     # Validate parameters
     parameters = data["parameters"]
