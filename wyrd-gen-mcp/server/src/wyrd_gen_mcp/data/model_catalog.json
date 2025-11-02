@@ -18,17 +18,6 @@
       "cost_efficiency": 180
     },
     {
-      "model": "stability-ai/sdxl",
-      "description": "Stable Diffusion XL - highly cost-effective open-source model with good quality for the price.",
-      "cost": 0.004,
-      "photorealism": 50,
-      "artistic_quality": 55,
-      "consistency": 50,
-      "speed": 65,
-      "style_versatility": 75,
-      "cost_efficiency": 148
-    },
-    {
       "model": "bytedance/seedream-4",
       "description": "State-of-the-art model with excellent prompt following, visual quality, and output diversity. Supports up to 4096x4096 resolution.",
       "cost": 0.03,
@@ -62,15 +51,15 @@
       "cost_efficiency": 20
     },
     {
-      "model": "google/imagen-3-fast",
-      "description": "Faster, more economical version of Imagen when price or speed are more important than final image quality.",
-      "cost": 0.03,
-      "photorealism": 68,
-      "artistic_quality": 50,
-      "consistency": 65,
-      "speed": 80,
-      "style_versatility": 60,
-      "cost_efficiency": 21
+      "model": "google/imagen-4-fast",
+      "description": "Fast, economical version of Google's latest Imagen 4 model with strong photorealism and ease of prompting.",
+      "cost": 0.02,
+      "photorealism": 85,
+      "artistic_quality": 58,
+      "consistency": 75,
+      "speed": 85,
+      "style_versatility": 68,
+      "cost_efficiency": 37
     },
     {
       "model": "black-forest-labs/flux-kontext-pro",
@@ -95,28 +84,6 @@
       "cost_efficiency": 18
     },
     {
-      "model": "stability-ai/stable-diffusion-3.5-large-turbo",
-      "description": "Fast text-to-image model generating high-resolution images with fine details. Turbo variant prioritizes speed over maximum quality.",
-      "cost": 0.04,
-      "photorealism": 55,
-      "artistic_quality": 58,
-      "consistency": 55,
-      "speed": 92,
-      "style_versatility": 75,
-      "cost_efficiency": 17
-    },
-    {
-      "model": "black-forest-labs/flux-1.1-pro-ultra",
-      "description": "Premium FLUX model supporting up to 4MP resolution with excellent image quality and prompt adherence.",
-      "cost": 0.06,
-      "photorealism": 88,
-      "artistic_quality": 75,
-      "consistency": 82,
-      "speed": 35,
-      "style_versatility": 72,
-      "cost_efficiency": 12
-    },
-    {
       "model": "black-forest-labs/flux-1.1-pro",
       "description": "Improved FLUX model with more consistent image quality and diversity. Great all-around choice.",
       "cost": 0.055,
@@ -139,17 +106,6 @@
       "cost_efficiency": 12
     },
     {
-      "model": "ideogram-ai/ideogram-v3-quality",
-      "description": "Highest quality Ideogram model with stunning realism and exceptional text rendering capabilities.",
-      "cost": 0.09,
-      "photorealism": 72,
-      "artistic_quality": 80,
-      "consistency": 78,
-      "speed": 50,
-      "style_versatility": 75,
-      "cost_efficiency": 8
-    },
-    {
       "model": "recraft-ai/recraft-v3",
       "description": "Versatile model capable of generating long texts and images in a wide variety of styles. SOTA on text-to-image benchmarks.",
       "cost": 0.08,
@@ -170,6 +126,17 @@
       "speed": 65,
       "style_versatility": 55,
       "cost_efficiency": 7
+    },
+    {
+      "model": "qwen/qwen-image",
+      "description": "Foundation model with exceptional text rendering capabilities. Supports LoRA fine-tuning and image-to-image transformations.",
+      "cost": 0.025,
+      "photorealism": 78,
+      "artistic_quality": 72,
+      "consistency": 75,
+      "speed": 70,
+      "style_versatility": 82,
+      "cost_efficiency": 302
     }
   ],
   "parameters": {
@@ -392,60 +359,6 @@
         }
       }
     },
-    "stability-ai/stable-diffusion-3.5-large-turbo": {
-      "model": "stability-ai/stable-diffusion-3.5-large-turbo",
-      "parameters": {
-        "aspect_ratio": {
-          "type": "string",
-          "description": "Output dimensions for the generated image",
-          "options": [
-            "1:1",
-            "16:9",
-            "21:9",
-            "3:2",
-            "2:3",
-            "4:5",
-            "5:4",
-            "9:16",
-            "9:21"
-          ],
-          "default": "1:1"
-        },
-        "output_format": {
-          "type": "string",
-          "description": "Format of the output image",
-          "options": ["webp", "jpg", "png"],
-          "default": "webp"
-        },
-        "negative_prompt": {
-          "type": "string",
-          "description": "Text describing what to exclude from the image",
-          "optional": true
-        },
-        "cfg": {
-          "type": "number",
-          "description": "Guidance scale controlling prompt adherence (1-10, higher = stronger adherence)",
-          "range": [1, 10],
-          "default": 1
-        },
-        "seed": {
-          "type": "integer",
-          "description": "Random seed for reproducible generation",
-          "optional": true
-        },
-        "image": {
-          "type": "string",
-          "description": "Input image URL for image-to-image mode",
-          "optional": true
-        },
-        "prompt_strength": {
-          "type": "number",
-          "description": "Denoising intensity for image-to-image (0-1, higher = more transformation)",
-          "range": [0, 1],
-          "default": 0.85
-        }
-      }
-    },
     "black-forest-labs/flux-schnell": {
       "model": "black-forest-labs/flux-schnell",
       "parameters": {
@@ -514,112 +427,6 @@
         }
       }
     },
-    "stability-ai/sdxl": {
-      "model": "stability-ai/sdxl",
-      "parameters": {
-        "negative_prompt": {
-          "type": "string",
-          "description": "Text describing what to exclude from the image",
-          "optional": true
-        },
-        "image": {
-          "type": "string",
-          "description": "Input image URL for img2img or inpaint mode",
-          "optional": true
-        },
-        "mask": {
-          "type": "string",
-          "description": "Input mask for inpaint mode (black areas preserved, white areas inpainted)",
-          "optional": true
-        },
-        "width": {
-          "type": "integer",
-          "description": "Width of output image",
-          "default": 1024
-        },
-        "height": {
-          "type": "integer",
-          "description": "Height of output image",
-          "default": 1024
-        },
-        "num_outputs": {
-          "type": "integer",
-          "description": "Number of images to generate",
-          "range": [1, 4],
-          "default": 1
-        },
-        "num_inference_steps": {
-          "type": "integer",
-          "description": "Number of denoising steps",
-          "range": [1, 500],
-          "default": 50
-        },
-        "scheduler": {
-          "type": "string",
-          "description": "Scheduler selection",
-          "options": [
-            "DDIM",
-            "DPMSolverMultistep",
-            "HeunDiscrete",
-            "KarrasDPM",
-            "K_EULER_ANCESTRAL",
-            "K_EULER",
-            "PNDM"
-          ],
-          "default": "K_EULER"
-        },
-        "guidance_scale": {
-          "type": "number",
-          "description": "Scale for classifier-free guidance",
-          "range": [1, 50],
-          "default": 7.5
-        },
-        "prompt_strength": {
-          "type": "number",
-          "description": "Prompt strength when using img2img/inpaint (1.0 = full information destruction)",
-          "range": [0, 1],
-          "default": 0.8
-        },
-        "seed": {
-          "type": "integer",
-          "description": "Random seed for reproducible generation",
-          "optional": true
-        },
-        "refine": {
-          "type": "string",
-          "description": "Which refine style to use",
-          "options": ["no_refiner", "expert_ensemble_refiner", "base_image_refiner"],
-          "default": "no_refiner"
-        },
-        "high_noise_frac": {
-          "type": "number",
-          "description": "For expert_ensemble_refiner, the fraction of noise",
-          "range": [0, 1],
-          "default": 0.8
-        },
-        "refine_steps": {
-          "type": "integer",
-          "description": "For base_image_refiner, number of refinement steps",
-          "optional": true
-        },
-        "lora_scale": {
-          "type": "number",
-          "description": "LoRA additive scale (only applicable on trained models)",
-          "range": [0, 1],
-          "default": 0.6
-        },
-        "apply_watermark": {
-          "type": "boolean",
-          "description": "Apply watermark to generated images",
-          "default": true
-        },
-        "disable_safety_checker": {
-          "type": "boolean",
-          "description": "Disable safety checker for generated images",
-          "default": false
-        }
-      }
-    },
     "bytedance/seedream-4": {
       "model": "bytedance/seedream-4",
       "parameters": {
@@ -681,8 +488,8 @@
         }
       }
     },
-    "google/imagen-3-fast": {
-      "model": "google/imagen-3-fast",
+    "google/imagen-4-fast": {
+      "model": "google/imagen-4-fast",
       "parameters": {
         "aspect_ratio": {
           "type": "string",
@@ -708,136 +515,8 @@
         }
       }
     },
-    "black-forest-labs/flux-1.1-pro-ultra": {
-      "model": "black-forest-labs/flux-1.1-pro-ultra",
-      "parameters": {
-        "aspect_ratio": {
-          "type": "string",
-          "description": "Aspect ratio of the generated image",
-          "options": [
-            "21:9",
-            "16:9",
-            "3:2",
-            "4:3",
-            "5:4",
-            "1:1",
-            "4:5",
-            "3:4",
-            "2:3",
-            "9:16",
-            "9:21"
-          ],
-          "default": "1:1"
-        },
-        "image_prompt": {
-          "type": "string",
-          "description": "Image URL to use with Flux Redux (must be jpeg, png, gif, or webp)",
-          "optional": true
-        },
-        "image_prompt_strength": {
-          "type": "number",
-          "description": "Blend between the prompt and the image prompt",
-          "range": [0, 1],
-          "default": 0.1
-        },
-        "safety_tolerance": {
-          "type": "integer",
-          "description": "Safety tolerance (1 is most strict, 6 is most permissive)",
-          "range": [1, 6],
-          "default": 2
-        },
-        "seed": {
-          "type": "integer",
-          "description": "Random seed for reproducible generation",
-          "optional": true
-        },
-        "raw": {
-          "type": "boolean",
-          "description": "Generate less processed, more natural-looking images",
-          "default": false
-        },
-        "output_format": {
-          "type": "string",
-          "description": "Format of the output image",
-          "options": ["jpg", "png"],
-          "default": "jpg"
-        }
-      }
-    },
     "ideogram-ai/ideogram-v3-balanced": {
       "model": "ideogram-ai/ideogram-v3-balanced",
-      "parameters": {
-        "aspect_ratio": {
-          "type": "string",
-          "description": "Aspect ratio (ignored if resolution or inpainting image provided)",
-          "options": [
-            "1:3",
-            "3:1",
-            "1:2",
-            "2:1",
-            "9:16",
-            "16:9",
-            "10:16",
-            "16:10",
-            "2:3",
-            "3:2",
-            "3:4",
-            "4:3",
-            "4:5",
-            "5:4",
-            "1:1"
-          ],
-          "default": "1:1"
-        },
-        "resolution": {
-          "type": "string",
-          "description": "Resolution setting (overrides aspect ratio; ignored for inpainting)",
-          "options": ["None"],
-          "default": "None"
-        },
-        "magic_prompt_option": {
-          "type": "string",
-          "description": "Interprets and optimizes prompts for variety and quality",
-          "options": ["Auto", "On", "Off"],
-          "default": "Auto"
-        },
-        "image": {
-          "type": "string",
-          "description": "Image URL for inpainting (requires mask parameter)",
-          "optional": true
-        },
-        "mask": {
-          "type": "string",
-          "description": "Black/white image where black pixels are inpainted, white preserved",
-          "optional": true
-        },
-        "style_type": {
-          "type": "string",
-          "description": "Defines aesthetic direction",
-          "options": ["None", "Auto", "General", "Realistic", "Design"],
-          "default": "None"
-        },
-        "style_preset": {
-          "type": "string",
-          "description": "Apply a predefined artistic style",
-          "options": ["None"],
-          "default": "None"
-        },
-        "style_reference_images": {
-          "type": "array",
-          "description": "List of images for style reference",
-          "optional": true
-        },
-        "seed": {
-          "type": "integer",
-          "description": "Random seed for reproducible generation",
-          "range": [0, 2147483647],
-          "optional": true
-        }
-      }
-    },
-    "ideogram-ai/ideogram-v3-quality": {
-      "model": "ideogram-ai/ideogram-v3-quality",
       "parameters": {
         "aspect_ratio": {
           "type": "string",
@@ -1035,8 +714,97 @@
         "style": {
           "type": "string",
           "description": "Style of the generated image",
-          "options": ["any", "engraving", "line_art", "line_circuit", "linocut"],
+          "options": [
+            "any",
+            "engraving",
+            "line_art",
+            "line_circuit",
+            "linocut"
+          ],
           "default": "any"
+        }
+      }
+    },
+    "qwen/qwen-image": {
+      "model": "qwen/qwen-image",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"],
+          "default": "16:9"
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Format of the output image",
+          "options": ["webp", "jpg", "png"],
+          "default": "webp"
+        },
+        "output_quality": {
+          "type": "integer",
+          "description": "Quality level (0=lowest, 100=best; N/A for PNG)",
+          "range": [0, 100],
+          "default": 80
+        },
+        "image_size": {
+          "type": "string",
+          "description": "Resolution optimization strategy",
+          "options": ["optimize_for_quality", "optimize_for_speed"],
+          "default": "optimize_for_quality"
+        },
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Denoising steps (28-50 recommended for quality)",
+          "range": [1, 50],
+          "default": 30
+        },
+        "guidance": {
+          "type": "number",
+          "description": "Prompt adherence strength (lower = more realistic)",
+          "range": [0, 10],
+          "default": 3
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "Elements to exclude from the generated image",
+          "optional": true,
+          "default": " "
+        },
+        "enhance_prompt": {
+          "type": "boolean",
+          "description": "Apply prompt enhancement processing",
+          "default": false
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "strength": {
+          "type": "number",
+          "description": "Transformation strength for image-to-image (0-1)",
+          "range": [0, 1],
+          "default": 0.9
+        },
+        "go_fast": {
+          "type": "boolean",
+          "description": "Enable optimized fast predictions",
+          "default": true
+        },
+        "disable_safety_checker": {
+          "type": "boolean",
+          "description": "Toggle safety filtering",
+          "default": false
+        },
+        "lora_weights": {
+          "type": "string",
+          "description": "URL to custom LoRA model weights for style fine-tuning",
+          "optional": true
+        },
+        "extra_lora_weights": {
+          "type": "string",
+          "description": "Comma-separated URLs for additional LoRA weights",
+          "optional": true
         }
       }
     }
