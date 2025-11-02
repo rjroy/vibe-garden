@@ -445,6 +445,600 @@
           "default": 0.85
         }
       }
+    },
+    "black-forest-labs/flux-schnell": {
+      "model": "black-forest-labs/flux-schnell",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": [
+            "1:1",
+            "16:9",
+            "21:9",
+            "3:2",
+            "2:3",
+            "4:5",
+            "5:4",
+            "3:4",
+            "4:3",
+            "9:16",
+            "9:21"
+          ],
+          "default": "1:1"
+        },
+        "num_outputs": {
+          "type": "integer",
+          "description": "Number of images to generate",
+          "range": [1, 4],
+          "default": 1
+        },
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Denoising steps (4 recommended; lower = faster/lower quality)",
+          "range": [1, 4],
+          "default": 4
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Format of the output image",
+          "options": ["webp", "jpg", "png"],
+          "default": "webp"
+        },
+        "output_quality": {
+          "type": "integer",
+          "description": "Quality level (0=lowest, 100=best; N/A for PNG)",
+          "range": [0, 100],
+          "default": 80
+        },
+        "disable_safety_checker": {
+          "type": "boolean",
+          "description": "Toggle safety filtering",
+          "default": false
+        },
+        "go_fast": {
+          "type": "boolean",
+          "description": "Run optimized fp8 quantized predictions",
+          "default": true
+        },
+        "megapixels": {
+          "type": "string",
+          "description": "Approximate image resolution",
+          "options": ["1", "0.25"],
+          "default": "1"
+        }
+      }
+    },
+    "stability-ai/sdxl": {
+      "model": "stability-ai/sdxl",
+      "parameters": {
+        "negative_prompt": {
+          "type": "string",
+          "description": "Text describing what to exclude from the image",
+          "optional": true
+        },
+        "image": {
+          "type": "string",
+          "description": "Input image URL for img2img or inpaint mode",
+          "optional": true
+        },
+        "mask": {
+          "type": "string",
+          "description": "Input mask for inpaint mode (black areas preserved, white areas inpainted)",
+          "optional": true
+        },
+        "width": {
+          "type": "integer",
+          "description": "Width of output image",
+          "default": 1024
+        },
+        "height": {
+          "type": "integer",
+          "description": "Height of output image",
+          "default": 1024
+        },
+        "num_outputs": {
+          "type": "integer",
+          "description": "Number of images to generate",
+          "range": [1, 4],
+          "default": 1
+        },
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps",
+          "range": [1, 500],
+          "default": 50
+        },
+        "scheduler": {
+          "type": "string",
+          "description": "Scheduler selection",
+          "options": [
+            "DDIM",
+            "DPMSolverMultistep",
+            "HeunDiscrete",
+            "KarrasDPM",
+            "K_EULER_ANCESTRAL",
+            "K_EULER",
+            "PNDM"
+          ],
+          "default": "K_EULER"
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "Scale for classifier-free guidance",
+          "range": [1, 50],
+          "default": 7.5
+        },
+        "prompt_strength": {
+          "type": "number",
+          "description": "Prompt strength when using img2img/inpaint (1.0 = full information destruction)",
+          "range": [0, 1],
+          "default": 0.8
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "refine": {
+          "type": "string",
+          "description": "Which refine style to use",
+          "options": ["no_refiner", "expert_ensemble_refiner", "base_image_refiner"],
+          "default": "no_refiner"
+        },
+        "high_noise_frac": {
+          "type": "number",
+          "description": "For expert_ensemble_refiner, the fraction of noise",
+          "range": [0, 1],
+          "default": 0.8
+        },
+        "refine_steps": {
+          "type": "integer",
+          "description": "For base_image_refiner, number of refinement steps",
+          "optional": true
+        },
+        "lora_scale": {
+          "type": "number",
+          "description": "LoRA additive scale (only applicable on trained models)",
+          "range": [0, 1],
+          "default": 0.6
+        },
+        "apply_watermark": {
+          "type": "boolean",
+          "description": "Apply watermark to generated images",
+          "default": true
+        },
+        "disable_safety_checker": {
+          "type": "boolean",
+          "description": "Disable safety checker for generated images",
+          "default": false
+        }
+      }
+    },
+    "bytedance/seedream-4": {
+      "model": "bytedance/seedream-4",
+      "parameters": {
+        "size": {
+          "type": "string",
+          "description": "Image resolution: 1K (1024px), 2K (2048px), 4K (4096px), or 'custom'",
+          "options": ["1K", "2K", "4K", "custom"],
+          "default": "2K"
+        },
+        "width": {
+          "type": "integer",
+          "description": "Custom image width (only used when size='custom')",
+          "range": [1024, 4096],
+          "default": 2048
+        },
+        "height": {
+          "type": "integer",
+          "description": "Custom image height (only used when size='custom')",
+          "range": [1024, 4096],
+          "default": 2048
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Image aspect ratio (use 'match_input_image' to match input dimensions)",
+          "options": [
+            "match_input_image",
+            "1:1",
+            "4:3",
+            "3:4",
+            "16:9",
+            "9:16",
+            "3:2",
+            "2:3",
+            "21:9"
+          ],
+          "default": "match_input_image"
+        },
+        "image_input": {
+          "type": "array",
+          "description": "Input images for image-to-image generation (1-10 images)",
+          "optional": true
+        },
+        "max_images": {
+          "type": "integer",
+          "description": "Maximum images to generate with sequential mode",
+          "range": [1, 15],
+          "default": 1
+        },
+        "enhance_prompt": {
+          "type": "boolean",
+          "description": "Enable prompt enhancement for higher quality results",
+          "default": true
+        },
+        "sequential_image_generation": {
+          "type": "string",
+          "description": "Group generation mode: disabled for single image or auto for multiple",
+          "options": ["disabled", "auto"],
+          "default": "disabled"
+        }
+      }
+    },
+    "google/imagen-3-fast": {
+      "model": "google/imagen-3-fast",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": ["1:1", "9:16", "16:9", "3:4", "4:3"],
+          "default": "1:1"
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Format of the output image",
+          "options": ["jpg", "png"],
+          "default": "jpg"
+        },
+        "safety_filter_level": {
+          "type": "string",
+          "description": "Level of safety filtering (block_low_and_above is strictest, block_only_high is most permissive)",
+          "options": [
+            "block_low_and_above",
+            "block_medium_and_above",
+            "block_only_high"
+          ],
+          "default": "block_only_high"
+        }
+      }
+    },
+    "black-forest-labs/flux-1.1-pro-ultra": {
+      "model": "black-forest-labs/flux-1.1-pro-ultra",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": [
+            "21:9",
+            "16:9",
+            "3:2",
+            "4:3",
+            "5:4",
+            "1:1",
+            "4:5",
+            "3:4",
+            "2:3",
+            "9:16",
+            "9:21"
+          ],
+          "default": "1:1"
+        },
+        "image_prompt": {
+          "type": "string",
+          "description": "Image URL to use with Flux Redux (must be jpeg, png, gif, or webp)",
+          "optional": true
+        },
+        "image_prompt_strength": {
+          "type": "number",
+          "description": "Blend between the prompt and the image prompt",
+          "range": [0, 1],
+          "default": 0.1
+        },
+        "safety_tolerance": {
+          "type": "integer",
+          "description": "Safety tolerance (1 is most strict, 6 is most permissive)",
+          "range": [1, 6],
+          "default": 2
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "raw": {
+          "type": "boolean",
+          "description": "Generate less processed, more natural-looking images",
+          "default": false
+        },
+        "output_format": {
+          "type": "string",
+          "description": "Format of the output image",
+          "options": ["jpg", "png"],
+          "default": "jpg"
+        }
+      }
+    },
+    "ideogram-ai/ideogram-v3-balanced": {
+      "model": "ideogram-ai/ideogram-v3-balanced",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio (ignored if resolution or inpainting image provided)",
+          "options": [
+            "1:3",
+            "3:1",
+            "1:2",
+            "2:1",
+            "9:16",
+            "16:9",
+            "10:16",
+            "16:10",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "1:1"
+          ],
+          "default": "1:1"
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Resolution setting (overrides aspect ratio; ignored for inpainting)",
+          "options": ["None"],
+          "default": "None"
+        },
+        "magic_prompt_option": {
+          "type": "string",
+          "description": "Interprets and optimizes prompts for variety and quality",
+          "options": ["Auto", "On", "Off"],
+          "default": "Auto"
+        },
+        "image": {
+          "type": "string",
+          "description": "Image URL for inpainting (requires mask parameter)",
+          "optional": true
+        },
+        "mask": {
+          "type": "string",
+          "description": "Black/white image where black pixels are inpainted, white preserved",
+          "optional": true
+        },
+        "style_type": {
+          "type": "string",
+          "description": "Defines aesthetic direction",
+          "options": ["None", "Auto", "General", "Realistic", "Design"],
+          "default": "None"
+        },
+        "style_preset": {
+          "type": "string",
+          "description": "Apply a predefined artistic style",
+          "options": ["None"],
+          "default": "None"
+        },
+        "style_reference_images": {
+          "type": "array",
+          "description": "List of images for style reference",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "range": [0, 2147483647],
+          "optional": true
+        }
+      }
+    },
+    "ideogram-ai/ideogram-v3-quality": {
+      "model": "ideogram-ai/ideogram-v3-quality",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio (ignored if resolution or inpainting image provided)",
+          "options": [
+            "1:3",
+            "3:1",
+            "1:2",
+            "2:1",
+            "9:16",
+            "16:9",
+            "10:16",
+            "16:10",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "1:1"
+          ],
+          "default": "1:1"
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Resolution setting (overrides aspect ratio; ignored for inpainting)",
+          "options": ["None"],
+          "default": "None"
+        },
+        "magic_prompt_option": {
+          "type": "string",
+          "description": "Interprets and optimizes prompts for variety and quality",
+          "options": ["Auto", "On", "Off"],
+          "default": "Auto"
+        },
+        "image": {
+          "type": "string",
+          "description": "Image URL for inpainting (requires mask parameter)",
+          "optional": true
+        },
+        "mask": {
+          "type": "string",
+          "description": "Black/white image where black pixels are inpainted, white preserved",
+          "optional": true
+        },
+        "style_type": {
+          "type": "string",
+          "description": "Defines aesthetic direction",
+          "options": ["None", "Auto", "General", "Realistic", "Design"],
+          "default": "None"
+        },
+        "style_preset": {
+          "type": "string",
+          "description": "Apply a predefined artistic style",
+          "options": ["None"],
+          "default": "None"
+        },
+        "style_reference_images": {
+          "type": "array",
+          "description": "List of images for style reference",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "range": [0, 2147483647],
+          "optional": true
+        }
+      }
+    },
+    "recraft-ai/recraft-v3": {
+      "model": "recraft-ai/recraft-v3",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": [
+            "Not set",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "16:9",
+            "9:16",
+            "1:2",
+            "2:1",
+            "7:5",
+            "5:7",
+            "4:5",
+            "5:4",
+            "3:5",
+            "5:3"
+          ],
+          "default": "Not set"
+        },
+        "size": {
+          "type": "string",
+          "description": "Width and height of the generated image (ignored if aspect ratio is set)",
+          "options": [
+            "1024x1024",
+            "1365x1024",
+            "1024x1365",
+            "1536x1024",
+            "1024x1536",
+            "1820x1024",
+            "1024x1820",
+            "1024x2048",
+            "2048x1024",
+            "1434x1024",
+            "1024x1434",
+            "1024x1280",
+            "1280x1024",
+            "1024x1707",
+            "1707x1024"
+          ],
+          "default": "1024x1024"
+        },
+        "style": {
+          "type": "string",
+          "description": "Style of the generated image",
+          "options": [
+            "any",
+            "realistic_image",
+            "digital_illustration",
+            "digital_illustration/pixel_art",
+            "digital_illustration/hand_drawn",
+            "digital_illustration/grain",
+            "digital_illustration/infantile_sketch",
+            "digital_illustration/2d_art_poster",
+            "digital_illustration/handmade_3d",
+            "digital_illustration/hand_drawn_outline",
+            "digital_illustration/engraving_color",
+            "digital_illustration/2d_art_poster_2",
+            "realistic_image/b_and_w",
+            "realistic_image/hard_flash",
+            "realistic_image/hdr",
+            "realistic_image/natural_light",
+            "realistic_image/studio_portrait",
+            "realistic_image/enterprise",
+            "realistic_image/motion_blur"
+          ],
+          "default": "any"
+        }
+      }
+    },
+    "recraft-ai/recraft-v3-svg": {
+      "model": "recraft-ai/recraft-v3-svg",
+      "parameters": {
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Aspect ratio of the generated image",
+          "options": [
+            "Not set",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "16:9",
+            "9:16",
+            "1:2",
+            "2:1",
+            "7:5",
+            "5:7",
+            "4:5",
+            "5:4",
+            "3:5",
+            "5:3"
+          ],
+          "default": "Not set"
+        },
+        "size": {
+          "type": "string",
+          "description": "Width and height of the generated image (ignored if aspect ratio is set)",
+          "options": [
+            "1024x1024",
+            "1365x1024",
+            "1024x1365",
+            "1536x1024",
+            "1024x1536",
+            "1820x1024",
+            "1024x1820",
+            "1024x2048",
+            "2048x1024",
+            "1434x1024",
+            "1024x1434",
+            "1024x1280",
+            "1280x1024",
+            "1024x1707",
+            "1707x1024"
+          ],
+          "default": "1024x1024"
+        },
+        "style": {
+          "type": "string",
+          "description": "Style of the generated image",
+          "options": ["any", "engraving", "line_art", "line_circuit", "linocut"],
+          "default": "any"
+        }
+      }
     }
   }
 }
