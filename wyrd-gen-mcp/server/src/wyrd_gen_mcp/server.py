@@ -143,34 +143,75 @@ async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
     logger.info(f"Output has url: {hasattr(output, 'url')}")
     logger.info(f"Output repr: {repr(output)}")
 
+    # Helper function to find next available filename with index
+    def get_next_available_path(base_path: str, start_idx: int = 0) -> tuple[str, int]:
+        """Find next available filename by checking existing files.
+
+        Returns:
+            tuple of (next_available_path, index_used)
+        """
+        # Split filename and extension
+        name_parts = base_path.rsplit(".", 1)
+
+        idx = start_idx
+        while True:
+            if len(name_parts) == 2:
+                candidate = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+            else:
+                candidate = f"{base_path}_{idx}"
+
+            if not os.path.exists(candidate):
+                return candidate, idx
+
+            idx += 1
+
     # Process the output and save to disk
     saved_files = []
 
     # Check if output has read method (FileOutput object)
     if hasattr(output, "read"):
         logger.info("Processing FileOutput object with read() method")
-        logger.info(f"Saving to file: {output_file_name}")
 
-        with open(output_file_name, "wb") as f:
+        # Find next available filename to prevent overwrites
+        final_path, used_idx = get_next_available_path(output_file_name)
+        logger.info(f"Saving to file: {final_path} (index: {used_idx})")
+
+        with open(final_path, "wb") as f:
             data = output.read()
             logger.info(f"Read {len(data)} bytes from output")
             f.write(data)
 
-        logger.info(f"File saved successfully: {output_file_name}")
-        saved_files.append(output_file_name)
+        logger.info(f"File saved successfully: {final_path}")
+        saved_files.append(final_path)
 
     elif hasattr(output, "__iter__") and not isinstance(output, str):
         logger.info("Processing iterable output (multiple files)")
+
+        # Find the starting offset to prevent overwrites
+        start_offset = 0
+        name_parts = output_file_name.rsplit(".", 1)
+        while True:
+            if len(name_parts) == 2:
+                check_path = f"{name_parts[0]}_{start_offset}.{name_parts[1]}"
+            else:
+                check_path = f"{output_file_name}_{start_offset}"
+
+            if not os.path.exists(check_path):
+                break
+            start_offset += 1
+
+        logger.info(f"Starting index offset: {start_offset}")
+
         # Multiple file outputs - save with numbered suffixes
         for idx, item in enumerate(output):
-            logger.info(f"Processing item {idx}: type={type(item)}")
+            actual_idx = start_offset + idx
+            logger.info(f"Processing item {idx}: type={type(item)}, using index {actual_idx}")
 
             # Split filename and extension
-            name_parts = output_file_name.rsplit(".", 1)
             if len(name_parts) == 2:
-                file_path = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+                file_path = f"{name_parts[0]}_{actual_idx}.{name_parts[1]}"
             else:
-                file_path = f"{output_file_name}_{idx}"
+                file_path = f"{output_file_name}_{actual_idx}"
 
             logger.info(f"Saving to file: {file_path}")
 
