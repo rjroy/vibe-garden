@@ -13,6 +13,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
+from wyrd_gen_mcp.data import MODELS, PARAMETERS
+
 
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
@@ -141,34 +143,75 @@ async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
     logger.info(f"Output has url: {hasattr(output, 'url')}")
     logger.info(f"Output repr: {repr(output)}")
 
+    # Helper function to find next available filename with index
+    def get_next_available_path(base_path: str, start_idx: int = 0) -> tuple[str, int]:
+        """Find next available filename by checking existing files.
+
+        Returns:
+            tuple of (next_available_path, index_used)
+        """
+        # Split filename and extension
+        name_parts = base_path.rsplit(".", 1)
+
+        idx = start_idx
+        while True:
+            if len(name_parts) == 2:
+                candidate = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+            else:
+                candidate = f"{base_path}_{idx}"
+
+            if not os.path.exists(candidate):
+                return candidate, idx
+
+            idx += 1
+
     # Process the output and save to disk
     saved_files = []
 
     # Check if output has read method (FileOutput object)
     if hasattr(output, "read"):
         logger.info("Processing FileOutput object with read() method")
-        logger.info(f"Saving to file: {output_file_name}")
 
-        with open(output_file_name, "wb") as f:
+        # Find next available filename to prevent overwrites
+        final_path, used_idx = get_next_available_path(output_file_name)
+        logger.info(f"Saving to file: {final_path} (index: {used_idx})")
+
+        with open(final_path, "wb") as f:
             data = output.read()
             logger.info(f"Read {len(data)} bytes from output")
             f.write(data)
 
-        logger.info(f"File saved successfully: {output_file_name}")
-        saved_files.append(output_file_name)
+        logger.info(f"File saved successfully: {final_path}")
+        saved_files.append(final_path)
 
     elif hasattr(output, "__iter__") and not isinstance(output, str):
         logger.info("Processing iterable output (multiple files)")
+
+        # Find the starting offset to prevent overwrites
+        start_offset = 0
+        name_parts = output_file_name.rsplit(".", 1)
+        while True:
+            if len(name_parts) == 2:
+                check_path = f"{name_parts[0]}_{start_offset}.{name_parts[1]}"
+            else:
+                check_path = f"{output_file_name}_{start_offset}"
+
+            if not os.path.exists(check_path):
+                break
+            start_offset += 1
+
+        logger.info(f"Starting index offset: {start_offset}")
+
         # Multiple file outputs - save with numbered suffixes
         for idx, item in enumerate(output):
-            logger.info(f"Processing item {idx}: type={type(item)}")
+            actual_idx = start_offset + idx
+            logger.info(f"Processing item {idx}: type={type(item)}, using index {actual_idx}")
 
             # Split filename and extension
-            name_parts = output_file_name.rsplit(".", 1)
             if len(name_parts) == 2:
-                file_path = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+                file_path = f"{name_parts[0]}_{actual_idx}.{name_parts[1]}"
             else:
-                file_path = f"{output_file_name}_{idx}"
+                file_path = f"{output_file_name}_{actual_idx}"
 
             logger.info(f"Saving to file: {file_path}")
 
@@ -211,137 +254,7 @@ async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
 async def list_image_models(arguments: dict[str, Any]) -> list[TextContent]:
     """List popular image generation models."""
     logger.info("list_image_models called")
-
-    # Model pricing verified 2025-10-17 from Replicate pricing pages
-    # Source: https://replicate.com/pricing and individual model pages
-    # Recommended: Check quarterly for pricing updates
-    # Quality ratings (1-10) are subjective developer assessments
-    # Cost-efficiency = quality / cost (higher is better value)
-    popular_models = [
-        # Premium Quality Models
-        {
-            "model": "bytedance/seedream-4",
-            "description": "State-of-the-art model with excellent prompt following, visual quality, and output diversity. Supports up to 4096x4096 resolution.",
-            "best_for": "High-resolution outputs, complex compositions, multi-reference generation, and when you need the absolute best quality",
-            "cost": 0.03,
-            "quality": 9,
-            "cost_efficiency": 300.0,
-        },
-        {
-            "model": "google/imagen-4",
-            "description": "Google's latest text-to-image model with exceptional photorealism and ease of prompting.",
-            "best_for": "Photorealistic images, marketing materials, professional content, product photography, and architectural visualizations",
-            "cost": 0.04,
-            "quality": 8,
-            "cost_efficiency": 200.0,
-        },
-        {
-            "model": "black-forest-labs/flux-kontext-pro",
-            "description": "Strong prompt following and style control for both photoreal and illustrated outputs with character consistency.",
-            "best_for": "Character consistency across multiple scenes, visual storytelling, in-context editing, and style preservation",
-            "cost": 0.04,
-            "quality": 7,
-            "cost_efficiency": 175.0,
-        },
-
-        # FLUX Model Family
-        {
-            "model": "black-forest-labs/flux-1.1-pro-ultra",
-            "description": "Premium FLUX model supporting up to 4MP resolution with excellent image quality and prompt adherence.",
-            "best_for": "Ultra high-resolution professional work, detailed compositions, and when maximum quality is needed",
-            "cost": 0.06,
-            "quality": 8,
-            "cost_efficiency": 133.33,
-        },
-        {
-            "model": "black-forest-labs/flux-1.1-pro",
-            "description": "Improved FLUX model with more consistent image quality and diversity. Great all-around choice.",
-            "best_for": "General-purpose high-quality generation, complex scenes with fine details, creative content, and e-commerce visuals",
-            "cost": 0.055,
-            "quality": 7,
-            "cost_efficiency": 127.27,
-        },
-        {
-            "model": "black-forest-labs/flux-dev",
-            "description": "Development version of FLUX with strong capabilities at a mid-tier price point.",
-            "best_for": "Development work, experimentation, and when you need good quality without premium pricing",
-            "cost": 0.03,
-            "quality": 6,
-            "cost_efficiency": 200.0,
-        },
-        {
-            "model": "black-forest-labs/flux-schnell",
-            "description": "Fastest FLUX model optimized for speed and cost. Great for rapid iteration and local development.",
-            "best_for": "Rapid prototyping, high-volume generation, personal projects, and when speed matters most",
-            "cost": 0.003,
-            "quality": 5,
-            "cost_efficiency": 1666.67,
-        },
-
-        # Ideogram Model Family (Excellent for Text)
-        {
-            "model": "ideogram-ai/ideogram-v3-quality",
-            "description": "Highest quality Ideogram model with stunning realism and exceptional text rendering capabilities.",
-            "best_for": "Professional designs with text, posters, advertisements, and when text legibility is critical",
-            "cost": 0.09,
-            "quality": 8,
-            "cost_efficiency": 88.89,
-        },
-        {
-            "model": "ideogram-ai/ideogram-v3-balanced",
-            "description": "Optimal balance between speed, cost, and quality with excellent text rendering.",
-            "best_for": "General text-heavy designs, balanced quality/speed needs, and iterative design work",
-            "cost": 0.06,
-            "quality": 7,
-            "cost_efficiency": 116.67,
-        },
-        {
-            "model": "ideogram-ai/ideogram-v3-turbo",
-            "description": "Fast, creative generation with strong text rendering capabilities at an economical price.",
-            "best_for": "Text-heavy designs, posters, graphic design, advertising materials, and rapid iterations with text overlays",
-            "cost": 0.03,
-            "quality": 6,
-            "cost_efficiency": 200.0,
-        },
-
-        # Specialized Models
-        {
-            "model": "recraft-ai/recraft-v3",
-            "description": "Versatile model capable of generating long texts and images in a wide variety of styles. SOTA on text-to-image benchmarks.",
-            "best_for": "Multi-style generation, long text rendering, creative compositions, and style-flexible projects",
-            "cost": 0.08,
-            "quality": 7,
-            "cost_efficiency": 87.5,
-        },
-        {
-            "model": "recraft-ai/recraft-v3-svg",
-            "description": "First major text-to-image model with high-quality SVG output capability. Perfect for scalable graphics.",
-            "best_for": "Logos, icons, vector graphics, scalable designs, and when you need SVG format output",
-            "cost": 0.08,
-            "quality": 6,
-            "cost_efficiency": 75.0,
-        },
-        {
-            "model": "google/imagen-3-fast",
-            "description": "Faster, more economical version of Imagen when price or speed are more important than final image quality.",
-            "best_for": "Quick iterations, high-volume work, prototyping, and when good quality at lower cost is acceptable",
-            "cost": 0.03,
-            "quality": 6,
-            "cost_efficiency": 200.0,
-        },
-
-        # Budget-Friendly Options
-        {
-            "model": "stability-ai/sdxl",
-            "description": "Stable Diffusion XL - highly cost-effective open-source model with good quality for the price.",
-            "best_for": "Budget-conscious projects, high-volume generation, experimentation, and learning",
-            "cost": 0.004,
-            "quality": 5,
-            "cost_efficiency": 1250.0,
-        },
-    ]
-
-    return [TextContent(type="text", text=json.dumps(popular_models, indent=2))]
+    return [TextContent(type="text", text=json.dumps(MODELS, indent=2))]
 
 
 async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
@@ -349,156 +262,16 @@ async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
     logger.info(f"get_model_parameters called with model: {arguments.get('model')}")
     model = arguments.get("model")
 
-    # Model parameter definitions
-    model_params = {
-        "google/imagen-4": {
-            "model": "google/imagen-4",
-            "parameters": {
-                "aspect_ratio": {
-                    "type": "string",
-                    "description": "Aspect ratio of the generated image",
-                    "options": ["1:1", "3:4", "4:3", "9:16", "16:9"],
-                    "default": "1:1",
-                },
-                "output_format": {
-                    "type": "string",
-                    "description": "Format of the output image",
-                    "options": ["jpg", "png", "webp"],
-                    "default": "jpg",
-                },
-                "safety_filter_level": {
-                    "type": "string",
-                    "description": "Level of safety filtering",
-                    "options": ["block_most", "block_medium_and_above", "block_only_high"],
-                    "default": "block_medium_and_above",
-                },
-                "negative_prompt": {
-                    "type": "string",
-                    "description": "Text describing what to exclude from the image",
-                    "optional": True,
-                },
-            },
-        },
-        "black-forest-labs/flux-kontext-pro": {
-            "model": "black-forest-labs/flux-kontext-pro",
-            "parameters": {
-                "input_image": {
-                    "type": "string",
-                    "description": "URL of input image for in-context editing",
-                    "optional": True,
-                },
-                "aspect_ratio": {
-                    "type": "string",
-                    "description": "Aspect ratio of the generated image",
-                    "options": ["1:1", "16:9", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21", "match_input_image"],
-                    "default": "1:1",
-                },
-                "output_format": {
-                    "type": "string",
-                    "description": "Format of the output image",
-                    "options": ["jpg", "png", "webp"],
-                    "default": "jpg",
-                },
-                "safety_tolerance": {
-                    "type": "integer",
-                    "description": "Safety tolerance level (1-5, higher is less restrictive)",
-                    "range": [1, 5],
-                    "default": 2,
-                },
-                "prompt_upsampling": {
-                    "type": "boolean",
-                    "description": "Whether to automatically enhance the prompt",
-                    "default": False,
-                },
-            },
-        },
-        "black-forest-labs/flux-1.1-pro": {
-            "model": "black-forest-labs/flux-1.1-pro",
-            "parameters": {
-                "width": {
-                    "type": "integer",
-                    "description": "Width of the generated image",
-                    "range": [256, 1440],
-                    "default": 1024,
-                },
-                "height": {
-                    "type": "integer",
-                    "description": "Height of the generated image",
-                    "range": [256, 1440],
-                    "default": 1024,
-                },
-                "aspect_ratio": {
-                    "type": "string",
-                    "description": "Aspect ratio (overrides width/height if set)",
-                    "options": ["1:1", "16:9", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"],
-                    "optional": True,
-                },
-                "output_format": {
-                    "type": "string",
-                    "description": "Format of the output image",
-                    "options": ["jpg", "png", "webp"],
-                    "default": "jpg",
-                },
-                "safety_tolerance": {
-                    "type": "integer",
-                    "description": "Safety tolerance level (1-5)",
-                    "range": [1, 5],
-                    "default": 2,
-                },
-                "prompt_upsampling": {
-                    "type": "boolean",
-                    "description": "Whether to automatically enhance the prompt",
-                    "default": False,
-                },
-            },
-        },
-        "ideogram-ai/ideogram-v3-turbo": {
-            "model": "ideogram-ai/ideogram-v3-turbo",
-            "parameters": {
-                "aspect_ratio": {
-                    "type": "string",
-                    "description": "Aspect ratio of the generated image",
-                    "options": ["1:1", "16:10", "3:2", "4:3", "16:9", "10:16", "2:3", "3:4", "9:16"],
-                    "default": "1:1",
-                },
-                "resolution": {
-                    "type": "string",
-                    "description": "Resolution setting",
-                    "options": ["None"],
-                    "default": "None",
-                },
-                "style_type": {
-                    "type": "string",
-                    "description": "Style preset type",
-                    "options": ["None", "General", "Realistic", "Design", "3D", "Anime"],
-                    "default": "None",
-                },
-                "style_preset": {
-                    "type": "string",
-                    "description": "Specific style preset",
-                    "options": ["None"],
-                    "default": "None",
-                },
-                "magic_prompt_option": {
-                    "type": "string",
-                    "description": "Magic prompt enhancement option",
-                    "options": ["Auto", "On", "Off"],
-                    "default": "Auto",
-                },
-            },
-        },
-    }
-
-    if model not in model_params:
+    if model not in PARAMETERS:
         return [TextContent(
             type="text",
             text=json.dumps({
                 "error": f"Unknown model: {model}",
-                "available_models": list(model_params.keys()),
+                "available_models": list(PARAMETERS.keys()),
             }, indent=2)
         )]
 
-    return [TextContent(type="text", text=json.dumps(model_params[model], indent=2))]
+    return [TextContent(type="text", text=json.dumps(PARAMETERS[model], indent=2))]
 
 
 async def main():

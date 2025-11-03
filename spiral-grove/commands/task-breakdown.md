@@ -111,9 +111,9 @@ Create a task breakdown in `.sdd/tasks/[feature-name]-tasks.md` with filename fo
 Use the `sdd-templates` skill to read `templates/tasks-template.md` for the complete document structure. Follow the template exactly for section organization and frontmatter YAML format.
 
 **Metadata Auto-Population**:
-Use the `sdd-metadata` skill to populate frontmatter fields:
-- `created`: Run `date +%Y-%m-%d` via Bash
-- `authored_by`: Run `scripts/detect-author.sh` via Bash
+Invoke `Skill(spiral-grove:sdd-metadata)` to populate frontmatter fields:
+- `created`: Follow skill instructions for date generation
+- `authored_by`: Follow skill instructions for author detection
 - `last_updated`: Same as created for new task breakdowns
 
 ## Workflow

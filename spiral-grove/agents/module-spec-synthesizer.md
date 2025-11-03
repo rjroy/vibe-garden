@@ -326,25 +326,14 @@ For each capability found in code (Step 3):
 **IMPORTANT**: This agent MUST write the file. Do NOT just return markdown content.
 
 **Metadata Auto-Population**:
-Use the `sdd-metadata` skill to populate YAML frontmatter fields:
+Invoke `Skill(spiral-grove:sdd-metadata)` to populate YAML frontmatter fields. Follow the skill's instructions for:
+- `created`: Date generation
+- `last_updated`: Date generation
+- `authored_by`: Author detection
 
-```bash
-# Invoke sdd-metadata skill
-Skill: spiral-grove:sdd-metadata
-
-# Get author
-bash spiral-grove/skills/sdd-metadata/scripts/detect-author.sh
-
-# Get current date
-date +%Y-%m-%d
-```
-
-Populate YAML frontmatter:
+Set these fields directly:
 - `version`: 1.0.0
 - `status`: Draft
-- `created`: [Current date from date command]
-- `last_updated`: [Current date from date command]
-- `authored_by`: [Detected author from script]
 
 **Additional reverse-engineering fields** (in document body, not frontmatter):
 - `**Reverse-Engineered**: true`

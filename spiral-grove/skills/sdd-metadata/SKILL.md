@@ -1,31 +1,50 @@
 ---
 name: sdd-metadata
-description: Provides metadata detection and management for SDD documents. Use when creating or updating specs, plans, tasks, or progress documents to auto-populate author, dates, and version fields.
+description: Provides metadata detection and management for SDD documents. This skill should be used when creating or updating specs, plans, tasks, or progress documents to auto-populate author, dates, and version fields.
 ---
 
 # SDD Metadata
 
-## Detect Author
+This skill provides utilities to auto-populate metadata fields in SDD frontmatter.
 
-```bash
-bash spiral-grove/skills/sdd-metadata/scripts/detect-author.sh
-```
+## Author Detection
 
-**Output**: `Name <email>` or `Name` or `Unknown Author`
+To populate the `authored_by` field:
 
-**Detection priority**: Git → Perforce → ENV ($USER/$USERNAME) → Unknown Author
+1. Execute the author detection script via the Bash tool `detect-author.sh`
 
-## Get Current Date
+2. Capture the output in one of these formats:
+   - `Name <email>` (if both name and email detected)
+   - `Name` (if only name detected)
+   - `Unknown Author` (if nothing detected)
 
-```bash
-date +%Y-%m-%d
-```
+3. Populate the `authored_by` field in the document frontmatter with the script output
 
-**Output**: `YYYY-MM-DD` (ISO 8601 format)
+**Detection priority**: Git config → Perforce user info → Environment variables ($USER/$USERNAME) → "Unknown Author"
 
-## Frontmatter Fields
+## Date Generation
 
-- `created`: Set once at document creation, never changed
-- `last_updated`: Update on every document edit
-- `authored_by`: YAML list, append new authors if different
-- `version`: Only change when user explicitly requests version bump
+To populate date fields (`created`, `last_updated`):
+
+1. Execute the date command via the Bash tool:
+   ```bash
+   date +%Y-%m-%d
+   ```
+
+2. Capture the output in `YYYY-MM-DD` format (ISO 8601)
+
+3. Apply the date to the appropriate fields:
+   - `created`: Set once at document creation, never change afterwards
+   - `last_updated`: Update on every document edit
+
+## Frontmatter Field Management
+
+To manage SDD document frontmatter fields:
+
+- **`created`**: Set once at document creation using current date, never change afterwards
+- **`last_updated`**: Update to current date on every document edit
+- **`authored_by`**: YAML list format. To manage this field:
+  - Compare detected author with existing list
+  - Append new author if different from all existing authors
+  - Preserve existing authors
+- **`version`**: Only increment when user explicitly requests a version bump (do not auto-increment)
