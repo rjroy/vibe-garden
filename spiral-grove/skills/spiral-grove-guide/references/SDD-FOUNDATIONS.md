@@ -4,7 +4,7 @@
 
 **Companion Document**: See [SDD-QUICK-REFERENCE.md](./SDD-QUICK-REFERENCE.md) for practical usage guide.
 
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-10-31
 
 ---
 
@@ -233,102 +233,29 @@ Invariants:     What must always be true
 
 ## Core Principles
 
-### 1. Specifications as Source of Truth
+Spec-Driven Development is built on five foundational principles that emerged from academic research (Ostroff et al., 2004) and industry practice. These principles address fundamental challenges in AI-assisted development, particularly the "vibe coding" problem where ambiguous prompts produce inconsistent results.
 
-**Principle**: The specification document defines correctness, not the code itself.
+**For Spiral Grove's interpretation and application of these principles, see [CHARTER.md](./CHARTER.md#core-pillars).**
 
-**Implication**: Code that works but deviates from spec is "wrong" unless spec is updated.
+### The Five Foundational Principles
 
-**Traditional Approach**:
-```
-Developer intent → Code → "It works, ship it"
-```
+**1. Specifications as Source of Truth** - The specification document defines correctness, not the code itself. Code that works but deviates from spec is "wrong" unless spec is updated. This prevents drift between intent and implementation, especially with AI agents that might interpret ambiguous prompts differently.
 
-**SDD Approach**:
-```
-Specification → Code → Validation against spec → Deviation tracking
-```
+**2. Explicit Over Implicit** - Make all assumptions, constraints, and requirements explicit in writing. This addresses the "vibe coding" problem where developers give loose instructions like "make it look good" and AI agents produce visually appealing but functionally incorrect code. Research shows that "language models excel at pattern completion, not mind reading" (GitHub, 2024).
 
-**Why This Matters**: Prevents drift between intent and implementation, especially with AI agents that might interpret ambiguous prompts differently.
+**3. Declarative Requirements (WHAT, Not HOW)** - Specify desired outcomes and constraints, not implementation steps. This allows AI agents (and human developers) to apply their expertise in choosing optimal implementation strategies rather than following prescriptive instructions.
 
----
+**4. Living Documents That Evolve** - Specifications are not frozen artifacts but evolve with understanding. Unlike Waterfall methodologies where changes are discouraged, SDD expects and manages updates when new information emerges during implementation, requirements change, or better approaches are identified.
 
-### 2. Explicit Over Implicit
+**5. Phase Boundaries with Validation** - Complete and validate each phase before proceeding to the next. Each phase builds on the previous one, making it cheaper to fix specification issues than implementation bugs. Validation gates prevent building on shaky foundations.
 
-**Principle**: Make all assumptions, constraints, and requirements explicit in writing.
+### Academic and Theoretical Justification
 
-**The "Vibe Coding" Problem**:
-```
-Developer: "Make it look good"
-AI Agent: *Produces visually appealing but functionally wrong code*
-```
+These principles emerged from decades of software engineering research and practice. The academic foundation traces back to Design by Contract (Meyer, 1986), which emphasized making obligations explicit, and formal methods from the 1970s, which demonstrated the value of rigorous specifications for safety-critical systems.
 
-**SDD Solution**:
-```
-Spec: "Button should be centered, 48px height, blue (#0066CC),
-       accessible (ARIA label, keyboard navigation),
-       loading state with spinner"
-```
+The modern SDD approach finds a middle ground: more rigorous than Agile's minimal documentation but lighter weight than formal methods' mathematical proofs. This balance proves especially effective for AI-assisted development, where explicit specifications dramatically improve consistency and predictability of AI-generated code.
 
-**Recognition**: "Language models excel at pattern completion, not mind reading" (GitHub)
-
----
-
-### 3. Declarative Requirements (WHAT, Not HOW)
-
-**Principle**: Specify desired outcomes and constraints, not implementation steps.
-
-**Example - Traditional (Imperative)**:
-```
-"Create a React component using useState for the counter.
-Add a button with onClick handler that increments the state.
-Use CSS modules for styling with flexbox centering."
-```
-
-**Example - SDD (Declarative)**:
-```
-"User can increment a counter by clicking a button.
-Counter displays current value.
-Button is visually prominent and accessible.
-State persists during component lifecycle."
-```
-
-**Why**: Allows AI agents (and human developers) to apply their expertise in choosing optimal implementation strategies.
-
----
-
-### 4. Living Documents That Evolve
-
-**Principle**: Specifications are not frozen artifacts but evolve with understanding.
-
-**Status Lifecycle**:
-```
-Draft → Under Review → Approved → [Updated/Superseded]
-```
-
-**When to Update Specs**:
-- New information discovered during implementation
-- Requirements change from stakeholders
-- Technical constraints emerge
-- Better approaches identified
-
-**Key Difference from Waterfall**: Updates are expected and managed, not avoided.
-
----
-
-### 5. Phase Boundaries with Validation
-
-**Principle**: Complete and validate each phase before proceeding to the next.
-
-**Validation Command**: The `/review [phase]` command provides structured validation before progression.
-
-**Validation Gates**:
-- **Spec → Plan**: Run `/review spec` - Spec approved, testable, feasible, no HOW details
-- **Plan → Tasks**: Run `/review plan` - Architecture sound, decisions documented with rationale
-- **Tasks → Implementation**: Run `/review tasks` - Dependencies mapped, acceptance criteria defined
-- **Implementation → Done**: Run `/review progress` - All tests pass, spec criteria met, deviations documented
-
-**Why Boundaries Matter**: Prevents building on shaky foundations. Cheaper to fix specification issues than implementation bugs. The `/review` command provides objective quality gates.
+**For practical implementation guidance, validation mechanisms (like the `/review` command), and Spiral Grove's specific enforcement strategies, see [CHARTER.md](./CHARTER.md) and [SDD-QUICK-REFERENCE.md](./SDD-QUICK-REFERENCE.md).**
 
 ---
 
@@ -421,8 +348,18 @@ Draft → Under Review → Approved → [Updated/Superseded]
 - Ordered task list
 - Acceptance criteria per task
 - Dependency mapping
-- Complexity ratings (t-shirt sizes: XS/S/M/L/XL/XXL)
+- Complexity ratings (t-shirt sizes: XS/S/M/L/XL/XXL with point values)
 - Test strategy per task
+
+**Complexity Rating System**:
+- **XS (1pt)**: Too trivial for task tracking - consolidate with related work
+- **S (2pts)**: Single file, straightforward logic, clear approach
+- **M (3pts)**: Multiple files or moderate complexity, well-understood domain
+- **L (5pts)**: Complex logic, cross-cutting concerns, or new patterns
+- **XL (8pts)**: Major subsystem work - must be broken down
+- **XXL (13pts)**: Epic-level work - must be broken down
+
+**Rationale**: T-shirt sizes replace time-based estimates because LLMs lack sufficient training data to predict implementation time accurately. Complexity is knowable; time is not.
 
 **Validation**:
 - [ ] Tasks map to spec acceptance criteria
@@ -675,20 +612,20 @@ Spec is source of truth → AI generates code → Validate against spec
 
 ---
 
-#### 2. Deviation Tracking as First-Class Concern
+#### 2. Discoveries and Changes Tracking
 
 **Process**:
 1. Detect conflict between implementation and spec/plan
-2. Document the deviation
+2. Document in progress file's "Technical Discoveries" section
 3. Explain the reason (technical constraint, new information, etc.)
-4. Propose alternatives
-5. Get approval
-6. Update source documents (spec/plan)
+4. Direct user consultation: "How to proceed? (1) Fix code, (2) Update docs, (3) Other"
+5. Get approval and decision
+6. Update source documents (spec/plan) if needed
 7. Continue implementation
 
-**Why**: Makes invisible drift visible. Creates audit trail of decisions. Prevents silent erosion of requirements.
+**Why**: Makes invisible drift visible. Creates lightweight audit trail. Preserves decisions without ceremony.
 
-**Unique to Spiral Grove**: No other implementation formalizes deviation tracking at this level.
+**Unique to Spiral Grove**: Simple, practical approach that matches actual developer workflow.
 
 ---
 
@@ -815,6 +752,44 @@ Would you like me to update the status field? (explicit confirmation required)
 
 ---
 
+#### 9. Agent Delegation Architecture (v2.0.0)
+
+**Core Pattern**: Commands orchestrate workflows, agents execute discrete work, skills serve resources.
+
+**Architecture**:
+- **3 Skills**: `sdd-templates`, `sdd-metadata`, `sdd-format-docs` (bundle files, provide references)
+- **8 Agents**: 4 validators (spec, plan, tasks, progress), 2 synthesizers (module docs/specs), 1 discovery (modules), 1 implementation validator (spec-acceptance)
+- **7 Commands**: All follow orchestration pattern (spawn agents, coordinate validation, track state)
+
+**Benefits**:
+1. **Fresh context per agent**: Prevents context bloat during long workflows
+2. **Objective review**: Agent works → Command reviews → Validators check
+3. **Composability**: Agents can be chained (e.g., module-spec-synthesizer uses spec-writing command)
+4. **Consistency**: Single source of truth for complex logic
+
+**Evidence**: Discovery 7 and 8 established this pattern through v2.0.0 refactor experience.
+
+---
+
+#### 10. Mandatory Validation Gates (v2.0.0)
+
+**Implementation**: Phase commands (spec-writing, plan-generation, task-breakdown) automatically invoke validator agents.
+
+**Process**:
+1. Command generates document draft
+2. Command spawns validator agent in fresh context
+3. Validator performs comprehensive checks
+4. Command presents findings to user
+5. User approves or addresses issues
+
+**Why**: "Fresh eyes" principle—agent review catches issues the generating agent might miss. Similar to code review for documents.
+
+**Enforcement**: Commands explicitly state "Validator Agent (Always Run)" and "ALWAYS spawn" language.
+
+---
+
+---
+
 ### Philosophical Emphases
 
 #### "Specs Define Success"
@@ -882,13 +857,15 @@ Would you like me to update the status field? (explicit confirmation required)
 
 ---
 
-#### "Track Deviations"
+#### "Track Discoveries and Changes"
 
-**Requirement**: Document when and why implementation differs from plan, with formal approval process.
+**Requirement**: Document when and why implementation differs from plan, along with all technical discoveries made during development.
 
-**Why**: Makes invisible drift visible. Creates decision history. Prevents silent requirement erosion.
+**Why**: Makes invisible drift visible. Creates decision history. Captures learning for future reference.
 
-**Unique Emphasis**: First-class concern in Spiral Grove, not formalized elsewhere.
+**Implementation**: Progress file's "Technical Discoveries" section provides lightweight documentation without ceremony. Direct user consultation for deviation decisions keeps workflow simple.
+
+**Evolution**: v2.0.0 refined this from formal deviation analysis to practical discovery tracking based on actual usage patterns.
 
 ---
 
@@ -1251,11 +1228,12 @@ Informal term for ad hoc, prompt-based AI-assisted development without structure
 
 ## Document History
 
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Created**: 2025-10-17
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-10-31
 **Author**: Compiled from research report (spec-driven-development-research-report.md)
-**Changes in v1.1.0**: added `/review` command documentation
+**Changes in v1.2.0**: Updated for Spiral Grove v2.0.0 architecture - agent delegation pattern, t-shirt sizing (Discovery 9), discoveries tracking (Discovery 10), mandatory validation gates, 8 agents (not 9)
+**Changes in v1.1.0**: Added `/review` command documentation
 **Status**: Complete
 
 ---

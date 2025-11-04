@@ -1,5 +1,13 @@
 # Spec-Driven Development - Quick Reference
 
+**Purpose**: Practical cheat sheet for using Spiral Grove commands and workflows.
+
+**Need theory?** See [SDD-FOUNDATIONS.md](./SDD-FOUNDATIONS.md) for academic background and methodology foundations.
+
+**Need philosophy?** See [CHARTER.md](./CHARTER.md) for Spiral Grove's implementation principles and architectural decisions.
+
+---
+
 ## Commands
 
 ### Core Workflow Commands

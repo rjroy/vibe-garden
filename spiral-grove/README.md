@@ -6,7 +6,7 @@
 
 Spiral Grove transforms AI-assisted development by providing a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Build production-ready features with clarity, consistency, and comprehensive documentation.
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![Claude Code](https://img.shields.io/badge/platform-Claude%20Code-purple.svg)](https://claude.ai/code)
 
 ---
@@ -15,13 +15,14 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 
 - 📋 **Specification Phase** - Define WHAT to build with measurable success criteria
 - 🏗️ **Planning Phase** - Design HOW to build with architectural decisions and rationale
-- 📝 **Task Breakdown** - Decompose plans into discrete, testable tasks
-- ⚙️ **Implementation Tracking** - Execute tasks with progress monitoring and deviation tracking
-- ✅ **Validation Command** - Review phase documents before progression
+- 📝 **Task Breakdown** - Decompose plans into discrete, testable tasks with t-shirt sizing
+- ⚙️ **Implementation Tracking** - Execute tasks with progress monitoring and technical discovery tracking
+- ✅ **Mandatory Validation** - Automatic validator agents ensure quality gates between phases
 - 📚 **Documentation Synthesis** - Generate operational CLAUDE.md docs from implementation
+- 🔄 **Spec Synthesis** - Reverse-engineer specifications from existing codebases
 - 🎯 **Claude Code Plugin** - Install via `/plugin` menu (see Quick Start below)
-- 🔄 **Parent/Child Hierarchies** - Organize complex projects without context overload
-- 📖 **Integrated Guidance** - Built-in skill provides methodology help when stuck
+- 🧩 **Parent/Child Hierarchies** - Organize complex projects without context overload
+- 📖 **Integrated Guidance** - Built-in skills provide methodology help and templates
 
 ---
 
@@ -32,7 +33,7 @@ Spiral Grove transforms AI-assisted development by providing a structured four-p
 1. Open Claude Code
 2. Type: `/plugin`
 3. Follow the prompts to **'add marketplace'**
-4. Enter: `https://github.com/rjroy/vibe-garden`
+4. Enter: `https://github.com/rjroy/vibe-garden.git`
 5. Follow the prompts and make sure **"Spiral Grove"** is installed
 
 ### 2. Start Your First Feature
@@ -104,23 +105,31 @@ Claude: This is a large project. Let's use parent/child specs to organize it.
 ### Validating Before Progression
 
 ```
-You: /review spec
+You: /spec-writing
+# Automatically invokes validator agent
 # Checks for:
 # - No HOW details in spec (tech stack choices)
 # - Measurable success criteria
 # - Explicit constraints (DO NOTs)
+# - All requirements numbered (REQ-F-N, REQ-NF-N)
 
-You: /review plan
+You: /plan-generation
+# Automatically invokes validator agent
 # Checks for:
 # - Technical decisions have rationale
 # - Integration points documented
 # - Error handling strategy defined
+# - Maps to spec requirements
 
-You: /review tasks
+You: /task-breakdown
+# Automatically invokes validator agent
 # Checks for:
 # - All spec acceptance criteria mapped
-# - Tasks sized appropriately
+# - Tasks sized appropriately (prefer S/M/L)
 # - Dependencies documented
+
+# Manual validation also available:
+You: /review [spec|plan|tasks|progress]
 ```
 
 ### Post-Implementation Documentation
@@ -132,6 +141,17 @@ You: /synthesize-docs auth
 # - Operational knowledge extracted from code
 # - Integration patterns documented
 # - Framework-agnostic structure
+```
+
+### Reverse-Engineering Specs from Existing Code
+
+```
+You: /synthesize-specs payment
+# Analyzes existing code and generates:
+# - .sdd/specs/payment.md (reverse-engineered spec)
+# - Requirements extracted from implementation
+# - Test cases derived from test code
+# - Enables SDD adoption on legacy codebases
 ```
 
 ---
@@ -151,17 +171,9 @@ You: /synthesize-docs auth
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/review [spec\|plan\|tasks\|progress]` | Validate phase documents before progression | Validation findings + approval checkpoint |
+| `/review [spec\|plan\|tasks\|progress]` | Validate phase documents (auto-invoked by workflow commands) | Validation findings + approval checkpoint |
 | `/synthesize-docs [module]` | Generate operational CLAUDE.md documentation | `[module]/CLAUDE.md` (≤400 lines) |
-
-### Guidance Skill
-
-```
-You: When should I use SDD vs quick prompts?
-
-Claude: [Invokes spiral-grove-guide skill]
-# Provides decision rules and methodology guidance
-```
+| `/synthesize-specs [module]` | Reverse-engineer specs from existing code | `.sdd/specs/[module].md` |
 
 ---
 
@@ -203,16 +215,18 @@ Claude: [Invokes spiral-grove-guide skill]
 
 ### Task Breakdown Phase
 - Create **independent, testable** tasks
-- Keep tasks **small** (< 1 day each)
+- Use **t-shirt sizing** (XS/S/M/L/XL/XXL) - prefer S/M/L, break down XL/XXL
 - Map tasks to **spec acceptance criteria**
 - Identify **dependencies** clearly
+- Tasks sized XL+ must be broken down further
 
 ### Implementation Phase
 - Work **one task at a time**
 - **Refer to the spec** constantly
-- **Update progress** frequently
+- **Update progress** frequently (in `.sdd/progress/` only)
 - **Test everything**
-- **Document deviations** immediately
+- **Track technical discoveries** immediately
+- **Mandatory validation** ensures quality gates between phases
 
 ---
 
@@ -262,12 +276,12 @@ Located in `spiral-grove/.claude-plugin/plugin.json`:
 {
   "name": "spiral-grove",
   "description": "A Spec Driven Development (SDD) set of Claude commands.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
   },
-  "repository": "https://github.com/rjroy/vibe-garden"
+  "repository": "https://github.com/rjroy/vibe-garden.git"
 }
 ```
 
@@ -278,6 +292,8 @@ Spiral Grove expects the following structure (created automatically):
 - `.sdd/plans/` - Technical plans
 - `.sdd/tasks/` - Task breakdowns
 - `.sdd/progress/` - Implementation tracking
+- `.sdd/module-manifest.json` - Documentation synthesis state
+- `.sdd/spec-manifest.json` - Spec synthesis state
 
 ---
 
@@ -285,10 +301,14 @@ Spiral Grove expects the following structure (created automatically):
 
 ### Reference Guides
 
-- **[SDD Foundations](skills/spiral-grove-guide/references/SDD-FOUNDATIONS.md)** - Core methodology principles
-- **[Quick Reference](skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md)** - Commands and workflows
-- **[CLAUDE.md Format](docs/claude-md-format.md)** - Documentation synthesis format
-- **[Module Manifest Schema](docs/module-manifest-schema.md)** - Module tracking schema
+- **[SDD Foundations](skills/spiral-grove-guide/references/SDD-FOUNDATIONS.md)** - Core methodology principles and academic background
+- **[Quick Reference](skills/spiral-grove-guide/references/SDD-QUICK-REFERENCE.md)** - Commands and workflows cheat sheet
+- **[Charter](skills/spiral-grove-guide/references/CHARTER.md)** - Spiral Grove's philosophical approach and principles
+- **[Implementation Detail](skills/spiral-grove-guide/references/SPIRAL-GROVE-IMPLEMENTATION-DETAIL.md)** - Technical architecture and requirement mappings
+- **[Synthesis Reference](skills/spiral-grove-guide/references/SYNTHESIZE-REFERENCE.md)** - Documentation and spec synthesis guidance
+- **[CLAUDE.md Format](skills/sdd-format-docs/docs/claude-md-format.md)** - Documentation synthesis format
+- **[Module Manifest Schema](skills/sdd-format-docs/docs/module-manifest-schema.md)** - Module tracking schema
+- **[Spec Manifest Schema](skills/sdd-format-docs/docs/spec-manifest-schema.md)** - Spec synthesis tracking schema
 
 ### Skills
 
@@ -296,6 +316,9 @@ Spiral Grove expects the following structure (created automatically):
   - When to use SDD vs quick prompts
   - Phase principles and best practices
   - Troubleshooting and workflow navigation
+- **sdd-templates** - Document templates (spec, plan, tasks, progress)
+- **sdd-metadata** - Automatic author detection and version tracking
+- **sdd-format-docs** - Format specifications and schemas
 
 ---
 
@@ -391,21 +414,27 @@ Spiral Grove treats Claude as a **literal-minded but highly capable pair program
 
 1. **Clarity** - Unambiguous requirements prevent implementation drift
 2. **Consistency** - Structured phases maintain coherence across sessions
-3. **Completeness** - Nothing falls through the cracks
+3. **Completeness** - Nothing falls through the cracks (mandatory validation gates)
 4. **Traceability** - Every implementation maps back to requirements
 5. **Adaptability** - Phases can be revisited when requirements change
+6. **Fresh Context** - Agent delegation prevents context bloat
+7. **Objective Review** - Validator agents provide "fresh eyes" on work
 
-By separating WHAT (spec), HOW (plan), and STEPS (tasks), SDD enables complex features to be built reliably over multiple sessions with full context preservation.
+By separating WHAT (spec), HOW (plan), and STEPS (tasks), and using specialized agents for validation and synthesis, Spiral Grove enables complex features to be built reliably over multiple sessions with full context preservation and quality assurance.
 
 ---
 
 ## Anti-Patterns to Avoid
 
 - ❌ **Skipping phases** - Each phase builds on the previous
-- ❌ **Silent deviations** - Always document why implementation differs from plan
+- ❌ **Skipping validation** - Let validator agents catch issues early
+- ❌ **Silent discoveries** - Always document technical findings in progress docs
 - ❌ **Implementation in spec** - Keep specs focused on WHAT, not HOW
 - ❌ **Vague success criteria** - "Fast" is not measurable, "95th percentile < 200ms" is
 - ❌ **Missing rationale** - Document WHY decisions were made, not just WHAT
+- ❌ **Time-based estimates** - Use t-shirt sizes (S/M/L), not hours/days
+- ❌ **XL/XXL tasks** - Break down large tasks into S/M/L chunks
+- ❌ **Tracking status in task documents** - Use `.sdd/progress/` only
 
 ---
 
@@ -419,7 +448,47 @@ Contributions are welcome! Please see the main repository's [CONTRIBUTING.md](..
 
 - **Issues**: [GitHub Issues](https://github.com/rjroy/vibe-garden/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/rjroy/vibe-garden/discussions)
-- **Documentation**: [Vibe Garden](https://github.com/rjroy/vibe-garden)
+- **Documentation**: [Epic Claude Code Plugins](https://github.com/rjroy/vibe-garden)
+
+---
+
+## Architecture
+
+### Agent Delegation Pattern
+
+Spiral Grove uses a modular architecture where:
+
+**Commands** orchestrate workflows → **Agents** execute discrete work → **Skills** serve resources
+
+### Components
+
+**8 Specialized Agents**:
+- **Validators** (automatically invoked): `spec-validator`, `plan-validator`, `tasks-validator`, `progress-validator`, `spec-acceptance-validator`
+- **Synthesizers** (spawned by commands): `module-discovery-agent`, `module-doc-synthesizer`, `module-spec-synthesizer`
+
+**4 Built-in Skills**:
+- `spiral-grove-guide` - Methodology guidance
+- `sdd-templates` - Document templates
+- `sdd-metadata` - Auto-detection of author info
+- `sdd-format-docs` - Format specifications
+
+### Key Design Decisions
+
+**Fresh context per agent**: Prevents context bloat during long workflows
+
+**Objective review**: Agents provide "fresh eyes" - work is validated by separate agents
+
+**Composability**: Agents can be chained (e.g., spec-synthesizer uses spec-writing command)
+
+**Mandatory validation**: Phase commands automatically invoke validator agents
+
+**T-shirt sizing**: Complexity ratings (XS/S/M/L/XL/XXL) instead of time estimates
+
+**Technical discoveries**: Lightweight tracking replaces formal deviation analysis
+
+**Template externalization**: Skills provide templates, reducing command size
+
+**Metadata automation**: Auto-detection of author info and version management
 
 ---
 

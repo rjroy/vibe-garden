@@ -6,6 +6,18 @@
 
 ---
 
+## About This Charter
+
+This charter defines how Spiral Grove implements Spec-Driven Development methodology through the Claude Code plugin architecture.
+
+**New to SDD?** Start with [SDD-FOUNDATIONS.md](./SDD-FOUNDATIONS.md) for academic background, historical context, and theoretical foundations of the methodology itself.
+
+**This document focuses on**: Spiral Grove's specific implementation decisions, plugin architecture choices, and operational principles for building and extending this plugin.
+
+**For practical how-to guidance**: See [SDD-QUICK-REFERENCE.md](./SDD-QUICK-REFERENCE.md) for command usage, decision trees, and checklists.
+
+---
+
 ## Mission
 
 Spiral Grove addresses the need for a paradigm shift in development. AI can be the tool which provides the implementation. The user can now focus on the specifications and the architecture. They can direct the implementation, but don't need to treat the implementation as the source of truth. With this paradigm shift, a bad generated implementation can just be deleted outright, and regenerated from the plan.
@@ -49,7 +61,7 @@ Context engineering is one of the most important benefits a plugin can provide t
 
 ### 5. Composability
 
-Each tool within the plugin should be written concisely and allowed to be used in different contexts. A concrete example of this is the `@spiral-grove:module-spec-synthesizer` which uses `/spiral-grove:spec-writing` to generate the specification. This agent will make all the decisions the user would.
+Each tool within the plugin should be written concisely and allowed to be used in different contexts. Agents invoke commands, commands spawn agents, and both use skills as reference material. This composability enables reuse and consistency across workflows.
 
 
 ---
@@ -133,10 +145,10 @@ Understanding what we're **not** building is as important as what we are:
 
 Ask: "Does this align with our core pillars? Which design philosophy principle applies?"
 
-**Example**: Considering adding a new feature to the implementation command?
-- Check Pillar 4 (Delegation): Should this be an agent instead?
-- Check Principle 8 (Commands ARE Orchestrators): Is this orchestration or discrete work?
-- Check Principle 2 (Fresh Eyes): Would agent delegation enable better review?
+When considering changes to plugin architecture, check alignment with:
+- Pillar 4 (Delegation): Commands orchestrate, agents execute discrete work, skills provide resources
+- Principle 8 (Commands ARE Orchestrators): User-driven entry points that coordinate workflows
+- Principle 2 (Fresh Eyes): Agent delegation enables peer review with fresh context
 
 ---
 
@@ -144,17 +156,18 @@ Ask: "Does this align with our core pillars? Which design philosophy principle a
 
 Filter through boundaries: "Is this Spiral Grove's responsibility?"
 
-**Example**: User requests automatic spec updates when code changes?
-- Check Boundaries: "Not About Automation"—human judgment drives decisions
-- Alternative: Provide tooling to detect drift, suggest updates, but require approval
+When evaluating feature requests, apply the boundaries test:
+- Check against "Not About Automation" - human judgment drives decisions
+- Check against "Not a Replacement for Testing" - specs define test requirements, don't replace them
+- Check against plugin scope - does this belong in SDD methodology or elsewhere?
 
 ---
 
 ### For Onboarding Contributors
 
-Start here: Read Mission → Core Pillars → Boundaries → Skim Principles
+**Reading Path**: Mission → Core Pillars → Boundaries → Design Philosophy
 
-**Then**: Ask Claude to answer the rest of the questions you have about Spiral Grove.
+**After reading**: Ask Claude any questions about Spiral Grove implementation details, technical approaches, or workflow specifics. The `spiral-grove-guide` skill loads these reference documents (including this CHARTER) to provide informed answers grounded in the project's philosophy and decisions.
 
 ---
 
