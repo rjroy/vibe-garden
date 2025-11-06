@@ -1,6 +1,6 @@
 ---
 name: spiral-grove-guide
-description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the Spiral Grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
+description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
 ---
 
 # Spiral Grove Guide
@@ -459,6 +459,28 @@ This skill includes comprehensive reference documentation:
 - Reverse-engineering requirements from code
 
 **Usage guideline:** Use QUICK-REFERENCE for "how to use SDD" and FOUNDATIONS for "why SDD exists and how it works." Use SYNTHESIZE-REFERENCE for "how to adopt SDD on existing code."
+
+### references/SPIRAL-GROVE-IMPLEMENTATION-DETAIL.md
+**Purpose:** Technical implementation reference mapping specification requirements to actual implementation components
+
+**Contains:**
+- Architecture overview (components, design patterns, data flow)
+- Requirement-to-implementation mapping (REQ-F-1 through REQ-NF-24)
+- Technical architecture details (file structure, agent execution, metadata detection)
+- Implementation details for each command and agent
+- Acceptance test implementations (AT-1 through AT-10)
+- Common troubleshooting Q&A
+- Version history and maintenance notes
+
+**When to use:**
+- Need to understand HOW Spiral Grove implements specific requirements
+- Answering user questions about implementation details
+- Troubleshooting unexpected behavior (why does X work this way?)
+- Understanding agent delegation patterns and workflow
+- Looking up file paths, schemas, or technical specifications
+- Need mapping from specification requirement to code component
+- Debugging or extending Spiral Grove functionality
+- Writing documentation about Spiral Grove internals
 
 ## Tips for Success
 

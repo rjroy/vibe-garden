@@ -15,7 +15,7 @@ You are now in **Implementation Mode**. Your role is to orchestrate task executi
 2. Update progress file before/after each task
 3. **Spawn agents to implement tasks** (don't implement directly)
 4. **Review agent's work with fresh eyes**
-5. Coordinate validators (spec-acceptance, deviation analyzer)
+5. **Coordinate validators** (code reviewer, spec-acceptance, progress quality)
 6. Document deviations and discoveries
 7. Manage session state
 
@@ -150,6 +150,125 @@ Return a summary including:
 4. Identify any concerns before validation
 ```
 
+### Step 4.5: Review Code Quality
+
+**Spawn implementation reviewer to assess code quality**:
+
+```
+Output: "Reviewing code quality..."
+
+# Agent Selection (priority order):
+
+1. Check for specialized reviewer agents:
+   - Language-specific: cpp-code-reviewer, rust-code-reviewer, python-code-reviewer
+   - Domain-specific: security-reviewer, performance-reviewer, api-reviewer
+   - Check project CLAUDE.md for preferred reviewer
+
+2. If specialized agent exists:
+   Output: "Spawning [agent-name] for specialized code review..."
+   Task(
+     description: "Review TASK-XXX implementation quality",
+     prompt: "Review the implementation for TASK-XXX focusing on [domain].
+
+     **Implementation**: [summary from Step 3]
+     **Files**: [files changed]
+     **Spec**: .sdd/specs/[feature].md
+     **Plan**: .sdd/plans/[feature]-plan.md
+
+     Assess: architecture, code quality, security, error handling, performance, conventions.
+     Return: Assessment (Approve/Concerns/Reject), Issues (by severity), Suggestions, Positives.",
+     subagent_type: "[specialized-agent-name]"
+   )
+
+3. If no specialized agent:
+   Output: "Spawning general-purpose code reviewer..."
+   Task(
+     description: "Review TASK-XXX implementation quality",
+     prompt: "You are reviewing implementation code quality for Spiral Grove methodology.
+
+## Implementation Summary
+**Task**: TASK-XXX
+**Files Changed**: [list from implementation agent]
+**Tests**: [test results]
+**Deviations**: [any reported by implementation agent]
+
+## Context Documents
+- **Spec**: .sdd/specs/[feature].md - Read for requirements
+- **Plan**: .sdd/plans/[feature]-plan.md - Read for architecture decisions
+- **Task**: TASK-XXX from .sdd/tasks/[feature]-tasks.md
+
+## Review Focus
+1. **Architecture**: Follows plan decisions? Appropriate patterns?
+2. **Code Quality**: Readable? Maintainable? Follows project conventions?
+3. **Security**: Input validation? Auth/authz? Injection risks (SQL, XSS, command)?
+4. **Error Handling**: Edge cases covered? Graceful failures? Clear error messages?
+5. **Performance**: Algorithms efficient? Resource usage reasonable? Unnecessary work avoided?
+6. **Testing**: Coverage adequate? Tests meaningful? Edge cases tested?
+7. **Conventions**: Project style adhered to? Naming clear? Patterns consistent?
+
+## Deliverables
+**Assessment**: Approve | Concerns | Reject
+**Issues**: [Categorized by severity]
+  - Blocker: Must fix before proceeding (security, correctness, architecture violation)
+  - Major: Should fix (maintainability, conventions, missing edge cases)
+  - Minor: Nice-to-have (style, naming, optimization opportunities)
+**Suggestions**: [Constructive improvements with rationale]
+**Positives**: [What was done well - be specific]
+
+## Guidelines
+- Read the actual implementation files to assess quality
+- Consider spec/plan context for architectural alignment
+- Be constructive, not just critical
+- Distinguish blockers from nice-to-haves
+- Focus on maintainability, correctness, and security
+- Highlight good practices observed",
+     subagent_type: "general-purpose"
+   )
+```
+
+**Agent returns**: Assessment with issues categorized by severity
+
+### Step 4.6: Handle Code Review Results
+
+```
+1. Present review findings to user:
+   Output: "Code Review Results:
+
+   **Assessment**: [Approve/Concerns/Reject]
+
+   **Issues Found**:
+   [List issues by severity with details]
+
+   **Suggestions**:
+   [List improvement suggestions]
+
+   **Positives**:
+   [What was done well]"
+
+2. If Assessment is "Approve" or minor concerns only:
+   Output: "Code review approved! Proceeding to spec validation..."
+   → Proceed to Step 5
+
+3. If Assessment is "Concerns" (major issues):
+   Output: "Code review found major concerns. How would you like to proceed?
+   1. Fix issues now (spawn implementation agent with corrections)
+   2. Accept and document (add to Technical Discoveries)
+   3. Discuss specific concerns"
+
+   Based on user choice:
+   - If "fix": Spawn implementation agent with specific issues to address → Return to Step 4
+   - If "accept": Document concerns in progress file → Proceed to Step 5
+   - If "discuss": Work with user to resolve → User decides path forward
+
+4. If Assessment is "Reject" (blockers):
+   Output: "⚠️ Code review found blocking issues that must be addressed:
+   [List blockers]
+
+   These must be fixed before proceeding."
+
+   → Spawn implementation agent with fixes → Return to Step 4
+```
+
 ### Step 5: Validate Against Spec
 
 **Spawn spec acceptance validator**:
@@ -215,6 +334,65 @@ Based on user choice:
 9. Output: "✅ TASK-XXX complete! Moving to next task..."
 ```
 
+### Step 7.5: Validate Progress Quality
+
+**Spawn progress validator to check documentation quality**:
+
+```
+Output: "Validating progress documentation quality..."
+
+Task(
+  description: "Validate progress documentation",
+  prompt: "Validate .sdd/progress/[feature]-progress.md in silent mode.
+
+**Context**: Just completed TASK-XXX
+**Task Reference**: .sdd/tasks/[feature]-tasks.md
+
+**Focus on**:
+- Deviations documented with specific rationale (not vague like 'changed approach')
+- Completion evidence present (PR numbers, files modified, test results)
+- Test coverage tracked accurately (not vague like 'mostly tested')
+- Status accuracy (percentages match task counts)
+
+**Invocation Mode**: Silent mode
+
+Return concise inline suggestions focusing on:
+- Missing or weak deviation rationale
+- Incomplete completion evidence for TASK-XXX
+- Test coverage tracking gaps
+- Status accuracy issues
+
+Use silent mode format: brief warnings with actionable fixes, not full report.",
+  subagent_type: "spiral-grove:progress-validator"
+)
+```
+
+**Agent returns**: Inline suggestions (warnings only)
+
+**Handle Results**:
+
+```
+1. If no issues found:
+   Output: "Progress documentation looks good!"
+   → Proceed to next task
+
+2. If suggestions returned:
+   Output: "Progress Validation Suggestions:
+   [List suggestions from validator]
+
+   Would you like me to:
+   1. Fix inline now (add missing details)
+   2. Note for later
+   3. Skip (accept as-is)"
+
+   Based on user choice:
+   - If "fix inline": Update progress file with missing details → Continue
+   - If "note for later": Add to "Notes for Next Session" → Continue
+   - If "skip": Continue without changes
+
+3. Non-blocking: Always proceed to next task regardless of findings
+```
+
 ## Progress Tracking
 
 ### Real-Time Updates
@@ -270,14 +448,24 @@ Key sections:
 Task iteration loop:
   1. Update progress (in-progress)
   2. Spawn implementation agent → wait for completion
-  3. Review agent's work
-  4. Spawn validation agent → wait for results
-  5. If validation fails:
+  3. Review agent's work (orchestrator spot-check)
+  4. Spawn code reviewer agent → wait for results
+  5. If code review finds issues:
+     - Present findings to user
+     - Ask user how to proceed (fix code, accept and document, or discuss)
+     - Take action based on user choice
+     - If fixed: return to step 3
+  6. Spawn spec validation agent → wait for results
+  7. If spec validation fails:
      - Present failures to user
      - Ask user how to proceed (fix code, update docs, or other)
      - Take action based on user choice
-  6. Update progress (complete or blocked)
-  7. Next task
+  8. Update progress (complete or blocked)
+  9. Spawn progress validator → wait for results
+  10. If progress validation has suggestions:
+      - Present suggestions to user
+      - Optionally fix inline
+  11. Next task
 ```
 
 ### Parallel Pattern (When Applicable)
@@ -299,11 +487,13 @@ If tasks have no dependencies:
 ## Quality Gates
 
 Before marking task complete, verify:
-- [ ] All acceptance criteria met (validator confirms)
+- [ ] Code review passed (implementation reviewer approved)
+- [ ] All acceptance criteria met (spec-acceptance-validator confirms)
 - [ ] Tests written and passing
 - [ ] Agent committed changes with clear message
 - [ ] Any changes from plan are documented and approved
-- [ ] Progress file updated
+- [ ] Progress file updated with completion evidence
+- [ ] Progress documentation quality checked (progress-validator)
 - [ ] No blockers
 
 ## Deviation Documentation
@@ -348,11 +538,15 @@ When a task cannot be completed:
 
 1. **Delegate, don't implement**: Spawn agents for implementation work
 2. **Review with fresh eyes**: Agent does work, you review critically
-3. **Validate rigorously**: Use spec-acceptance-validator for every task
+3. **Validate rigorously**: Use three validators for every task
+   - Code reviewer: Quality, security, architecture
+   - Spec-acceptance: Meets requirements
+   - Progress validator: Documentation quality
 4. **Document everything**: Deviations, discoveries, decisions
 5. **Real-time tracking**: Update progress during work, not at end
 6. **Respect branching**: Always verify branch before commits
 7. **One task at a time**: Focus prevents scope creep (unless parallel approved)
+8. **Use specialized reviewers**: Check for project-specific code review agents
 
 ## When to Exit Implementation
 
@@ -402,20 +596,55 @@ Let me review the changes...
 
 [Reads src/middleware/rateLimit.ts to verify]
 
-Looks good! The implementation follows the plan's architecture. Now validating against spec...
+Looks good! The implementation follows the plan's architecture. Now reviewing code quality...
+
+[Checks CLAUDE.md for specialized reviewers - none found]
+
+Spawning general-purpose code reviewer...
+
+[Spawns code review agent]
+
+[Code reviewer returns]:
+**Assessment**: Approve
+**Issues**:
+  - Minor: Consider extracting rate limit config validation to separate function
+**Positives**:
+  - Good error handling with clear messages
+  - Edge cases covered (burst traffic, distributed systems)
+  - Tests cover both happy path and failure scenarios
+
+Code review approved! Proceeding to spec validation...
 
 [Spawns spec-acceptance-validator]
 
 [Validator returns]:
 ✅ All acceptance criteria passed
-- Criterion 1: Rate limit accuracy 99.9% - PASS
-- Criterion 2: Response time < 200ms - PASS
+- Criterion 1: Rate limit accuracy 99.9% - PASS (verified in tests)
+- Criterion 2: Response time < 200ms - PASS (avg 45ms in load tests)
 
 Excellent! TASK-001 complete.
 
-[Updates progress file - mark TASK-001 completed]
+[Updates progress file - mark TASK-001 completed with details]
 
-Moving to TASK-002: Add rate limit configuration...
+Validating progress documentation quality...
+
+[Spawns progress-validator in silent mode]
+
+[Progress validator returns]:
+**Suggestions**:
+- TASK-001: Add PR number and key files to completion notes
+- Consider adding performance metrics to Test Coverage section
+
+Would you like me to:
+1. Fix inline now
+2. Note for later
+3. Skip
+
+User: Fix inline now
+
+Claude: [Updates progress file with PR number and performance details]
+
+Progress documentation updated! Moving to TASK-002: Add rate limit configuration...
 ```
 
 ## Notes

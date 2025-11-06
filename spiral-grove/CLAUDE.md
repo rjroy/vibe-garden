@@ -1,10 +1,10 @@
 # Spiral Grove Plugin
 
-**Last Generated**: 2025-10-29T00:00:00Z
+**Last Generated**: 2025-11-04T00:00:00Z
 
 ## Purpose
 
-A Claude Code plugin implementing Spec-Driven Development (SDD) methodology through a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Enables production-grade feature development with explicit requirements, architectural decisions, task decomposition, and progress tracking.
+A Claude Code plugin implementing Spec-Driven Development (SDD) methodology through a structured four-phase workflow: Specification → Planning → Task Breakdown → Implementation. Enables production-grade feature development with explicit requirements, architectural decisions, task decomposition, and progress tracking. Features quality-focused validation with two-tier structure (process compliance vs quality checks) and three-tier implementation validation (code review, spec compliance, progress quality).
 
 ## Key Components
 
@@ -24,17 +24,32 @@ Slash commands that execute specific SDD workflow phases:
 
 Autonomous agents invoked by commands for complex operations:
 
+**Validators** (5 agents with two-tier validation):
+- `spec-validator.md`: Validates specifications (process compliance + 9 quality checks)
+- `plan-validator.md`: Validates technical plans (process compliance + 4 quality checks)
+- `tasks-validator.md`: Validates task breakdowns (process compliance + 3 quality checks)
+- `progress-validator.md`: Validates progress tracking (process compliance + 2 quality checks)
+- `spec-acceptance-validator.md`: Validates implementation against spec acceptance criteria
+
+**Synthesizers** (3 agents):
+- `module-discovery-agent.md`: Detects logical module boundaries using heuristics
 - `module-doc-synthesizer.md`: Analyzes single module implementation to generate CLAUDE.md (≤400 lines)
 - `module-spec-synthesizer.md`: Reverse-engineers specifications from module code
 
-### Skills (`skills/spiral-grove-guide/`)
+### Skills (`skills/`)
 
-Contextual guidance invoked automatically when working with SDD:
+Contextual guidance and resources invoked automatically when working with SDD:
 
+**spiral-grove-guide**:
 - `SKILL.md`: Main skill entry point with workflow guidance
 - `references/SDD-FOUNDATIONS.md`: Academic foundations and methodology theory
 - `references/SDD-QUICK-REFERENCE.md`: Practical operational guide
 - `references/SYNTHESIZE-REFERENCE.md`: Documentation and spec synthesis guidance
+- `references/SPIRAL-GROVE-IMPLEMENTATION-DETAIL.md`: Technical implementation reference (v2.1.0)
+
+**sdd-templates**: Externalized document templates (spec, plan, tasks, progress)
+**sdd-metadata**: Author/date detection scripts for YAML frontmatter
+**sdd-format-docs**: Format specifications and schemas for CLAUDE.md and manifests
 
 ### Documentation (`docs/*.md`)
 
@@ -46,13 +61,13 @@ Format specifications and schemas:
 
 ### Configuration
 
-- `.claude-plugin/plugin.json`: Plugin metadata (name: "spiral-grove", version: "2.0.0", author: Ronald Roy <gsdwig@gmail.com>)
+- `.claude-plugin/plugin.json`: Plugin metadata (name: "spiral-grove", version: "2.1.0", author: Ronald Roy)
 
 ## Public API
 
 **Installation**:
 ```bash
-/plugin install spiral-grove@vibe-garden
+/plugin install spiral-grove@claude-code-plugins
 ```
 
 **Core Workflow Commands**:
@@ -100,7 +115,7 @@ project-root/
 ### Starting New Feature with SDD
 
 **Steps**:
-1. Install plugin: `/plugin install spiral-grove@vibe-garden`
+1. Install plugin: `/plugin install spiral-grove@claude-code-plugins`
 2. Create specification: `/spec-writing`
 3. Generate technical plan: `/plan-generation`
 4. Break down tasks: `/task-breakdown`
@@ -208,24 +223,36 @@ Claude: [Invokes /spec-writing]
 - Works one task at a time
 - Updates progress in `.sdd/progress/` only (never modifies task documents)
 - Refers back to spec constantly
+- **Three-tier validation** (NEW in v2.1.0):
+  1. Code review (architecture, security, error handling, performance)
+  2. Spec compliance (validates against acceptance criteria)
+  3. Progress quality (non-blocking advisory feedback)
 - Default: Writing tests includes fixing failures (overridable)
 - Respects branching strategy from project CLAUDE.md
 
 **Testing Strategy**: Tests that fail indicate incomplete implementation unless explicitly overridden
 
+**Code Review**: Prefers specialized reviewers (language/domain-specific) over general-purpose. Three-tier feedback: Approve/Minor → Concerns/Major → Reject/Blockers
+
 ### Review (`/review [type]`)
 
 **Key Behaviors**:
 - Performs semantic validation (not just keyword matching)
+- **Two-tier validation structure** (NEW in v2.1.0):
+  - **Process Compliance** (critical/blocking): Format violations, phase boundaries, required fields
+  - **Quality Checks** (advisory/warning): Requirements clarity, rationale depth, testability
 - Presents structured findings (pass/fail/warning)
 - Never updates status automatically (waits for user approval)
+- Advisory warnings don't block progression (respects user judgment)
 - Type-specific checks (spec: no HOW details, plan: rationale present, tasks: acceptance criteria defined)
 
 **Validation Types**:
-- `spec`: Phase boundary (WHAT vs HOW), measurable criteria, numbered requirements
-- `plan`: Technical rationale, requirement mapping, integration points
-- `tasks`: Independence, sizing, acceptance criteria, spec mapping
-- `progress`: Deviation tracking, status accuracy
+- `spec`: Phase boundary (WHAT vs HOW), measurable criteria, numbered requirements + 9 quality checks (clarity, completeness, testability, consistency, feasibility, dependencies, error coverage, security, acceptance criteria)
+- `plan`: Technical rationale, requirement mapping, integration points + 4 quality checks (rationale quality, alternative analysis, implementability, risk awareness)
+- `tasks`: Independence, sizing, acceptance criteria, spec mapping + 3 quality checks (acceptance criteria quality, task clarity, testing approach)
+- `progress`: Deviation tracking, status accuracy + 2 quality checks (deviation rationale quality, completion evidence)
+
+**Proportional Quality**: More critical phases (spec) receive deeper quality scrutiny than tracking phases (progress)
 
 ### Synthesize Docs (`/synthesize-docs`)
 
@@ -329,6 +356,31 @@ Claude: [Invokes /spec-writing]
 - Progress only in `.sdd/progress/` (never in task documents)
 - Real-time updates during implementation
 - Deviations documented immediately
+
+## Version History
+
+**v2.1.0** (2025-11-04):
+- Two-tier validation structure (Process Compliance vs Quality Checks)
+- Quality-focused validation (9 spec / 4 plan / 3 task / 2 progress checks)
+- Three-tier implementation validation (code review → spec compliance → progress quality)
+- Specialized code reviewer preference (language/domain-specific prioritized)
+- Advisory warning handling (user can proceed despite quality warnings)
+- Proportional quality checks (critical phases receive deeper scrutiny)
+
+**v2.0.0** (2025-10-31):
+- Template externalization via sdd-templates skill
+- Metadata automation via sdd-metadata skill
+- Format specifications bundled in sdd-format-docs skill
+- Agent delegation architecture (8 total agents)
+- Automatic validator invocation at phase transitions
+- Parallel synthesis processing (10 agents concurrently)
+- Manifest-based resumability
+
+**v1.0.0** (Legacy):
+- Initial SDD workflow implementation
+- Monolithic command prompts with embedded templates
+- Manual metadata entry
+- Sequential synthesis processing
 
 <!-- BEGIN: HAND-EDITED -->
 <!-- Users can add custom sections here -->
