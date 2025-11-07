@@ -280,7 +280,7 @@ The MCP tools are already correctly designed per spec:
     "type": "object",
     "properties": {
       "prompt": {"type": "string"},
-      "model": {"type": "string", "default": "black-forest-labs/flux-kontext-pro"},
+      "model": {"type": "string", "default": "black-forest-labs/flux-schnell"},
       "output_file_name": {"type": "string"},
       "parameters": {"type": "object", "default": {}}
     },
@@ -304,7 +304,7 @@ The MCP tools are already correctly designed per spec:
 Each model now includes pricing and quality information:
 ```typescript
 interface ModelInfo {
-  model: string;           // e.g., "black-forest-labs/flux-kontext-pro"
+  model: string;           // e.g., "black-forest-labs/flux-schnell"
   description: string;     // Human-readable description
   best_for: string;        // Recommended use cases
   cost: number;            // Cost per generation in USD (e.g., 0.04)
@@ -836,7 +836,7 @@ def find_available_filename(file_path: str) -> str:
    - Lines 214-235: Add cost, quality, cost_efficiency fields to each model in `list_image_models()`:
      ```python
      {
-         "model": "black-forest-labs/flux-kontext-pro",
+         "model": "black-forest-labs/flux-schnell",
          "description": "...",
          "best_for": "...",
          "cost": 0.04,           # NEW
