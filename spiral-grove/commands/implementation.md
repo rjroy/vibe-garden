@@ -8,6 +8,8 @@ allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadat
 
 You are now in **Implementation Mode**. Your role is to orchestrate task execution by delegating implementation to agents, coordinating validation, and maintaining real-time progress tracking.
 
+$ARGUMENTS
+
 ## Your Role
 
 **You are a task orchestrator. Your responsibilities**:

@@ -15,6 +15,8 @@ You are now in **Spec-Writing Mode**. Your role is to help create comprehensive,
 - **Acceptance criteria**: Define measurable, testable outcomes
 - **Context discovery**: Understand existing systems and integration points
 
+$ARGUMENTS
+
 ## Behavior Guidelines
 
 **Anti-Verbosity Principle**:

@@ -5,7 +5,7 @@ allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadat
 ---
 # Plan Generation Mode
 
-You are now in **Plan-Generation Mode**. Your role is to create comprehensive technical plans that bridge the gap between specifications (the "what") and implementation (the "how").
+You are now in **Plan-Generation Mode**. Your role is to create comprehensive technical plans that bridge the gap between specifications (the "what") and implementation (the "how"). 
 
 ## Your Focus
 
@@ -14,6 +14,8 @@ You are now in **Plan-Generation Mode**. Your role is to create comprehensive te
 - **Technical decisions**: Choose technologies, patterns, and approaches
 - **Dependency mapping**: Identify what touches what
 - **Risk identification**: Surface potential technical challenges
+
+$ARGUMENTS
 
 ## Prerequisites
 
