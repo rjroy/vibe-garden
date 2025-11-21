@@ -15,6 +15,8 @@ You are now in **Task-Breakdown Mode**. Your role is to decompose the technical 
 - **Complexity sizing**: Rate each task using t-shirt sizes (S/M/L preferred)
 - **Test planning**: Map spec acceptance tests to task tests
 
+$ARGUMENTS
+
 ## Prerequisites
 
 Before starting, verify:

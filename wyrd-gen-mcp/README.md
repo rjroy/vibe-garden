@@ -101,14 +101,14 @@ Generate AI images from text prompts with configurable parameters.
 **Parameters**:
 - `prompt` (required): Text description of the image
 - `output_file_name` (required): Filename to save (e.g., "my-image.png")
-- `model` (optional): Model ID (default: "black-forest-labs/flux-kontext-pro")
+- `model` (optional): Model ID (default: "black-forest-labs/flux-schnell")
 - `parameters` (optional): Model-specific settings (aspect_ratio, quality, etc.)
 
 **Example Response**:
 ```json
 {
   "success": true,
-  "model": "black-forest-labs/flux-kontext-pro",
+  "model": "black-forest-labs/flux-schnell",
   "prompt": "serene mountain landscape at sunset",
   "saved_files": [
     "/home/user/projects/mountain-sunset.png"

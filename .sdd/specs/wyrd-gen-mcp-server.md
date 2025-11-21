@@ -45,7 +45,7 @@ As a **Claude Desktop/Code user**, I want **to generate AI images through natura
 - System SHALL support configurable output file names via `output_file_name` parameter
 - System SHALL save generated images to disk automatically
 - System SHALL support model-specific parameters passed through a flexible `parameters` object
-- Default model SHALL be `black-forest-labs/flux-kontext-pro`
+- Default model SHALL be `black-forest-labs/flux-schnell`
 
 **FR-2: Model Selection**
 - System SHALL support multiple image generation models from Replicate
@@ -55,7 +55,7 @@ As a **Claude Desktop/Code user**, I want **to generate AI images through natura
   - `quality`: Subjective quality rating from 1-10 (developer assessment)
   - `cost_efficiency`: Calculated ratio of quality to cost (higher is better)
 - Models SHALL include at minimum:
-  - `black-forest-labs/flux-kontext-pro` (default)
+  - `black-forest-labs/flux-schnell` (default)
   - `black-forest-labs/flux-1.1-pro`
   - `google/imagen-4`
   - `ideogram-ai/ideogram-v3-turbo`

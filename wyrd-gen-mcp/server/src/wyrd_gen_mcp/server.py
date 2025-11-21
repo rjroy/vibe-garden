@@ -60,8 +60,8 @@ TOOLS = [
                 },
                 "model": {
                     "type": "string",
-                    "description": "The Replicate model to use (default: black-forest-labs/flux-kontext-pro)",
-                    "default": "black-forest-labs/flux-kontext-pro",
+                    "description": "The Replicate model to use (default: black-forest-labs/flux-schnell)",
+                    "default": "black-forest-labs/flux-schnell",
                 },
                 "output_file_name": {
                     "type": "string",
@@ -109,7 +109,7 @@ async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
     logger.info(f"Current working directory: {os.getcwd()}")
 
     prompt = arguments.get("prompt")
-    model = arguments.get("model", "black-forest-labs/flux-kontext-pro")
+    model = arguments.get("model", "black-forest-labs/flux-schnell")
     output_file_name = arguments.get("output_file_name")
     parameters = arguments.get("parameters", {})
 
@@ -263,13 +263,18 @@ async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
     model = arguments.get("model")
 
     if model not in PARAMETERS:
-        return [TextContent(
-            type="text",
-            text=json.dumps({
-                "error": f"Unknown model: {model}",
-                "available_models": list(PARAMETERS.keys()),
-            }, indent=2)
-        )]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "error": f"Unknown model: {model}",
+                        "available_models": list(PARAMETERS.keys()),
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     return [TextContent(type="text", text=json.dumps(PARAMETERS[model], indent=2))]
 
