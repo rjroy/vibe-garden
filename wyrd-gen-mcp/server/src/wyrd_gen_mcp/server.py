@@ -9,12 +9,25 @@ import sys
 from typing import Any
 
 import replicate
+import torch
+from diffusers import AutoPipelineForText2Image, DiffusionPipeline
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 from wyrd_gen_mcp.data import MODELS, PARAMETERS
 
+
+def get_most_cost_efficient_model() -> str:
+    """Find the model with the highest cost_efficiency rating."""
+    if not MODELS:
+        return "black-forest-labs/flux-schnell"  # Fallback
+    best = max(MODELS, key=lambda m: m.get("cost_efficiency", 0))
+    return best["model"]
+
+
+# Default model based on cost efficiency
+DEFAULT_MODEL = get_most_cost_efficient_model()
 
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
@@ -49,7 +62,7 @@ logger.info("Replicate client initialized")
 # Define available tools
 TOOLS = [
     Tool(
-        name="generate_image",
+        name="generate_image_replicate",
         description="Generate an image using AI models via Replicate. Supports various models including Flux, Stable Diffusion, and more. Pass model-specific parameters via the 'parameters' object. Images are automatically saved to disk.",
         inputSchema={
             "type": "object",
@@ -60,8 +73,8 @@ TOOLS = [
                 },
                 "model": {
                     "type": "string",
-                    "description": "The Replicate model to use (default: black-forest-labs/flux-schnell)",
-                    "default": "black-forest-labs/flux-schnell",
+                    "description": f"The Replicate model to use (default: {DEFAULT_MODEL})",
+                    "default": DEFAULT_MODEL,
                 },
                 "output_file_name": {
                     "type": "string",
@@ -77,7 +90,7 @@ TOOLS = [
         },
     ),
     Tool(
-        name="list_image_models",
+        name="list_image_models_replicate",
         description="List popular image generation models available on Replicate with their descriptions",
         inputSchema={
             "type": "object",
@@ -85,8 +98,8 @@ TOOLS = [
         },
     ),
     Tool(
-        name="get_model_parameters",
-        description="Get the available parameters for a specific image generation model",
+        name="get_model_parameters_replicate",
+        description="Get the available parameters for a specific image generation model on Replicate",
         inputSchema={
             "type": "object",
             "properties": {
@@ -98,18 +111,54 @@ TOOLS = [
             "required": ["model"],
         },
     ),
+    Tool(
+        name="list_image_models_local",
+        description="List recommended local image generation models compatible with diffusers",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+        },
+    ),
+    Tool(
+        name="generate_image_local",
+        description="Generate an image using a local model via the diffusers library. Requires a GPU with sufficient VRAM.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "The text prompt describing the image to generate",
+                },
+                "model": {
+                    "type": "string",
+                    "description": "The Hugging Face model ID to use (default: runwayml/stable-diffusion-v1-5)",
+                    "default": "runwayml/stable-diffusion-v1-5",
+                },
+                "output_file_name": {
+                    "type": "string",
+                    "description": "File name to save the generated image (e.g., 'my-image.png'). Required.",
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "Additional model-specific parameters (e.g., num_inference_steps, guidance_scale, height, width)",
+                    "default": {},
+                },
+            },
+            "required": ["prompt", "output_file_name"],
+        },
+    ),
 ]
 
 
-async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
+async def generate_image_replicate(arguments: dict[str, Any]) -> list[TextContent]:
     """Generate an image using Replicate."""
     logger.info("=" * 80)
-    logger.info("generate_image called")
+    logger.info("generate_image_replicate called")
     logger.info(f"Arguments: {json.dumps(arguments, indent=2)}")
     logger.info(f"Current working directory: {os.getcwd()}")
 
     prompt = arguments.get("prompt")
-    model = arguments.get("model", "black-forest-labs/flux-schnell")
+    model = arguments.get("model", DEFAULT_MODEL)
     output_file_name = arguments.get("output_file_name")
     parameters = arguments.get("parameters", {})
 
@@ -251,15 +300,15 @@ async def generate_image(arguments: dict[str, Any]) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
 
-async def list_image_models(arguments: dict[str, Any]) -> list[TextContent]:
-    """List popular image generation models."""
-    logger.info("list_image_models called")
+async def list_image_models_replicate(arguments: dict[str, Any]) -> list[TextContent]:
+    """List popular image generation models on Replicate."""
+    logger.info("list_image_models_replicate called")
     return [TextContent(type="text", text=json.dumps(MODELS, indent=2))]
 
 
-async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
-    """Get available parameters for a specific model."""
-    logger.info(f"get_model_parameters called with model: {arguments.get('model')}")
+async def get_model_parameters_replicate(arguments: dict[str, Any]) -> list[TextContent]:
+    """Get available parameters for a specific model on Replicate."""
+    logger.info(f"get_model_parameters_replicate called with model: {arguments.get('model')}")
     model = arguments.get("model")
 
     if model not in PARAMETERS:
@@ -279,6 +328,133 @@ async def get_model_parameters(arguments: dict[str, Any]) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps(PARAMETERS[model], indent=2))]
 
 
+async def generate_image_local(arguments: dict[str, Any]) -> list[TextContent]:
+    """Generate an image using a local model via diffusers."""
+    logger.info("=" * 80)
+    logger.info("generate_image_local called")
+    logger.info(f"Arguments: {json.dumps(arguments, indent=2)}")
+
+    prompt = arguments.get("prompt")
+    model_id = arguments.get("model", "runwayml/stable-diffusion-v1-5")
+    output_file_name = arguments.get("output_file_name")
+    parameters = arguments.get("parameters", {})
+
+    if not output_file_name:
+        raise ValueError("output_file_name is required")
+
+    # Path handling
+    if not os.path.isabs(output_file_name):
+        output_file_name = os.path.join(INVOKE_DIR, output_file_name)
+    output_file_name = os.path.abspath(output_file_name)
+
+    logger.info(f"Loading model: {model_id}")
+    try:
+        # Determine device - for offloading we generally want to start on CPU
+        # but we check for CUDA availability to ensure we can eventually run there
+        if not torch.cuda.is_available():
+            logger.warning("CUDA not available, falling back to CPU (will be slow)")
+            device = "cpu"
+        else:
+            device = "cuda"
+
+        logger.info(f"Target device: {device}")
+
+        # Load pipeline with memory optimizations
+        lower_id = model_id.lower()
+        diffusion_class = AutoPipelineForText2Image
+        extra_args = {}
+        if "qwen" in lower_id:
+            logger.info("Setting Qwen model with trust_remote_code=True")
+            diffusion_class = DiffusionPipeline
+            extra_args = {"trust_remote_code": True}
+        logger.info(f"Loading diffusion model: {model_id}")
+        # Use AutoPipelineForText2Image for better compatibility across model types
+        pipe = diffusion_class.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+            low_cpu_mem_usage=True,
+            *extra_args,
+        )
+
+        if device == "cuda":
+            logger.info("Enabling memory optimizations for GPU")
+            # Enable VAE tiling to reduce memory usage during decoding
+            # Note: Some pipelines might not support all optimizations, so we wrap in try/except
+            try:
+                pipe.enable_vae_tiling()
+            except AttributeError:
+                logger.warning("Pipeline does not support enable_vae_tiling")
+
+            try:
+                pipe.enable_attention_slicing(1)
+            except AttributeError:
+                logger.warning("Pipeline does not support enable_attention_slicing")
+
+            # Enable model CPU offload - keeps models on CPU and moves to GPU only when needed
+            # This is critical for 8GB VRAM cards
+            try:
+                pipe.enable_model_cpu_offload()
+            except AttributeError:
+                logger.warning(
+                    "Pipeline does not support enable_model_cpu_offload, moving to device manually"
+                )
+                pipe = pipe.to(device)
+        else:
+            # For CPU only, just move to device
+            pipe = pipe.to(device)
+
+        # Generate image
+        logger.info("Generating image...")
+        image = pipe(prompt, **parameters).images[0]
+
+        # Save image
+        # Helper function to find next available filename with index
+        def get_next_available_path(base_path: str, start_idx: int = 0) -> tuple[str, int]:
+            name_parts = base_path.rsplit(".", 1)
+            idx = start_idx
+            while True:
+                if len(name_parts) == 2:
+                    candidate = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+                else:
+                    candidate = f"{base_path}_{idx}"
+                if not os.path.exists(candidate):
+                    return candidate, idx
+                idx += 1
+
+        final_path, _ = get_next_available_path(output_file_name)
+        image.save(final_path)
+        logger.info(f"Saved local image to: {final_path}")
+
+        result = {
+            "success": True,
+            "model": model_id,
+            "prompt": prompt,
+            "saved_files": [final_path],
+            "parameters": parameters,
+        }
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+    except Exception as e:
+        logger.exception("Error in local generation")
+        raise e
+
+
+async def list_image_models_local(arguments: dict[str, Any]) -> list[TextContent]:
+    """List recommended local image generation models."""
+    logger.info("list_image_models_local called")
+    local_models = [
+        {
+            "model": "black-forest-labs/FLUX.1-schnell",
+            "description": "FLUX.1 Schnell - State of the art speed and quality.",
+        },
+        {
+            "model": "Qwen/Qwen-Image",
+            "description": "Qwen-Image - 20B parameter model, high quality text rendering. Requires high VRAM (24GB+ recommended).",
+        },
+    ]
+    return [TextContent(type="text", text=json.dumps(local_models, indent=2))]
+
+
 async def main():
     """Run the MCP server."""
     # Create server instance
@@ -295,12 +471,16 @@ async def main():
         logger.info(f"Tool called: {name}")
         logger.debug(f"Tool arguments: {arguments}")
         try:
-            if name == "generate_image":
-                return await generate_image(arguments)
-            elif name == "list_image_models":
-                return await list_image_models(arguments)
-            elif name == "get_model_parameters":
-                return await get_model_parameters(arguments)
+            if name == "generate_image_replicate":
+                return await generate_image_replicate(arguments)
+            elif name == "list_image_models_replicate":
+                return await list_image_models_replicate(arguments)
+            elif name == "get_model_parameters_replicate":
+                return await get_model_parameters_replicate(arguments)
+            elif name == "generate_image_local":
+                return await generate_image_local(arguments)
+            elif name == "list_image_models_local":
+                return await list_image_models_local(arguments)
             else:
                 logger.error(f"Unknown tool: {name}")
                 raise ValueError(f"Unknown tool: {name}")
