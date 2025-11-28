@@ -8,9 +8,9 @@ source_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd $source_directory/../
 
 if [ ! -d venv ]; then
-    python3 -m venv venv
-    venv/bin/pip install --upgrade pip
-    venv/bin/pip install -e .
+    python3 -m venv venv > /dev/null 2>&1
+    venv/bin/pip install --upgrade pip > /dev/null 2>&1
+    venv/bin/pip install -e . > /dev/null 2>&1
 fi
 
 if [ -f $invoke_directory/.env ]; then
