@@ -17,18 +17,6 @@ from mcp.types import TextContent, Tool
 
 from wyrd_gen_mcp.data import MODELS, PARAMETERS
 
-
-def get_most_cost_efficient_model() -> str:
-    """Find the model with the highest cost_efficiency rating."""
-    if not MODELS:
-        return "black-forest-labs/flux-schnell"  # Fallback
-    best = max(MODELS, key=lambda m: m.get("cost_efficiency", 0))
-    return best["model"]
-
-
-# Default model based on cost efficiency
-DEFAULT_MODEL = get_most_cost_efficient_model()
-
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
 
@@ -73,8 +61,7 @@ TOOLS = [
                 },
                 "model": {
                     "type": "string",
-                    "description": f"The Replicate model to use (default: {DEFAULT_MODEL})",
-                    "default": DEFAULT_MODEL,
+                    "description": "The Replicate model to use. Call list_image_models_replicate to see available models and their use cases.",
                 },
                 "output_file_name": {
                     "type": "string",
@@ -86,7 +73,7 @@ TOOLS = [
                     "default": {},
                 },
             },
-            "required": ["prompt", "output_file_name"],
+            "required": ["prompt", "model", "output_file_name"],
         },
     ),
     Tool(
@@ -158,8 +145,12 @@ async def generate_image_replicate(arguments: dict[str, Any]) -> list[TextConten
     logger.info(f"Current working directory: {os.getcwd()}")
 
     prompt = arguments.get("prompt")
-    model = arguments.get("model", DEFAULT_MODEL)
+    model = arguments.get("model")
     output_file_name = arguments.get("output_file_name")
+
+    if not model:
+        logger.error("model is required but not provided")
+        raise ValueError("model is required - call list_image_models_replicate to see available models")
     parameters = arguments.get("parameters", {})
 
     logger.info(f"Prompt: {prompt}")
