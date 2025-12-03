@@ -1,0 +1,299 @@
+{
+  "metadata": {
+    "last_updated": "2025-12-02",
+    "data_source": "https://replicate.com/collections/image-to-video",
+    "schema_version": "1.0",
+    "notes": "Video model pricing verified from Replicate model pages. All costs are for 5-second 720p videos (standardized output). Use-case categories: iteration (cheapest, rapid prototyping), animation (Live2D/anime optimized), stylized (multiple style presets), photorealistic (live-action quality), premium (maximum quality)."
+  },
+  "models": [
+    {
+      "model": "wan-video/wan-2.2-i2v-fast",
+      "description": "Use for rapid iteration and budget-conscious prototyping. Cheapest option for quick video generation from images.",
+      "use_case": "iteration",
+      "cost_per_video": 0.11,
+      "duration_seconds": 5,
+      "resolution": "720p",
+      "fps": 16,
+      "vendor": "Alibaba",
+      "notes": "Speed-optimized with PrunaAI. Best for concept testing and rapid workflow iteration."
+    },
+    {
+      "model": "minimax/video-01-live",
+      "description": "Use for Live2D and animation content. Trained specifically for anime-style and character animation with natural motion.",
+      "use_case": "animation",
+      "cost_per_video": 0.50,
+      "duration_seconds": 5,
+      "resolution": "720p",
+      "fps": 25,
+      "vendor": "MiniMax",
+      "notes": "Optimized for Live2D workflows and anime-style content. Output aspect ratio matches input image."
+    },
+    {
+      "model": "pixverse/pixverse-v4",
+      "description": "Use for stylized and artistic content. Supports multiple style presets (anime, 3d_animation, clay, cyberpunk, comic).",
+      "use_case": "stylized",
+      "cost_per_video": 0.60,
+      "duration_seconds": 5,
+      "resolution": "720p",
+      "fps": 24,
+      "vendor": "PixVerse",
+      "notes": "Wide range of artistic styles. Good balance of quality and cost for creative content."
+    },
+    {
+      "model": "minimax/hailuo-02",
+      "description": "Use for photorealistic live-action content. Excellent physics simulation and realistic human motion.",
+      "use_case": "photorealistic",
+      "cost_per_video": 0.27,
+      "duration_seconds": 5,
+      "resolution": "768p",
+      "fps": 30,
+      "vendor": "MiniMax",
+      "notes": "Ranked #2 globally on Artificial Analysis. Exceptional at complex human motion and physics. Note: 768p base resolution."
+    },
+    {
+      "model": "kwaivgi/kling-v2.5-turbo-pro",
+      "description": "Use for high-quality photorealistic content with smooth motion. Pro-level text-to-video and image-to-video with cinematic depth.",
+      "use_case": "photorealistic",
+      "cost_per_video": 0.35,
+      "duration_seconds": 5,
+      "resolution": "720p",
+      "fps": 30,
+      "vendor": "Kuaishou",
+      "notes": "Excellent prompt adherence and cinematic quality. Good balance of quality and cost for production work."
+    },
+    {
+      "model": "kwaivgi/kling-v2.1-master",
+      "description": "Use for maximum quality production videos. Premium model optimized for dynamics with cinematic camera language.",
+      "use_case": "premium",
+      "cost_per_video": 1.40,
+      "duration_seconds": 5,
+      "resolution": "1080p",
+      "fps": 30,
+      "vendor": "Kuaishou",
+      "notes": "Highest quality output at 1080p. Best for final production and high-end content."
+    }
+  ],
+  "parameters": {
+    "wan-video/wan-2.2-i2v-fast": {
+      "model": "wan-video/wan-2.2-i2v-fast",
+      "parameters": {
+        "image": {
+          "type": "string",
+          "description": "Input image file path (will be converted to data URI)",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text description of motion/action to apply",
+          "required": true
+        },
+        "frames": {
+          "type": "integer",
+          "description": "Number of frames to generate (81 recommended for best results)",
+          "range": [81, 121],
+          "default": 81
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Output resolution",
+          "options": ["480p", "720p"],
+          "default": "720p"
+        },
+        "fps": {
+          "type": "integer",
+          "description": "Frames per second",
+          "range": [5, 30],
+          "default": 16
+        },
+        "sample_shift": {
+          "type": "integer",
+          "description": "Sampling shift parameter for quality tuning",
+          "range": [1, 20],
+          "default": 12
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        },
+        "go_fast": {
+          "type": "boolean",
+          "description": "Enable optimized fast mode",
+          "default": true
+        }
+      }
+    },
+    "minimax/video-01-live": {
+      "model": "minimax/video-01-live",
+      "parameters": {
+        "first_frame_image": {
+          "type": "string",
+          "description": "First frame image (data URI). Output aspect ratio will match this image.",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text prompt for video generation",
+          "required": true
+        },
+        "prompt_optimizer": {
+          "type": "boolean",
+          "description": "Enable prompt optimization",
+          "default": true
+        }
+      }
+    },
+    "pixverse/pixverse-v4": {
+      "model": "pixverse/pixverse-v4",
+      "parameters": {
+        "image": {
+          "type": "string",
+          "description": "First frame image (data URI)",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text description of video content",
+          "required": true
+        },
+        "quality": {
+          "type": "string",
+          "description": "Output resolution",
+          "options": ["360p", "540p", "720p", "1080p"],
+          "default": "720p"
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Video duration in seconds",
+          "options": [5, 8],
+          "default": 5
+        },
+        "motion_mode": {
+          "type": "string",
+          "description": "Motion rendering style",
+          "options": ["normal", "smooth"],
+          "default": "normal"
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Video aspect ratio",
+          "options": ["16:9", "9:16", "1:1"],
+          "default": "16:9"
+        },
+        "style": {
+          "type": "string",
+          "description": "Artistic style preset",
+          "options": ["None", "anime", "3d_animation", "clay", "cyberpunk", "comic"],
+          "default": "None"
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "Elements to avoid in generation",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    },
+    "minimax/hailuo-02": {
+      "model": "minimax/hailuo-02",
+      "parameters": {
+        "first_frame_image": {
+          "type": "string",
+          "description": "First frame image (data URI) for image-to-video",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text prompt describing motion/action",
+          "required": true
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Video duration in seconds",
+          "options": [6, 10],
+          "default": 6
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Output resolution (1080p limited to 6s)",
+          "options": ["768p", "1080p"],
+          "default": "768p"
+        },
+        "prompt_optimizer": {
+          "type": "boolean",
+          "description": "Enable prompt optimization",
+          "default": true
+        }
+      }
+    },
+    "kwaivgi/kling-v2.5-turbo-pro": {
+      "model": "kwaivgi/kling-v2.5-turbo-pro",
+      "parameters": {
+        "start_image": {
+          "type": "string",
+          "description": "First frame image (data URI)",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text prompt for video generation",
+          "required": true
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Video duration in seconds",
+          "options": [5, 10],
+          "default": 5
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Video aspect ratio (ignored if start_image provided)",
+          "options": ["16:9", "9:16", "1:1"],
+          "default": "16:9"
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "Elements to avoid in generation",
+          "optional": true,
+          "default": ""
+        }
+      }
+    },
+    "kwaivgi/kling-v2.1-master": {
+      "model": "kwaivgi/kling-v2.1-master",
+      "parameters": {
+        "start_image": {
+          "type": "string",
+          "description": "First frame image (data URI)",
+          "required": true
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Text prompt for video generation",
+          "required": true
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Video duration in seconds",
+          "options": [5, 10],
+          "default": 5
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Video aspect ratio",
+          "options": ["16:9", "9:16", "1:1"],
+          "default": "16:9"
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "Elements to avoid in generation",
+          "optional": true
+        }
+      }
+    }
+  }
+}

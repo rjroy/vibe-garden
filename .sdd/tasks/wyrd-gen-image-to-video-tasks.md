@@ -1,7 +1,7 @@
 ---
 specification: [.sdd/specs/wyrd-gen-image-to-video.md](../specs/wyrd-gen-image-to-video.md)
 plan: [.sdd/plans/wyrd-gen-image-to-video-plan.md](../plans/wyrd-gen-image-to-video-plan.md)
-status: Draft
+status: Approved
 version: 1.0.0
 created: 2025-12-02
 last_updated: 2025-12-02

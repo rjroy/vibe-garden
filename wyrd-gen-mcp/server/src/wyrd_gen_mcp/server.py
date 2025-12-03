@@ -2,6 +2,7 @@
 """Wyrd-Gen MCP Server - AI image generation via Replicate."""
 
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -15,7 +16,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-from wyrd_gen_mcp.data import MODELS, PARAMETERS
+from wyrd_gen_mcp.data import MODELS, PARAMETERS, VIDEO_MODELS, VIDEO_PARAMETERS
 
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
@@ -134,7 +135,104 @@ TOOLS = [
             "required": ["prompt", "output_file_name"],
         },
     ),
+    Tool(
+        name="generate_video_replicate",
+        description="Generate a 5-second 720p MP4 video from an input image using AI models via Replicate. The input image becomes the first frame of the video.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string",
+                    "description": "Path to input image file (PNG, JPG, JPEG, or WebP)",
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "Description of motion/action to apply to the image",
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Replicate model ID. Call list_video_models_replicate to see available models.",
+                },
+                "output_file_name": {
+                    "type": "string",
+                    "description": "File name to save the generated video (e.g., 'output.mp4')",
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "Optional model-specific parameters",
+                    "default": {},
+                },
+            },
+            "required": ["image", "prompt", "model", "output_file_name"],
+        },
+    ),
+    Tool(
+        name="list_video_models_replicate",
+        description="List available video generation models on Replicate with use-case categorization and cost information",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+        },
+    ),
+    Tool(
+        name="get_video_model_parameters_replicate",
+        description="Get available parameters for a specific video generation model",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "The Replicate model ID (e.g., 'kuaishou/kling-v2.5-pro')",
+                },
+            },
+            "required": ["model"],
+        },
+    ),
 ]
+
+
+def image_to_data_uri(file_path: str) -> str:
+    """Convert local image file to base64 data URI for Replicate API submission.
+
+    Args:
+        file_path: Path to local image file (PNG, JPG, JPEG, or WebP)
+
+    Returns:
+        Data URI string in format: data:image/{format};base64,{encoded_data}
+
+    Raises:
+        FileNotFoundError: When the image file doesn't exist
+        ValueError: When the image format is not supported
+    """
+    # Validate file exists
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Input image not found: {file_path}")
+
+    # Validate and map file extension to MIME type
+    ext = os.path.splitext(file_path)[1].lower()
+
+    # Map extensions to MIME types
+    mime_type_map = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+
+    if ext not in mime_type_map:
+        supported = ", ".join(mime_type_map.keys())
+        raise ValueError(f"Unsupported image format: {ext}. Supported formats: {supported}")
+
+    mime_type = mime_type_map[ext]
+
+    # Read and encode the image
+    try:
+        with open(file_path, "rb") as f:
+            image_data = f.read()
+        encoded_data = base64.b64encode(image_data).decode("utf-8")
+        return f"data:{mime_type};base64,{encoded_data}"
+    except Exception as e:
+        raise ValueError(f"Failed to read image file: {str(e)}")
 
 
 async def generate_image_replicate(arguments: dict[str, Any]) -> list[TextContent]:
@@ -150,7 +248,9 @@ async def generate_image_replicate(arguments: dict[str, Any]) -> list[TextConten
 
     if not model:
         logger.error("model is required but not provided")
-        raise ValueError("model is required - call list_image_models_replicate to see available models")
+        raise ValueError(
+            "model is required - call list_image_models_replicate to see available models"
+        )
     parameters = arguments.get("parameters", {})
 
     logger.info(f"Prompt: {prompt}")
@@ -446,6 +546,249 @@ async def list_image_models_local(arguments: dict[str, Any]) -> list[TextContent
     return [TextContent(type="text", text=json.dumps(local_models, indent=2))]
 
 
+async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextContent]:
+    """Generate a video using Replicate."""
+    logger.info("=" * 80)
+    logger.info("generate_video_replicate called")
+    logger.info(f"Arguments: {json.dumps(arguments, indent=2)}")
+    logger.info(f"Current working directory: {os.getcwd()}")
+
+    image = arguments.get("image")
+    prompt = arguments.get("prompt")
+    model = arguments.get("model")
+    output_file_name = arguments.get("output_file_name")
+
+    if not model:
+        logger.error("model is required but not provided")
+        raise ValueError(
+            "model is required - call list_video_models_replicate to see available models"
+        )
+
+    parameters = arguments.get("parameters", {})
+
+    logger.info(f"Image: {image}")
+    logger.info(f"Prompt: {prompt}")
+    logger.info(f"Model: {model}")
+    logger.info(f"Output file name (raw): {output_file_name}")
+    logger.info(f"Parameters: {parameters}")
+
+    if not output_file_name:
+        logger.error("output_file_name is required but not provided")
+        raise ValueError("output_file_name is required")
+
+    if not image:
+        logger.error("image is required but not provided")
+        raise ValueError("image is required")
+
+    # Convert to absolute path using INVOKE_DIR as base for relative paths
+    if not os.path.isabs(output_file_name):
+        output_file_name = os.path.join(INVOKE_DIR, output_file_name)
+    output_file_name = os.path.abspath(output_file_name)
+    logger.info(f"Output file name (absolute): {output_file_name}")
+
+    if not os.path.isabs(image):
+        image = os.path.join(INVOKE_DIR, image)
+    image = os.path.abspath(image)
+    logger.info(f"Input image (absolute): {image}")
+
+    # Validate and convert input image to data URI
+    logger.info("Converting input image to data URI")
+    try:
+        image_data_uri = image_to_data_uri(image)
+        logger.info(f"Image conversion successful, data URI length: {len(image_data_uri)}")
+    except FileNotFoundError as e:
+        logger.error(f"Input image not found: {e}")
+        raise ValueError(f"Input image not found: {image}")
+    except ValueError as e:
+        logger.error(f"Input image validation failed: {e}")
+        raise
+
+    # Determine the correct parameter name for the input image based on the model
+    # Different models use different parameter names for the input image
+    model_params = VIDEO_PARAMETERS.get(model, {}).get("parameters", {})
+
+    # Find the image parameter name by looking for the required image parameter
+    image_param_name = None
+    for param_name, param_def in model_params.items():
+        if param_def.get("type") == "string" and "image" in param_name.lower():
+            if param_def.get("required"):
+                image_param_name = param_name
+                break
+
+    # Fallback to common names if not found in catalog
+    if not image_param_name:
+        if "kling" in model.lower():
+            image_param_name = "start_image"
+        elif "minimax" in model.lower() or "hailuo" in model.lower():
+            image_param_name = "first_frame_image"
+        else:
+            image_param_name = "image"
+
+    logger.info(f"Using image parameter name: {image_param_name}")
+
+    # Build model input with the correct image parameter name
+    model_input = {
+        image_param_name: image_data_uri,
+        "prompt": prompt,
+        **parameters
+    }
+    logger.info(f"Model input keys: {list(model_input.keys())}")
+
+    # Run the model
+    logger.info(f"Calling replicate_client.run with model: {model}")
+    output = replicate_client.run(model, input=model_input)
+    logger.info(f"Replicate API call completed")
+    logger.info(f"Output type: {type(output)}")
+    logger.info(f"Output has __iter__: {hasattr(output, '__iter__')}")
+    logger.info(f"Output is string: {isinstance(output, str)}")
+    logger.info(f"Output has read: {hasattr(output, 'read')}")
+    logger.info(f"Output has url: {hasattr(output, 'url')}")
+    logger.info(f"Output repr: {repr(output)}")
+
+    # Helper function to find next available filename with index
+    def get_next_available_path(base_path: str, start_idx: int = 0) -> tuple[str, int]:
+        """Find next available filename by checking existing files.
+
+        Returns:
+            tuple of (next_available_path, index_used)
+        """
+        # Split filename and extension
+        name_parts = base_path.rsplit(".", 1)
+
+        idx = start_idx
+        while True:
+            if len(name_parts) == 2:
+                candidate = f"{name_parts[0]}_{idx}.{name_parts[1]}"
+            else:
+                candidate = f"{base_path}_{idx}"
+
+            if not os.path.exists(candidate):
+                return candidate, idx
+
+            idx += 1
+
+    # Process the output and save to disk
+    saved_files = []
+
+    # Check if output has read method (FileOutput object)
+    if hasattr(output, "read"):
+        logger.info("Processing FileOutput object with read() method")
+
+        # Find next available filename to prevent overwrites
+        final_path, used_idx = get_next_available_path(output_file_name)
+        logger.info(f"Saving to file: {final_path} (index: {used_idx})")
+
+        with open(final_path, "wb") as f:
+            data = output.read()
+            logger.info(f"Read {len(data)} bytes from output")
+            f.write(data)
+
+        logger.info(f"File saved successfully: {final_path}")
+        saved_files.append(final_path)
+
+    elif hasattr(output, "__iter__") and not isinstance(output, str):
+        logger.info("Processing iterable output (multiple files)")
+
+        # Find the starting offset to prevent overwrites
+        start_offset = 0
+        name_parts = output_file_name.rsplit(".", 1)
+        while True:
+            if len(name_parts) == 2:
+                check_path = f"{name_parts[0]}_{start_offset}.{name_parts[1]}"
+            else:
+                check_path = f"{output_file_name}_{start_offset}"
+
+            if not os.path.exists(check_path):
+                break
+            start_offset += 1
+
+        logger.info(f"Starting index offset: {start_offset}")
+
+        # Multiple file outputs - save with numbered suffixes
+        for idx, item in enumerate(output):
+            actual_idx = start_offset + idx
+            logger.info(f"Processing item {idx}: type={type(item)}, using index {actual_idx}")
+
+            # Split filename and extension
+            if len(name_parts) == 2:
+                file_path = f"{name_parts[0]}_{actual_idx}.{name_parts[1]}"
+            else:
+                file_path = f"{output_file_name}_{actual_idx}"
+
+            logger.info(f"Saving to file: {file_path}")
+
+            if hasattr(item, "read"):
+                # FileOutput object
+                with open(file_path, "wb") as f:
+                    data = item.read()
+                    logger.info(f"Read {len(data)} bytes from item")
+                    f.write(data)
+            elif isinstance(item, bytes):
+                # Direct bytes
+                with open(file_path, "wb") as f:
+                    f.write(item)
+                logger.info(f"Wrote {len(item)} bytes to {file_path}")
+            else:
+                logger.warning(f"Unknown item type: {type(item)}")
+                continue
+
+            logger.info(f"File saved successfully: {file_path}")
+            saved_files.append(file_path)
+
+    else:
+        logger.warning(f"Unexpected output type: {type(output)}, value: {output}")
+
+    logger.info(f"Saved files: {saved_files}")
+
+    # Get model metadata from catalog
+    model_info = next((m for m in VIDEO_MODELS if m["model"] == model), {})
+    duration = model_info.get("duration_seconds", 5)
+    resolution = model_info.get("resolution", "720p")
+
+    result = {
+        "success": True,
+        "model": model,
+        "prompt": prompt,
+        "input_image": image,
+        "saved_files": saved_files,
+        "duration_seconds": duration,
+        "resolution": resolution,
+        "parameters": parameters,
+    }
+
+    logger.info(f"Returning result: {json.dumps(result, indent=2)}")
+    logger.info("=" * 80)
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+
+async def list_video_models_replicate(arguments: dict[str, Any]) -> list[TextContent]:
+    """List available video generation models on Replicate."""
+    logger.info("list_video_models_replicate called")
+    return [TextContent(type="text", text=json.dumps(VIDEO_MODELS, indent=2))]
+
+
+async def get_video_model_parameters_replicate(arguments: dict[str, Any]) -> list[TextContent]:
+    """Get available parameters for a specific video model on Replicate."""
+    logger.info(f"get_video_model_parameters_replicate called with model: {arguments.get('model')}")
+    model = arguments.get("model")
+
+    if model not in VIDEO_PARAMETERS:
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "error": f"Unknown model: {model}",
+                        "available_models": list(VIDEO_PARAMETERS.keys()),
+                    },
+                    indent=2,
+                ),
+            )
+        ]
+
+    return [TextContent(type="text", text=json.dumps(VIDEO_PARAMETERS[model], indent=2))]
+
+
 async def main():
     """Run the MCP server."""
     # Create server instance
@@ -472,6 +815,12 @@ async def main():
                 return await generate_image_local(arguments)
             elif name == "list_image_models_local":
                 return await list_image_models_local(arguments)
+            elif name == "generate_video_replicate":
+                return await generate_video_replicate(arguments)
+            elif name == "list_video_models_replicate":
+                return await list_video_models_replicate(arguments)
+            elif name == "get_video_model_parameters_replicate":
+                return await get_video_model_parameters_replicate(arguments)
             else:
                 logger.error(f"Unknown tool: {name}")
                 raise ValueError(f"Unknown tool: {name}")

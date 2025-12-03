@@ -3,12 +3,12 @@
 import json
 import logging
 from importlib.resources import files
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def validate_model_catalog(data: Dict[str, Any]) -> None:
+def validate_model_catalog(data: dict[str, Any]) -> None:
     """Validate model catalog structure.
 
     Args:
@@ -42,7 +42,9 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
         "model", "description", "cost", "cost_efficiency",
         "photorealism", "artistic_quality", "consistency", "speed", "style_versatility"
     }
-    rating_fields = ["photorealism", "artistic_quality", "consistency", "speed", "style_versatility"]
+    rating_fields = [
+        "photorealism", "artistic_quality", "consistency", "speed", "style_versatility"
+    ]
 
     for idx, model in enumerate(models):
         if not isinstance(model, dict):
@@ -50,7 +52,8 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
 
         if not required_model_fields.issubset(model.keys()):
             missing = required_model_fields - model.keys()
-            raise ValueError(f"Model '{model.get('model', f'at index {idx}')}' missing fields: {missing}")
+            model_id = model.get('model', f'at index {idx}')
+            raise ValueError(f"Model '{model_id}' missing fields: {missing}")
 
         # Validate types
         if not isinstance(model["model"], str):
@@ -66,7 +69,10 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
             if not isinstance(value, (int, float)):
                 raise ValueError(f"Model '{model['model']}' has non-numeric {rating_field}")
             if not (1 <= value <= 100):
-                raise ValueError(f"Model '{model['model']}' has {rating_field}={value} out of range (must be 1-100)")
+                raise ValueError(
+                    f"Model '{model['model']}' has {rating_field}={value} "
+                    f"out of range (must be 1-100)"
+                )
 
     # Validate parameters
     parameters = data["parameters"]
@@ -87,7 +93,7 @@ def validate_model_catalog(data: Dict[str, Any]) -> None:
             raise ValueError(f"Parameters for '{model_id}' has non-object 'parameters' field")
 
 
-def load_model_catalog() -> Dict[str, Any]:
+def load_model_catalog() -> dict[str, Any]:
     """Load and validate model catalog from package data.
 
     Returns:
@@ -106,7 +112,10 @@ def load_model_catalog() -> Dict[str, Any]:
         # Validate the structure
         validate_model_catalog(data)
 
-        logger.info(f"Loaded {len(data['models'])} models and {len(data['parameters'])} parameter definitions")
+        logger.info(
+            f"Loaded {len(data['models'])} models and "
+            f"{len(data['parameters'])} parameter definitions"
+        )
         logger.info(f"Catalog last updated: {data['metadata']['last_updated']}")
 
         return data
@@ -125,12 +134,153 @@ def load_model_catalog() -> Dict[str, Any]:
 # Load catalog once at module import time
 try:
     _CATALOG = load_model_catalog()
-    MODELS: List[Dict[str, Any]] = _CATALOG["models"]
-    PARAMETERS: Dict[str, Dict[str, Any]] = _CATALOG["parameters"]
-    METADATA: Dict[str, str] = _CATALOG["metadata"]
+    MODELS: list[dict[str, Any]] = _CATALOG["models"]
+    PARAMETERS: dict[str, dict[str, Any]] = _CATALOG["parameters"]
+    METADATA: dict[str, str] = _CATALOG["metadata"]
 except Exception as e:
     logger.critical(f"Failed to load model catalog: {e}")
     raise
 
 
-__all__ = ["MODELS", "PARAMETERS", "METADATA", "load_model_catalog", "validate_model_catalog"]
+def validate_video_model_catalog(data: dict[str, Any]) -> None:
+    """Validate video model catalog structure.
+
+    Args:
+        data: The loaded JSON data
+
+    Raises:
+        ValueError: If validation fails
+    """
+    # Validate top-level structure
+    required_keys = {"metadata", "models", "parameters"}
+    if not required_keys.issubset(data.keys()):
+        missing = required_keys - data.keys()
+        raise ValueError(f"Missing required top-level keys: {missing}")
+
+    # Validate metadata
+    metadata = data["metadata"]
+    required_metadata = {"last_updated", "data_source", "schema_version"}
+    if not required_metadata.issubset(metadata.keys()):
+        missing = required_metadata - metadata.keys()
+        raise ValueError(f"Missing required metadata keys: {missing}")
+
+    # Validate models array
+    models = data["models"]
+    if not isinstance(models, list):
+        raise ValueError("'models' must be an array")
+
+    if not models:
+        raise ValueError("'models' array cannot be empty")
+
+    required_model_fields = {
+        "model", "description", "use_case", "cost_per_video",
+        "duration_seconds", "resolution", "fps", "vendor"
+    }
+    valid_use_cases = {"iteration", "animation", "stylized", "photorealistic", "premium"}
+
+    for idx, model in enumerate(models):
+        if not isinstance(model, dict):
+            raise ValueError(f"Model at index {idx} is not an object")
+
+        if not required_model_fields.issubset(model.keys()):
+            missing = required_model_fields - model.keys()
+            model_id = model.get('model', f'at index {idx}')
+            raise ValueError(f"Model '{model_id}' missing fields: {missing}")
+
+        # Validate types
+        if not isinstance(model["model"], str):
+            raise ValueError(f"Model '{model['model']}' has non-string model ID")
+        if not isinstance(model["description"], str):
+            raise ValueError(f"Model '{model['model']}' has non-string description")
+        if not isinstance(model["use_case"], str):
+            raise ValueError(f"Model '{model['model']}' has non-string use_case")
+        if model["use_case"] not in valid_use_cases:
+            raise ValueError(
+                f"Model '{model['model']}' has invalid use_case '{model['use_case']}' "
+                f"(must be one of: {valid_use_cases})"
+            )
+        if not isinstance(model["cost_per_video"], (int, float)):
+            raise ValueError(f"Model '{model['model']}' has non-numeric cost_per_video")
+        if not isinstance(model["duration_seconds"], (int, float)):
+            raise ValueError(f"Model '{model['model']}' has non-numeric duration_seconds")
+        if not isinstance(model["resolution"], str):
+            raise ValueError(f"Model '{model['model']}' has non-string resolution")
+        if not isinstance(model["fps"], (int, float)):
+            raise ValueError(f"Model '{model['model']}' has non-numeric fps")
+        if not isinstance(model["vendor"], str):
+            raise ValueError(f"Model '{model['model']}' has non-string vendor")
+
+    # Validate parameters
+    parameters = data["parameters"]
+    if not isinstance(parameters, dict):
+        raise ValueError("'parameters' must be an object")
+
+    for model_id, param_data in parameters.items():
+        if not isinstance(param_data, dict):
+            raise ValueError(f"Parameters for '{model_id}' is not an object")
+
+        if "model" not in param_data:
+            raise ValueError(f"Parameters for '{model_id}' missing 'model' field")
+
+        if "parameters" not in param_data:
+            raise ValueError(f"Parameters for '{model_id}' missing 'parameters' field")
+
+        if not isinstance(param_data["parameters"], dict):
+            raise ValueError(f"Parameters for '{model_id}' has non-object 'parameters' field")
+
+
+def load_video_model_catalog() -> dict[str, Any]:
+    """Load and validate video model catalog from package data.
+
+    Returns:
+        The validated video model catalog data
+
+    Raises:
+        FileNotFoundError: If the catalog file is not found
+        ValueError: If validation fails
+        json.JSONDecodeError: If the JSON is malformed
+    """
+    try:
+        # Load the JSON file from package data
+        catalog_file = files("wyrd_gen_mcp.data").joinpath("video_model_catalog.json")
+        data = json.loads(catalog_file.read_text())
+
+        # Validate the structure
+        validate_video_model_catalog(data)
+
+        logger.info(
+            f"Loaded {len(data['models'])} video models and "
+            f"{len(data['parameters'])} parameter definitions"
+        )
+        logger.info(f"Video catalog last updated: {data['metadata']['last_updated']}")
+
+        return data
+
+    except FileNotFoundError:
+        logger.error("video_model_catalog.json not found in package data")
+        raise
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in video_model_catalog.json: {e}")
+        raise
+    except ValueError as e:
+        logger.error(f"Video model catalog validation failed: {e}")
+        raise
+
+
+# Load video catalog once at module import time
+try:
+    _VIDEO_CATALOG = load_video_model_catalog()
+    VIDEO_MODELS: list[dict[str, Any]] = _VIDEO_CATALOG["models"]
+    VIDEO_PARAMETERS: dict[str, dict[str, Any]] = _VIDEO_CATALOG["parameters"]
+    VIDEO_METADATA: dict[str, str] = _VIDEO_CATALOG["metadata"]
+except Exception as e:
+    logger.critical(f"Failed to load video model catalog: {e}")
+    raise
+
+
+__all__ = [
+    "MODELS", "PARAMETERS", "METADATA",
+    "load_model_catalog", "validate_model_catalog",
+    "VIDEO_MODELS", "VIDEO_PARAMETERS", "VIDEO_METADATA",
+    "load_video_model_catalog", "validate_video_model_catalog"
+]
