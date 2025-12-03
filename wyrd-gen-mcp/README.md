@@ -2,12 +2,12 @@
 
 <img src="wyrd-gen-logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
-**AI-powered image generation for Claude Code via Replicate API**
+**AI-powered image and video generation for Claude Code via Replicate API**
 
 
-Wyrd-Gen MCP enables Claude Code users to generate stunning AI images through natural language prompts. Simply describe what you want, and Claude will create it using state-of-the-art image generation models.
+Wyrd-Gen MCP enables Claude Code users to generate stunning AI images and animated videos through natural language prompts. Create static images from text descriptions, then bring them to life with image-to-video animation using state-of-the-art AI models.
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/rjroy/vibe-garden/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/protocol-MCP-purple.svg)](https://modelcontextprotocol.io/)
@@ -17,7 +17,8 @@ Wyrd-Gen MCP enables Claude Code users to generate stunning AI images through na
 ## Features
 
 - 🎨 **Text-to-Image Generation** - Describe your vision in natural language
-- 🚀 **Multiple AI Models** - Flux, Stable Diffusion, SDXL, Imagen, and more
+- 🎬 **Image-to-Video Animation** - Transform static images into 5-second videos
+- 🚀 **Multiple AI Models** - Flux, Stable Diffusion, SDXL, Imagen, Kling, Hailuo, and more
 - ⚡ **Fast Performance** - Sub-500ms server overhead on top of API response time
 - 📁 **Smart File Management** - Auto-incrementing filenames prevent overwriting
 - 🔒 **Secure** - OAuth via Replicate API tokens, never stores sensitive data
@@ -47,11 +48,20 @@ Wyrd-Gen MCP enables Claude Code users to generate stunning AI images through na
 
 ### 3. Use in Claude Code
 
+**Image Generation:**
 ```
 You: Generate an image of a serene mountain landscape at sunset
 
 Claude: [Uses wyrd-gen-mcp generate_image tool]
 ✓ Image saved to: ./mountain-sunset.png
+```
+
+**Video Generation:**
+```
+You: Animate my character.png with gentle breathing motion
+
+Claude: [Uses wyrd-gen-mcp generate_video tool]
+✓ Video saved to: ./character-breathing.mp4
 ```
 
 ---
@@ -88,6 +98,30 @@ Claude: [Generates conceptual visualization]
 You: Generate a cyberpunk cityscape, then make it more neon, then add rain
 
 Claude: [Iterates through 3 versions based on feedback]
+```
+
+### Character Animation
+
+```
+You: Generate a portrait of a fantasy elf, then animate it with a gentle head turn
+
+Claude: [Generates image, then creates 5-second video with motion]
+```
+
+### Product Demos
+
+```
+You: Take my product-shot.png and animate it rotating 360 degrees
+
+Claude: [Uses video generation to create rotating product showcase]
+```
+
+### Social Media Content
+
+```
+You: Animate my logo.png with a pulsing glow effect for Instagram
+
+Claude: [Creates 5-second looping video optimized for social]
 ```
 
 ---
@@ -169,9 +203,110 @@ Query available parameters for a specific model.
 }
 ```
 
+### `generate_video_replicate`
+
+Generate 5-second 720p MP4 videos from static images using AI animation models.
+
+**Parameters**:
+- `image` (required): Path to input image file (PNG, JPG, JPEG, or WebP)
+- `prompt` (required): Description of motion/action to apply
+- `model` (required): Replicate model ID (use `list_video_models_replicate` to see options)
+- `output_file_name` (required): Filename to save (e.g., "animated.mp4")
+- `parameters` (optional): Model-specific settings (style, motion_mode, etc.)
+
+**Fixed Constraints**:
+- Resolution: 720p (1280x720)
+- Duration: 5 seconds
+- Format: MP4
+
+**Example Response**:
+```json
+{
+  "success": true,
+  "model": "minimax/video-01-live",
+  "prompt": "gentle breathing motion",
+  "input_image": "/home/user/projects/character.png",
+  "saved_files": [
+    "/home/user/projects/character-breathing.mp4"
+  ],
+  "duration_seconds": 5,
+  "resolution": "720p",
+  "parameters": {
+    "prompt_optimizer": true
+  }
+}
+```
+
+### `list_video_models_replicate`
+
+List available video generation models organized by use-case category with cost information.
+
+**Use-Case Categories**:
+- **iteration**: Budget-conscious rapid prototyping (cheapest)
+- **animation**: Live2D and anime-style animation
+- **stylized**: Multiple style presets (anime, 3D, comic, cyberpunk)
+- **photorealistic**: Live-action quality output
+- **premium**: Maximum quality for production
+
+**Example Response**:
+```json
+[
+  {
+    "model": "wan-video/wan-2.2-i2v-fast",
+    "description": "Use for rapid iteration and budget-conscious prototyping",
+    "use_case": "iteration",
+    "cost_per_video": 0.11,
+    "vendor": "Alibaba"
+  },
+  {
+    "model": "minimax/video-01-live",
+    "description": "Use for Live2D and animation content",
+    "use_case": "animation",
+    "cost_per_video": 0.50,
+    "vendor": "MiniMax"
+  },
+  ...
+]
+```
+
+### `get_video_model_parameters_replicate`
+
+Query available parameters for a specific video generation model.
+
+**Parameters**:
+- `model` (required): Replicate model ID (e.g., "minimax/video-01-live")
+
+**Example Response**:
+```json
+{
+  "model": "pixverse/pixverse-v4",
+  "parameters": {
+    "image": {
+      "type": "string",
+      "required": true,
+      "description": "First frame image (data URI)"
+    },
+    "prompt": {
+      "type": "string",
+      "required": true,
+      "description": "Text description of video content"
+    },
+    "style": {
+      "type": "string",
+      "options": ["None", "anime", "3d_animation", "clay", "cyberpunk", "comic"],
+      "default": "None",
+      "description": "Artistic style preset"
+    },
+    ...
+  }
+}
+```
+
 ---
 
 ## Popular Models
+
+### Image Models
 
 | Model | Speed | Quality | Best For | Cost Efficiency* |
 |-------|-------|---------|----------|------------------|
@@ -181,6 +316,29 @@ Query available parameters for a specific model.
 | **ideogram-v3-turbo** | Very Fast | Good | Rapid prototyping | ⭐⭐⭐⭐⭐ |
 
 *Cost efficiency based on quality-to-price ratio. See spec for current pricing.
+
+### Video Models
+
+| Model | Use Case | Cost/Video | Resolution | Best For |
+|-------|----------|------------|------------|----------|
+| **wan-2.2-i2v-fast** | Iteration | $0.11 | 720p | Budget prototyping, rapid testing |
+| **video-01-live** | Animation | $0.50 | 720p | Live2D, anime characters |
+| **pixverse-v4** | Stylized | $0.60 | 720p | Artistic styles (anime, 3D, comic) |
+| **hailuo-02** | Photorealistic | $0.27 | 768p | Human motion, physics simulation |
+| **kling-v2.5-turbo-pro** | Photorealistic | $0.35 | 720p | High-quality live-action |
+| **kling-v2.1-master** | Premium | $1.40 | 1080p | Maximum quality production |
+
+**All video models**:
+- Fixed duration: 5 seconds
+- Fixed format: MP4
+- Input: Single image (becomes first frame)
+- FPS: 16-30 depending on model
+
+**Cost Considerations**:
+- **Iteration workflow**: Use wan-2.2-i2v-fast ($0.11) for rapid testing, then upgrade to higher quality for finals
+- **Animation projects**: video-01-live optimized for Live2D and anime content
+- **Photorealistic content**: hailuo-02 offers best cost/quality ratio at $0.27
+- **Production work**: kling-v2.1-master provides 1080p output at $1.40
 
 ---
 
@@ -309,13 +467,15 @@ python -m wyrd_gen_mcp.server
 
 ## Project Status
 
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Status**: Production Ready
 
 **Completed**:
 - ✅ Core image generation functionality
-- ✅ Multi-model support (4+ models)
-- ✅ Model parameter discovery
+- ✅ Image-to-video animation (5s, 720p MP4)
+- ✅ Multi-model support (4+ image models, 6 video models)
+- ✅ Model parameter discovery (image and video)
+- ✅ Use-case categorized video models (iteration, animation, photorealistic, premium)
 - ✅ File collision prevention
 - ✅ Log rotation (10MB, 5 backups)
 - ✅ Dual launch scripts (1Password + direct .env)
@@ -359,6 +519,13 @@ python -m wyrd_gen_mcp.server
 - Confirm API token is valid at replicate.com/account
 - Check you have sufficient credits
 - Review model name for typos (use `list_image_models` tool)
+
+### Video Generation Fails
+- Verify input image exists and is supported format (PNG, JPG, JPEG, WebP)
+- Check image dimensions are reasonable (most models support up to 1080p input)
+- Confirm sufficient credits (video generation costs $0.11-$1.40 per 5-second video)
+- Review model name for typos (use `list_video_models_replicate` tool)
+- Note: Video generation takes 30-120 seconds depending on model
 
 ### Files Not Saving
 - Check `WYRD_INVOKE_DIR` is set correctly
