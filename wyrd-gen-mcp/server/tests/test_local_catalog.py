@@ -243,10 +243,34 @@ class TestLoadedLocalCatalog:
             model_id = model["model"]
             assert model_id in LOCAL_PARAMETERS, f"Missing parameters for {model_id}"
 
-    def test_flux_schnell_in_catalog(self):
-        """FLUX.1-schnell should be in the catalog."""
+    def test_sd15_in_catalog(self):
+        """Stable Diffusion v1.5 should be in the catalog."""
         model_ids = [m["model"] for m in LOCAL_MODELS]
-        assert "black-forest-labs/FLUX.1-schnell" in model_ids
+        assert "stable-diffusion-v1-5/stable-diffusion-v1-5" in model_ids
+
+    def test_waifu_diffusion_in_catalog(self):
+        """Waifu Diffusion should be in the catalog for anime use case."""
+        model_ids = [m["model"] for m in LOCAL_MODELS]
+        assert "hakurei/waifu-diffusion" in model_ids
+
+    def test_openjourney_in_catalog(self):
+        """Openjourney should be in the catalog for stylized art."""
+        model_ids = [m["model"] for m in LOCAL_MODELS]
+        assert "prompthero/openjourney" in model_ids
+
+    def test_arcane_diffusion_in_catalog(self):
+        """Arcane Diffusion should be in the catalog for character design."""
+        model_ids = [m["model"] for m in LOCAL_MODELS]
+        assert "nitrosocke/Arcane-Diffusion" in model_ids
+
+    def test_modi_diffusion_in_catalog(self):
+        """Mo-Di Diffusion should be in the catalog for animation style."""
+        model_ids = [m["model"] for m in LOCAL_MODELS]
+        assert "nitrosocke/mo-di-diffusion" in model_ids
+
+    def test_catalog_has_five_models(self):
+        """Catalog should have exactly 5 models."""
+        assert len(LOCAL_MODELS) == 5
 
     def test_all_models_have_vram_requirement(self):
         """All models should have VRAM requirements."""

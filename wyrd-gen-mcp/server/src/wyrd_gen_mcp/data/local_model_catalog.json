@@ -3,55 +3,97 @@
     "last_updated": "2025-12-02",
     "data_source": "https://huggingface.co",
     "schema_version": "1.0",
-    "notes": "Local image generation models compatible with diffusers library. VRAM requirements are estimates for default settings. All models run locally with no API cost."
+    "notes": "Local image generation models compatible with diffusers library. All models are SD 1.5 based (~4GB VRAM at 512x512). Curated for specific use cases: general, anime, stylized art, character design, animation."
   },
   "models": [
     {
-      "model": "black-forest-labs/FLUX.1-schnell",
-      "description": "Use for fast, high-quality local generation. State of the art speed and quality balance. Recommended starting point for local generation.",
-      "vram_requirement_gb": 12,
-      "quality": 85,
-      "speed": 90,
-      "text_rendering": 60,
-      "notes": "Optimized for speed with minimal quality loss. Good balance for most use cases."
+      "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+      "description": "Use for general-purpose local generation. Classic SD 1.5 baseline with good quality and low VRAM requirements. Best for photorealistic and general imagery.",
+      "vram_requirement_gb": 4,
+      "quality": 70,
+      "speed": 60,
+      "text_rendering": 30,
+      "use_case": "general",
+      "trigger_words": null,
+      "notes": "Baseline model. Trained on 512x512 resolution. Use 50 inference steps for best quality."
     },
     {
-      "model": "Qwen/Qwen-Image",
-      "description": "Use for high-quality text rendering in images. 20B parameter model with excellent text accuracy. Requires high VRAM.",
-      "vram_requirement_gb": 24,
-      "quality": 90,
-      "speed": 40,
-      "text_rendering": 95,
-      "notes": "Best choice when readable text in images is critical. Requires trust_remote_code=True."
+      "model": "hakurei/waifu-diffusion",
+      "description": "Use for anime and illustration-style images. Fine-tuned on high-quality anime images. Best for character art, anime scenes, and stylized illustrations.",
+      "vram_requirement_gb": 4,
+      "quality": 75,
+      "speed": 60,
+      "text_rendering": 20,
+      "use_case": "anime",
+      "trigger_words": null,
+      "notes": "Supports danbooru tags (1girl, white hair, etc). Uses guidance_scale=6 by default."
+    },
+    {
+      "model": "prompthero/openjourney",
+      "description": "Use for stylized artistic images mimicking Midjourney aesthetic. Excellent for fantasy, surreal, and highly stylized artwork with rich colors and dramatic lighting.",
+      "vram_requirement_gb": 4,
+      "quality": 80,
+      "speed": 60,
+      "text_rendering": 25,
+      "use_case": "stylized_art",
+      "trigger_words": "mdjrny-v4 style",
+      "notes": "Include 'mdjrny-v4 style' in prompt for best results. Very popular model (16K+ downloads/month)."
+    },
+    {
+      "model": "nitrosocke/Arcane-Diffusion",
+      "description": "Use for character design in the style of Netflix's Arcane series. Excellent for portraits, character concepts, and stylized figures with painterly detail.",
+      "vram_requirement_gb": 4,
+      "quality": 82,
+      "speed": 60,
+      "text_rendering": 20,
+      "use_case": "character_design",
+      "trigger_words": "arcane style",
+      "notes": "Include 'arcane style' in prompt. Trained on 95 images from the show. Great for character portraits."
+    },
+    {
+      "model": "nitrosocke/mo-di-diffusion",
+      "description": "Use for modern Disney/Pixar animation style. Excellent for animated characters, animals, vehicles, and landscapes with that polished animation studio look.",
+      "vram_requirement_gb": 4,
+      "quality": 80,
+      "speed": 60,
+      "text_rendering": 20,
+      "use_case": "animation",
+      "trigger_words": "modern disney style",
+      "notes": "Include 'modern disney style' in prompt. Trained via DreamBooth on animation studio screenshots."
     }
   ],
   "parameters": {
-    "black-forest-labs/FLUX.1-schnell": {
-      "model": "black-forest-labs/FLUX.1-schnell",
+    "stable-diffusion-v1-5/stable-diffusion-v1-5": {
+      "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
       "parameters": {
         "num_inference_steps": {
           "type": "integer",
           "description": "Number of denoising steps (higher = better quality, slower)",
-          "range": [1, 50],
-          "default": 4
+          "range": [1, 100],
+          "default": 50
         },
         "guidance_scale": {
           "type": "number",
           "description": "How closely to follow the prompt (higher = more literal)",
           "range": [1.0, 20.0],
-          "default": 0.0
+          "default": 7.5
         },
         "height": {
           "type": "integer",
-          "description": "Image height in pixels (must be divisible by 8)",
-          "range": [256, 1024],
+          "description": "Image height in pixels (512 recommended)",
+          "range": [256, 768],
           "default": 512
         },
         "width": {
           "type": "integer",
-          "description": "Image width in pixels (must be divisible by 8)",
-          "range": [256, 1024],
+          "description": "Image width in pixels (512 recommended)",
+          "range": [256, 768],
           "default": 512
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "What to avoid in the generated image",
+          "optional": true
         },
         "seed": {
           "type": "integer",
@@ -60,8 +102,8 @@
         }
       }
     },
-    "Qwen/Qwen-Image": {
-      "model": "Qwen/Qwen-Image",
+    "hakurei/waifu-diffusion": {
+      "model": "hakurei/waifu-diffusion",
       "parameters": {
         "num_inference_steps": {
           "type": "integer",
@@ -73,19 +115,141 @@
           "type": "number",
           "description": "How closely to follow the prompt",
           "range": [1.0, 20.0],
-          "default": 7.5
+          "default": 6.0
         },
         "height": {
           "type": "integer",
           "description": "Image height in pixels",
-          "range": [256, 1024],
+          "range": [256, 768],
           "default": 512
         },
         "width": {
           "type": "integer",
           "description": "Image width in pixels",
-          "range": [256, 1024],
+          "range": [256, 768],
           "default": 512
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "What to avoid (e.g., 'low quality, blurry, bad anatomy')",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    },
+    "prompthero/openjourney": {
+      "model": "prompthero/openjourney",
+      "parameters": {
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps",
+          "range": [1, 100],
+          "default": 50
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "How closely to follow the prompt",
+          "range": [1.0, 20.0],
+          "default": 7.0
+        },
+        "height": {
+          "type": "integer",
+          "description": "Image height in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "width": {
+          "type": "integer",
+          "description": "Image width in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "What to avoid in the generated image",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    },
+    "nitrosocke/Arcane-Diffusion": {
+      "model": "nitrosocke/Arcane-Diffusion",
+      "parameters": {
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps",
+          "range": [1, 100],
+          "default": 50
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "How closely to follow the prompt",
+          "range": [1.0, 20.0],
+          "default": 7.0
+        },
+        "height": {
+          "type": "integer",
+          "description": "Image height in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "width": {
+          "type": "integer",
+          "description": "Image width in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "What to avoid in the generated image",
+          "optional": true
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    },
+    "nitrosocke/mo-di-diffusion": {
+      "model": "nitrosocke/mo-di-diffusion",
+      "parameters": {
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps",
+          "range": [1, 100],
+          "default": 50
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "How closely to follow the prompt",
+          "range": [1.0, 20.0],
+          "default": 7.0
+        },
+        "height": {
+          "type": "integer",
+          "description": "Image height in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "width": {
+          "type": "integer",
+          "description": "Image width in pixels",
+          "range": [256, 768],
+          "default": 512
+        },
+        "negative_prompt": {
+          "type": "string",
+          "description": "What to avoid in the generated image",
+          "optional": true
         },
         "seed": {
           "type": "integer",

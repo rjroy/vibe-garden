@@ -11,7 +11,7 @@ from typing import Any
 
 import replicate
 import torch
-from diffusers import AutoPipelineForText2Image, DiffusionPipeline
+from diffusers import AutoPipelineForText2Image
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
@@ -473,20 +473,12 @@ async def generate_image_local(arguments: dict[str, Any]) -> list[TextContent]:
         logger.info(f"Target device: {device}")
 
         # Load pipeline with memory optimizations
-        lower_id = model_id.lower()
-        diffusion_class = AutoPipelineForText2Image
-        extra_args = {}
-        if "qwen" in lower_id:
-            logger.info("Setting Qwen model with trust_remote_code=True")
-            diffusion_class = DiffusionPipeline
-            extra_args = {"trust_remote_code": True}
         logger.info(f"Loading diffusion model: {model_id}")
         # Use AutoPipelineForText2Image for better compatibility across model types
-        pipe = diffusion_class.from_pretrained(
+        pipe = AutoPipelineForText2Image.from_pretrained(
             model_id,
             torch_dtype=torch.float16 if device == "cuda" else torch.float32,
             low_cpu_mem_usage=True,
-            *extra_args,
         )
 
         if device == "cuda":
