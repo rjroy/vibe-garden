@@ -16,7 +16,10 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-from wyrd_gen_mcp.data import MODELS, PARAMETERS, VIDEO_MODELS, VIDEO_PARAMETERS
+from wyrd_gen_mcp.data import (
+    MODELS, PARAMETERS, VIDEO_MODELS, VIDEO_PARAMETERS,
+    LOCAL_MODELS, LOCAL_PARAMETERS
+)
 
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
@@ -119,8 +122,7 @@ TOOLS = [
                 },
                 "model": {
                     "type": "string",
-                    "description": "The Hugging Face model ID to use (default: runwayml/stable-diffusion-v1-5)",
-                    "default": "runwayml/stable-diffusion-v1-5",
+                    "description": "The Hugging Face model ID to use. Call list_image_models_local to see available models.",
                 },
                 "output_file_name": {
                     "type": "string",
@@ -132,7 +134,21 @@ TOOLS = [
                     "default": {},
                 },
             },
-            "required": ["prompt", "output_file_name"],
+            "required": ["prompt", "model", "output_file_name"],
+        },
+    ),
+    Tool(
+        name="get_model_parameters_local",
+        description="Get the available parameters for a specific local image generation model",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "The Hugging Face model ID (e.g., 'black-forest-labs/FLUX.1-schnell')",
+                },
+            },
+            "required": ["model"],
         },
     ),
     Tool(
@@ -426,9 +442,15 @@ async def generate_image_local(arguments: dict[str, Any]) -> list[TextContent]:
     logger.info(f"Arguments: {json.dumps(arguments, indent=2)}")
 
     prompt = arguments.get("prompt")
-    model_id = arguments.get("model", "runwayml/stable-diffusion-v1-5")
+    model_id = arguments.get("model")
     output_file_name = arguments.get("output_file_name")
     parameters = arguments.get("parameters", {})
+
+    if not model_id:
+        logger.error("model is required but not provided")
+        raise ValueError(
+            "model is required - call list_image_models_local to see available models"
+        )
 
     if not output_file_name:
         raise ValueError("output_file_name is required")
@@ -533,17 +555,29 @@ async def generate_image_local(arguments: dict[str, Any]) -> list[TextContent]:
 async def list_image_models_local(arguments: dict[str, Any]) -> list[TextContent]:
     """List recommended local image generation models."""
     logger.info("list_image_models_local called")
-    local_models = [
-        {
-            "model": "black-forest-labs/FLUX.1-schnell",
-            "description": "FLUX.1 Schnell - State of the art speed and quality.",
-        },
-        {
-            "model": "Qwen/Qwen-Image",
-            "description": "Qwen-Image - 20B parameter model, high quality text rendering. Requires high VRAM (24GB+ recommended).",
-        },
-    ]
-    return [TextContent(type="text", text=json.dumps(local_models, indent=2))]
+    return [TextContent(type="text", text=json.dumps(LOCAL_MODELS, indent=2))]
+
+
+async def get_model_parameters_local(arguments: dict[str, Any]) -> list[TextContent]:
+    """Get available parameters for a specific local model."""
+    logger.info(f"get_model_parameters_local called with model: {arguments.get('model')}")
+    model = arguments.get("model")
+
+    if model not in LOCAL_PARAMETERS:
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "error": f"Unknown model: {model}",
+                        "available_models": list(LOCAL_PARAMETERS.keys()),
+                    },
+                    indent=2,
+                ),
+            )
+        ]
+
+    return [TextContent(type="text", text=json.dumps(LOCAL_PARAMETERS[model], indent=2))]
 
 
 async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextContent]:
@@ -815,6 +849,8 @@ async def main():
                 return await generate_image_local(arguments)
             elif name == "list_image_models_local":
                 return await list_image_models_local(arguments)
+            elif name == "get_model_parameters_local":
+                return await get_model_parameters_local(arguments)
             elif name == "generate_video_replicate":
                 return await generate_video_replicate(arguments)
             elif name == "list_video_models_replicate":

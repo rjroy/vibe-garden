@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "last_updated": "2025-12-02",
+    "data_source": "https://huggingface.co",
+    "schema_version": "1.0",
+    "notes": "Local image generation models compatible with diffusers library. VRAM requirements are estimates for default settings. All models run locally with no API cost."
+  },
+  "models": [
+    {
+      "model": "black-forest-labs/FLUX.1-schnell",
+      "description": "Use for fast, high-quality local generation. State of the art speed and quality balance. Recommended starting point for local generation.",
+      "vram_requirement_gb": 12,
+      "quality": 85,
+      "speed": 90,
+      "text_rendering": 60,
+      "notes": "Optimized for speed with minimal quality loss. Good balance for most use cases."
+    },
+    {
+      "model": "Qwen/Qwen-Image",
+      "description": "Use for high-quality text rendering in images. 20B parameter model with excellent text accuracy. Requires high VRAM.",
+      "vram_requirement_gb": 24,
+      "quality": 90,
+      "speed": 40,
+      "text_rendering": 95,
+      "notes": "Best choice when readable text in images is critical. Requires trust_remote_code=True."
+    }
+  ],
+  "parameters": {
+    "black-forest-labs/FLUX.1-schnell": {
+      "model": "black-forest-labs/FLUX.1-schnell",
+      "parameters": {
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps (higher = better quality, slower)",
+          "range": [1, 50],
+          "default": 4
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "How closely to follow the prompt (higher = more literal)",
+          "range": [1.0, 20.0],
+          "default": 0.0
+        },
+        "height": {
+          "type": "integer",
+          "description": "Image height in pixels (must be divisible by 8)",
+          "range": [256, 1024],
+          "default": 512
+        },
+        "width": {
+          "type": "integer",
+          "description": "Image width in pixels (must be divisible by 8)",
+          "range": [256, 1024],
+          "default": 512
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    },
+    "Qwen/Qwen-Image": {
+      "model": "Qwen/Qwen-Image",
+      "parameters": {
+        "num_inference_steps": {
+          "type": "integer",
+          "description": "Number of denoising steps",
+          "range": [1, 100],
+          "default": 50
+        },
+        "guidance_scale": {
+          "type": "number",
+          "description": "How closely to follow the prompt",
+          "range": [1.0, 20.0],
+          "default": 7.5
+        },
+        "height": {
+          "type": "integer",
+          "description": "Image height in pixels",
+          "range": [256, 1024],
+          "default": 512
+        },
+        "width": {
+          "type": "integer",
+          "description": "Image width in pixels",
+          "range": [256, 1024],
+          "default": 512
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Random seed for reproducible generation",
+          "optional": true
+        }
+      }
+    }
+  }
+}
