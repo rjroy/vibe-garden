@@ -9,6 +9,7 @@ import os
 import sys
 from typing import Any
 
+import httpx
 import replicate
 import torch
 from diffusers import AutoPipelineForText2Image
@@ -17,12 +18,19 @@ from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
 from wyrd_gen_mcp.data import (
-    MODELS, PARAMETERS, VIDEO_MODELS, VIDEO_PARAMETERS,
-    LOCAL_MODELS, LOCAL_PARAMETERS
+    LOCAL_MODELS,
+    LOCAL_PARAMETERS,
+    MODELS,
+    PARAMETERS,
+    VIDEO_MODELS,
+    VIDEO_PARAMETERS,
 )
 
 # Get the invoke directory (where the user ran the script from)
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
+
+# Video generation timeout (10 minutes) - video models can take a long time
+VIDEO_GENERATION_TIMEOUT_SECONDS = 600
 
 # Set up logging to file
 log_file = os.path.join(os.getcwd(), "wyrd-gen-mcp.log")
@@ -153,7 +161,7 @@ TOOLS = [
     ),
     Tool(
         name="generate_video_replicate",
-        description="Generate a 5-second 720p MP4 video from an input image using AI models via Replicate. The input image becomes the first frame of the video.",
+        description="Generate a 5-second 720p MP4 video from an input image using AI models via Replicate. The input image becomes the first frame of the video. WARNING: Video generation typically takes 2-5 minutes and costs $0.10-$1.50+ per video depending on the model. ALWAYS ask the user for confirmation before each generation attempt due to cost and time. Do not retry automatically on failure.",
         inputSchema={
             "type": "object",
             "properties": {
@@ -184,7 +192,7 @@ TOOLS = [
     ),
     Tool(
         name="list_video_models_replicate",
-        description="List available video generation models on Replicate with use-case categorization and cost information",
+        description="List available video generation models on Replicate with use-case categorization and cost information. Review cost_per_video carefully before selecting a model - video generation is expensive ($0.10-$1.50+ per video) and slow (2-5 minutes per generation).",
         inputSchema={
             "type": "object",
             "properties": {},
@@ -192,7 +200,7 @@ TOOLS = [
     ),
     Tool(
         name="get_video_model_parameters_replicate",
-        description="Get available parameters for a specific video generation model",
+        description="Get available parameters for a specific video generation model. Remember: video generation takes 2-5 minutes and costs $0.10-$1.50+ per attempt. Always confirm with user before generating.",
         inputSchema={
             "type": "object",
             "properties": {
@@ -291,7 +299,7 @@ async def generate_image_replicate(arguments: dict[str, Any]) -> list[TextConten
     # Run the model
     logger.info(f"Calling replicate_client.run with model: {model}")
     output = replicate_client.run(model, input=model_input)
-    logger.info(f"Replicate API call completed")
+    logger.info("Replicate API call completed")
     logger.info(f"Output type: {type(output)}")
     logger.info(f"Output has __iter__: {hasattr(output, '__iter__')}")
     logger.info(f"Output is string: {isinstance(output, str)}")
@@ -573,7 +581,7 @@ async def get_model_parameters_local(arguments: dict[str, Any]) -> list[TextCont
 
 
 async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextContent]:
-    """Generate a video using Replicate."""
+    """Generate a video using Replicate with async API and timeout handling."""
     logger.info("=" * 80)
     logger.info("generate_video_replicate called")
     logger.info(f"Arguments: {json.dumps(arguments, indent=2)}")
@@ -660,15 +668,58 @@ async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextConten
     }
     logger.info(f"Model input keys: {list(model_input.keys())}")
 
-    # Run the model
-    logger.info(f"Calling replicate_client.run with model: {model}")
-    output = replicate_client.run(model, input=model_input)
-    logger.info(f"Replicate API call completed")
+    # Run the model using async API with timeout
+    logger.info(f"Creating prediction with model: {model}")
+    logger.info(f"Timeout set to {VIDEO_GENERATION_TIMEOUT_SECONDS} seconds ({VIDEO_GENERATION_TIMEOUT_SECONDS // 60} minutes)")
+
+    prediction = None
+    try:
+        # Create the prediction
+        prediction = await replicate_client.predictions.async_create(
+            model=model,
+            input=model_input
+        )
+        logger.info(f"Prediction created: {prediction.id}")
+        logger.info(f"Prediction status: {prediction.status}")
+
+        # Wait for completion with timeout
+        async with asyncio.timeout(VIDEO_GENERATION_TIMEOUT_SECONDS):
+            logger.info("Waiting for prediction to complete...")
+            prediction = await prediction.async_wait()
+
+        logger.info(f"Prediction completed with status: {prediction.status}")
+
+        if prediction.status == "failed":
+            error_msg = prediction.error or "Unknown error"
+            logger.error(f"Prediction failed: {error_msg}")
+            raise ValueError(f"Video generation failed: {error_msg}")
+
+        if prediction.status == "canceled":
+            logger.error("Prediction was canceled")
+            raise ValueError("Video generation was canceled")
+
+        output = prediction.output
+        logger.info(f"Prediction output: {output}")
+
+    except asyncio.TimeoutError:
+        logger.error(f"Video generation timed out after {VIDEO_GENERATION_TIMEOUT_SECONDS} seconds")
+        # Attempt to cancel the prediction
+        if prediction:
+            try:
+                logger.info(f"Attempting to cancel prediction {prediction.id}")
+                await prediction.async_cancel()
+                logger.info("Prediction canceled successfully")
+            except Exception as cancel_error:
+                logger.warning(f"Failed to cancel prediction: {cancel_error}")
+        raise ValueError(
+            f"Video generation timed out after {VIDEO_GENERATION_TIMEOUT_SECONDS // 60} minutes. "
+            f"The prediction may still be running on Replicate's servers. "
+            f"Check the Replicate dashboard for status."
+        )
+
     logger.info(f"Output type: {type(output)}")
     logger.info(f"Output has __iter__: {hasattr(output, '__iter__')}")
     logger.info(f"Output is string: {isinstance(output, str)}")
-    logger.info(f"Output has read: {hasattr(output, 'read')}")
-    logger.info(f"Output has url: {hasattr(output, 'url')}")
     logger.info(f"Output repr: {repr(output)}")
 
     # Helper function to find next available filename with index
@@ -693,14 +744,43 @@ async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextConten
 
             idx += 1
 
+    async def download_file(url: str, dest_path: str) -> int:
+        """Download a file from URL to destination path.
+
+        Returns:
+            Number of bytes written
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, follow_redirects=True)
+            response.raise_for_status()
+            with open(dest_path, "wb") as f:
+                f.write(response.content)
+            return len(response.content)
+
     # Process the output and save to disk
     saved_files = []
 
-    # Check if output has read method (FileOutput object)
-    if hasattr(output, "read"):
+    # Handle different output formats from async API
+    # The async API typically returns URLs as strings or lists of URLs
+    if isinstance(output, str):
+        # Single URL output
+        logger.info(f"Processing single URL output: {output}")
+
+        final_path, used_idx = get_next_available_path(output_file_name)
+        logger.info(f"Downloading to file: {final_path} (index: {used_idx})")
+
+        try:
+            bytes_written = await download_file(output, final_path)
+            logger.info(f"Downloaded {bytes_written} bytes to {final_path}")
+            saved_files.append(final_path)
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to download video: {e}")
+            raise ValueError(f"Failed to download video from {output}: {e}")
+
+    elif hasattr(output, "read"):
+        # FileOutput object (fallback for sync-style output)
         logger.info("Processing FileOutput object with read() method")
 
-        # Find next available filename to prevent overwrites
         final_path, used_idx = get_next_available_path(output_file_name)
         logger.info(f"Saving to file: {final_path} (index: {used_idx})")
 
@@ -712,7 +792,7 @@ async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextConten
         logger.info(f"File saved successfully: {final_path}")
         saved_files.append(final_path)
 
-    elif hasattr(output, "__iter__") and not isinstance(output, str):
+    elif hasattr(output, "__iter__") and not isinstance(output, (str, bytes)):
         logger.info("Processing iterable output (multiple files)")
 
         # Find the starting offset to prevent overwrites
@@ -730,7 +810,7 @@ async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextConten
 
         logger.info(f"Starting index offset: {start_offset}")
 
-        # Multiple file outputs - save with numbered suffixes
+        # Multiple outputs - could be URLs or FileOutput objects
         for idx, item in enumerate(output):
             actual_idx = start_offset + idx
             logger.info(f"Processing item {idx}: type={type(item)}, using index {actual_idx}")
@@ -743,7 +823,15 @@ async def generate_video_replicate(arguments: dict[str, Any]) -> list[TextConten
 
             logger.info(f"Saving to file: {file_path}")
 
-            if hasattr(item, "read"):
+            if isinstance(item, str):
+                # URL - download it
+                try:
+                    bytes_written = await download_file(item, file_path)
+                    logger.info(f"Downloaded {bytes_written} bytes to {file_path}")
+                except httpx.HTTPError as e:
+                    logger.error(f"Failed to download video: {e}")
+                    continue
+            elif hasattr(item, "read"):
                 # FileOutput object
                 with open(file_path, "wb") as f:
                     data = item.read()
