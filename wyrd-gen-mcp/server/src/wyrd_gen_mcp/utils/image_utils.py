@@ -29,6 +29,62 @@ MIME_TYPE_MAP = {
 }
 
 
+def detect_image_format(data: bytes) -> str | None:
+    """Detect image format from magic bytes.
+
+    Examines the first bytes of image data to determine the actual format,
+    regardless of file extension. This is essential because Replicate models
+    may return images in formats different from what the filename suggests.
+
+    Args:
+        data: Raw image bytes (at least first 12 bytes needed for detection)
+
+    Returns:
+        File extension string (e.g., ".png", ".jpg", ".webp") if recognized,
+        None if format cannot be determined.
+
+    Example:
+        with open("image.png", "rb") as f:
+            data = f.read()
+        actual_format = detect_image_format(data)
+        # Returns ".jpg" if file is actually JPEG despite .png extension
+    """
+    if len(data) < 12:
+        return None
+
+    # PNG: 89 50 4E 47 0D 0A 1A 0A
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return ".png"
+
+    # JPEG: FF D8 FF
+    if data[:3] == b"\xff\xd8\xff":
+        return ".jpg"
+
+    # WebP: RIFF....WEBP (bytes 0-3 = RIFF, bytes 8-11 = WEBP)
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ".webp"
+
+    # GIF: GIF87a or GIF89a
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return ".gif"
+
+    return None
+
+
+def replace_extension(path: str, new_ext: str) -> str:
+    """Replace the file extension in a path.
+
+    Args:
+        path: Original file path (e.g., "/path/to/file.png")
+        new_ext: New extension including dot (e.g., ".jpg")
+
+    Returns:
+        Path with new extension (e.g., "/path/to/file.jpg")
+    """
+    base, _ = os.path.splitext(path)
+    return base + new_ext
+
+
 def image_to_data_uri(file_path: str) -> str:
     """Convert local image file to base64 data URI for Replicate API submission.
 

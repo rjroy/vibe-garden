@@ -293,3 +293,118 @@ class TestReplicateImageGenerator:
         # All four files should exist
         for file_path in result1.saved_files + result2.saved_files:
             assert os.path.exists(file_path)
+
+    @pytest.mark.asyncio
+    async def test_format_correction_jpeg_to_jpg(
+        self, mock_replicate_client, temp_dir
+    ):
+        """Test that JPEG data is saved with .jpg extension even if user requested .png.
+
+        This is critical because Replicate models often return JPEG data for efficiency,
+        but users might specify .png as the output filename. If we save JPEG data with
+        a .png extension, tools that read the file will fail due to format mismatch.
+        """
+        # Setup - create a mock that returns JPEG data (FF D8 FF signature)
+        jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 100  # JPEG magic bytes + padding
+        mock_output = MagicMock()
+        mock_output.read = MagicMock(return_value=jpeg_data)
+
+        generator = ReplicateImageGenerator(mock_replicate_client, temp_dir)
+        mock_replicate_client.async_run.return_value = mock_output
+
+        # Execute - request .png but API returns JPEG
+        result = await generator.generate(
+            prompt="A sunset",
+            model="black-forest-labs/flux-schnell",
+            output_file_name="sunset.png",
+        )
+
+        # Verify file was saved with .jpg extension, not .png
+        assert result.success is True
+        assert len(result.saved_files) == 1
+        assert result.saved_files[0].endswith(".jpg")
+        assert "sunset_0.jpg" in result.saved_files[0]
+
+        # Verify file exists and contains the JPEG data
+        assert os.path.exists(result.saved_files[0])
+        with open(result.saved_files[0], "rb") as f:
+            assert f.read() == jpeg_data
+
+    @pytest.mark.asyncio
+    async def test_format_correction_webp_to_webp(
+        self, mock_replicate_client, temp_dir
+    ):
+        """Test that WebP data is saved with .webp extension even if user requested .png."""
+        # Setup - create a mock that returns WebP data (RIFF....WEBP signature)
+        webp_data = b"RIFF\x00\x00\x00\x00WEBP" + b"\x00" * 100
+        mock_output = MagicMock()
+        mock_output.read = MagicMock(return_value=webp_data)
+
+        generator = ReplicateImageGenerator(mock_replicate_client, temp_dir)
+        mock_replicate_client.async_run.return_value = mock_output
+
+        # Execute - request .png but API returns WebP
+        result = await generator.generate(
+            prompt="A sunset",
+            model="black-forest-labs/flux-schnell",
+            output_file_name="sunset.png",
+        )
+
+        # Verify file was saved with .webp extension
+        assert result.success is True
+        assert len(result.saved_files) == 1
+        assert result.saved_files[0].endswith(".webp")
+
+    @pytest.mark.asyncio
+    async def test_format_correction_png_stays_png(
+        self, mock_replicate_client, temp_dir
+    ):
+        """Test that PNG data is saved with .png extension when user requested .png."""
+        # Setup - create a mock that returns PNG data (89 PNG signature)
+        png_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        mock_output = MagicMock()
+        mock_output.read = MagicMock(return_value=png_data)
+
+        generator = ReplicateImageGenerator(mock_replicate_client, temp_dir)
+        mock_replicate_client.async_run.return_value = mock_output
+
+        # Execute - request .png and API returns PNG
+        result = await generator.generate(
+            prompt="A sunset",
+            model="black-forest-labs/flux-schnell",
+            output_file_name="sunset.png",
+        )
+
+        # Verify file was saved with .png extension (no correction needed)
+        assert result.success is True
+        assert len(result.saved_files) == 1
+        assert result.saved_files[0].endswith(".png")
+
+    @pytest.mark.asyncio
+    async def test_format_correction_multiple_files(
+        self, mock_replicate_client, temp_dir
+    ):
+        """Test format correction works for multiple file output."""
+        # Setup - create multiple mocks returning JPEG data
+        jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 100
+        mock_output1 = MagicMock()
+        mock_output1.read = MagicMock(return_value=jpeg_data)
+        mock_output2 = MagicMock()
+        mock_output2.read = MagicMock(return_value=jpeg_data)
+
+        generator = ReplicateImageGenerator(mock_replicate_client, temp_dir)
+        mock_replicate_client.async_run.return_value = [mock_output1, mock_output2]
+
+        # Execute - request .png but API returns JPEG for all
+        result = await generator.generate(
+            prompt="Multiple sunsets",
+            model="black-forest-labs/flux-schnell",
+            output_file_name="sunset.png",
+        )
+
+        # Verify all files were saved with .jpg extension
+        assert result.success is True
+        assert len(result.saved_files) == 2
+        assert all(f.endswith(".jpg") for f in result.saved_files)
+        assert "sunset_0.jpg" in result.saved_files[0]
+        assert "sunset_1.jpg" in result.saved_files[1]

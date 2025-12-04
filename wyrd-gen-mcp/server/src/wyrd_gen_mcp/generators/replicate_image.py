@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 from wyrd_gen_mcp.exceptions import GenerationError, ValidationError
 from wyrd_gen_mcp.generators.base import GenerationResult
 from wyrd_gen_mcp.utils.file_utils import get_next_available_path, resolve_output_path
+from wyrd_gen_mcp.utils.image_utils import detect_image_format, replace_extension
 from wyrd_gen_mcp.utils.logging_utils import RequestContext
 
 logger = logging.getLogger("wyrd-gen-mcp.generators.replicate_image")
@@ -207,10 +208,25 @@ class ReplicateImageGenerator:
         # Case 1: Single FileOutput object with read() method
         if hasattr(output, "read"):
             ctx.log_debug("Processing FileOutput object with read() method")
-            final_path, used_idx = get_next_available_path(abs_output_path)
+            data = output.read()
+
+            # Detect actual format and correct extension if needed
+            actual_ext = detect_image_format(data)
+            corrected_path = abs_output_path
+            if actual_ext:
+                requested_ext = os.path.splitext(abs_output_path)[1].lower()
+                if requested_ext != actual_ext:
+                    corrected_path = replace_extension(abs_output_path, actual_ext)
+                    ctx.log_debug(
+                        "Format mismatch - correcting extension",
+                        requested=requested_ext,
+                        actual=actual_ext,
+                        corrected_path=corrected_path,
+                    )
+
+            final_path, used_idx = get_next_available_path(corrected_path)
 
             with open(final_path, "wb") as f:
-                data = output.read()
                 f.write(data)
 
             ctx.log_progress(f"Saved {len(data)} bytes", path=final_path, index=used_idx)
@@ -219,24 +235,42 @@ class ReplicateImageGenerator:
         # Case 2: Iterable of outputs (multiple files)
         elif hasattr(output, "__iter__") and not isinstance(output, str):
             ctx.log_debug("Processing iterable output (multiple files)")
-            start_offset = self._find_start_offset(abs_output_path)
 
-            for idx, item in enumerate(output):
-                file_path = self._make_indexed_path(abs_output_path, start_offset + idx)
-
+            # Collect all items first so we can detect format from first one
+            items_data: list[bytes] = []
+            for item in output:
                 if hasattr(item, "read"):
-                    with open(file_path, "wb") as f:
-                        data = item.read()
-                        f.write(data)
-                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(data))
+                    items_data.append(item.read())
                 elif isinstance(item, bytes):
-                    with open(file_path, "wb") as f:
-                        f.write(item)
-                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(item))
+                    items_data.append(item)
                 else:
                     ctx.log_warning(f"Unknown item type in output", item_type=type(item).__name__)
-                    continue
 
+            if not items_data:
+                return saved_files
+
+            # Detect format from first item and correct extension if needed
+            corrected_path = abs_output_path
+            actual_ext = detect_image_format(items_data[0])
+            if actual_ext:
+                requested_ext = os.path.splitext(abs_output_path)[1].lower()
+                if requested_ext != actual_ext:
+                    corrected_path = replace_extension(abs_output_path, actual_ext)
+                    ctx.log_debug(
+                        "Format mismatch - correcting extension",
+                        requested=requested_ext,
+                        actual=actual_ext,
+                    )
+
+            # Find starting offset once for the corrected path
+            start_offset = self._find_start_offset(corrected_path)
+
+            for idx, data in enumerate(items_data):
+                file_path = self._make_indexed_path(corrected_path, start_offset + idx)
+
+                with open(file_path, "wb") as f:
+                    f.write(data)
+                ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(data))
                 saved_files.append(file_path)
         else:
             # Unexpected format - log for debugging
