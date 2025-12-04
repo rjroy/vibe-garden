@@ -53,9 +53,10 @@ if not REPLICATE_API_TOKEN:
 
 logger.info("REPLICATE_API_TOKEN found")
 
-# Initialize Replicate client
+# Initialize Replicate clients (sync for simple ops, async for generation)
 replicate_client = replicate.Client(api_token=REPLICATE_API_TOKEN)
-logger.info("Replicate client initialized")
+async_replicate_client = replicate.AsyncClient(api_token=REPLICATE_API_TOKEN)
+logger.info("Replicate clients initialized (sync + async)")
 
 # Create FastMCP server instance
 mcp = FastMCP("wyrd-gen-mcp")
@@ -187,9 +188,9 @@ async def generate_image_replicate(
     model_input = {"prompt": prompt, **parameters}
     logger.info(f"Model input: {json.dumps(model_input, indent=2)}")
 
-    # Run the model
-    logger.info(f"Calling replicate_client.run with model: {model}")
-    output = replicate_client.run(model, input=model_input)
+    # Run the model using async client
+    logger.info(f"Calling async_replicate_client.run with model: {model}")
+    output = await async_replicate_client.run(model, input=model_input)
     logger.info("Replicate API call completed")
     logger.info(f"Output type: {type(output)}")
 
@@ -536,8 +537,8 @@ async def generate_video_replicate(
 
     prediction = None
     try:
-        # Create the prediction
-        prediction = await replicate_client.predictions.async_create(
+        # Create the prediction using async client
+        prediction = await async_replicate_client.predictions.create(
             model=model,
             input=model_input
         )
@@ -562,8 +563,8 @@ async def generate_video_replicate(
             if elapsed > VIDEO_GENERATION_TIMEOUT_SECONDS:
                 raise asyncio.TimeoutError()
 
-            # Reload prediction to get current status
-            prediction = await prediction.async_reload()
+            # Reload prediction to get current status using async client
+            prediction = await async_replicate_client.predictions.get(prediction.id)
             poll_count += 1
 
             logger.info(f"Poll {poll_count}: status={prediction.status}, elapsed={elapsed:.0f}s")
@@ -607,7 +608,7 @@ async def generate_video_replicate(
         if prediction:
             try:
                 logger.info(f"Attempting to cancel prediction {prediction.id}")
-                await prediction.async_cancel()
+                await async_replicate_client.predictions.cancel(prediction.id)
                 logger.info("Prediction canceled successfully")
             except Exception as cancel_error:
                 logger.warning(f"Failed to cancel prediction: {cancel_error}")
