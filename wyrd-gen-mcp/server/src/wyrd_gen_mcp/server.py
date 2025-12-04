@@ -1,5 +1,57 @@
 #!/usr/bin/env python3
-"""Wyrd-Gen MCP Server - AI image and video generation via Replicate and local models."""
+"""Wyrd-Gen MCP Server - AI image and video generation via MCP protocol.
+
+This module implements the MCP (Model Context Protocol) server that exposes
+AI generation capabilities as tools. It acts as the entry point and orchestration
+layer, delegating actual generation work to specialized generator classes.
+
+Architecture:
+    The server follows a clean separation of concerns:
+
+    1. Server Layer (this file):
+       - MCP tool registration and descriptions
+       - Input validation and error handling
+       - Progress reporting via MCP Context
+       - JSON serialization of results
+
+    2. Generator Layer (generators/):
+       - ReplicateImageGenerator: Cloud-based image generation
+       - ReplicateVideoGenerator: Cloud-based video generation with polling
+       - LocalImageGenerator: On-device generation via diffusers
+
+    3. Utility Layer (utils/):
+       - File path resolution and collision avoidance
+       - Image encoding for API submission
+       - Async file downloads
+
+Available MCP Tools:
+    Image Generation (Replicate):
+        - generate_image_replicate: Generate images using cloud models
+        - list_image_models_replicate: List available Replicate models
+        - get_model_parameters_replicate: Get model-specific parameters
+
+    Image Generation (Local):
+        - generate_image_local: Generate images using local GPU
+        - list_image_models_local: List recommended local models
+        - get_model_parameters_local: Get model-specific parameters
+
+    Video Generation (Replicate):
+        - generate_video_replicate: Generate video from image
+        - list_video_models_replicate: List available video models
+        - get_video_model_parameters_replicate: Get model parameters
+
+Environment Variables:
+    REPLICATE_API_TOKEN: Required. API token for Replicate.com
+    WYRD_INVOKE_DIR: Optional. Base directory for relative path resolution.
+        Defaults to current working directory.
+
+Usage:
+    Run as MCP server (stdio transport):
+        python -m wyrd_gen_mcp.server
+
+    Or via the installed command:
+        wyrd-gen-mcp
+"""
 
 import json
 import logging
@@ -24,10 +76,18 @@ from wyrd_gen_mcp.generators import (
     ReplicateVideoGenerator,
 )
 
-# Get the invoke directory (where the user ran the script from)
+# =============================================================================
+# Module Initialization
+# =============================================================================
+
+# The invoke directory determines where relative output paths are resolved.
+# This allows users to specify "output.png" and have it saved in their project
+# directory, regardless of where the MCP server process is running.
 INVOKE_DIR = os.environ.get("WYRD_INVOKE_DIR", os.getcwd())
 
-# Set up logging to file
+# Configure file-based logging for debugging. The log file is created in the
+# current working directory (not invoke directory) since that's where the
+# server process runs.
 log_file = os.path.join(os.getcwd(), "wyrd-gen-mcp.log")
 logging.basicConfig(
     level=logging.DEBUG,
@@ -277,8 +337,15 @@ async def get_video_model_parameters_replicate(model: str) -> str:
 # =============================================================================
 
 
-def main():
-    """Run the MCP server."""
+def main() -> None:
+    """Run the MCP server using stdio transport.
+
+    This is the main entry point for the server. It starts the FastMCP
+    server which communicates over stdin/stdout using the MCP protocol.
+
+    The server runs indefinitely until the client disconnects or the
+    process is terminated.
+    """
     logger.info("Starting Wyrd-Gen MCP Server")
     print("Wyrd-Gen MCP Server running on stdio", file=sys.stderr)
     mcp.run()

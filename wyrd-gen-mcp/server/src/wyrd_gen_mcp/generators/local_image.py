@@ -1,4 +1,19 @@
-"""Local image generation using diffusers."""
+"""Local image generation using HuggingFace diffusers.
+
+This module provides the LocalImageGenerator class for generating images
+using locally-running diffusion models via the HuggingFace diffusers library.
+
+Unlike Replicate-based generation, local generation:
+- Requires a GPU with sufficient VRAM (varies by model, typically 4-24GB)
+- Has no per-image cost (beyond electricity)
+- May be slower depending on hardware
+- Keeps data on-device (better for privacy)
+
+The generator automatically:
+- Detects CUDA availability and falls back to CPU if needed
+- Applies memory optimizations (VAE tiling, attention slicing, CPU offload)
+- Downloads models from HuggingFace Hub on first use
+"""
 
 import logging
 from typing import Any
@@ -13,13 +28,37 @@ logger = logging.getLogger("wyrd-gen-mcp")
 
 
 class LocalImageGenerator:
-    """Image generator using local diffusers models."""
+    """Image generator using local HuggingFace diffusers models.
+
+    This class runs diffusion models locally using the HuggingFace diffusers
+    library. Models are downloaded from HuggingFace Hub on first use and
+    cached locally.
+
+    The generator applies memory optimizations automatically when using CUDA:
+    - VAE tiling: Process image in tiles to reduce VRAM
+    - Attention slicing: Compute attention in slices to reduce VRAM
+    - Model CPU offload: Keep model weights on CPU, move to GPU as needed
+
+    Attributes:
+        _invoke_dir: Base directory for resolving relative output paths.
+
+    Example:
+        generator = LocalImageGenerator("/home/user/project")
+        result = await generator.generate(
+            prompt="A cyberpunk city at night",
+            model="stabilityai/stable-diffusion-2-1",
+            output_file_name="city.png",
+            parameters={"num_inference_steps": 50}
+        )
+    """
 
     def __init__(self, invoke_dir: str):
         """Initialize the generator.
 
         Args:
-            invoke_dir: Directory from which the server was invoked
+            invoke_dir: Base directory for resolving relative output paths.
+                When output_file_name is relative, it will be resolved against
+                this directory.
         """
         self._invoke_dir = invoke_dir
 

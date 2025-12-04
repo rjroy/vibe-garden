@@ -1,4 +1,19 @@
-"""Replicate-based video generation."""
+"""Replicate-based video generation.
+
+This module provides the ReplicateVideoGenerator class for generating videos
+from input images using Replicate's cloud API. It supports image-to-video models
+like Kling, Wan, and MiniMax.
+
+The generator handles:
+- Async prediction creation and polling with progress reporting
+- Automatic timeout handling (default 10 minutes)
+- Model-specific parameter naming (different models use different image param names)
+- Multiple output formats (URLs, FileOutput objects, iterables)
+- Path resolution and collision avoidance
+
+Video generation is expensive ($0.10-$1.50+ per video) and slow (2-5 minutes),
+so the generator supports progress callbacks to keep the user informed.
+"""
 
 from __future__ import annotations
 
@@ -26,15 +41,50 @@ logger = logging.getLogger("wyrd-gen-mcp")
 # Video generation timeout (10 minutes) - video models can take a long time
 VIDEO_GENERATION_TIMEOUT_SECONDS = 600
 
-# Progress reporting interval (seconds)
+# Progress reporting interval (seconds) - how often to poll and report status
 PROGRESS_INTERVAL_SECONDS = 10
 
-# Type alias for progress callback
+# Type alias for progress callback function signature
+# Args: (progress_count, total_or_none, status_message)
 ProgressCallback = Callable[[int, int | None, str], Coroutine[Any, Any, None]]
 
 
 class ReplicateVideoGenerator:
-    """Video generator using Replicate API."""
+    """Video generator using Replicate's cloud API.
+
+    This class creates videos from input images using Replicate's image-to-video
+    models. Unlike image generation which completes quickly, video generation
+    requires polling for completion and can take several minutes.
+
+    The generator uses Replicate's predictions API:
+    1. Create a prediction with the model and inputs
+    2. Poll for status until succeeded/failed/canceled
+    3. Download the output video from the returned URL
+
+    Different video models use different parameter names for the input image:
+    - Kling models: 'start_image'
+    - MiniMax/Hailuo models: 'first_frame_image'
+    - Other models: 'image'
+
+    Attributes:
+        _client: The Replicate client instance for API calls.
+        _invoke_dir: Base directory for resolving relative paths.
+
+    Example:
+        client = replicate.Client(api_token="...")
+        generator = ReplicateVideoGenerator(client, "/home/user/project")
+
+        async def on_progress(count, total, msg):
+            print(f"Progress: {msg}")
+
+        result = await generator.generate(
+            image="input.png",
+            prompt="A person walking forward",
+            model="wan-video/wan-2.2-i2v-fast",
+            output_file_name="output.mp4",
+            progress_callback=on_progress
+        )
+    """
 
     def __init__(
         self,
@@ -44,8 +94,10 @@ class ReplicateVideoGenerator:
         """Initialize the generator.
 
         Args:
-            client: Replicate client for API calls
-            invoke_dir: Directory from which the server was invoked
+            client: Replicate client instance. Must be configured with a valid
+                API token. Uses predictions.async_create/async_get for video gen.
+            invoke_dir: Base directory for resolving relative paths for both
+                input images and output videos.
         """
         self._client = client
         self._invoke_dir = invoke_dir
@@ -124,7 +176,16 @@ class ReplicateVideoGenerator:
         return result
 
     def _validate_inputs(self, image: str, model: str, output_file_name: str) -> None:
-        """Validate required inputs."""
+        """Validate required inputs.
+
+        Args:
+            image: Input image path (must be non-empty)
+            model: Model ID (must be non-empty)
+            output_file_name: Output file name (must be non-empty)
+
+        Raises:
+            ValueError: If any required input is empty or None
+        """
         if not model:
             raise ValueError(
                 "model is required - call list_video_models_replicate to see available models"
@@ -135,7 +196,20 @@ class ReplicateVideoGenerator:
             raise ValueError("image is required")
 
     def _convert_image(self, abs_image_path: str) -> str:
-        """Convert input image to data URI."""
+        """Convert input image to base64 data URI for API submission.
+
+        Replicate's API accepts images as data URIs (base64-encoded with MIME type).
+        This method reads the image file and converts it to the required format.
+
+        Args:
+            abs_image_path: Absolute path to the input image file
+
+        Returns:
+            Data URI string (e.g., 'data:image/png;base64,...')
+
+        Raises:
+            ValueError: If the image file doesn't exist or has unsupported format
+        """
         logger.info("Converting input image to data URI")
         try:
             image_data_uri = image_to_data_uri(abs_image_path)
@@ -152,8 +226,26 @@ class ReplicateVideoGenerator:
         prompt: str,
         parameters: dict[str, Any],
     ) -> dict[str, Any]:
-        """Build the model input dictionary with correct parameter names."""
-        # Determine the correct parameter name for the input image
+        """Build the model input dictionary with correct parameter names.
+
+        Different video models expect the input image under different parameter names:
+        - Kling models use 'start_image'
+        - MiniMax/Hailuo models use 'first_frame_image'
+        - Most other models use 'image'
+
+        This method detects the correct parameter name from the model's parameter
+        schema in VIDEO_PARAMETERS, falling back to heuristics based on model name.
+
+        Args:
+            model: The Replicate model ID
+            image_data_uri: Base64-encoded image data URI
+            prompt: The motion/action prompt
+            parameters: Additional model-specific parameters
+
+        Returns:
+            Dictionary ready to pass to Replicate's prediction API
+        """
+        # Try to find the image parameter name from the model's schema
         model_params = VIDEO_PARAMETERS.get(model, {}).get("parameters", {})
 
         image_param_name = None
@@ -163,6 +255,7 @@ class ReplicateVideoGenerator:
                     image_param_name = param_name
                     break
 
+        # Fall back to heuristics based on model name if not found in schema
         if not image_param_name:
             if "kling" in model.lower():
                 image_param_name = "start_image"
@@ -185,7 +278,26 @@ class ReplicateVideoGenerator:
         model_input: dict[str, Any],
         progress_callback: ProgressCallback | None,
     ) -> Any:
-        """Run prediction with progress reporting and timeout."""
+        """Run prediction with progress reporting and timeout.
+
+        Video generation is a long-running operation that requires:
+        1. Creating a prediction request
+        2. Polling until the prediction completes or times out
+        3. Handling cancellation on timeout
+
+        Progress is reported via the callback every PROGRESS_INTERVAL_SECONDS.
+
+        Args:
+            model: The Replicate model ID
+            model_input: The input dictionary for the model
+            progress_callback: Optional async callback for progress updates
+
+        Returns:
+            The prediction output (usually a URL to the generated video)
+
+        Raises:
+            ValueError: If generation fails, is canceled, or times out
+        """
         timeout_minutes = VIDEO_GENERATION_TIMEOUT_SECONDS // 60
         logger.info(f"Creating prediction with model: {model}")
         logger.info(f"Timeout: {VIDEO_GENERATION_TIMEOUT_SECONDS}s ({timeout_minutes} min)")
@@ -265,7 +377,23 @@ class ReplicateVideoGenerator:
             )
 
     async def _process_output(self, output: Any, abs_output_path: str) -> list[str]:
-        """Process Replicate output and save files."""
+        """Process Replicate output and save files.
+
+        Video models typically return output as:
+        1. String URL - download the video from this URL
+        2. FileOutput object with read() method - read binary data directly
+        3. Iterable of URLs or FileOutput objects - multiple outputs
+
+        Args:
+            output: The prediction output from Replicate
+            abs_output_path: Absolute path template for output file
+
+        Returns:
+            List of absolute paths to saved video files
+
+        Raises:
+            ValueError: If download fails
+        """
         logger.info(f"Output type: {type(output)}")
         logger.info(f"Output is string: {isinstance(output, str)}")
 
@@ -309,7 +437,15 @@ class ReplicateVideoGenerator:
     async def _process_iterable_output(
         self, output: Any, abs_output_path: str
     ) -> list[str]:
-        """Process iterable output (multiple files)."""
+        """Process iterable output containing multiple files.
+
+        Args:
+            output: Iterable of URLs, FileOutput objects, or bytes
+            abs_output_path: Absolute path template for output files
+
+        Returns:
+            List of absolute paths to saved files
+        """
         saved_files: list[str] = []
         start_offset = self._find_start_offset(abs_output_path)
         name_parts = abs_output_path.rsplit(".", 1)
@@ -344,7 +480,16 @@ class ReplicateVideoGenerator:
         return saved_files
 
     def _find_start_offset(self, base_path: str) -> int:
-        """Find the starting offset for indexed file names."""
+        """Find the starting offset for indexed file names.
+
+        Scans for existing files to avoid overwriting them.
+
+        Args:
+            base_path: Base file path template
+
+        Returns:
+            First available index where no file exists
+        """
         name_parts = base_path.rsplit(".", 1)
         start_offset = 0
         while True:

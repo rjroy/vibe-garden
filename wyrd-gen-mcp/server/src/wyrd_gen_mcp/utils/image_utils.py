@@ -1,10 +1,21 @@
-"""Image handling utilities for Wyrd-Gen MCP Server."""
+"""Image handling utilities for Wyrd-Gen MCP Server.
+
+This module provides utilities for preparing images for API submission.
+The primary function converts local image files to base64 data URIs,
+which is the format required by Replicate's video generation API.
+
+Supported formats:
+    - PNG (.png)
+    - JPEG (.jpg, .jpeg)
+    - WebP (.webp)
+"""
 
 import base64
 import os
 
 
-# Map extensions to MIME types
+# Map file extensions to MIME types for data URI construction.
+# Used to determine the correct MIME type when encoding images.
 MIME_TYPE_MAP = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
