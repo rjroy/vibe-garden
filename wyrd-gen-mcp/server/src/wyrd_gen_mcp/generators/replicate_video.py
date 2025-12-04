@@ -22,12 +22,16 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-import httpx
-
 if TYPE_CHECKING:
     from replicate import Client
 
 from wyrd_gen_mcp.data import VIDEO_MODELS, VIDEO_PARAMETERS
+from wyrd_gen_mcp.exceptions import (
+    FileError,
+    GenerationError,
+    TimeoutError as WyrdTimeoutError,
+    ValidationError,
+)
 from wyrd_gen_mcp.generators.base import GenerationResult
 from wyrd_gen_mcp.utils.file_utils import (
     download_file,
@@ -35,8 +39,9 @@ from wyrd_gen_mcp.utils.file_utils import (
     resolve_output_path,
 )
 from wyrd_gen_mcp.utils.image_utils import image_to_data_uri
+from wyrd_gen_mcp.utils.logging_utils import RequestContext
 
-logger = logging.getLogger("wyrd-gen-mcp")
+logger = logging.getLogger("wyrd-gen-mcp.generators.replicate_video")
 
 # Video generation timeout (10 minutes) - video models can take a long time
 VIDEO_GENERATION_TIMEOUT_SECONDS = 600
@@ -125,55 +130,94 @@ class ReplicateVideoGenerator:
             GenerationResult with saved file paths
 
         Raises:
-            ValueError: If required parameters are missing or generation fails
+            ValidationError: If required parameters are missing or invalid.
+            GenerationError: If video generation fails.
+            FileError: If input image cannot be read or output cannot be saved.
+            WyrdTimeoutError: If generation times out.
         """
-        logger.info("=" * 80)
-        logger.info("ReplicateVideoGenerator.generate called")
-        logger.info(f"image={image}, prompt={prompt}, model={model}")
-        logger.info(f"Current working directory: {os.getcwd()}")
-
         if parameters is None:
             parameters = {}
 
+        # Validate inputs before starting
         self._validate_inputs(image, model, output_file_name)
 
-        abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
-        abs_image_path = resolve_output_path(image, self._invoke_dir)
-        logger.info(f"Output file name (absolute): {abs_output_path}")
-        logger.info(f"Input image (absolute): {abs_image_path}")
+        # Truncate prompt for logging
+        log_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
 
-        # Convert input image to data URI
-        image_data_uri = self._convert_image(abs_image_path)
-
-        # Build model input
-        model_input = self._build_model_input(model, image_data_uri, prompt, parameters)
-        logger.info(f"Model input keys: {list(model_input.keys())}")
-
-        # Run generation with progress reporting
-        output = await self._run_with_progress(model, model_input, progress_callback)
-
-        # Process output and save files
-        saved_files = await self._process_output(output, abs_output_path)
-
-        # Get model metadata from catalog
-        model_info = next((m for m in VIDEO_MODELS if m["model"] == model), {})
-        duration = model_info.get("duration_seconds", 5)
-        resolution = model_info.get("resolution", "720p")
-
-        result = GenerationResult(
-            success=True,
+        with RequestContext(
+            operation="replicate_video_generation",
+            logger=logger,
             model=model,
-            prompt=prompt,
-            saved_files=saved_files,
-            parameters=parameters,
-            input_image=abs_image_path,
-            duration_seconds=duration,
-            resolution=resolution,
-        )
+        ) as ctx:
+            ctx.log_start(prompt=log_prompt, input_image=image, output=output_file_name)
 
-        logger.info(f"Returning result: {result.to_dict()}")
-        logger.info("=" * 80)
-        return result
+            abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
+            abs_image_path = resolve_output_path(image, self._invoke_dir)
+            ctx.log_debug("Resolved paths", output=abs_output_path, input=abs_image_path)
+
+            # Convert input image to data URI
+            try:
+                image_data_uri = self._convert_image(abs_image_path, ctx)
+            except (FileError, ValidationError):
+                raise  # Re-raise with original context
+            except Exception as e:
+                ctx.log_error(e)
+                raise FileError(
+                    "Failed to process input image",
+                    path=abs_image_path,
+                    operation="convert",
+                    cause=e,
+                )
+
+            # Build model input
+            model_input = self._build_model_input(model, image_data_uri, prompt, parameters)
+            ctx.log_debug("Prepared model input", param_keys=list(model_input.keys()))
+
+            # Run generation with progress reporting
+            try:
+                output = await self._run_with_progress(
+                    model, model_input, progress_callback, ctx
+                )
+            except (GenerationError, WyrdTimeoutError):
+                raise  # Re-raise with original context
+
+            # Process output and save files
+            try:
+                saved_files = await self._process_output(output, abs_output_path, ctx)
+            except FileError:
+                raise
+            except Exception as e:
+                ctx.log_error(e)
+                raise GenerationError(
+                    "Failed to process and save video output",
+                    operation="save_output",
+                    model=model,
+                    cause=e,
+                )
+
+            # Get model metadata from catalog
+            model_info = next((m for m in VIDEO_MODELS if m["model"] == model), {})
+            duration = model_info.get("duration_seconds", 5)
+            resolution = model_info.get("resolution", "720p")
+
+            result = GenerationResult(
+                success=True,
+                model=model,
+                prompt=prompt,
+                saved_files=saved_files,
+                parameters=parameters,
+                input_image=abs_image_path,
+                duration_seconds=duration,
+                resolution=resolution,
+            )
+
+            ctx.log_success(
+                saved_files=len(saved_files),
+                first_file=saved_files[0] if saved_files else None,
+                duration=duration,
+                resolution=resolution,
+            )
+            return result
 
     def _validate_inputs(self, image: str, model: str, output_file_name: str) -> None:
         """Validate required inputs.
@@ -184,18 +228,25 @@ class ReplicateVideoGenerator:
             output_file_name: Output file name (must be non-empty)
 
         Raises:
-            ValueError: If any required input is empty or None
+            ValidationError: If any required input is empty or None
         """
         if not model:
-            raise ValueError(
-                "model is required - call list_video_models_replicate to see available models"
+            raise ValidationError(
+                "model is required - call list_video_models_replicate to see available models",
+                parameter="model",
             )
         if not output_file_name:
-            raise ValueError("output_file_name is required")
+            raise ValidationError(
+                "output_file_name is required",
+                parameter="output_file_name",
+            )
         if not image:
-            raise ValueError("image is required")
+            raise ValidationError(
+                "image is required",
+                parameter="image",
+            )
 
-    def _convert_image(self, abs_image_path: str) -> str:
+    def _convert_image(self, abs_image_path: str, ctx: RequestContext) -> str:
         """Convert input image to base64 data URI for API submission.
 
         Replicate's API accepts images as data URIs (base64-encoded with MIME type).
@@ -203,21 +254,20 @@ class ReplicateVideoGenerator:
 
         Args:
             abs_image_path: Absolute path to the input image file
+            ctx: Request context for logging
 
         Returns:
             Data URI string (e.g., 'data:image/png;base64,...')
 
         Raises:
-            ValueError: If the image file doesn't exist or has unsupported format
+            FileError: If the image file doesn't exist or cannot be read.
+            ValidationError: If the image format is not supported.
         """
-        logger.info("Converting input image to data URI")
-        try:
-            image_data_uri = image_to_data_uri(abs_image_path)
-            logger.info(f"Image conversion successful, data URI length: {len(image_data_uri)}")
-            return image_data_uri
-        except FileNotFoundError as e:
-            logger.error(f"Input image not found: {e}")
-            raise ValueError(f"Input image not found: {abs_image_path}")
+        ctx.log_progress("Converting input image to data URI")
+        # image_to_data_uri now raises FileError/ValidationError with context
+        image_data_uri = image_to_data_uri(abs_image_path)
+        ctx.log_debug("Image conversion successful", data_uri_length=len(image_data_uri))
+        return image_data_uri
 
     def _build_model_input(
         self,
@@ -277,6 +327,7 @@ class ReplicateVideoGenerator:
         model: str,
         model_input: dict[str, Any],
         progress_callback: ProgressCallback | None,
+        ctx: RequestContext,
     ) -> Any:
         """Run prediction with progress reporting and timeout.
 
@@ -291,28 +342,49 @@ class ReplicateVideoGenerator:
             model: The Replicate model ID
             model_input: The input dictionary for the model
             progress_callback: Optional async callback for progress updates
+            ctx: Request context for logging
 
         Returns:
             The prediction output (usually a URL to the generated video)
 
         Raises:
-            ValueError: If generation fails, is canceled, or times out
+            GenerationError: If generation fails or is canceled.
+            WyrdTimeoutError: If generation times out.
         """
         timeout_minutes = VIDEO_GENERATION_TIMEOUT_SECONDS // 60
-        logger.info(f"Creating prediction with model: {model}")
-        logger.info(f"Timeout: {VIDEO_GENERATION_TIMEOUT_SECONDS}s ({timeout_minutes} min)")
+        ctx.log_progress(
+            "Creating prediction",
+            timeout_seconds=VIDEO_GENERATION_TIMEOUT_SECONDS,
+            timeout_minutes=timeout_minutes,
+        )
 
         prediction = None
+        prediction_id = None
+
         try:
-            prediction = await self._client.predictions.async_create(
-                model=model, input=model_input
-            )
-            logger.info(f"Prediction created: {prediction.id}")
-            logger.info(f"Prediction status: {prediction.status}")
+            # Create prediction
+            try:
+                prediction = await self._client.predictions.async_create(
+                    model=model, input=model_input
+                )
+                prediction_id = prediction.id
+                ctx.log_progress(
+                    "Prediction created",
+                    prediction_id=prediction_id,
+                    initial_status=prediction.status,
+                )
+            except Exception as e:
+                ctx.log_error(e)
+                raise GenerationError(
+                    "Failed to create prediction",
+                    operation="create_prediction",
+                    model=model,
+                    cause=e,
+                )
 
             if progress_callback:
                 await progress_callback(
-                    0, None, f"Video generation started (prediction: {prediction.id})"
+                    0, None, f"Video generation started (prediction: {prediction_id})"
                 )
 
             # Poll for completion
@@ -325,11 +397,19 @@ class ReplicateVideoGenerator:
                 if elapsed > VIDEO_GENERATION_TIMEOUT_SECONDS:
                     raise asyncio.TimeoutError()
 
-                prediction = await self._client.predictions.async_get(prediction.id)
-                poll_count += 1
+                try:
+                    prediction = await self._client.predictions.async_get(prediction_id)
+                except Exception as e:
+                    ctx.log_warning("Failed to poll prediction status", error=str(e))
+                    # Continue polling despite transient errors
+                    await asyncio.sleep(PROGRESS_INTERVAL_SECONDS)
+                    continue
 
-                logger.info(
-                    f"Poll {poll_count}: status={prediction.status}, elapsed={elapsed:.0f}s"
+                poll_count += 1
+                ctx.log_debug(
+                    f"Poll {poll_count}",
+                    status=prediction.status,
+                    elapsed_seconds=int(elapsed),
                 )
 
                 if progress_callback:
@@ -342,15 +422,25 @@ class ReplicateVideoGenerator:
                     )
 
                 if prediction.status == "succeeded":
-                    logger.info("Prediction succeeded!")
+                    ctx.log_progress("Prediction succeeded", poll_count=poll_count)
                     break
                 elif prediction.status == "failed":
                     error_msg = prediction.error or "Unknown error"
-                    logger.error(f"Prediction failed: {error_msg}")
-                    raise ValueError(f"Video generation failed: {error_msg}")
+                    ctx.log_error(Exception(error_msg))
+                    raise GenerationError(
+                        f"Video generation failed: {error_msg}",
+                        operation="video_generation",
+                        model=model,
+                        prediction_id=prediction_id,
+                        replicate_error=error_msg,
+                    )
                 elif prediction.status == "canceled":
-                    logger.error("Prediction was canceled")
-                    raise ValueError("Video generation was canceled")
+                    raise GenerationError(
+                        "Video generation was canceled",
+                        operation="video_generation",
+                        model=model,
+                        prediction_id=prediction_id,
+                    )
 
                 await asyncio.sleep(PROGRESS_INTERVAL_SECONDS)
 
@@ -362,21 +452,39 @@ class ReplicateVideoGenerator:
             return prediction.output
 
         except asyncio.TimeoutError:
-            logger.error(f"Timed out after {VIDEO_GENERATION_TIMEOUT_SECONDS} seconds")
-            if prediction:
-                try:
-                    logger.info(f"Attempting to cancel prediction {prediction.id}")
-                    await self._client.predictions.async_cancel(prediction.id)
-                    logger.info("Prediction canceled successfully")
-                except Exception as cancel_error:
-                    logger.warning(f"Failed to cancel prediction: {cancel_error}")
-            raise ValueError(
-                f"Video generation timed out after {timeout_minutes} minutes. "
-                f"The prediction may still be running on Replicate's servers. "
-                f"Check the Replicate dashboard for status."
+            elapsed = asyncio.get_event_loop().time() - start_time if "start_time" in dir() else 0
+            ctx.log_warning(
+                "Generation timed out",
+                timeout_seconds=VIDEO_GENERATION_TIMEOUT_SECONDS,
+                elapsed_seconds=int(elapsed),
+                prediction_id=prediction_id,
             )
 
-    async def _process_output(self, output: Any, abs_output_path: str) -> list[str]:
+            # Attempt to cancel the prediction
+            if prediction_id:
+                try:
+                    ctx.log_progress("Attempting to cancel prediction", prediction_id=prediction_id)
+                    await self._client.predictions.async_cancel(prediction_id)
+                    ctx.log_progress("Prediction canceled successfully")
+                except Exception as cancel_error:
+                    ctx.log_warning("Failed to cancel prediction", error=str(cancel_error))
+
+            raise WyrdTimeoutError(
+                f"Video generation timed out after {timeout_minutes} minutes. "
+                f"The prediction may still be running on Replicate's servers. "
+                f"Check the Replicate dashboard for status.",
+                timeout_seconds=VIDEO_GENERATION_TIMEOUT_SECONDS,
+                elapsed_seconds=elapsed,
+                model=model,
+                prediction_id=prediction_id,
+            )
+
+    async def _process_output(
+        self,
+        output: Any,
+        abs_output_path: str,
+        ctx: RequestContext,
+    ) -> list[str]:
         """Process Replicate output and save files.
 
         Video models typically return output as:
@@ -387,61 +495,72 @@ class ReplicateVideoGenerator:
         Args:
             output: The prediction output from Replicate
             abs_output_path: Absolute path template for output file
+            ctx: Request context for logging
 
         Returns:
             List of absolute paths to saved video files
 
         Raises:
-            ValueError: If download fails
+            FileError: If download or save fails.
         """
-        logger.info(f"Output type: {type(output)}")
-        logger.info(f"Output is string: {isinstance(output, str)}")
+        ctx.log_debug("Processing output", output_type=type(output).__name__)
 
         saved_files: list[str] = []
 
         if isinstance(output, str):
             # Single URL output
-            logger.info(f"Processing single URL output: {output}")
+            ctx.log_progress("Downloading video from URL")
             final_path, used_idx = get_next_available_path(abs_output_path)
-            logger.info(f"Downloading to file: {final_path} (index: {used_idx})")
 
-            try:
-                bytes_written = await download_file(output, final_path)
-                logger.info(f"Downloaded {bytes_written} bytes to {final_path}")
-                saved_files.append(final_path)
-            except httpx.HTTPError as e:
-                logger.error(f"Failed to download video: {e}")
-                raise ValueError(f"Failed to download video from {output}: {e}")
+            # download_file now raises FileError with context
+            bytes_written = await download_file(output, final_path)
+            ctx.log_progress(f"Downloaded video", path=final_path, bytes=bytes_written)
+            saved_files.append(final_path)
 
         elif hasattr(output, "read"):
             # FileOutput object
-            logger.info("Processing FileOutput object with read() method")
+            ctx.log_debug("Processing FileOutput object with read() method")
             final_path, _ = get_next_available_path(abs_output_path)
 
-            with open(final_path, "wb") as f:
-                data = output.read()
-                logger.info(f"Read {len(data)} bytes from output")
-                f.write(data)
-
-            saved_files.append(final_path)
+            try:
+                with open(final_path, "wb") as f:
+                    data = output.read()
+                    f.write(data)
+                ctx.log_progress(f"Saved video", path=final_path, bytes=len(data))
+                saved_files.append(final_path)
+            except OSError as e:
+                raise FileError(
+                    "Failed to save video file",
+                    path=final_path,
+                    operation="write",
+                    cause=e,
+                )
 
         elif hasattr(output, "__iter__") and not isinstance(output, (str, bytes)):
-            logger.info("Processing iterable output (multiple files)")
-            saved_files = await self._process_iterable_output(output, abs_output_path)
+            ctx.log_debug("Processing iterable output (multiple files)")
+            saved_files = await self._process_iterable_output(output, abs_output_path, ctx)
 
         else:
-            logger.warning(f"Unexpected output type: {type(output)}, value: {output}")
+            ctx.log_warning(
+                "Unexpected output type",
+                output_type=type(output).__name__,
+                output_value=str(output)[:200],
+            )
 
         return saved_files
 
     async def _process_iterable_output(
-        self, output: Any, abs_output_path: str
+        self,
+        output: Any,
+        abs_output_path: str,
+        ctx: RequestContext,
     ) -> list[str]:
         """Process iterable output containing multiple files.
 
         Args:
             output: Iterable of URLs, FileOutput objects, or bytes
             abs_output_path: Absolute path template for output files
+            ctx: Request context for logging
 
         Returns:
             List of absolute paths to saved files
@@ -460,19 +579,29 @@ class ReplicateVideoGenerator:
             if isinstance(item, str):
                 try:
                     bytes_written = await download_file(item, file_path)
-                    logger.info(f"Downloaded {bytes_written} bytes to {file_path}")
-                except httpx.HTTPError as e:
-                    logger.error(f"Failed to download video: {e}")
+                    ctx.log_debug(f"Downloaded file {idx + 1}", path=file_path, bytes=bytes_written)
+                except FileError as e:
+                    ctx.log_warning(f"Failed to download file {idx + 1}", error=str(e))
                     continue
             elif hasattr(item, "read"):
-                with open(file_path, "wb") as f:
-                    data = item.read()
-                    f.write(data)
+                try:
+                    with open(file_path, "wb") as f:
+                        data = item.read()
+                        f.write(data)
+                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(data))
+                except OSError as e:
+                    ctx.log_warning(f"Failed to save file {idx + 1}", error=str(e))
+                    continue
             elif isinstance(item, bytes):
-                with open(file_path, "wb") as f:
-                    f.write(item)
+                try:
+                    with open(file_path, "wb") as f:
+                        f.write(item)
+                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(item))
+                except OSError as e:
+                    ctx.log_warning(f"Failed to save file {idx + 1}", error=str(e))
+                    continue
             else:
-                logger.warning(f"Unknown item type: {type(item)}")
+                ctx.log_warning(f"Unknown item type in output", item_type=type(item).__name__)
                 continue
 
             saved_files.append(file_path)

@@ -11,7 +11,12 @@ Supported formats:
 """
 
 import base64
+import logging
 import os
+
+from wyrd_gen_mcp.exceptions import FileError, ValidationError
+
+logger = logging.getLogger("wyrd-gen-mcp.utils.image")
 
 
 # Map file extensions to MIME types for data URI construction.
@@ -34,24 +39,54 @@ def image_to_data_uri(file_path: str) -> str:
         Data URI string in format: data:image/{format};base64,{encoded_data}
 
     Raises:
-        FileNotFoundError: When the image file doesn't exist
-        ValueError: When the image format is not supported
+        FileError: When the image file doesn't exist or cannot be read.
+        ValidationError: When the image format is not supported.
     """
+    logger.debug(f"Converting image to data URI: {file_path}")
+
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Input image not found: {file_path}")
+        logger.error(f"Input image not found: {file_path}")
+        raise FileError(
+            "Input image file not found",
+            path=file_path,
+            operation="read",
+        )
 
     ext = os.path.splitext(file_path)[1].lower()
 
     if ext not in MIME_TYPE_MAP:
         supported = ", ".join(MIME_TYPE_MAP.keys())
-        raise ValueError(f"Unsupported image format: {ext}. Supported formats: {supported}")
+        logger.error(f"Unsupported image format {ext} for file: {file_path}")
+        raise ValidationError(
+            f"Unsupported image format: {ext}",
+            parameter="file_path",
+            value=file_path,
+            supported_formats=list(MIME_TYPE_MAP.keys()),
+        )
 
     mime_type = MIME_TYPE_MAP[ext]
 
     try:
         with open(file_path, "rb") as f:
             image_data = f.read()
+
+        file_size = len(image_data)
+        logger.debug(f"Read {file_size} bytes from {file_path}")
+
         encoded_data = base64.b64encode(image_data).decode("utf-8")
-        return f"data:{mime_type};base64,{encoded_data}"
-    except Exception as e:
-        raise ValueError(f"Failed to read image file: {str(e)}")
+        data_uri = f"data:{mime_type};base64,{encoded_data}"
+
+        logger.info(
+            f"Converted image to data URI: {file_path} "
+            f"({file_size} bytes -> {len(data_uri)} chars)"
+        )
+        return data_uri
+
+    except OSError as e:
+        logger.error(f"Failed to read image file {file_path}: {e}")
+        raise FileError(
+            "Failed to read image file",
+            path=file_path,
+            operation="read",
+            cause=e,
+        )

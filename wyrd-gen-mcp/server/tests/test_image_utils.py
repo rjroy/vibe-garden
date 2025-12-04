@@ -149,23 +149,27 @@ class TestImageToDataURI:
             os.unlink(temp_path)
 
     def test_missing_file_raises_file_not_found_error(self):
-        """Test that a missing file raises FileNotFoundError."""
+        """Test that a missing file raises FileError."""
+        from wyrd_gen_mcp.exceptions import FileError
+
         nonexistent_path = "/tmp/definitely_does_not_exist_12345.png"
 
-        with pytest.raises(FileNotFoundError) as exc_info:
+        with pytest.raises(FileError) as exc_info:
             image_to_data_uri(nonexistent_path)
 
-        # Verify the error message contains the path
-        assert nonexistent_path in str(exc_info.value)
+        # Verify the error contains context about the path
+        assert exc_info.value.context.get("path") == nonexistent_path
 
     def test_unsupported_format_raises_value_error(self):
-        """Test that an unsupported file format raises ValueError."""
+        """Test that an unsupported file format raises ValidationError."""
+        from wyrd_gen_mcp.exceptions import ValidationError
+
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
             f.write(b"not an image")
             temp_path = f.name
 
         try:
-            with pytest.raises(ValueError) as exc_info:
+            with pytest.raises(ValidationError) as exc_info:
                 image_to_data_uri(temp_path)
 
             # Verify the error message mentions unsupported format
@@ -175,13 +179,15 @@ class TestImageToDataURI:
             os.unlink(temp_path)
 
     def test_unsupported_format_gif_raises_value_error(self):
-        """Test that GIF format (not supported) raises ValueError."""
+        """Test that GIF format (not supported) raises ValidationError."""
+        from wyrd_gen_mcp.exceptions import ValidationError
+
         with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
             f.write(b"GIF89a")  # Minimal GIF header
             temp_path = f.name
 
         try:
-            with pytest.raises(ValueError) as exc_info:
+            with pytest.raises(ValidationError) as exc_info:
                 image_to_data_uri(temp_path)
 
             assert "Unsupported image format" in str(exc_info.value)

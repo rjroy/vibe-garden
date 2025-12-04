@@ -21,10 +21,12 @@ from typing import Any
 import torch
 from diffusers import AutoPipelineForText2Image
 
+from wyrd_gen_mcp.exceptions import GenerationError, ValidationError
 from wyrd_gen_mcp.generators.base import GenerationResult
 from wyrd_gen_mcp.utils.file_utils import get_next_available_path, resolve_output_path
+from wyrd_gen_mcp.utils.logging_utils import RequestContext
 
-logger = logging.getLogger("wyrd-gen-mcp")
+logger = logging.getLogger("wyrd-gen-mcp.generators.local_image")
 
 
 class LocalImageGenerator:
@@ -81,57 +83,89 @@ class LocalImageGenerator:
             GenerationResult with saved file paths
 
         Raises:
-            ValueError: If required parameters are missing
+            ValidationError: If required parameters are missing.
+            GenerationError: If model loading or image generation fails.
         """
-        logger.info("=" * 80)
-        logger.info("LocalImageGenerator.generate called")
-        logger.info(f"prompt={prompt}, model={model}, output_file_name={output_file_name}")
-
         if parameters is None:
             parameters = {}
 
+        # Validate inputs
+        self._validate_inputs(model, output_file_name)
+
+        # Truncate prompt for logging
+        log_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
+
+        with RequestContext(
+            operation="local_image_generation",
+            logger=logger,
+            model=model,
+        ) as ctx:
+            ctx.log_start(prompt=log_prompt, output=output_file_name)
+
+            abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
+            ctx.log_debug("Resolved output path", path=abs_output_path)
+
+            try:
+                device = self._get_device()
+                ctx.log_progress(f"Using device: {device}")
+
+                ctx.log_progress("Loading model (this may take a while on first run)")
+                pipe = self._load_pipeline(model, device, ctx)
+                pipe = self._apply_optimizations(pipe, device, ctx)
+
+                # Generate image
+                ctx.log_progress("Generating image")
+                image = pipe(prompt, **parameters).images[0]
+
+                # Save image
+                final_path, used_idx = get_next_available_path(abs_output_path)
+                image.save(final_path)
+                ctx.log_progress("Saved image", path=final_path, index=used_idx)
+
+                result = GenerationResult(
+                    success=True,
+                    model=model,
+                    prompt=prompt,
+                    saved_files=[final_path],
+                    parameters=parameters,
+                )
+
+                ctx.log_success(saved_file=final_path)
+                return result
+
+            except (ValidationError, GenerationError):
+                raise  # Re-raise with original context
+            except Exception as e:
+                ctx.log_error(e)
+                raise GenerationError(
+                    "Local image generation failed",
+                    operation="local_generation",
+                    model=model,
+                    prompt=prompt,
+                    cause=e,
+                )
+
+    def _validate_inputs(self, model: str, output_file_name: str) -> None:
+        """Validate required inputs.
+
+        Args:
+            model: The model ID to validate.
+            output_file_name: The output file name to validate.
+
+        Raises:
+            ValidationError: If any required input is missing.
+        """
         if not model:
-            raise ValueError(
-                "model is required - call list_image_models_local to see available models"
+            raise ValidationError(
+                "model is required - call list_image_models_local to see available models",
+                parameter="model",
             )
 
         if not output_file_name:
-            raise ValueError("output_file_name is required")
-
-        abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
-
-        logger.info(f"Loading model: {model}")
-        try:
-            device = self._get_device()
-            logger.info(f"Target device: {device}")
-
-            pipe = self._load_pipeline(model, device)
-            pipe = self._apply_optimizations(pipe, device)
-
-            # Generate image
-            logger.info("Generating image...")
-            image = pipe(prompt, **parameters).images[0]
-
-            # Save image
-            final_path, _ = get_next_available_path(abs_output_path)
-            image.save(final_path)
-            logger.info(f"Saved local image to: {final_path}")
-
-            result = GenerationResult(
-                success=True,
-                model=model,
-                prompt=prompt,
-                saved_files=[final_path],
-                parameters=parameters,
+            raise ValidationError(
+                "output_file_name is required",
+                parameter="output_file_name",
             )
-
-            logger.info(f"Returning result: {result.to_dict()}")
-            logger.info("=" * 80)
-            return result
-
-        except Exception as e:
-            logger.exception("Error in local generation")
-            raise e
 
     def _get_device(self) -> str:
         """Determine the best available device."""
@@ -140,34 +174,77 @@ class LocalImageGenerator:
             return "cpu"
         return "cuda"
 
-    def _load_pipeline(self, model: str, device: str) -> AutoPipelineForText2Image:
-        """Load the diffusers pipeline."""
-        return AutoPipelineForText2Image.from_pretrained(
-            model,
-            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-            low_cpu_mem_usage=True,
-        )
+    def _load_pipeline(
+        self,
+        model: str,
+        device: str,
+        ctx: RequestContext,
+    ) -> AutoPipelineForText2Image:
+        """Load the diffusers pipeline.
+
+        Args:
+            model: HuggingFace model ID.
+            device: Target device ("cuda" or "cpu").
+            ctx: Request context for logging.
+
+        Returns:
+            Loaded pipeline ready for inference.
+
+        Raises:
+            GenerationError: If model loading fails.
+        """
+        try:
+            pipe = AutoPipelineForText2Image.from_pretrained(
+                model,
+                torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+                low_cpu_mem_usage=True,
+            )
+            ctx.log_debug("Model loaded successfully")
+            return pipe
+        except Exception as e:
+            ctx.log_error(e)
+            raise GenerationError(
+                f"Failed to load model: {model}",
+                operation="load_model",
+                model=model,
+                cause=e,
+            )
 
     def _apply_optimizations(
-        self, pipe: AutoPipelineForText2Image, device: str
+        self,
+        pipe: AutoPipelineForText2Image,
+        device: str,
+        ctx: RequestContext,
     ) -> AutoPipelineForText2Image:
-        """Apply memory optimizations to the pipeline."""
+        """Apply memory optimizations to the pipeline.
+
+        Args:
+            pipe: The loaded pipeline.
+            device: Target device ("cuda" or "cpu").
+            ctx: Request context for logging.
+
+        Returns:
+            Pipeline with optimizations applied.
+        """
         if device == "cuda":
-            logger.info("Enabling memory optimizations for GPU")
+            ctx.log_debug("Enabling memory optimizations for GPU")
             try:
                 pipe.enable_vae_tiling()
+                ctx.log_debug("Enabled VAE tiling")
             except AttributeError:
-                logger.warning("Pipeline does not support enable_vae_tiling")
+                ctx.log_debug("Pipeline does not support enable_vae_tiling")
 
             try:
                 pipe.enable_attention_slicing(1)
+                ctx.log_debug("Enabled attention slicing")
             except AttributeError:
-                logger.warning("Pipeline does not support enable_attention_slicing")
+                ctx.log_debug("Pipeline does not support enable_attention_slicing")
 
             try:
                 pipe.enable_model_cpu_offload()
+                ctx.log_debug("Enabled model CPU offload")
             except AttributeError:
-                logger.warning(
+                ctx.log_warning(
                     "Pipeline does not support enable_model_cpu_offload, "
                     "moving to device manually"
                 )

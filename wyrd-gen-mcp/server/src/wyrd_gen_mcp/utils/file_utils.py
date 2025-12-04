@@ -6,9 +6,14 @@ This module provides file system utilities for:
 - Downloading files from URLs asynchronously
 """
 
+import logging
 import os
 
 import httpx
+
+from wyrd_gen_mcp.exceptions import FileError
+
+logger = logging.getLogger("wyrd-gen-mcp.utils.file")
 
 
 def get_next_available_path(base_path: str, start_idx: int = 0) -> tuple[str, int]:
@@ -94,8 +99,8 @@ async def download_file(url: str, dest_path: str) -> int:
         Number of bytes written to the file.
 
     Raises:
-        httpx.HTTPError: If the download fails (network error, 4xx/5xx response).
-        OSError: If the file cannot be written to disk.
+        FileError: If the download fails (network error, 4xx/5xx response)
+            or if the file cannot be written to disk.
 
     Example:
         bytes_written = await download_file(
@@ -104,9 +109,60 @@ async def download_file(url: str, dest_path: str) -> int:
         )
         print(f"Downloaded {bytes_written} bytes")
     """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, follow_redirects=True)
-        response.raise_for_status()
-        with open(dest_path, "wb") as f:
-            f.write(response.content)
-        return len(response.content)
+    # Truncate URL for logging (hide potential tokens in query params)
+    log_url = url.split("?")[0] if "?" in url else url
+    if len(log_url) > 80:
+        log_url = log_url[:80] + "..."
+
+    logger.debug(f"Starting download: {log_url} -> {dest_path}")
+
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.get(url, follow_redirects=True)
+            response.raise_for_status()
+
+            content_length = len(response.content)
+            logger.debug(f"Downloaded {content_length} bytes from {log_url}")
+
+            with open(dest_path, "wb") as f:
+                f.write(response.content)
+
+            logger.info(f"Saved {content_length} bytes to {dest_path}")
+            return content_length
+
+    except httpx.TimeoutException as e:
+        logger.error(f"Download timeout: {log_url}")
+        raise FileError(
+            "Download timed out",
+            path=dest_path,
+            operation="download",
+            cause=e,
+            url=log_url,
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error {e.response.status_code} downloading {log_url}")
+        raise FileError(
+            f"Download failed with HTTP {e.response.status_code}",
+            path=dest_path,
+            operation="download",
+            cause=e,
+            url=log_url,
+            status_code=e.response.status_code,
+        )
+    except httpx.HTTPError as e:
+        logger.error(f"Network error downloading {log_url}: {e}")
+        raise FileError(
+            "Download failed due to network error",
+            path=dest_path,
+            operation="download",
+            cause=e,
+            url=log_url,
+        )
+    except OSError as e:
+        logger.error(f"Failed to write file {dest_path}: {e}")
+        raise FileError(
+            "Failed to write downloaded file",
+            path=dest_path,
+            operation="write",
+            cause=e,
+        )

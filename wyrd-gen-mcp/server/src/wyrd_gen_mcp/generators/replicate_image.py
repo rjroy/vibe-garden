@@ -20,10 +20,12 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from replicate import Client
 
+from wyrd_gen_mcp.exceptions import GenerationError, ValidationError
 from wyrd_gen_mcp.generators.base import GenerationResult
 from wyrd_gen_mcp.utils.file_utils import get_next_available_path, resolve_output_path
+from wyrd_gen_mcp.utils.logging_utils import RequestContext
 
-logger = logging.getLogger("wyrd-gen-mcp")
+logger = logging.getLogger("wyrd-gen-mcp.generators.replicate_image")
 
 
 class ReplicateImageGenerator:
@@ -83,50 +85,103 @@ class ReplicateImageGenerator:
             GenerationResult with saved file paths
 
         Raises:
-            ValueError: If required parameters are missing
+            ValidationError: If required parameters are missing or invalid.
+            GenerationError: If the Replicate API call fails.
         """
-        logger.info("=" * 80)
-        logger.info("ReplicateImageGenerator.generate called")
-        logger.info(f"prompt={prompt}, model={model}, output_file_name={output_file_name}")
-
         if parameters is None:
             parameters = {}
 
+        # Validate inputs before starting
+        self._validate_inputs(model, output_file_name)
+
+        # Truncate prompt for logging (keep full prompt for API)
+        log_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
+
+        with RequestContext(
+            operation="replicate_image_generation",
+            logger=logger,
+            model=model,
+        ) as ctx:
+            ctx.log_start(prompt=log_prompt, output=output_file_name)
+
+            abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
+            ctx.log_debug("Resolved output path", path=abs_output_path)
+
+            model_input = {"prompt": prompt, **parameters}
+            ctx.log_debug("Prepared model input", param_keys=list(model_input.keys()))
+
+            # Call Replicate API with error handling
+            try:
+                ctx.log_progress("Calling Replicate API")
+                output = await self._client.async_run(model, input=model_input)
+                ctx.log_debug("API call completed", output_type=type(output).__name__)
+            except Exception as e:
+                ctx.log_error(e)
+                raise GenerationError(
+                    "Replicate API call failed",
+                    operation="replicate_api_call",
+                    model=model,
+                    prompt=prompt,
+                    cause=e,
+                )
+
+            # Process output and save files
+            try:
+                saved_files = self._process_output(output, abs_output_path, ctx)
+            except Exception as e:
+                ctx.log_error(e)
+                raise GenerationError(
+                    "Failed to process and save output",
+                    operation="save_output",
+                    model=model,
+                    cause=e,
+                )
+
+            if not saved_files:
+                ctx.log_warning("No files were saved from output")
+
+            result = GenerationResult(
+                success=True,
+                model=model,
+                prompt=prompt,
+                saved_files=saved_files,
+                parameters=parameters,
+            )
+
+            ctx.log_success(
+                saved_files=len(saved_files),
+                first_file=saved_files[0] if saved_files else None,
+            )
+            return result
+
+    def _validate_inputs(self, model: str, output_file_name: str) -> None:
+        """Validate required inputs.
+
+        Args:
+            model: The model ID to validate.
+            output_file_name: The output file name to validate.
+
+        Raises:
+            ValidationError: If any required input is missing.
+        """
         if not model:
-            raise ValueError(
-                "model is required - call list_image_models_replicate to see available models"
+            raise ValidationError(
+                "model is required - call list_image_models_replicate to see available models",
+                parameter="model",
             )
 
         if not output_file_name:
-            raise ValueError("output_file_name is required")
+            raise ValidationError(
+                "output_file_name is required",
+                parameter="output_file_name",
+            )
 
-        abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
-        logger.info(f"Output file name (absolute): {abs_output_path}")
-
-        model_input = {"prompt": prompt, **parameters}
-        logger.info(f"Model input: {model_input}")
-
-        # Run the model using client's async method
-        logger.info(f"Calling client.async_run with model: {model}")
-        output = await self._client.async_run(model, input=model_input)
-        logger.info("Replicate API call completed")
-        logger.info(f"Output type: {type(output)}")
-
-        saved_files = self._process_output(output, abs_output_path)
-
-        result = GenerationResult(
-            success=True,
-            model=model,
-            prompt=prompt,
-            saved_files=saved_files,
-            parameters=parameters,
-        )
-
-        logger.info(f"Returning result: {result.to_dict()}")
-        logger.info("=" * 80)
-        return result
-
-    def _process_output(self, output: Any, abs_output_path: str) -> list[str]:
+    def _process_output(
+        self,
+        output: Any,
+        abs_output_path: str,
+        ctx: RequestContext,
+    ) -> list[str]:
         """Process Replicate output and save files.
 
         Replicate models can return output in several formats:
@@ -142,6 +197,7 @@ class ReplicateImageGenerator:
                 or other types depending on the model.
             abs_output_path: Absolute path template for output file. Files will
                 be saved with incrementing indices (e.g., output_0.png, output_1.png).
+            ctx: Request context for logging.
 
         Returns:
             List of absolute paths to saved files.
@@ -150,20 +206,19 @@ class ReplicateImageGenerator:
 
         # Case 1: Single FileOutput object with read() method
         if hasattr(output, "read"):
-            logger.info("Processing FileOutput object with read() method")
+            ctx.log_debug("Processing FileOutput object with read() method")
             final_path, used_idx = get_next_available_path(abs_output_path)
-            logger.info(f"Saving to file: {final_path} (index: {used_idx})")
 
             with open(final_path, "wb") as f:
                 data = output.read()
-                logger.info(f"Read {len(data)} bytes from output")
                 f.write(data)
 
+            ctx.log_progress(f"Saved {len(data)} bytes", path=final_path, index=used_idx)
             saved_files.append(final_path)
 
         # Case 2: Iterable of outputs (multiple files)
         elif hasattr(output, "__iter__") and not isinstance(output, str):
-            logger.info("Processing iterable output (multiple files)")
+            ctx.log_debug("Processing iterable output (multiple files)")
             start_offset = self._find_start_offset(abs_output_path)
 
             for idx, item in enumerate(output):
@@ -173,17 +228,23 @@ class ReplicateImageGenerator:
                     with open(file_path, "wb") as f:
                         data = item.read()
                         f.write(data)
+                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(data))
                 elif isinstance(item, bytes):
                     with open(file_path, "wb") as f:
                         f.write(item)
+                    ctx.log_debug(f"Saved file {idx + 1}", path=file_path, bytes=len(item))
                 else:
-                    logger.warning(f"Unknown item type: {type(item)}")
+                    ctx.log_warning(f"Unknown item type in output", item_type=type(item).__name__)
                     continue
 
                 saved_files.append(file_path)
         else:
             # Unexpected format - log for debugging
-            logger.warning(f"Unexpected output type: {type(output)}, value: {output}")
+            ctx.log_warning(
+                "Unexpected output type",
+                output_type=type(output).__name__,
+                output_value=str(output)[:200],
+            )
 
         return saved_files
 

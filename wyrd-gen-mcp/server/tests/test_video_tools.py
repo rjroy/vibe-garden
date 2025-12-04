@@ -229,12 +229,14 @@ async def test_iteration_model_is_cheapest():
 @pytest.mark.asyncio
 async def test_missing_input_image_error(temp_output_dir, mock_context):
     """AT-5: System returns structured error when input image doesn't exist."""
+    from wyrd_gen_mcp.exceptions import FileError
+
     # Use a path that doesn't exist
     nonexistent_image = os.path.join(temp_output_dir, "nonexistent.png")
     output_path = os.path.join(temp_output_dir, "output.mp4")
 
-    # The function raises ValueError which is caught by the tool handler
-    with pytest.raises(ValueError) as exc_info:
+    # The function raises FileError with context
+    with pytest.raises(FileError) as exc_info:
         await generate_video_replicate(
             image=nonexistent_image,
             prompt="Test prompt",
@@ -243,8 +245,8 @@ async def test_missing_input_image_error(temp_output_dir, mock_context):
             ctx=mock_context,
         )
 
-    # Verify error message mentions the missing file
-    assert "not found" in str(exc_info.value).lower()
+    # Verify error has context about the path
+    assert exc_info.value.context.get("path") == nonexistent_image
 
 
 # AT-7: Cost display present in model listing
@@ -265,6 +267,8 @@ async def test_cost_display_in_listing():
 @pytest.mark.asyncio
 async def test_unsupported_image_format(temp_output_dir, mock_context):
     """Verify system returns error for unsupported image formats."""
+    from wyrd_gen_mcp.exceptions import ValidationError
+
     # Create a temporary file with unsupported extension
     with tempfile.NamedTemporaryFile(mode="wb", suffix=".bmp", delete=False) as f:
         f.write(b"fake_bmp_data")
@@ -273,8 +277,8 @@ async def test_unsupported_image_format(temp_output_dir, mock_context):
     try:
         output_path = os.path.join(temp_output_dir, "output.mp4")
 
-        # The function raises ValueError for unsupported format
-        with pytest.raises(ValueError) as exc_info:
+        # The function raises ValidationError for unsupported format
+        with pytest.raises(ValidationError) as exc_info:
             await generate_video_replicate(
                 image=unsupported_image,
                 prompt="Test prompt",
