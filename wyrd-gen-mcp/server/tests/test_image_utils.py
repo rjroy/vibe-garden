@@ -12,7 +12,88 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from wyrd_gen_mcp.server import image_to_data_uri
+from wyrd_gen_mcp.utils.image_utils import (
+    detect_image_format,
+    image_to_data_uri,
+    replace_extension,
+)
+
+
+class TestDetectImageFormat:
+    """Test detect_image_format() function."""
+
+    def test_detect_png_format(self):
+        """Test that PNG magic bytes are correctly detected."""
+        # PNG signature: 89 50 4E 47 0D 0A 1A 0A
+        png_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 20
+        assert detect_image_format(png_data) == ".png"
+
+    def test_detect_jpeg_format(self):
+        """Test that JPEG magic bytes are correctly detected."""
+        # JPEG signature: FF D8 FF
+        jpeg_data = b"\xff\xd8\xff\xe0" + b"\x00" * 20
+        assert detect_image_format(jpeg_data) == ".jpg"
+
+    def test_detect_webp_format(self):
+        """Test that WebP magic bytes are correctly detected."""
+        # WebP: RIFF....WEBP
+        webp_data = b"RIFF\x00\x00\x00\x00WEBP" + b"\x00" * 10
+        assert detect_image_format(webp_data) == ".webp"
+
+    def test_detect_gif87a_format(self):
+        """Test that GIF87a magic bytes are correctly detected."""
+        gif_data = b"GIF87a" + b"\x00" * 20
+        assert detect_image_format(gif_data) == ".gif"
+
+    def test_detect_gif89a_format(self):
+        """Test that GIF89a magic bytes are correctly detected."""
+        gif_data = b"GIF89a" + b"\x00" * 20
+        assert detect_image_format(gif_data) == ".gif"
+
+    def test_unknown_format_returns_none(self):
+        """Test that unknown formats return None."""
+        unknown_data = b"unknown format data here"
+        assert detect_image_format(unknown_data) is None
+
+    def test_empty_data_returns_none(self):
+        """Test that empty data returns None."""
+        assert detect_image_format(b"") is None
+
+    def test_short_data_returns_none(self):
+        """Test that data too short for detection returns None."""
+        short_data = b"\x89PNG"  # Only 4 bytes, need 12
+        assert detect_image_format(short_data) is None
+
+    def test_minimum_length_for_detection(self):
+        """Test detection with exactly minimum required bytes."""
+        # Exactly 12 bytes with PNG signature
+        png_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 4
+        assert len(png_data) == 12
+        assert detect_image_format(png_data) == ".png"
+
+
+class TestReplaceExtension:
+    """Test replace_extension() function."""
+
+    def test_replace_png_with_jpg(self):
+        """Test replacing .png extension with .jpg."""
+        assert replace_extension("/path/to/file.png", ".jpg") == "/path/to/file.jpg"
+
+    def test_replace_extension_preserves_path(self):
+        """Test that the directory path is preserved."""
+        assert replace_extension("/home/user/images/photo.png", ".webp") == "/home/user/images/photo.webp"
+
+    def test_replace_extension_no_directory(self):
+        """Test replacing extension on filename without directory."""
+        assert replace_extension("image.png", ".jpg") == "image.jpg"
+
+    def test_replace_extension_multiple_dots(self):
+        """Test replacing extension when filename has multiple dots."""
+        assert replace_extension("/path/to/my.image.file.png", ".jpg") == "/path/to/my.image.file.jpg"
+
+    def test_replace_extension_no_original_extension(self):
+        """Test replacing extension on filename without extension."""
+        assert replace_extension("/path/to/file", ".png") == "/path/to/file.png"
 
 
 class TestImageToDataURI:
@@ -149,23 +230,27 @@ class TestImageToDataURI:
             os.unlink(temp_path)
 
     def test_missing_file_raises_file_not_found_error(self):
-        """Test that a missing file raises FileNotFoundError."""
+        """Test that a missing file raises FileError."""
+        from wyrd_gen_mcp.exceptions import FileError
+
         nonexistent_path = "/tmp/definitely_does_not_exist_12345.png"
 
-        with pytest.raises(FileNotFoundError) as exc_info:
+        with pytest.raises(FileError) as exc_info:
             image_to_data_uri(nonexistent_path)
 
-        # Verify the error message contains the path
-        assert nonexistent_path in str(exc_info.value)
+        # Verify the error contains context about the path
+        assert exc_info.value.context.get("path") == nonexistent_path
 
     def test_unsupported_format_raises_value_error(self):
-        """Test that an unsupported file format raises ValueError."""
+        """Test that an unsupported file format raises ValidationError."""
+        from wyrd_gen_mcp.exceptions import ValidationError
+
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
             f.write(b"not an image")
             temp_path = f.name
 
         try:
-            with pytest.raises(ValueError) as exc_info:
+            with pytest.raises(ValidationError) as exc_info:
                 image_to_data_uri(temp_path)
 
             # Verify the error message mentions unsupported format
@@ -175,13 +260,15 @@ class TestImageToDataURI:
             os.unlink(temp_path)
 
     def test_unsupported_format_gif_raises_value_error(self):
-        """Test that GIF format (not supported) raises ValueError."""
+        """Test that GIF format (not supported) raises ValidationError."""
+        from wyrd_gen_mcp.exceptions import ValidationError
+
         with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
             f.write(b"GIF89a")  # Minimal GIF header
             temp_path = f.name
 
         try:
-            with pytest.raises(ValueError) as exc_info:
+            with pytest.raises(ValidationError) as exc_info:
                 image_to_data_uri(temp_path)
 
             assert "Unsupported image format" in str(exc_info.value)
