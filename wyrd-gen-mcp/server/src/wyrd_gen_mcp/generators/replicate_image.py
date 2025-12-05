@@ -73,6 +73,7 @@ class ReplicateImageGenerator:
         model: str,
         output_file_name: str,
         parameters: dict[str, Any] | None = None,
+        output_directory: str | None = None,
     ) -> GenerationResult:
         """Generate an image using Replicate.
 
@@ -81,6 +82,7 @@ class ReplicateImageGenerator:
             model: The Replicate model to use
             output_file_name: File name to save the generated image
             parameters: Additional model-specific parameters
+            output_directory: Directory to save the output file (overrides invoke_dir)
 
         Returns:
             GenerationResult with saved file paths
@@ -98,6 +100,18 @@ class ReplicateImageGenerator:
         # Truncate prompt for logging (keep full prompt for API)
         log_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
 
+        # Determine base directory for output
+        # If output_directory is provided and absolute, use it directly
+        # If output_directory is relative, resolve it against invoke_dir
+        # If not provided, use invoke_dir
+        if output_directory:
+            if os.path.isabs(output_directory):
+                base_dir = output_directory
+            else:
+                base_dir = os.path.join(self._invoke_dir, output_directory)
+        else:
+            base_dir = self._invoke_dir
+
         with RequestContext(
             operation="replicate_image_generation",
             logger=logger,
@@ -105,7 +119,7 @@ class ReplicateImageGenerator:
         ) as ctx:
             ctx.log_start(prompt=log_prompt, output=output_file_name)
 
-            abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
+            abs_output_path = resolve_output_path(output_file_name, base_dir)
             ctx.log_debug("Resolved output path", path=abs_output_path)
 
             model_input = {"prompt": prompt, **parameters}

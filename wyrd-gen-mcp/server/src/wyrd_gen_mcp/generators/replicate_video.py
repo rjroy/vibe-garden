@@ -115,6 +115,7 @@ class ReplicateVideoGenerator:
         output_file_name: str,
         progress_callback: ProgressCallback | None = None,
         parameters: dict[str, Any] | None = None,
+        output_directory: str | None = None,
     ) -> GenerationResult:
         """Generate a video using Replicate.
 
@@ -125,6 +126,7 @@ class ReplicateVideoGenerator:
             output_file_name: File name to save the generated video
             progress_callback: Optional async callback for progress reporting
             parameters: Optional model-specific parameters
+            output_directory: Directory to save the output file (overrides invoke_dir)
 
         Returns:
             GenerationResult with saved file paths
@@ -144,6 +146,19 @@ class ReplicateVideoGenerator:
         # Truncate prompt for logging
         log_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
 
+        # Determine base directory for output
+        # If output_directory is provided and absolute, use it directly
+        # If output_directory is relative, resolve it against invoke_dir
+        # If not provided, use invoke_dir
+        # Note: input image always resolves against invoke_dir
+        if output_directory:
+            if os.path.isabs(output_directory):
+                output_base_dir = output_directory
+            else:
+                output_base_dir = os.path.join(self._invoke_dir, output_directory)
+        else:
+            output_base_dir = self._invoke_dir
+
         with RequestContext(
             operation="replicate_video_generation",
             logger=logger,
@@ -151,7 +166,7 @@ class ReplicateVideoGenerator:
         ) as ctx:
             ctx.log_start(prompt=log_prompt, input_image=image, output=output_file_name)
 
-            abs_output_path = resolve_output_path(output_file_name, self._invoke_dir)
+            abs_output_path = resolve_output_path(output_file_name, output_base_dir)
             abs_image_path = resolve_output_path(image, self._invoke_dir)
             ctx.log_debug("Resolved paths", output=abs_output_path, input=abs_image_path)
 
