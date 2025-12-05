@@ -70,6 +70,7 @@ class TestImageReplicateTools:
                 model="black-forest-labs/flux-schnell",
                 output_file_name="sunset.png",
                 parameters={"num_inference_steps": 4},
+                output_directory=None,
             )
 
     @pytest.mark.asyncio
@@ -193,6 +194,7 @@ class TestImageLocalTools:
                 model="black-forest-labs/FLUX.1-schnell",
                 output_file_name="landscape.png",
                 parameters={"num_inference_steps": 4},
+                output_directory=None,
             )
 
     @pytest.mark.asyncio

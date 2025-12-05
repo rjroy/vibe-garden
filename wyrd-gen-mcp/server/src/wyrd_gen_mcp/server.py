@@ -138,6 +138,7 @@ async def generate_image_replicate(
     model: str,
     output_file_name: str,
     parameters: dict[str, Any] | None = None,
+    output_directory: str | None = None,
 ) -> str:
     """Generate an image using Replicate.
 
@@ -146,12 +147,14 @@ async def generate_image_replicate(
         model: The Replicate model to use. Call list_image_models_replicate for options.
         output_file_name: File name to save the generated image (e.g., 'my-image.png')
         parameters: Additional model-specific parameters
+        output_directory: Directory to save the output file (overrides default invoke dir)
     """
     result = await replicate_image_generator.generate(
         prompt=prompt,
         model=model,
         output_file_name=output_file_name,
         parameters=parameters,
+        output_directory=output_directory,
     )
     return json.dumps(result.to_dict(), indent=2)
 
@@ -203,6 +206,7 @@ async def generate_image_local(
     model: str,
     output_file_name: str,
     parameters: dict[str, Any] | None = None,
+    output_directory: str | None = None,
 ) -> str:
     """Generate an image using a local model via diffusers.
 
@@ -211,12 +215,14 @@ async def generate_image_local(
         model: The Hugging Face model ID to use. Call list_image_models_local for options.
         output_file_name: File name to save the generated image (e.g., 'my-image.png')
         parameters: Additional model-specific parameters (num_inference_steps, etc.)
+        output_directory: Directory to save the output file (overrides default invoke dir)
     """
     result = await local_image_generator.generate(
         prompt=prompt,
         model=model,
         output_file_name=output_file_name,
         parameters=parameters,
+        output_directory=output_directory,
     )
     return json.dumps(result.to_dict(), indent=2)
 
@@ -268,6 +274,7 @@ async def generate_video_replicate(
     output_file_name: str,
     ctx: Context,
     parameters: dict[str, Any] | None = None,
+    output_directory: str | None = None,
 ) -> str:
     """Generate a video using Replicate with async API, timeout, and progress reporting.
 
@@ -278,6 +285,7 @@ async def generate_video_replicate(
         output_file_name: File name to save the generated video (e.g., 'output.mp4')
         ctx: FastMCP context for progress reporting (injected automatically)
         parameters: Optional model-specific parameters
+        output_directory: Directory to save the output file (overrides default invoke dir)
     """
 
     async def progress_callback(
@@ -292,6 +300,7 @@ async def generate_video_replicate(
         output_file_name=output_file_name,
         progress_callback=progress_callback,
         parameters=parameters,
+        output_directory=output_directory,
     )
     return json.dumps(result.to_dict(), indent=2)
 
