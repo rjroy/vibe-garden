@@ -10,6 +10,18 @@ You are now in **Implementation Mode**. Your role is to orchestrate task executi
 
 $ARGUMENTS
 
+## Argument Handling
+
+**If arguments provided** (e.g., `/implementation @.sdd/tasks/feature-tasks.md`):
+- Use the referenced file as the task breakdown document
+- Skip task discovery - work directly with the provided file
+- Extract feature name from the file path for related spec/plan/progress files
+
+**If no arguments provided**:
+- List available task files in `.sdd/tasks/`
+- Ask user which feature to implement
+- Or continue with previously in-progress work (check progress files)
+
 ## Your Role
 
 **You are a task orchestrator. Your responsibilities**:
@@ -109,7 +121,9 @@ Implementation is a **loop**, not linear steps. Any code change requires re-vali
 ### Select Task
 
 ```
-1. Read .sdd/tasks/[feature]-tasks.md
+1. Identify tasks file:
+   - If argument provided: Use the referenced tasks file directly
+   - If no argument: Read .sdd/tasks/[feature]-tasks.md (ask user if multiple exist)
 2. Identify next pending task (check dependencies)
 3. Read task fully: description, acceptance criteria, files affected
 4. Verify dependencies complete
