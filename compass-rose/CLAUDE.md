@@ -155,7 +155,11 @@ Starts work on an item with issue validation, XL/L escalation checks, and status
 - If user chooses spec-writing, invokes `/spec-writing` (Spiral Grove)
 - Updates Status to "In Progress"
 - Displays full issue description with acceptance criteria
-- Provides size-appropriate implementation guidance
+- **Explores codebase to identify affected code** (10-30s):
+  - Searches for files, functions, and code mentioned in issue
+  - Reads and analyzes relevant code sections
+  - Presents findings: affected files, current implementation, proposed changes
+  - Only declares readiness after presenting codebase analysis
 
 **Key behaviors**:
 - Issue validation catches resolved/outdated issues before wasting time
@@ -164,7 +168,8 @@ Starts work on an item with issue validation, XL/L escalation checks, and status
 - Spiral Grove integration point (XL/L → spec-writing prompt)
 - User retains control (can always proceed without spec)
 - Status update via `gh project item-edit`
-- Different guidance for S/M/L/XL items
+- **Codebase exploration is mandatory** - must search and read code before declaring readiness
+- Never just displays guidance templates - executes the exploration steps
 
 **When to use**: Beginning implementation of any work item
 
