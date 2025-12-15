@@ -54,18 +54,20 @@ Creates a repository issue and adds it to the GitHub Project with custom fields.
 
 ### `/next-item` - Get Next Work Item
 
-Recommends highest-priority ready item with rationale.
+Recommends highest-priority ready item with rationale, using lightweight codebase signals as a tiebreaker.
 
 **What it does**:
 - Queries items with "Ready" status (or similar)
-- Sorts by Priority (P0 > P1 > P2 > P3), then creation date
-- Shows top 2-3 options in table format
+- Sorts by Priority (P0 > P1 > P2 > P3)
+- Uses codebase signals as secondary tiebreaker (within same priority)
+- Shows top 2-3 options in table format with codebase relevance
 - Explains why top item is recommended
 
 **Key behaviors**:
-- Fast (<3s typical)
-- Degrades gracefully if Priority field missing (sorts by creation date)
-- Simple priority-based sorting (no deep analysis)
+- Fast (<8s typical, includes 2-5s for codebase analysis)
+- Runs lightweight git heuristics on top 5 candidates
+- Degrades gracefully if git unavailable or Priority field missing
+- Codebase signals: recent file activity, file existence, related directory commits
 
 **When to use**: Quick "what should I work on now?" query
 
@@ -304,7 +306,7 @@ If `gh project item-edit` fails for a field:
 - Field discovery: <1s (single API call)
 - Item listing: <2s (typical backlog <100 items)
 - Item creation: <5s (issue + project + fields)
-- `/next-item`: <3s end-to-end
+- `/next-item`: <8s end-to-end (includes 2-5s codebase analysis)
 - `/backlog`: ~10-15s (agent analysis)
 - `/reprioritize`: 5-15 minutes (codebase scanning)
 
