@@ -12,6 +12,7 @@ You are now in **Start Work Mode**. Your role is to help the user begin work on 
 
 - **Item selection**: Accept issue number, URL, or "next" for recommendation
 - **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
+- **Issue validation**: Check if issue is still relevant before starting work
 - **Field discovery**: Detect available custom fields (Size, Status, etc.)
 - **Size-based escalation**: Check for XL/L items and prompt about spec-writing
 - **Status update**: Update item Status to "In Progress"
@@ -135,7 +136,344 @@ Verify that:
 3. Issue URL matches project item
 ```
 
-### 4. Discover Custom Fields
+### 4. Validate Issue Relevance
+
+**Purpose**: Check if the issue is still valid before starting work. Issues can become outdated as the codebase evolves.
+
+**Performance Budget**: 15-30 seconds total
+
+**Skip Conditions**:
+- `preferences.validateIssuesBeforeWork` is `false` in config
+- Issue body is empty (nothing to validate against)
+
+#### Step 4a: Load Validation Preferences
+
+```bash
+# Load validation preferences (with defaults)
+VALIDATE_ISSUES=$(jq -r '.preferences.validateIssuesBeforeWork // true' .compass-rose/config.json)
+VALIDATION_TIMEOUT=$(jq -r '.preferences.validationTimeoutSeconds // 30' .compass-rose/config.json)
+
+if [ "$VALIDATE_ISSUES" = "false" ]; then
+  echo "Note: Issue validation disabled via configuration."
+  # Skip to next step
+fi
+```
+
+#### Step 4b: Run Validation Checks
+
+Display progress to user:
+
+```
+Validating issue relevance...
+  [1/5] Checking file references...
+  [2/5] Searching for feature keywords...
+  [3/5] Analyzing acceptance criteria...
+  [4/5] Checking recent activity...
+  [5/5] Verifying test coverage...
+```
+
+**Check 1: File/Path Existence** (2-5 seconds)
+
+Verify files or paths mentioned in the issue still exist:
+
+```bash
+# Extract file paths from issue body
+file_refs=$(echo "$BODY" | grep -oE '[a-zA-Z0-9_/-]+\.(ts|js|py|json|md|yaml|yml|tsx|jsx|css|html)' | sort -u | head -10)
+
+missing_files=""
+existing_files=""
+
+for ref in $file_refs; do
+  if git ls-files --cached 2>/dev/null | grep -q "$ref"; then
+    existing_files="$existing_files $ref"
+  else
+    missing_files="$missing_files $ref"
+  fi
+done
+```
+
+**Check 2: Feature Detection via Keyword Search** (3-8 seconds)
+
+Search for keywords suggesting the feature/fix is already implemented:
+
+```bash
+# Extract key terms from title and body (exclude common words)
+keywords=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]' | \
+  grep -oE '\b[a-z]{4,}\b' | \
+  grep -vE '^(the|and|for|are|but|not|you|all|can|had|was|one|has|this|that|with|from|they|have|been|will|what|when|your|which|would|there|their|about|could|other|these|than|into|some|them|only|over|such|after|also|most|made|just|very|where|while|should|since|because|using|without|issue|feature|bug|fix|implement|add|create|update|change|need|want|like|make|work|use)$' | \
+  sort -u | head -8)
+
+# Search codebase for each keyword
+feature_matches=""
+for kw in $keywords; do
+  matches=$(grep -rl --include="*.ts" --include="*.js" --include="*.py" --include="*.tsx" "$kw" src/ lib/ 2>/dev/null | head -3)
+  if [ -n "$matches" ]; then
+    feature_matches="$feature_matches\n$kw: $matches"
+  fi
+done
+```
+
+**Check 3: Acceptance Criteria Analysis** (3-8 seconds)
+
+If acceptance criteria exist, check if code appears to satisfy them:
+
+```bash
+# Extract acceptance criteria section
+ac_section=$(echo "$BODY" | sed -n '/[Aa]cceptance [Cc]riteria\|^AC:\|[Ss]uccess [Cc]riteria/,/^##\|^$/p' | head -20)
+
+if [ -n "$ac_section" ]; then
+  # Extract action items (lines starting with - or *)
+  ac_items=$(echo "$ac_section" | grep -E '^\s*[-*]' | head -5)
+
+  # For each criterion, search for related code
+  for item in $ac_items; do
+    # Extract key verbs and nouns
+    item_keywords=$(echo "$item" | tr '[:upper:]' '[:lower:]' | grep -oE '\b[a-z]{4,}\b' | head -3)
+    # Search for matches in codebase
+  done
+fi
+```
+
+**Check 4: Recent Activity Analysis** (2-5 seconds)
+
+Check if related code was recently modified:
+
+```bash
+# Check if git is available
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  # Extract directories/components from issue
+  components=$(echo "$BODY" | grep -oE '\b(src|lib|test|tests|config|utils|components)/[a-zA-Z0-9_/-]+' | head -5)
+
+  recent_activity=""
+  for component in $components; do
+    # Check recent commits (last 30 days)
+    commits=$(git log --since="30 days ago" --oneline -- "$component" 2>/dev/null | head -5)
+    if [ -n "$commits" ]; then
+      recent_activity="$recent_activity\n$component:\n$commits"
+    fi
+
+    # Look for commits mentioning issue number
+    issue_commits=$(git log --since="90 days ago" --oneline --grep="#$ISSUE_NUMBER" 2>/dev/null | head -3)
+  done
+fi
+```
+
+**Check 5: Test Coverage Check** (2-5 seconds)
+
+Check if tests exist for the described functionality:
+
+```bash
+# Search test directories for keywords
+test_matches=""
+for kw in $keywords; do
+  matches=$(grep -rl "$kw" tests/ test/ __tests__/ spec/ 2>/dev/null | head -3)
+  if [ -n "$matches" ]; then
+    test_matches="$test_matches\n$kw: $matches"
+  fi
+done
+```
+
+#### Step 4c: Categorize Finding
+
+Based on validation results, categorize the issue:
+
+**RESOLVED** (Feature appears implemented):
+- Tests exist that cover the described functionality
+- Commits reference the issue number with "fix" or "implement"
+- Code matching acceptance criteria found in codebase
+
+**OUTDATED** (Issue references non-existent components):
+- Multiple files mentioned in issue don't exist
+- Directories referenced have been removed/renamed
+
+**STALE** (Issue old, codebase changed significantly):
+- Issue created >3 months ago with no recent activity
+- Related code has >10 commits since issue creation
+- No commits reference this issue
+
+**VALID** (Issue appears relevant):
+- Referenced files exist
+- No evidence of implementation
+- Acceptance criteria not satisfied by existing code
+
+#### Step 4d: Present Finding and Get User Decision
+
+**RESOLVED Finding**:
+```
+═══════════════════════════════════════════════════════════════
+⚠️  ISSUE VALIDATION: RESOLVED
+═══════════════════════════════════════════════════════════════
+
+Issue #<number>: "<title>"
+
+Finding: Feature appears to already be implemented.
+
+Evidence:
+  - <file> exists and contains related code
+  - Test file <test-file> covers this functionality
+  - Commit <hash>: "<message>" references this issue
+
+Confidence: HIGH
+
+Recommendation: Close this issue. The described feature appears complete.
+
+Options:
+  1. Close issue (mark as resolved)
+  2. Proceed with work anyway
+
+Which would you prefer? (Enter 1 or 2):
+```
+
+**OUTDATED Finding**:
+```
+═══════════════════════════════════════════════════════════════
+⚠️  ISSUE VALIDATION: OUTDATED
+═══════════════════════════════════════════════════════════════
+
+Issue #<number>: "<title>"
+
+Finding: Issue references files/components that no longer exist.
+
+Evidence:
+  - File `<path>` mentioned in issue does not exist
+  - Directory `<dir>` was removed/restructured
+
+Confidence: HIGH
+
+Recommendation: Update the issue description before starting work,
+or close if the problem no longer applies.
+
+Options:
+  1. Skip work (update issue first)
+  2. Proceed with work anyway
+
+Which would you prefer? (Enter 1 or 2):
+```
+
+**STALE Finding**:
+```
+═══════════════════════════════════════════════════════════════
+⚠️  ISSUE VALIDATION: STALE
+═══════════════════════════════════════════════════════════════
+
+Issue #<number>: "<title>"
+
+Finding: Issue is old and codebase has changed significantly.
+
+Evidence:
+  - Issue created <date> (<X> months ago)
+  - <Y> commits to related areas since issue creation
+  - Last issue activity: <date>
+
+Confidence: MEDIUM
+
+Recommendation: Review the current implementation to verify
+the issue still applies before starting work.
+
+Options:
+  1. Review first (examine current code)
+  2. Proceed with work
+
+Which would you prefer? (Enter 1 or 2):
+```
+
+**VALID Finding** (no prompt, informational only):
+```
+═══════════════════════════════════════════════════════════════
+✓ ISSUE VALIDATION: VALID
+═══════════════════════════════════════════════════════════════
+
+Issue #<number>: "<title>"
+
+Finding: Issue appears relevant and ready to implement.
+
+Evidence:
+  - Referenced files exist in codebase
+  - No existing implementation found
+  - Acceptance criteria not yet satisfied
+
+Proceeding to next step...
+```
+
+#### Step 4e: Handle User Decision
+
+**If user selects "Close issue" (RESOLVED)**:
+```bash
+# Close the issue with comment
+gh issue close $ISSUE_NUMBER --repo $REPO --comment "Closing as resolved. Feature appears to have been implemented."
+
+echo "✓ Issue #$ISSUE_NUMBER closed."
+echo ""
+echo "If this was incorrect, reopen with: gh issue reopen $ISSUE_NUMBER"
+```
+Exit workflow.
+
+**If user selects "Skip work" (OUTDATED)**:
+```
+Understood. Please update the issue description with current file paths
+and component names, then run /start-work again.
+
+Issue URL: <url>
+```
+Exit workflow.
+
+**If user selects "Review first" (STALE)**:
+```
+Let me help you review the current state of the codebase related to this issue.
+
+[Read and display relevant files mentioned in issue]
+[Show recent commits to related areas]
+
+After reviewing, would you like to:
+  1. Proceed with work
+  2. Update the issue first
+  3. Close the issue
+
+Which would you prefer? (Enter 1, 2, or 3):
+```
+
+**If user selects "Proceed anyway"**:
+Continue to Step 5 (Discover Custom Fields).
+
+#### Graceful Degradation
+
+**Timeout Handling**:
+```bash
+# Wrap validation in timeout
+if ! timeout ${VALIDATION_TIMEOUT}s validation_checks; then
+  echo ""
+  echo "═══════════════════════════════════════════════════════════════"
+  echo "⚠️  ISSUE VALIDATION: TIMEOUT"
+  echo "═══════════════════════════════════════════════════════════════"
+  echo ""
+  echo "Validation could not complete within ${VALIDATION_TIMEOUT}s."
+  echo ""
+  echo "Proceeding without validation. Consider manually reviewing:"
+  echo "  - Whether the feature already exists"
+  echo "  - Whether referenced files still exist"
+  echo "  - Whether the codebase has changed significantly"
+  echo ""
+  # Continue to next step
+fi
+```
+
+**Git Unavailable**:
+```
+Note: Git repository not detected. Skipping activity analysis.
+Validation based on file existence and keyword search only.
+```
+
+**No Acceptance Criteria**:
+```
+Note: No acceptance criteria found in issue. Skipping AC analysis.
+```
+
+**Empty Issue Body**:
+```
+Note: Issue has no description. Skipping validation.
+```
+
+### 5. Discover Custom Fields
 
 Use `gh project field-list` to detect available fields:
 
@@ -198,7 +536,7 @@ Note: <Field> field not found in project. Skipping <field>-based features.
 
 Continue with available fields even if some are missing.
 
-### 5. XL/L Escalation Check
+### 6. XL/L Escalation Check
 
 **Requirements**: REQ-F-18, REQ-F-19, REQ-F-20
 
@@ -294,7 +632,7 @@ To disable L-item prompts, user can edit `.compass-rose/config.json`:
 }
 ```
 
-### 6. Update Status to "In Progress"
+### 7. Update Status to "In Progress"
 
 **Requirement**: REQ-F-22
 
@@ -322,7 +660,7 @@ The item is still ready to work on, but you'll need to manually update the
 status in the GitHub Projects web UI.
 ```
 
-### 7. Read and Display Full Issue Context
+### 8. Read and Display Full Issue Context
 
 **Requirement**: REQ-F-23
 
@@ -355,7 +693,7 @@ Acceptance Criteria:
 ───────────────────────────────────────────────────────────────
 ```
 
-### 8. Provide Implementation Guidance
+### 9. Provide Implementation Guidance
 
 Offer guidance based on item size and type:
 
@@ -423,7 +761,7 @@ If proceeding anyway:
 Consider this a risk you're consciously accepting.
 ```
 
-### 9. Handle Edge Cases
+### 10. Handle Edge Cases
 
 **Issue Not in Project**:
 ```
@@ -476,6 +814,8 @@ This command implements the following specification requirements:
 - **REQ-F-21**: Allow user to request starting work on next ready item
 - **REQ-F-22**: Update issue status to "In Progress" when work begins
 - **REQ-F-23**: Read full issue description and any linked context before starting
+- **REQ-F-24**: Validate issue relevance before starting work (detect resolved/outdated/stale)
+- **REQ-F-25**: Present validation findings with recommendation and allow user override
 
 ## Implementation Notes
 
@@ -483,12 +823,14 @@ This command implements the following specification requirements:
 - Config load: <100ms (local file read)
 - Field discovery: <1s (single API call)
 - Item lookup: <2s (project item-list query)
+- Issue validation: 15-30s (codebase analysis)
 - Status update: <1s (gh project item-edit)
-- Total operation: <5s end-to-end
+- Total operation: <35s end-to-end (with validation), <5s (without validation)
 
 **Data Flow**:
-1. Select item → 2. Load config → 3. Get item details → 4. Discover fields →
-5. Check size escalation → 6. Update status → 7. Display context → 8. Provide guidance
+1. Select item → 2. Load config → 3. Get item details → 4. Validate issue →
+5. Discover fields → 6. Check size escalation → 7. Update status →
+8. Display context → 9. Provide guidance
 
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
@@ -513,6 +855,26 @@ Loading project configuration...
 
 Retrieving issue details...
 ✓ Found: #156 - "Implement multi-tenancy support"
+
+Validating issue relevance...
+  [1/5] Checking file references...
+  [2/5] Searching for feature keywords...
+  [3/5] Analyzing acceptance criteria...
+  [4/5] Checking recent activity...
+  [5/5] Verifying test coverage...
+
+═══════════════════════════════════════════════════════════════
+✓ ISSUE VALIDATION: VALID
+═══════════════════════════════════════════════════════════════
+
+Finding: Issue appears relevant and ready to implement.
+
+Evidence:
+  - No existing multi-tenancy implementation found
+  - Acceptance criteria not yet satisfied
+  - No commits reference this issue
+
+Proceeding to next step...
 
 Discovering custom fields...
 ✓ Found fields: Status, Priority, Size
@@ -562,6 +924,26 @@ Finding highest-priority ready item...
 | 1 | Fix login timeout bug      | P0       | S    | Ready  |
 
 Selected: #142 - "Fix login timeout bug"
+
+Validating issue relevance...
+  [1/5] Checking file references...
+  [2/5] Searching for feature keywords...
+  [3/5] Analyzing acceptance criteria...
+  [4/5] Checking recent activity...
+  [5/5] Verifying test coverage...
+
+═══════════════════════════════════════════════════════════════
+✓ ISSUE VALIDATION: VALID
+═══════════════════════════════════════════════════════════════
+
+Finding: Issue appears relevant and ready to implement.
+
+Evidence:
+  - File `src/auth/session.ts` exists (referenced in issue)
+  - No timeout fix found in codebase
+  - 3 commits to src/auth/ in last 30 days (active area)
+
+Proceeding to next step...
 
 Discovering custom fields...
 ✓ Found fields: Status, Priority, Size
@@ -617,6 +999,26 @@ Loading project configuration...
 
 Retrieving issue details...
 ✓ Found: #158 - "Add export to CSV feature"
+
+Validating issue relevance...
+  [1/5] Checking file references...
+  [2/5] Searching for feature keywords...
+  [3/5] Analyzing acceptance criteria...
+  [4/5] Checking recent activity...
+  [5/5] Verifying test coverage...
+
+═══════════════════════════════════════════════════════════════
+✓ ISSUE VALIDATION: VALID
+═══════════════════════════════════════════════════════════════
+
+Finding: Issue appears relevant and ready to implement.
+
+Evidence:
+  - No CSV export functionality found
+  - Dashboard components exist but no export feature
+  - Acceptance criteria not yet satisfied
+
+Proceeding to next step...
 
 Discovering custom fields...
 ✓ Found fields: Status, Priority, Size
@@ -684,9 +1086,62 @@ If scope starts expanding, STOP and consider writing a spec.
 Ready to begin implementation!
 ```
 
+### Session 4: Issue Validated as RESOLVED
+
+```
+User: /start-work 201
+
+Loading project configuration...
+✓ Config loaded: my-org/project-123
+
+Retrieving issue details...
+✓ Found: #201 - "Add dark mode support"
+
+Validating issue relevance...
+  [1/5] Checking file references...
+  [2/5] Searching for feature keywords...
+  [3/5] Analyzing acceptance criteria...
+  [4/5] Checking recent activity...
+  [5/5] Verifying test coverage...
+
+═══════════════════════════════════════════════════════════════
+⚠️  ISSUE VALIDATION: RESOLVED
+═══════════════════════════════════════════════════════════════
+
+Issue #201: "Add dark mode support"
+
+Finding: Feature appears to already be implemented.
+
+Evidence:
+  - File `src/theme/dark-mode.ts` exists (created 2025-11-20)
+  - Theme toggle component found in `src/components/ThemeToggle.tsx`
+  - Test file `tests/theme/dark-mode.test.ts` covers dark mode scenarios
+  - Commit abc1234 (2025-11-20): "Add dark mode theme support"
+
+Confidence: HIGH
+
+Recommendation: Close this issue. The described feature appears complete.
+
+Options:
+  1. Close issue (mark as resolved)
+  2. Proceed with work anyway
+
+Which would you prefer? (Enter 1 or 2):
+> 1
+
+Closing issue...
+✓ Issue #201 closed with comment: "Closing as resolved. Feature appears
+   to have been implemented."
+
+If this was incorrect, reopen with: gh issue reopen 201
+```
+
 ## Anti-Patterns to Avoid
 
 - **Don't skip config validation**: Always verify config exists and is valid before proceeding
+- **Don't skip issue validation**: Always run relevance check (unless disabled via config)
+- **Don't block on validation failures**: If checks timeout or fail, warn and continue
+- **Don't auto-close without user consent**: Always present findings and let user decide
 - **Don't skip size check**: Always check Size field for XL/L items (critical for spec escalation)
 - **Don't force spec-writing**: User must have choice to proceed directly
 - **Don't skip status update**: Always attempt to update Status (or warn if not possible)
