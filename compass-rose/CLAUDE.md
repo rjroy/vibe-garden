@@ -136,11 +136,17 @@ Analyzes codebase to recommend priority changes based on current state.
 
 ### `/start-work` - Begin Implementation
 
-Starts work on an item with XL/L escalation checks and status tracking.
+Starts work on an item with issue validation, XL/L escalation checks, and status tracking.
 
 **What it does**:
 - Accepts issue number, URL, or "next" for recommendation
 - Loads item details from project and repository
+- **Validates issue relevance** (15-30s) before starting:
+  - Checks if files referenced in issue exist
+  - Searches for keywords suggesting feature is implemented
+  - Analyzes if acceptance criteria are satisfied
+  - Checks recent activity in related code areas
+  - Presents findings (RESOLVED/OUTDATED/STALE/VALID) with recommendation
 - Checks Size field for escalation:
   - **XL items**: Always prompts about spec-writing (recommended)
   - **L items**: Prompts if `preferences.promptForLargeItems` is true (default)
@@ -152,6 +158,9 @@ Starts work on an item with XL/L escalation checks and status tracking.
 - Provides size-appropriate implementation guidance
 
 **Key behaviors**:
+- Issue validation catches resolved/outdated issues before wasting time
+- Validation findings show evidence and let user decide (never auto-closes)
+- Can disable validation via `preferences.validateIssuesBeforeWork: false`
 - Spiral Grove integration point (XL/L → spec-writing prompt)
 - User retains control (can always proceed without spec)
 - Status update via `gh project item-edit`
@@ -307,6 +316,7 @@ If `gh project item-edit` fails for a field:
 - Item listing: <2s (typical backlog <100 items)
 - Item creation: <5s (issue + project + fields)
 - `/next-item`: <8s end-to-end (includes 2-5s codebase analysis)
+- `/start-work`: <35s with validation (15-30s for issue validation), <5s without
 - `/backlog`: ~10-15s (agent analysis)
 - `/reprioritize`: 5-15 minutes (codebase scanning)
 
@@ -318,7 +328,7 @@ If `gh project item-edit` fails for a field:
 
 ```
 /next-item                    # Quick: what should I work on?
-/start-work next              # Begin top item (XL/L prompt if needed)
+/start-work next              # Validates issue, then begins work
 [Implement the item]
 [Create PR, mark Done in GitHub UI]
 ```

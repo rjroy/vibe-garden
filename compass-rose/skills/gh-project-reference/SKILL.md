@@ -18,7 +18,9 @@ Configuration is stored in `.compass-rose/config.json` at the repository root:
   },
   "preferences": {
     "promptForLargeItems": true,
-    "largeSizeThreshold": ["L", "XL"]
+    "largeSizeThreshold": ["L", "XL"],
+    "validateIssuesBeforeWork": true,
+    "validationTimeoutSeconds": 30
   }
 }
 ```
@@ -32,6 +34,8 @@ Configuration is stored in `.compass-rose/config.json` at the repository root:
 
 - `preferences.promptForLargeItems`: Whether to prompt before starting L-sized items (default: `true`)
 - `preferences.largeSizeThreshold`: Array of size values that trigger spec-writing prompts (default: `["L", "XL"]`)
+- `preferences.validateIssuesBeforeWork`: Whether to validate issue relevance before starting work (default: `true`)
+- `preferences.validationTimeoutSeconds`: Maximum time for issue validation checks (default: `30`)
 
 ### Configuration Loading Pattern
 
