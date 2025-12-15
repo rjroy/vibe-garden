@@ -693,72 +693,79 @@ Acceptance Criteria:
 ───────────────────────────────────────────────────────────────
 ```
 
-### 9. Provide Implementation Guidance
+### 9. Explore Codebase and Identify Affected Code
 
-Offer guidance based on item size and type:
+**IMPORTANT**: This step requires you to actively explore the codebase, not just display guidance. You must identify the specific code that needs to change before declaring readiness.
 
-**For Small Items (S)**:
+**Required Actions** (all sizes):
+
+1. **Extract keywords from issue** - Identify file names, function names, error messages, or technical terms mentioned in the issue body
+
+2. **Search the codebase** - Use Grep/Glob to find:
+   - Files mentioned in the issue
+   - Code matching keywords or error messages
+   - Related components or modules
+
+3. **Read and analyze affected code** - For each relevant file found:
+   - Read the specific sections that need modification
+   - Understand the current implementation
+   - Identify dependencies and potential impact
+
+4. **Present findings to user** - Display what you found:
+   ```
+   Codebase Analysis:
+   ───────────────────────────────────────────────────────────────
+   Affected files identified:
+     - <file-path>:<line-range> - <brief description of what's there>
+     - <file-path>:<line-range> - <brief description of what's there>
+
+   Current implementation:
+     <summary of how the code currently works>
+
+   Proposed changes:
+     <high-level description of what needs to change>
+
+   Dependencies/impact:
+     <other files or components that may be affected>
+   ───────────────────────────────────────────────────────────────
+   ```
+
+5. **Confirm readiness** - Only after presenting findings, ask:
+   ```
+   Ready to begin implementation. Would you like me to proceed with these changes?
+   ```
+
+**Size-Specific Considerations**:
+
+After completing the codebase analysis, add size-appropriate context:
+
+- **S items**: Note that this should be achievable in a single focused session
+- **M items**: Suggest breaking into 2-3 sub-tasks if the analysis reveals complexity
+- **L items** (without spec): Warn about scope and suggest documenting decisions as you go
+- **XL items** (without spec): Strongly recommend stopping to write a spec if the codebase analysis reveals significant complexity
+
+**If No Relevant Code Found**:
+
+If the codebase search doesn't find the code mentioned in the issue:
 ```
-Implementation Guidance:
+⚠️  Codebase Analysis: Code Not Found
 ───────────────────────────────────────────────────────────────
-This is a small item (estimated < 4 hours). Recommended approach:
+Could not locate the code described in this issue.
 
-1. Read the issue carefully and identify affected code
-2. Make focused changes with minimal scope
-3. Test locally to verify acceptance criteria
-4. Create a PR when complete
+Searched for:
+  - <keywords searched>
+  - <file patterns tried>
 
-This item should be achievable in a single focused session.
-```
+Possible reasons:
+  - Issue description may be outdated (code was refactored/removed)
+  - Issue may reference code that doesn't exist yet (new feature)
+  - Search terms may need refinement
 
-**For Medium Items (M)**:
-```
-Implementation Guidance:
+Would you like me to:
+  1. Broaden the search with different terms
+  2. Proceed with implementation (if this is new code to create)
+  3. Stop and clarify the issue first
 ───────────────────────────────────────────────────────────────
-This is a medium item (estimated 1-2 days). Recommended approach:
-
-1. Break down into 2-3 sub-tasks if needed
-2. Implement incrementally with frequent testing
-3. Consider creating a feature branch for this work
-4. Document any technical decisions or trade-offs
-
-Check in with progress after first sub-task to validate direction.
-```
-
-**For Large Items (L) - If proceeding without spec**:
-```
-Implementation Guidance:
-───────────────────────────────────────────────────────────────
-This is a large item (estimated 3-5 days). Recommended approach:
-
-⚠️  Without a formal spec, pay extra attention to:
-1. Clarifying requirements upfront (ask questions if unclear)
-2. Breaking into smaller milestones (aim for daily progress checkpoints)
-3. Documenting decisions as you go (consider a design doc)
-4. Frequent validation with stakeholders
-
-If scope starts expanding, STOP and consider writing a spec.
-```
-
-**For XL Items - If proceeding without spec**:
-```
-Implementation Guidance:
-───────────────────────────────────────────────────────────────
-⚠️  WARNING: XL items without specs have high risk of:
-- Scope creep and extended timelines
-- Misalignment with expectations
-- Rework due to unclear requirements
-
-STRONGLY RECOMMEND: Stop now and create a spec (/spec-writing).
-
-If proceeding anyway:
-1. Document ALL assumptions clearly upfront
-2. Break into week-long milestones with explicit deliverables
-3. Create design documents for architecture decisions
-4. Get stakeholder review at each milestone
-5. Be prepared to backtrack if requirements are unclear
-
-Consider this a risk you're consciously accepting.
 ```
 
 ### 10. Handle Edge Cases
@@ -823,14 +830,15 @@ This command implements the following specification requirements:
 - Config load: <100ms (local file read)
 - Field discovery: <1s (single API call)
 - Item lookup: <2s (project item-list query)
-- Issue validation: 15-30s (codebase analysis)
+- Issue validation: 15-30s (codebase analysis for relevance)
 - Status update: <1s (gh project item-edit)
-- Total operation: <35s end-to-end (with validation), <5s (without validation)
+- Codebase exploration: 10-30s (search, read, analyze affected code)
+- Total operation: <60s end-to-end (with validation + exploration)
 
 **Data Flow**:
 1. Select item → 2. Load config → 3. Get item details → 4. Validate issue →
 5. Discover fields → 6. Check size escalation → 7. Update status →
-8. Display context → 9. Provide guidance
+8. Display context → 9. Explore codebase and identify affected code
 
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
@@ -975,18 +983,33 @@ Acceptance Criteria:
 - Timeout is configurable via environment variable
 ───────────────────────────────────────────────────────────────
 
-Implementation Guidance:
+Exploring codebase to identify affected code...
+  - Searching for "timeout" in src/auth/...
+  - Reading src/auth/session.ts...
+  - Searching for mobile-specific configuration...
+
+Codebase Analysis:
 ───────────────────────────────────────────────────────────────
-This is a small item (estimated < 4 hours). Recommended approach:
+Affected files identified:
+  - src/auth/session.ts:45-62 - Session timeout configuration
+  - src/auth/mobile-session.ts:23-30 - Mobile-specific overrides
 
-1. Read the issue carefully and identify affected code
-2. Make focused changes with minimal scope
-3. Test locally to verify acceptance criteria
-4. Create a PR when complete
+Current implementation:
+  Web timeout is set via SESSION_TIMEOUT env var (default 1800s).
+  Mobile client has hardcoded 30s timeout in mobile-session.ts:28.
 
-This item should be achievable in a single focused session.
+Proposed changes:
+  - Remove hardcoded timeout in mobile-session.ts
+  - Use shared SESSION_TIMEOUT config for both web and mobile
 
-Ready to begin implementation!
+Dependencies/impact:
+  - Tests in tests/auth/session.test.ts may need updating
+  - Mobile app will need rebuild after this change
+───────────────────────────────────────────────────────────────
+
+This is a small item - should be achievable in a single focused session.
+
+Ready to begin implementation. Would you like me to proceed with these changes?
 ```
 
 ### Session 3: L Item with Preference Override
@@ -1071,19 +1094,40 @@ Acceptance Criteria:
 - Filters are applied to export
 ───────────────────────────────────────────────────────────────
 
-Implementation Guidance:
+Exploring codebase to identify affected code...
+  - Searching for "dashboard" components...
+  - Reading src/components/Dashboard.tsx...
+  - Searching for existing export utilities...
+
+Codebase Analysis:
 ───────────────────────────────────────────────────────────────
-This is a large item (estimated 3-5 days). Recommended approach:
+Affected files identified:
+  - src/components/Dashboard.tsx:120-180 - Main dashboard rendering
+  - src/components/DataTable.tsx:45-90 - Table with column definitions
+  - src/hooks/useFilters.ts:1-50 - Current filter state management
 
-⚠️  Without a formal spec, pay extra attention to:
-1. Clarifying requirements upfront (ask questions if unclear)
-2. Breaking into smaller milestones (aim for daily progress checkpoints)
-3. Documenting decisions as you go (consider a design doc)
-4. Frequent validation with stakeholders
+Current implementation:
+  Dashboard renders DataTable with dynamic columns from useColumns hook.
+  Filters managed via useFilters hook, stored in URL params.
+  No existing export functionality found.
 
-If scope starts expanding, STOP and consider writing a spec.
+Proposed changes:
+  - Add ExportButton component to Dashboard toolbar
+  - Create useExport hook to handle CSV generation
+  - Wire filters from useFilters into export logic
+  - Use browser download API for file attachment
 
-Ready to begin implementation!
+Dependencies/impact:
+  - May want to add csv-stringify or similar library
+  - Tests needed for export with various filter combinations
+───────────────────────────────────────────────────────────────
+
+⚠️  This is a large item (L) without a formal spec. Consider:
+  - Breaking into 2-3 milestones (button UI → export logic → filter integration)
+  - Documenting decisions as you go
+  - If scope expands, stop and write a spec
+
+Ready to begin implementation. Would you like me to proceed, or break this into sub-tasks first?
 ```
 
 ### Session 4: Issue Validated as RESOLVED
@@ -1148,7 +1192,8 @@ If this was incorrect, reopen with: gh issue reopen 201
 - **Don't truncate issue body**: Display full description for context
 - **Don't ignore preferences**: Respect `promptForLargeItems` configuration
 - **Don't proceed if user selects spec-writing**: Transfer to /spec-writing command
-- **Don't skip guidance**: Provide size-appropriate implementation advice
+- **Don't skip codebase exploration**: Always search for and read the affected code before declaring readiness
+- **Don't display guidance as output**: Step 9 is actions to execute, not templates to display; you must actually explore the codebase
 
 ## Related Commands
 
