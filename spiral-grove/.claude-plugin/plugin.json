@@ -1,7 +1,7 @@
 {
   "name": "spiral-grove",
   "description": "A Spec Driven Development (SDD) set of Claude commands.",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
