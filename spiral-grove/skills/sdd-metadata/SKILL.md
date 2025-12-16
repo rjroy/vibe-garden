@@ -11,7 +11,10 @@ This skill provides utilities to auto-populate metadata fields in SDD frontmatte
 
 To populate the `authored_by` field:
 
-1. Execute the author detection script via the Bash tool `detect-author.sh`
+1. Execute the author detection script via the Bash tool:
+   ```bash
+   ${CLAUDE_PLUGIN_ROOT}/skills/sdd-metadata/scripts/detect-author.sh
+   ```
 
 2. Capture the output in one of these formats:
    - `Name <email>` (if both name and email detected)
