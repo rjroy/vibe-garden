@@ -17,6 +17,7 @@ Slash commands that execute specific SDD workflow phases:
 - `task-breakdown.md`: Decomposes plans into discrete, implementable tasks
 - `implementation.md`: Executes tasks with progress tracking and deviation management
 - `review.md`: Validates phase documents before progression (spec/plan/tasks/progress)
+- `validate-completeness.md`: Skeptically audits implementation against spec requirements
 - `synthesize-docs.md`: Generates operational CLAUDE.md documentation from implementation
 - `synthesize-specs.md`: Reverse-engineers specifications from existing codebases
 
@@ -24,12 +25,13 @@ Slash commands that execute specific SDD workflow phases:
 
 Autonomous agents invoked by commands for complex operations:
 
-**Validators** (5 agents with two-tier validation):
+**Validators** (6 agents with two-tier validation):
 - `spec-validator.md`: Validates specifications (process compliance + 9 quality checks)
 - `plan-validator.md`: Validates technical plans (process compliance + 4 quality checks)
 - `tasks-validator.md`: Validates task breakdowns (process compliance + 3 quality checks)
 - `progress-validator.md`: Validates progress tracking (process compliance + 2 quality checks)
-- `spec-acceptance-validator.md`: Validates implementation against spec acceptance criteria
+- `spec-acceptance-validator.md`: Validates implementation against spec acceptance criteria (per-task)
+- `implementation-completeness-auditor.md`: Skeptically audits entire implementation against spec (post-completion)
 
 **Synthesizers** (3 agents):
 - `module-discovery-agent.md`: Detects logical module boundaries using heuristics
@@ -78,6 +80,7 @@ Format specifications and schemas:
 
 **Validation & Synthesis Commands**:
 - `/review [spec|plan|tasks|progress]` → Validates phase documents
+- `/validate-completeness [feature]` → Skeptically audits implementation, creates `.sdd/validation/[feature]-validation-report.md`
 - `/synthesize-docs [module]` → Generates `[module]/CLAUDE.md`
 - `/synthesize-specs [module]` → Generates `.sdd/specs/[module].md` from code
 
@@ -100,6 +103,7 @@ project-root/
 │   ├── plans/              # Technical plans
 │   ├── tasks/              # Task breakdowns
 │   ├── progress/           # Implementation tracking
+│   ├── validation/         # Completeness validation reports
 │   ├── module-manifest.json    # Doc synthesis state
 │   └── spec-manifest.json      # Spec synthesis state
 └── [modules]/
@@ -146,6 +150,30 @@ Claude: [Invokes /spec-writing]
 → Verifies no HOW details in spec
 → Confirms all requirements numbered
 ```
+
+### Validating Implementation Completeness
+
+**Purpose**: Final skeptical audit to catch "close enough" implementations
+
+**When**: After implementation is marked complete, before declaring feature done
+
+**Steps**:
+1. Complete implementation (all tasks marked done)
+2. Run completeness audit: `/validate-completeness [feature]`
+3. Address critical issues (blocking gaps)
+4. Optionally address advisory issues (improvements)
+5. Re-run validation until satisfied
+
+**Example**:
+```
+/validate-completeness api-rate-limiter
+→ Examines codebase against spec requirements
+→ Verifies each REQ-F-N and REQ-NF-N with code evidence
+→ Identifies "close enough" issues (happy path only, untested functionality)
+→ Creates .sdd/validation/api-rate-limiter-validation-report.md
+```
+
+**Key Difference from `/review progress`**: The review command validates the progress *document*. The validate-completeness command examines the actual *code* against the spec, ignoring what the progress document claims.
 
 ### Generating Documentation Post-Implementation
 
