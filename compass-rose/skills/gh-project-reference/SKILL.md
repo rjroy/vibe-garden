@@ -184,13 +184,91 @@ To enable priority-based sorting, add a "Priority" field to your project with va
 
 ### Listing Items
 
-```bash
-# Get all items in the project
-gh project item-list $NUMBER --owner $OWNER --format json --limit 100
+**IMPORTANT**: Do NOT use `gh project item-list` - it silently truncates results without warning. Always use GraphQL for reliable item retrieval.
 
-# Filter by field value (using jq after fetching)
-gh project item-list $NUMBER --owner $OWNER --format json | \
-  jq '[.items[] | select(.status == "Ready")]'
+```bash
+# Get all items in the project using GraphQL (reliable, no truncation)
+# Note: Use "user" for personal accounts, "organization" for org-owned projects
+gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      id
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              title
+              body
+              state
+              url
+              repository { nameWithOwner }
+            }
+            ... on PullRequest {
+              number
+              title
+              body
+              state
+              url
+              repository { nameWithOwner }
+            }
+          }
+          fieldValues(first: 10) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER"
+```
+
+**Pagination**: If `hasNextPage` is true, make additional requests with `after: $endCursor`:
+
+```bash
+# Subsequent page query (add after parameter)
+gh api graphql -f query='
+query($owner: String!, $number: Int!, $cursor: String!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      items(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ... }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER" -f cursor="$END_CURSOR"
+```
+
+**Filter by field value** (using jq after fetching):
+
+```bash
+# Filter to Ready items only
+echo "$response" | jq '[
+  .data.user.projectV2.items.nodes[] |
+  select(
+    [.fieldValues.nodes[] | select(.field.name == "Status") | .name] |
+    first == "Ready"
+  )
+]'
+```
+
+**Filter to OPEN issues only** (critical for reprioritization):
+
+```bash
+# Filter out closed issues
+echo "$response" | jq '[
+  .data.user.projectV2.items.nodes[] |
+  select(.content.state == "OPEN")
+]'
 ```
 
 ### Creating Items (Two-Step Process)
@@ -291,14 +369,35 @@ Run the following command to add the project scope:
 
 ### Query Limits
 
-Use `--limit` parameter to control result size:
+Use pagination with GraphQL `first` and `after` parameters:
 
 ```bash
-# Typical backlog: limit to 100 items
-gh project item-list $NUMBER --owner $OWNER --limit 100
+# Typical backlog: fetch first 100 items
+gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ... }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER"
 
-# Large backlog: fetch in batches (gh handles pagination)
-gh project item-list $NUMBER --owner $OWNER --limit 500
+# Large backlog: paginate using endCursor
+# If hasNextPage is true, request next batch with after: $endCursor
+gh api graphql -f query='
+query($owner: String!, $number: Int!, $cursor: String!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      items(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ... }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER" -f cursor="$END_CURSOR"
 ```
 
 ### Caching Strategy
@@ -367,13 +466,52 @@ discover_priority_field() {
 
 ```bash
 get_ready_items() {
-  local items=$(gh project item-list $NUMBER --owner $OWNER --format json)
+  # Use GraphQL to fetch items (never use gh project item-list - it truncates)
+  local response=$(gh api graphql -f query='
+    query($owner: String!, $number: Int!) {
+      user(login: $owner) {
+        projectV2(number: $number) {
+          items(first: 100) {
+            pageInfo { hasNextPage endCursor }
+            nodes {
+              id
+              content {
+                ... on Issue {
+                  number
+                  title
+                  body
+                  state
+                  url
+                }
+              }
+              fieldValues(first: 10) {
+                nodes {
+                  ... on ProjectV2ItemFieldSingleSelectValue {
+                    name
+                    field { ... on ProjectV2SingleSelectField { name } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }' -f owner="$OWNER" -F number="$NUMBER")
 
-  # Filter by status and sort by priority
-  echo "$items" | jq -r '
-    [.items[] | select(.status == "Ready")] |
-    sort_by(.priority) |
-    .[]
+  # Filter by status="Ready", state="OPEN", and sort by priority
+  echo "$response" | jq -r '
+    [.data.user.projectV2.items.nodes[] |
+      select(.content.state == "OPEN") |
+      {
+        id: .id,
+        title: .content.title,
+        number: .content.number,
+        status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first),
+        priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first)
+      } |
+      select(.status == "Ready")
+    ] |
+    sort_by(.priority | sub("P"; "") | tonumber? // 999)
   '
 }
 ```

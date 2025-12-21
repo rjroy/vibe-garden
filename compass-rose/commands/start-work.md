@@ -101,7 +101,7 @@ fi
 
 ### 3. Get Item Details
 
-Retrieve the full issue details and project item metadata:
+Retrieve the full issue details and project item metadata using GraphQL (never use `gh project item-list` - it silently truncates):
 
 ```bash
 # Get repository name from git remote
@@ -115,16 +115,50 @@ BODY=$(echo "$ISSUE_DATA" | jq -r .body)
 ISSUE_URL=$(echo "$ISSUE_DATA" | jq -r .url)
 ISSUE_NUMBER=$(echo "$ISSUE_DATA" | jq -r .number)
 
-# Get project item data (for custom fields)
-PROJECT_ITEMS=$(gh project item-list $NUMBER --owner $OWNER --format json --limit 100)
+# Get project item data using GraphQL for reliable results
+# Note: Use "user" for personal accounts, "organization" for org-owned projects
+PROJECT_ITEMS=$(gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      id
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              url
+            }
+          }
+          fieldValues(first: 10) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name id } }
+                optionId
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER")
+
+# Get project ID for later updates
+PROJECT_ID=$(echo "$PROJECT_ITEMS" | jq -r '.data.user.projectV2.id')
 
 # Find this issue in project items
 ITEM_DATA=$(echo "$PROJECT_ITEMS" | jq --arg url "$ISSUE_URL" '
-  .items[] | select(.content.url == $url)
+  .data.user.projectV2.items.nodes[] | select(.content.url == $url)
 ')
 
 ITEM_ID=$(echo "$ITEM_DATA" | jq -r .id)
 ```
+
+**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor` to find the issue if not in first 100 items.
 
 **Error Handling**:
 ```

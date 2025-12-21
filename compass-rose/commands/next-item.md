@@ -84,21 +84,71 @@ Continue with available data even if some fields are missing.
 
 ### 3. Query Ready Items
 
-Fetch project items and filter by status:
+Fetch project items using GraphQL (never use `gh project item-list` - it silently truncates results):
 
 ```bash
-gh project item-list $NUMBER --owner $OWNER --format json --limit 100
+# Use GraphQL for reliable, complete item retrieval
+# Note: Use "user" for personal accounts, "organization" for org-owned projects
+ITEMS_RESPONSE=$(gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      id
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              title
+              body
+              state
+              url
+              createdAt
+            }
+          }
+          fieldValues(first: 10) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER")
 ```
+
+**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor`.
 
 **Status Filtering**:
 - Look for items with Status field value matching "Ready" (case-insensitive)
+- Also filter to OPEN issues only (exclude closed GitHub issues)
 - If no exact match, look for similar values: "Ready for Dev", "To Do", "Backlog"
-- Parse JSON output using `jq` to filter items
 
 Example filter:
 ```bash
-# Filter items with "Ready" status
-echo "$items" | jq -r '[.items[] | select(.status | test("ready"; "i"))]'
+# Filter items with "Ready" status and OPEN state
+ready_items=$(echo "$ITEMS_RESPONSE" | jq -r '[
+  .data.user.projectV2.items.nodes[] |
+  select(.content.state == "OPEN") |
+  {
+    id: .id,
+    title: .content.title,
+    body: .content.body,
+    number: .content.number,
+    url: .content.url,
+    createdAt: .content.createdAt,
+    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
+    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // null),
+    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // null)
+  } |
+  select(.status | test("ready"; "i"))
+]')
 ```
 
 **If no ready items found**:
