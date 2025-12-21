@@ -18,15 +18,18 @@ This agent is invoked by:
 
 **Purpose**: Provide data-driven priority change recommendations based on actual codebase state rather than issue metadata alone.
 
-**Input**: JSON array of project items from `gh project item-list` with fields:
-- `id`: Item ID
+**Input**: JSON array of project items from GraphQL query (pre-filtered to OPEN issues only) with fields:
+- `id`: Item ID (PVTI_...)
 - `title`: Issue title
 - `body`: Issue description
-- `priority`: Current priority (P0/P1/P2/P3)
-- `size`: Estimated size (S/M/L/XL)
-- `status`: Current status (Ready, In Progress, etc.)
-- `labels`: Issue labels
+- `number`: Issue number
 - `url`: GitHub issue URL
+- `repository`: Repository name (owner/repo)
+- `priority`: Current priority (P0/P1/P2/P3 or "Unset")
+- `size`: Estimated size (S/M/L/XL or "Unset")
+- `status`: Project status (Ready, In Progress, Backlog, etc.)
+
+**Note**: Closed issues are filtered out before agent invocation. All items passed to this agent are OPEN GitHub issues.
 
 ## Codebase Exploration Strategy
 

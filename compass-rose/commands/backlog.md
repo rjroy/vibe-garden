@@ -83,21 +83,74 @@ Continue with available data even if some fields are missing.
 
 ### 3. Query All Non-Done Items
 
-Fetch project items excluding completed work:
+Fetch project items using GraphQL (never use `gh project item-list` - it silently truncates results):
 
 ```bash
-gh project item-list $NUMBER --owner $OWNER --format json --limit 100
+# Use GraphQL for reliable, complete item retrieval
+# Note: Use "user" for personal accounts, "organization" for org-owned projects
+ITEMS_RESPONSE=$(gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      id
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              title
+              body
+              state
+              url
+              repository { nameWithOwner }
+              assignees(first: 5) { nodes { login } }
+              labels(first: 10) { nodes { name } }
+            }
+          }
+          fieldValues(first: 10) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER")
 ```
+
+**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor` until all items are fetched.
 
 **Status Filtering**:
 - Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
+- Also filter to OPEN issues only (exclude closed GitHub issues)
 - Include all other statuses: "Ready", "To Do", "In Progress", "Backlog", etc.
-- Parse JSON output using `jq` to filter items
 
 Example filter:
 ```bash
-# Filter out "Done" items, keep everything else
-echo "$items" | jq -r '[.items[] | select(.status | test("^(?!.*(done|closed|complete)).*$"; "i"))]'
+# Filter out "Done" items and closed issues, keep everything else
+echo "$ITEMS_RESPONSE" | jq -r '[
+  .data.user.projectV2.items.nodes[] |
+  select(.content.state == "OPEN") |
+  {
+    id: .id,
+    title: .content.title,
+    body: .content.body,
+    number: .content.number,
+    url: .content.url,
+    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
+    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // null),
+    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // null),
+    assignees: [.content.assignees.nodes[].login],
+    labels: [.content.labels.nodes[].name]
+  } |
+  select(.status | test("done|closed|complete"; "i") | not)
+]'
 ```
 
 **If no items found**:
@@ -111,25 +164,26 @@ Would you like to create a new item? (/add-item command)
 
 ### 4. Prepare Data for Agent Analysis
 
-Transform the raw `gh` CLI output into a clean JSON array suitable for the backlog-analyzer agent:
+Transform the GraphQL response into a clean JSON array suitable for the backlog-analyzer agent:
 
 ```bash
-# Extract relevant fields and format for agent
-echo "$items" | jq -r '[.items[] | {
-  id: .id,
-  title: .title,
-  body: .content.body // "",
-  number: .content.number,
-  url: .content.url,
-  priority: .fieldValues.priority // null,
-  size: .fieldValues.size // null,
-  status: .fieldValues.status // null,
-  assignees: .content.assignees // [],
-  labels: .content.labels // []
-}]'
+# The filtering in step 3 already produces the correct format for the agent
+# Items are already transformed to:
+# {
+#   id: "PVTI_...",
+#   title: "...",
+#   body: "...",
+#   number: 42,
+#   url: "https://github.com/...",
+#   status: "Ready",
+#   priority: "P1",
+#   size: "M",
+#   assignees: ["username"],
+#   labels: ["bug", "frontend"]
+# }
 ```
 
-**Note**: Field paths may vary depending on `gh` CLI version and project structure. Adapt the `jq` query to match actual output structure.
+**Note**: The GraphQL response structure is consistent. The jq transformation in step 3 normalizes the data for agent consumption.
 
 ### 5. Spawn Backlog Analyzer Agent
 

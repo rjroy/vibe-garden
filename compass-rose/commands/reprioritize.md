@@ -99,27 +99,87 @@ Stop execution if Priority field is missing - cannot reprioritize without it.
 
 ### 3. Query All Project Items
 
-Fetch all items (not just Ready status) for comprehensive analysis:
+Use GraphQL to fetch items with their GitHub issue state (OPEN/CLOSED). This is critical because:
+- `gh project item-list` only shows project Status field, not GitHub issue state
+- We must filter to OPEN issues only - closed issues should not be reprioritized
 
 ```bash
-# Query all items with increased limit for large backlogs
-gh project item-list $NUMBER --owner $OWNER --format json --limit 500
+# GraphQL query to get items with issue state
+# Note: Use "user" for personal accounts, "organization" for org-owned projects
+gh api graphql -f query='
+query($owner: String!, $number: Int!) {
+  user(login: $owner) {
+    projectV2(number: $number) {
+      id
+      items(first: 100) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              title
+              body
+              state
+              url
+              repository { nameWithOwner }
+            }
+            ... on PullRequest {
+              number
+              title
+              body
+              state
+              url
+              repository { nameWithOwner }
+            }
+          }
+          fieldValues(first: 10) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$OWNER" -F number="$NUMBER"
 ```
 
-**Item Filtering**:
-- Exclude items with "Done" or "Closed" status (no need to reprioritize completed work)
-- Include items from all other statuses: Ready, In Progress, Backlog, To Do, etc.
+**Pagination for Large Backlogs**:
+If `hasNextPage` is true, make additional requests with `after: $endCursor` until all items are fetched.
+
+**Item Filtering** (filter BEFORE passing to agent):
+- **CRITICAL**: Only include items where `content.state == "OPEN"`
+- Also exclude items with "Done" project status (completed work)
+- Filter at query level using jq:
 
 ```bash
-# Filter out Done items
-echo "$items" | jq -r '[.items[] | select(.status | test("done|closed"; "i") | not)]'
+# Extract and filter to OPEN issues only
+echo "$response" | jq '[
+  .data.user.projectV2.items.nodes[] |
+  select(.content.state == "OPEN") |
+  {
+    id: .id,
+    title: .content.title,
+    body: .content.body,
+    number: .content.number,
+    url: .content.url,
+    repository: .content.repository.nameWithOwner,
+    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
+    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // "Unset"),
+    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // "Unset")
+  }
+] | [.[] | select(.status | test("done"; "i") | not)]'
 ```
 
-**If no items found**:
+**If no open items found**:
 ```
-No items found for reprioritization.
+No open items found for reprioritization.
 
-All items in the project are marked as Done or Closed.
+All issues in the project are either closed or marked as Done.
 ```
 
 **If large backlog detected (>50 items)**:

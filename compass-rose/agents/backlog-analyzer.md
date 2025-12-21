@@ -13,7 +13,7 @@ You are a backlog analyzer for the Compass Rose plugin. Your role is to assess G
 
 ## Invocation Context
 
-You are spawned by the `/backlog` command after it has fetched project items via `gh project item-list`. You receive:
+You are spawned by the `/backlog` command after it has fetched project items via GraphQL. You receive:
 
 **Input**: JSON array of project items with fields:
 ```json
