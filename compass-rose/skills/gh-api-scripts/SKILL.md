@@ -41,7 +41,44 @@ List all open issues in the configured project with automatic pagination.
 python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues
 ```
 
-**Output**: Array of issues with number, title, body, url, state, labels, status, priority, size.
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix login timeout",
+        "body": "Users experiencing timeouts after 30 seconds...",
+        "url": "https://github.com/my-org/my-repo/issues/42",
+        "state": "OPEN",
+        "labels": ["bug", "priority-high"],
+        "status": "Ready",
+        "priority": "P0",
+        "size": "S"
+      },
+      {
+        "number": 58,
+        "title": "Add user preferences panel",
+        "body": "Feature request for user settings...",
+        "url": "https://github.com/my-org/my-repo/issues/58",
+        "state": "OPEN",
+        "labels": ["feature"],
+        "status": "To Do",
+        "priority": "P1",
+        "size": "M"
+      }
+    ],
+    "count": 2
+  }
+}
+```
+
+**Notes**:
+- Automatically paginates through projects with >100 items
+- Only returns issues in OPEN state
+- Field values (status, priority, size) are extracted from project custom fields
 
 ### get-issue
 
@@ -51,6 +88,35 @@ Get a single issue by number with full project field values.
 python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py get-issue <number>
 ```
 
+**Example**:
+```bash
+python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py get-issue 42
+```
+
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "issue": {
+      "number": 42,
+      "title": "Fix login timeout",
+      "body": "Users experiencing timeouts after 30 seconds...",
+      "url": "https://github.com/my-org/my-repo/issues/42",
+      "state": "OPEN",
+      "labels": ["bug", "priority-high"],
+      "status": "Ready",
+      "priority": "P0",
+      "size": "S"
+    }
+  }
+}
+```
+
+**Error Cases**:
+- `ISSUE_NOT_FOUND` - Issue number doesn't exist in the repository
+- `ISSUE_NOT_IN_PROJECT` - Issue exists but isn't linked to the configured project
+
 ### set-status
 
 Update the Status field of an issue in the project.
@@ -59,6 +125,31 @@ Update the Status field of an issue in the project.
 python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py set-status <number> "<status>"
 ```
 
+**Example**:
+```bash
+python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py set-status 42 "In Progress"
+```
+
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "issue_number": 42,
+    "previous_status": "Ready",
+    "new_status": "In Progress"
+  }
+}
+```
+
+**Notes**:
+- Status value must match one of the project's configured status options (case-sensitive)
+- Common status values: `"Ready"`, `"In Progress"`, `"Done"`, `"To Do"`
+
+**Error Cases**:
+- `STATUS_INVALID` - Provided status value doesn't match project options
+- `FIELD_NOT_FOUND` - Project doesn't have a Status field configured
+
 ### add-to-project
 
 Add an existing repository issue to the configured project.
@@ -66,6 +157,29 @@ Add an existing repository issue to the configured project.
 ```bash
 python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py add-to-project <number>
 ```
+
+**Example**:
+```bash
+python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py add-to-project 156
+```
+
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "issue_number": 156,
+    "item_id": "PVTI_lADOBQ..."
+  }
+}
+```
+
+**Notes**:
+- Issue must exist in the repository before adding to project
+- The returned `item_id` can be used for subsequent field updates via `gh project item-edit`
+
+**Error Cases**:
+- `ISSUE_NOT_FOUND` - Issue number doesn't exist in the repository
 
 ## Output Format
 
@@ -112,7 +226,47 @@ All operations return JSON with a consistent envelope:
 - `gh` CLI installed and authenticated
 - `project` scope authorized (`gh auth refresh -s project`)
 
+## Usage in Commands
+
+This skill is used by Compass Rose commands to interact with GitHub Projects:
+
+| Command | Operations Used |
+|---------|----------------|
+| `/backlog` | `list-issues` |
+| `/next-item` | `list-issues` |
+| `/start-work` | `get-issue`, `set-status` |
+| `/add-item` | `add-to-project` |
+| `/reprioritize` | `list-issues` |
+
+### Common Patterns
+
+**Check for errors before processing:**
+```bash
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues)
+
+if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
+  echo "$RESPONSE" | jq -r '.error.details'
+  exit 1
+fi
+
+# Process successful response
+echo "$RESPONSE" | jq '.data.issues'
+```
+
+**Filter by status:**
+```bash
+# Get only "Ready" items
+echo "$RESPONSE" | jq '[.data.issues[] | select(.status == "Ready")]'
+```
+
+**Sort by priority:**
+```bash
+# Sort by priority (P0 first)
+echo "$RESPONSE" | jq '.data.issues | sort_by(.priority)'
+```
+
 ## Related Documentation
 
 - Spec: `.sdd/specs/2025-12-24-compass-rose-gh-api-scripts.md`
 - Plan: `.sdd/plans/2025-12-24-compass-rose-gh-api-scripts-plan.md`
+- Tasks: `.sdd/tasks/2025-12-25-compass-rose-gh-api-scripts-tasks.md`
