@@ -18,7 +18,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -197,6 +200,284 @@ def load_config(config_path: str | None = None) -> ProjectConfig:
         owner=project["owner"],
         owner_type=owner_type,
         number=number,
+    )
+
+
+# Patterns for detecting error types from gh CLI output
+_RETRYABLE_PATTERNS = [
+    r"502",
+    r"503",
+    r"Bad Gateway",
+    r"Service Unavailable",
+    r"connection reset",
+    r"connection refused",
+    r"network is unreachable",
+    r"temporary failure",
+]
+
+_AUTH_REQUIRED_PATTERNS = [
+    r"gh auth login",
+    r"not logged in",
+    r"authentication required",
+    r"401",
+    r"Unauthorized",
+]
+
+_AUTH_SCOPE_PATTERNS = [
+    r"project.*scope",
+    r"scope.*project",
+    r"scopes",
+    r"insufficient permissions",
+    r"permission denied.*project",
+]
+
+_RATE_LIMIT_PATTERNS = [
+    r"rate limit",
+    r"429",
+    r"Too Many Requests",
+    r"API rate limit exceeded",
+]
+
+
+def _is_retryable_error(stderr: str) -> bool:
+    """Determine if an error is retryable (transient) or permanent.
+
+    Retryable errors include:
+    - HTTP 502 Bad Gateway
+    - HTTP 503 Service Unavailable
+    - Connection errors (reset, refused, unreachable)
+    - Temporary failures
+
+    Non-retryable errors include:
+    - HTTP 404 Not Found
+    - HTTP 401 Unauthorized
+    - HTTP 400 Bad Request
+    - HTTP 429 Rate Limited (handled specially with retry-after)
+
+    Args:
+        stderr: The stderr output from the subprocess
+
+    Returns:
+        True if the error is retryable, False otherwise
+    """
+    stderr_lower = stderr.lower()
+
+    # Check for non-retryable errors first
+    non_retryable = ["404", "not found", "400", "bad request"]
+    for pattern in non_retryable:
+        if pattern in stderr_lower:
+            return False
+
+    # Rate limiting is handled specially, not retried automatically
+    for pattern in _RATE_LIMIT_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            return False
+
+    # Auth errors are not retryable
+    for pattern in _AUTH_REQUIRED_PATTERNS + _AUTH_SCOPE_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            return False
+
+    # Check for retryable patterns
+    for pattern in _RETRYABLE_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            return True
+
+    return False
+
+
+def _extract_retry_after(stderr: str) -> int | None:
+    """Extract retry-after seconds from rate limit response.
+
+    Looks for patterns like:
+    - "retry after X seconds"
+    - "Retry-After: X"
+    - "wait X seconds"
+
+    Args:
+        stderr: The stderr output from the subprocess
+
+    Returns:
+        Number of seconds to wait, or None if not found
+    """
+    # Look for explicit retry-after header or message
+    patterns = [
+        r"retry[- ]after[:\s]+(\d+)",
+        r"wait\s+(\d+)\s+second",
+        r"try again in\s+(\d+)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, stderr, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+
+    return None
+
+
+@dataclass
+class GhError:
+    """Categorized error from gh CLI execution.
+
+    Attributes:
+        code: Error code from the taxonomy (AUTH_REQUIRED, RATE_LIMITED, etc.)
+        message: Human-readable error message
+        details: Actionable remediation guidance
+        retry_after: Seconds to wait before retry (only for RATE_LIMITED)
+    """
+
+    code: str
+    message: str
+    details: str
+    retry_after: int | None = None
+
+
+def _parse_gh_error(stderr: str, returncode: int) -> GhError:
+    """Parse gh CLI error output and categorize into error taxonomy.
+
+    Args:
+        stderr: The stderr output from the subprocess
+        returncode: The exit code from the subprocess
+
+    Returns:
+        GhError with appropriate code, message, and remediation details
+    """
+    # Check for authentication required
+    for pattern in _AUTH_REQUIRED_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            return GhError(
+                code=AUTH_REQUIRED,
+                message="GitHub CLI authentication required",
+                details="Run `gh auth login` to authenticate with GitHub.",
+            )
+
+    # Check for missing project scope
+    for pattern in _AUTH_SCOPE_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            return GhError(
+                code=AUTH_SCOPE_MISSING,
+                message="GitHub CLI missing 'project' scope",
+                details="Run `gh auth refresh -s project` to add the required scope.",
+            )
+
+    # Check for rate limiting
+    for pattern in _RATE_LIMIT_PATTERNS:
+        if re.search(pattern, stderr, re.IGNORECASE):
+            retry_after = _extract_retry_after(stderr)
+            retry_msg = (
+                f"Wait {retry_after} seconds before retrying."
+                if retry_after
+                else "Wait before retrying. Check rate limit status with `gh api rate_limit`."
+            )
+            return GhError(
+                code=RATE_LIMITED,
+                message="GitHub API rate limit exceeded",
+                details=retry_msg,
+                retry_after=retry_after,
+            )
+
+    # Fallback: generic API error with raw message
+    # Clean up the stderr for display
+    cleaned_stderr = stderr.strip()
+    if not cleaned_stderr:
+        cleaned_stderr = f"Command failed with exit code {returncode}"
+
+    return GhError(
+        code=API_ERROR,
+        message="GitHub API error",
+        details=cleaned_stderr,
+    )
+
+
+@dataclass
+class ExecutionResult:
+    """Result of subprocess execution with retry handling.
+
+    Attributes:
+        success: True if command succeeded
+        stdout: Standard output from successful command
+        error: Parsed error if command failed
+        attempts: Number of attempts made
+    """
+
+    success: bool
+    stdout: str = ""
+    error: GhError | None = None
+    attempts: int = 1
+
+
+def _execute_with_retry(
+    cmd: list[str],
+    max_attempts: int = 3,
+    timeout: int = 30,
+) -> ExecutionResult:
+    """Execute a subprocess command with exponential backoff retry.
+
+    Implements retry logic for transient errors:
+    - Retryable: Network timeout, connection error, HTTP 502, 503
+    - Non-retryable: HTTP 404, 401, 400, rate limit 429
+
+    Args:
+        cmd: Command and arguments to execute
+        max_attempts: Maximum number of attempts (default 3)
+        timeout: Timeout per attempt in seconds (default 30)
+
+    Returns:
+        ExecutionResult with success status and stdout or error details
+    """
+    # Generate delays for exponential backoff: 1s, 2s, 4s, 8s, ...
+    # We need (max_attempts - 1) delays (no delay after last attempt)
+    delays = [2**i for i in range(max_attempts - 1)]
+    last_error: GhError | None = None
+    last_stderr = ""
+    last_returncode = 1
+
+    for attempt in range(max_attempts):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            if result.returncode == 0:
+                return ExecutionResult(
+                    success=True,
+                    stdout=result.stdout,
+                    attempts=attempt + 1,
+                )
+
+            # Command failed - check if retryable
+            last_stderr = result.stderr
+            last_returncode = result.returncode
+
+            if not _is_retryable_error(result.stderr):
+                # Permanent error - don't retry
+                error = _parse_gh_error(result.stderr, result.returncode)
+                return ExecutionResult(
+                    success=False,
+                    error=error,
+                    attempts=attempt + 1,
+                )
+
+            # Retryable error - continue to retry logic
+
+        except subprocess.TimeoutExpired:
+            # Timeout is retryable
+            last_stderr = f"Command timed out after {timeout} seconds"
+            last_returncode = -1
+
+        # Wait before retrying (unless this was the last attempt)
+        if attempt < max_attempts - 1:
+            time.sleep(delays[attempt])
+
+    # All attempts exhausted - return last error
+    last_error = _parse_gh_error(last_stderr, last_returncode)
+    return ExecutionResult(
+        success=False,
+        error=last_error,
+        attempts=max_attempts,
     )
 
 
