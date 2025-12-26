@@ -10,51 +10,58 @@ You are now in **Backlog Review Mode**. Your role is to analyze all non-Done pro
 
 ## Your Focus
 
-- **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
+- **Item retrieval**: Use `gh-api-scripts` skill to fetch all project items
 - **Field discovery**: Detect available custom fields (Priority, Size, Status, etc.)
-- **Item retrieval**: Query all non-Done items from the project
+- **Status filtering**: Filter out completed items from the results
 - **Quality analysis**: Spawn backlog-analyzer agent to assess definition quality
 - **Recommendation**: Present 2-3 best options with detailed rationale
 
 ## Workflow
 
-### 1. Load Configuration
+### 1. Fetch Project Items
 
-Read `.compass-rose/config.json` from the repository root:
+Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
 
 ```bash
-# Check if config exists
-if [ ! -f .compass-rose/config.json ]; then
-  echo "Error: Configuration file not found."
-  echo ""
-  echo "Please create .compass-rose/config.json with your project details:"
-  echo ""
-  echo '{'
-  echo '  "project": {'
-  echo '    "owner": "<org-or-username>",'
-  echo '    "number": <project-number>'
-  echo '  }'
-  echo '}'
-  echo ""
-  echo "Find your project number in the project URL:"
-  echo "https://github.com/orgs/<owner>/projects/<number>"
-  exit 1
-fi
-
-# Parse config (using jq)
-OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-
-# Validate required fields
-if [ "$OWNER" = "null" ] || [ "$NUMBER" = "null" ]; then
-  echo "Error: Invalid configuration."
-  echo ""
-  echo "Both 'project.owner' and 'project.number' are required."
-  exit 1
-fi
+python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues
 ```
 
-**If configuration is missing or invalid**, show clear error message with setup instructions and stop.
+**Output Format** (JSON):
+```json
+{
+  "success": true,
+  "data": {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix login timeout",
+        "body": "Description...",
+        "url": "https://github.com/...",
+        "state": "OPEN",
+        "labels": ["bug", "priority-high"],
+        "status": "Ready",
+        "priority": "P0",
+        "size": "S"
+      }
+    ],
+    "count": 15
+  }
+}
+```
+
+**Error Handling**: The script returns structured errors:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CONFIG_MISSING",
+    "message": "Configuration file not found",
+    "details": "Create .compass-rose/config.json with..."
+  }
+}
+```
+
+**If configuration is missing or invalid**, display the error details and stop.
 
 ### 2. Discover Custom Fields
 
@@ -81,77 +88,31 @@ To enable priority-based sorting, add a "Priority" field to your project with va
 
 Continue with available data even if some fields are missing.
 
-### 3. Query All Non-Done Items
+### 3. Filter Non-Done Items
 
-Fetch project items using GraphQL (never use `gh project item-list` - it silently truncates results):
+The `list-issues` script returns all open issues from the project. Filter out completed items:
 
 ```bash
-# Use GraphQL for reliable, complete item retrieval
-# Note: Use "user" for personal accounts, "organization" for org-owned projects
-ITEMS_RESPONSE=$(gh api graphql -f query='
-query($owner: String!, $number: Int!) {
-  user(login: $owner) {
-    projectV2(number: $number) {
-      id
-      items(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          content {
-            ... on Issue {
-              number
-              title
-              body
-              state
-              url
-              repository { nameWithOwner }
-              assignees(first: 5) { nodes { login } }
-              labels(first: 10) { nodes { name } }
-            }
-          }
-          fieldValues(first: 10) {
-            nodes {
-              ... on ProjectV2ItemFieldSingleSelectValue {
-                name
-                field { ... on ProjectV2SingleSelectField { name } }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}' -f owner="$OWNER" -F number="$NUMBER")
-```
+# Parse script output and filter
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues)
 
-**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor` until all items are fetched.
+# Check for errors
+if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
+  echo "$RESPONSE" | jq -r '.error.details'
+  exit 1
+fi
 
-**Status Filtering**:
-- Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
-- Also filter to OPEN issues only (exclude closed GitHub issues)
-- Include all other statuses: "Ready", "To Do", "In Progress", "Backlog", etc.
-
-Example filter:
-```bash
-# Filter out "Done" items and closed issues, keep everything else
-echo "$ITEMS_RESPONSE" | jq -r '[
-  .data.user.projectV2.items.nodes[] |
-  select(.content.state == "OPEN") |
-  {
-    id: .id,
-    title: .content.title,
-    body: .content.body,
-    number: .content.number,
-    url: .content.url,
-    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
-    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // null),
-    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // null),
-    assignees: [.content.assignees.nodes[].login],
-    labels: [.content.labels.nodes[].name]
-  } |
+# Filter out "Done" status items
+echo "$RESPONSE" | jq '[
+  .data.issues[] |
   select(.status | test("done|closed|complete"; "i") | not)
 ]'
 ```
+
+**Status Filtering**:
+- Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
+- The script already filters to OPEN issues only
+- Include all other statuses: "Ready", "To Do", "In Progress", "Backlog", etc.
 
 **If no items found**:
 ```
@@ -164,26 +125,23 @@ Would you like to create a new item? (/add-item command)
 
 ### 4. Prepare Data for Agent Analysis
 
-Transform the GraphQL response into a clean JSON array suitable for the backlog-analyzer agent:
+The `list-issues` script already returns data in a clean format suitable for the backlog-analyzer agent:
 
-```bash
-# The filtering in step 3 already produces the correct format for the agent
-# Items are already transformed to:
-# {
-#   id: "PVTI_...",
-#   title: "...",
-#   body: "...",
-#   number: 42,
-#   url: "https://github.com/...",
-#   status: "Ready",
-#   priority: "P1",
-#   size: "M",
-#   assignees: ["username"],
-#   labels: ["bug", "frontend"]
-# }
+```json
+{
+  "number": 42,
+  "title": "Fix login timeout",
+  "body": "Description with details...",
+  "url": "https://github.com/org/repo/issues/42",
+  "state": "OPEN",
+  "labels": ["bug", "priority-high"],
+  "status": "Ready",
+  "priority": "P1",
+  "size": "M"
+}
 ```
 
-**Note**: The GraphQL response structure is consistent. The jq transformation in step 3 normalizes the data for agent consumption.
+**Note**: The script handles GraphQL complexity internally. The filtered array from step 3 is ready for agent consumption.
 
 ### 5. Spawn Backlog Analyzer Agent
 
@@ -374,7 +332,8 @@ This command implements the following specification requirements:
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
 - `project` scope authorized (`gh auth refresh -s project`)
-- `jq` for JSON parsing (check availability, provide clear error if missing)
+- `jq` for JSON filtering (optional - script handles parsing)
+- Python 3.12+ for `gh-api-scripts` skill
 
 **Agent Invocation**:
 - Agent operates on item data passed as context
@@ -519,4 +478,4 @@ Would you like to:
 - **Spec**: REQ-F-11, REQ-F-12, REQ-F-13, REQ-NF-3, REQ-NF-4
 - **Plan**: TD-8 (Item Presentation Format), /backlog command flow
 - **Agent**: `compass-rose/agents/backlog-analyzer.md` (quality scoring and recommendation)
-- **Skill**: `compass-rose/skills/gh-project-reference/SKILL.md` (config patterns, field discovery)
+- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)
