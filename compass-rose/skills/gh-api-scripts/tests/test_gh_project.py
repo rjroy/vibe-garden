@@ -33,14 +33,21 @@ from gh_project import (  # noqa: E402
     AUTH_SCOPE_MISSING,
     CONFIG_INVALID,
     CONFIG_MISSING,
+    FIELD_NOT_FOUND,
+    LIST_ISSUES_QUERY,
     RATE_LIMITED,
     ExecutionResult,
     GhError,
+    GraphQLResult,
     ProjectConfig,
+    _execute_graphql,
     _execute_with_retry,
+    _extract_field_value,
     _extract_retry_after,
     _is_retryable_error,
     _parse_gh_error,
+    _parse_issue_from_node,
+    cmd_list_issues,
     create_parser,
     load_config,
 )
@@ -1026,3 +1033,684 @@ class TestExecutionResultDataclass:
         assert result.stdout == ""
         assert result.error == error
         assert result.attempts == 3
+
+
+class TestExecuteGraphQL:
+    """Tests for _execute_graphql function."""
+
+    def test_successful_query(self) -> None:
+        """Test successful GraphQL query execution."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = '{"data": {"user": {"projectV2": {"items": []}}}}'
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _execute_graphql("query {}", {"owner": "test", "number": 1})
+
+            assert result.success is True
+            assert result.data == {"data": {"user": {"projectV2": {"items": []}}}}
+            assert result.error is None
+
+    def test_subprocess_failure(self) -> None:
+        """Test GraphQL query with subprocess failure."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "To authenticate, run: gh auth login"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _execute_graphql("query {}", {"owner": "test", "number": 1})
+
+            assert result.success is False
+            assert result.error is not None
+            assert result.error.code == AUTH_REQUIRED
+
+    def test_invalid_json_response(self) -> None:
+        """Test GraphQL query with invalid JSON response."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "not valid json"
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _execute_graphql("query {}", {"owner": "test", "number": 1})
+
+            assert result.success is False
+            assert result.error is not None
+            assert result.error.code == API_ERROR
+            assert "JSON parse error" in result.error.details
+
+    def test_graphql_errors_in_response(self) -> None:
+        """Test GraphQL query with errors in response body."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps({
+            "data": None,
+            "errors": [{"message": "Field 'foo' not found"}],
+        })
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _execute_graphql("query {}", {"owner": "test", "number": 1})
+
+            assert result.success is False
+            assert result.error is not None
+            assert result.error.code == API_ERROR
+            assert "Field 'foo' not found" in result.error.details
+
+    def test_integer_variable_uses_dash_F(self) -> None:
+        """Test that integer variables use -F flag for correct typing."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = '{"data": {}}'
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            _execute_graphql("query {}", {"owner": "test", "number": 42})
+
+            cmd = mock_run.call_args[0][0]
+            # owner should use -f (string)
+            assert "-f" in cmd
+            assert "owner=test" in cmd
+            # number should use -F (integer)
+            assert "-F" in cmd
+            assert "number=42" in cmd
+
+    def test_none_variables_skipped(self) -> None:
+        """Test that None variables are not included in command."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = '{"data": {}}'
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            _execute_graphql("query {}", {"owner": "test", "cursor": None})
+
+            cmd = mock_run.call_args[0][0]
+            assert "cursor" not in " ".join(cmd)
+
+
+class TestExtractFieldValue:
+    """Tests for _extract_field_value function."""
+
+    def test_extract_status_field(self) -> None:
+        """Test extracting Status field value."""
+        field_values = [
+            {"name": "In Progress", "field": {"name": "Status"}},
+            {"name": "P0", "field": {"name": "Priority"}},
+        ]
+        assert _extract_field_value(field_values, "Status") == "In Progress"
+
+    def test_extract_priority_field(self) -> None:
+        """Test extracting Priority field value."""
+        field_values = [
+            {"name": "Ready", "field": {"name": "Status"}},
+            {"name": "P1", "field": {"name": "Priority"}},
+        ]
+        assert _extract_field_value(field_values, "Priority") == "P1"
+
+    def test_field_not_present(self) -> None:
+        """Test extracting field that doesn't exist."""
+        field_values = [
+            {"name": "Ready", "field": {"name": "Status"}},
+        ]
+        assert _extract_field_value(field_values, "Size") is None
+
+    def test_empty_field_values(self) -> None:
+        """Test extracting from empty field values."""
+        assert _extract_field_value([], "Status") is None
+
+    def test_missing_field_key(self) -> None:
+        """Test handling nodes without 'field' key."""
+        field_values = [
+            {"name": "Something"},  # No 'field' key
+        ]
+        assert _extract_field_value(field_values, "Status") is None
+
+
+class TestParseIssueFromNode:
+    """Tests for _parse_issue_from_node function."""
+
+    def test_parse_complete_issue(self) -> None:
+        """Test parsing a complete issue node."""
+        node = {
+            "id": "item123",
+            "content": {
+                "number": 42,
+                "title": "Fix login bug",
+                "body": "Users cannot login",
+                "state": "OPEN",
+                "url": "https://github.com/owner/repo/issues/42",
+                "labels": {"nodes": [{"name": "bug"}, {"name": "P0"}]},
+            },
+            "fieldValues": {
+                "nodes": [
+                    {"name": "In Progress", "field": {"name": "Status"}},
+                    {"name": "P0", "field": {"name": "Priority"}},
+                    {"name": "M", "field": {"name": "Size"}},
+                ]
+            },
+        }
+
+        issue = _parse_issue_from_node(node)
+
+        assert issue is not None
+        assert issue["number"] == 42
+        assert issue["title"] == "Fix login bug"
+        assert issue["body"] == "Users cannot login"
+        assert issue["state"] == "OPEN"
+        assert issue["url"] == "https://github.com/owner/repo/issues/42"
+        assert issue["labels"] == ["bug", "P0"]
+        assert issue["status"] == "In Progress"
+        assert issue["priority"] == "P0"
+        assert issue["size"] == "M"
+
+    def test_parse_issue_without_labels(self) -> None:
+        """Test parsing issue with no labels."""
+        node = {
+            "content": {
+                "number": 1,
+                "title": "Test",
+                "body": "",
+                "state": "OPEN",
+                "url": "https://github.com/owner/repo/issues/1",
+                "labels": {"nodes": []},
+            },
+            "fieldValues": {"nodes": []},
+        }
+
+        issue = _parse_issue_from_node(node)
+
+        assert issue is not None
+        assert issue["labels"] == []
+
+    def test_parse_draft_item_returns_none(self) -> None:
+        """Test that draft items (no content) return None."""
+        node = {"id": "draft123", "content": None}
+
+        assert _parse_issue_from_node(node) is None
+
+    def test_parse_pull_request_returns_none(self) -> None:
+        """Test that pull requests (no 'number' in content) return None."""
+        node = {
+            "content": {
+                "title": "PR Title",
+                # PRs might not have 'number' in the Issue fragment
+            },
+            "fieldValues": {"nodes": []},
+        }
+
+        assert _parse_issue_from_node(node) is None
+
+    def test_parse_issue_missing_optional_fields(self) -> None:
+        """Test parsing issue with missing optional field values."""
+        node = {
+            "content": {
+                "number": 5,
+                "title": "Minimal issue",
+                "labels": {"nodes": []},
+            },
+            "fieldValues": {"nodes": []},
+        }
+
+        issue = _parse_issue_from_node(node)
+
+        assert issue is not None
+        assert issue["number"] == 5
+        assert issue["body"] == ""
+        assert issue["url"] == ""
+        assert issue["state"] == ""
+        assert issue["status"] is None
+        assert issue["priority"] is None
+        assert issue["size"] is None
+
+
+class TestListIssuesQuery:
+    """Tests for LIST_ISSUES_QUERY constant."""
+
+    def test_query_user_format(self) -> None:
+        """Test query formats correctly for user owner_type."""
+        query = LIST_ISSUES_QUERY.format(owner_type="user")
+        assert "user(login: $owner)" in query
+        assert "organization" not in query
+
+    def test_query_organization_format(self) -> None:
+        """Test query formats correctly for organization owner_type."""
+        query = LIST_ISSUES_QUERY.format(owner_type="organization")
+        assert "organization(login: $owner)" in query
+        assert "user(login:" not in query
+
+    def test_query_includes_pagination(self) -> None:
+        """Test query includes pagination fields."""
+        query = LIST_ISSUES_QUERY.format(owner_type="user")
+        assert "pageInfo" in query
+        assert "hasNextPage" in query
+        assert "endCursor" in query
+        assert "$cursor" in query
+
+    def test_query_includes_issue_fields(self) -> None:
+        """Test query includes all required issue fields."""
+        query = LIST_ISSUES_QUERY.format(owner_type="user")
+        assert "number" in query
+        assert "title" in query
+        assert "body" in query
+        assert "state" in query
+        assert "url" in query
+        assert "labels" in query
+
+    def test_query_includes_status_field_check(self) -> None:
+        """Test query includes Status field lookup."""
+        query = LIST_ISSUES_QUERY.format(owner_type="user")
+        assert 'field(name: "Status")' in query
+
+
+class TestCmdListIssues:
+    """Integration tests for cmd_list_issues function."""
+
+    def _make_graphql_response(
+        self,
+        items: list,
+        has_next_page: bool = False,
+        end_cursor: str | None = None,
+        has_status_field: bool = True,
+    ) -> str:
+        """Helper to create a mock GraphQL response."""
+        response = {
+            "data": {
+                "user": {
+                    "projectV2": {
+                        "items": {
+                            "nodes": items,
+                            "pageInfo": {
+                                "hasNextPage": has_next_page,
+                                "endCursor": end_cursor,
+                            },
+                        },
+                        "field": {"id": "field123", "name": "Status"}
+                        if has_status_field
+                        else None,
+                    }
+                }
+            }
+        }
+        return json.dumps(response)
+
+    def _make_issue_node(
+        self,
+        number: int,
+        title: str = "Test issue",
+        status: str | None = "Ready",
+    ) -> dict:
+        """Helper to create a mock issue node."""
+        node = {
+            "id": f"item{number}",
+            "content": {
+                "number": number,
+                "title": title,
+                "body": f"Body for issue {number}",
+                "state": "OPEN",
+                "url": f"https://github.com/owner/repo/issues/{number}",
+                "labels": {"nodes": [{"name": "bug"}]},
+            },
+            "fieldValues": {"nodes": []},
+        }
+        if status:
+            node["fieldValues"]["nodes"].append(
+                {"name": status, "field": {"name": "Status"}}
+            )
+        return node
+
+    def test_list_issues_single_page(self, tmp_path: Path, capsys) -> None:
+        """Test listing issues with single page of results."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        items = [
+            self._make_issue_node(1, "First issue", "Ready"),
+            self._make_issue_node(2, "Second issue", "In Progress"),
+        ]
+        mock_response = self._make_graphql_response(items, has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["count"] == 2
+        assert len(output["data"]["issues"]) == 2
+        assert output["data"]["issues"][0]["number"] == 1
+        assert output["data"]["issues"][0]["title"] == "First issue"
+        assert output["data"]["issues"][1]["number"] == 2
+
+    def test_list_issues_pagination(self, tmp_path: Path, capsys) -> None:
+        """Test listing issues with multiple pages."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # First page
+        page1_items = [self._make_issue_node(1)]
+        page1_response = self._make_graphql_response(
+            page1_items, has_next_page=True, end_cursor="cursor123"
+        )
+
+        # Second page
+        page2_items = [self._make_issue_node(2)]
+        page2_response = self._make_graphql_response(page2_items, has_next_page=False)
+
+        mock_results = [
+            mock.Mock(returncode=0, stdout=page1_response, stderr=""),
+            mock.Mock(returncode=0, stdout=page2_response, stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_results) as mock_run:
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 0
+
+            # Verify two queries were made
+            assert mock_run.call_count == 2
+
+            # Verify second query included cursor
+            second_call_args = mock_run.call_args_list[1][0][0]
+            assert "cursor=cursor123" in " ".join(second_call_args)
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["count"] == 2
+        assert len(output["data"]["issues"]) == 2
+
+    def test_list_issues_empty_project(self, tmp_path: Path, capsys) -> None:
+        """Test listing issues from empty project."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_response = self._make_graphql_response([], has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["count"] == 0
+        assert output["data"]["issues"] == []
+
+    def test_list_issues_organization_owner_type(self, tmp_path: Path) -> None:
+        """Test that organization owner_type uses correct query root."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testorg",
+                    "owner_type": "organization",
+                    "number": 5,
+                }
+            })
+        )
+
+        # Response with organization root
+        response = {
+            "data": {
+                "organization": {
+                    "projectV2": {
+                        "items": {"nodes": [], "pageInfo": {"hasNextPage": False}},
+                        "field": {"id": "f1", "name": "Status"},
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit):
+                cmd_list_issues(args)
+
+            # Verify query used organization root
+            cmd = mock_run.call_args[0][0]
+            query_arg = next(arg for arg in cmd if "organization(login:" in arg)
+            assert query_arg is not None
+
+    def test_list_issues_status_field_missing(self, tmp_path: Path, capsys) -> None:
+        """Test FIELD_NOT_FOUND error when Status field is missing."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_response = self._make_graphql_response(
+            [], has_next_page=False, has_status_field=False
+        )
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == FIELD_NOT_FOUND
+        assert "Status" in output["error"]["message"]
+
+    def test_list_issues_api_error(self, tmp_path: Path, capsys) -> None:
+        """Test handling of API errors."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "HTTP 404 Not Found"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == API_ERROR
+
+    def test_list_issues_filters_draft_items(self, tmp_path: Path, capsys) -> None:
+        """Test that draft items are filtered out."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        items = [
+            self._make_issue_node(1, "Real issue"),
+            {"id": "draft1", "content": None, "fieldValues": {"nodes": []}},  # Draft
+        ]
+        mock_response = self._make_graphql_response(items, has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit):
+                cmd_list_issues(args)
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["count"] == 1
+        assert output["data"]["issues"][0]["number"] == 1
+
+    def test_list_issues_handles_many_pages(self, tmp_path: Path, capsys) -> None:
+        """Test handling of >100 items across multiple pages."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # Create 3 pages with different issues
+        pages = []
+        for page_num in range(3):
+            start = page_num * 100 + 1
+            items = [self._make_issue_node(i) for i in range(start, start + 100)]
+            has_next = page_num < 2
+            cursor = f"cursor{page_num + 1}" if has_next else None
+            pages.append(
+                mock.Mock(
+                    returncode=0,
+                    stdout=self._make_graphql_response(items, has_next, cursor),
+                    stderr="",
+                )
+            )
+
+        with mock.patch("subprocess.run", side_effect=pages) as mock_run:
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 0
+            assert mock_run.call_count == 3
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["count"] == 300
+
+    def test_list_issues_project_not_found(self, tmp_path: Path, capsys) -> None:
+        """Test handling when project doesn't exist."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 999}
+            })
+        )
+
+        response = {"data": {"user": {"projectV2": None}}}
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_list_issues(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == API_ERROR
+        assert "Project not found" in output["error"]["message"]
+
+
+class TestGraphQLResultDataclass:
+    """Tests for the GraphQLResult dataclass structure."""
+
+    def test_graphql_result_success(self) -> None:
+        """Test GraphQLResult for successful query."""
+        result = GraphQLResult(
+            success=True,
+            data={"data": {"user": {}}},
+        )
+        assert result.success is True
+        assert result.data is not None
+        assert result.error is None
+
+    def test_graphql_result_failure(self) -> None:
+        """Test GraphQLResult for failed query."""
+        error = GhError(code=API_ERROR, message="msg", details="det")
+        result = GraphQLResult(
+            success=False,
+            error=error,
+        )
+        assert result.success is False
+        assert result.data is None
+        assert result.error == error

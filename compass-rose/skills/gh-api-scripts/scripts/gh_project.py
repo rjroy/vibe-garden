@@ -44,6 +44,47 @@ DEFAULT_CONFIG_PATH = ".compass-rose/config.json"
 # Valid owner types
 VALID_OWNER_TYPES = ("user", "organization")
 
+# GraphQL query for listing issues with pagination
+# Uses {owner_type} placeholder for user vs organization
+LIST_ISSUES_QUERY = """
+query($owner: String!, $number: Int!, $cursor: String) {{
+  {owner_type}(login: $owner) {{
+    projectV2(number: $number) {{
+      items(first: 100, after: $cursor) {{
+        pageInfo {{ hasNextPage endCursor }}
+        nodes {{
+          id
+          content {{
+            ... on Issue {{
+              number
+              title
+              body
+              state
+              url
+              labels(first: 20) {{ nodes {{ name }} }}
+            }}
+          }}
+          fieldValues(first: 20) {{
+            nodes {{
+              ... on ProjectV2ItemFieldSingleSelectValue {{
+                name
+                field {{ ... on ProjectV2SingleSelectField {{ name }} }}
+              }}
+            }}
+          }}
+        }}
+      }}
+      field(name: "Status") {{
+        ... on ProjectV2SingleSelectField {{
+          id
+          name
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+
 
 @dataclass
 class ProjectConfig:
@@ -481,23 +522,219 @@ def _execute_with_retry(
     )
 
 
+@dataclass
+class GraphQLResult:
+    """Result of a GraphQL query execution.
+
+    Attributes:
+        success: True if query executed successfully
+        data: Parsed JSON response data (if successful)
+        error: GhError if query failed
+    """
+
+    success: bool
+    data: dict[str, Any] | None = None
+    error: GhError | None = None
+
+
+def _execute_graphql(
+    query: str,
+    variables: dict[str, Any],
+    max_attempts: int = 3,
+    timeout: int = 30,
+) -> GraphQLResult:
+    """Execute a GraphQL query via gh api graphql.
+
+    Args:
+        query: The GraphQL query string
+        variables: Variables to pass to the query
+        max_attempts: Maximum number of retry attempts
+        timeout: Timeout per attempt in seconds
+
+    Returns:
+        GraphQLResult with parsed data or error details
+    """
+    # Build command with query and variables
+    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    for name, value in variables.items():
+        if value is None:
+            continue
+        if isinstance(value, int):
+            cmd.extend(["-F", f"{name}={value}"])
+        else:
+            cmd.extend(["-f", f"{name}={value}"])
+
+    result = _execute_with_retry(cmd, max_attempts=max_attempts, timeout=timeout)
+
+    if not result.success:
+        return GraphQLResult(success=False, error=result.error)
+
+    # Parse JSON response
+    try:
+        response_data = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        return GraphQLResult(
+            success=False,
+            error=GhError(
+                code=API_ERROR,
+                message="Failed to parse GraphQL response",
+                details=f"JSON parse error: {e}. Response: {result.stdout[:200]}",
+            ),
+        )
+
+    # Check for GraphQL errors in response
+    if "errors" in response_data:
+        error_msgs = [e.get("message", str(e)) for e in response_data["errors"]]
+        return GraphQLResult(
+            success=False,
+            error=GhError(
+                code=API_ERROR,
+                message="GraphQL query returned errors",
+                details="; ".join(error_msgs),
+            ),
+        )
+
+    return GraphQLResult(success=True, data=response_data)
+
+
+def _extract_field_value(field_values: list[dict], field_name: str) -> str | None:
+    """Extract a specific field value from project item field values.
+
+    Args:
+        field_values: List of field value nodes from GraphQL response
+        field_name: Name of the field to extract (e.g., "Status", "Priority")
+
+    Returns:
+        The field value if found, None otherwise
+    """
+    for fv in field_values:
+        # Check if this is a single select field with the right name
+        field = fv.get("field", {})
+        if field.get("name") == field_name:
+            return fv.get("name")
+    return None
+
+
+def _parse_issue_from_node(node: dict) -> dict[str, Any] | None:
+    """Parse a project item node into issue data.
+
+    Args:
+        node: A project item node from GraphQL response
+
+    Returns:
+        Issue dictionary with normalized fields, or None if not an issue
+    """
+    content = node.get("content")
+    if not content:
+        # Draft items or non-issue content
+        return None
+
+    # Only process issues (not pull requests or draft items)
+    if "number" not in content:
+        return None
+
+    # Extract labels
+    labels_data = content.get("labels", {}).get("nodes", [])
+    labels = [label.get("name") for label in labels_data if label.get("name")]
+
+    # Extract project field values
+    field_values = node.get("fieldValues", {}).get("nodes", [])
+    status = _extract_field_value(field_values, "Status")
+    priority = _extract_field_value(field_values, "Priority")
+    size = _extract_field_value(field_values, "Size")
+
+    return {
+        "number": content.get("number"),
+        "title": content.get("title", ""),
+        "body": content.get("body", ""),
+        "url": content.get("url", ""),
+        "state": content.get("state", ""),
+        "labels": labels,
+        "status": status,
+        "priority": priority,
+        "size": size,
+    }
+
+
 def cmd_list_issues(args: argparse.Namespace) -> None:
     """List all open issues in the configured project.
 
-    Placeholder implementation - will be completed in TASK-004.
+    Fetches all issues from the project with automatic pagination.
+    Returns issues with: number, title, body, url, state, labels, status, priority, size.
     """
     config = load_config(args.config)
-    # TODO: Implement in TASK-004 - List Issues Operation with Pagination
-    output_success(
-        {
-            "message": "list-issues operation not yet implemented",
-            "config": {
-                "owner": config.owner,
-                "owner_type": config.owner_type,
-                "number": config.number,
-            },
+
+    # Format query with correct owner_type (user vs organization)
+    query = LIST_ISSUES_QUERY.format(owner_type=config.owner_type)
+
+    all_issues: list[dict[str, Any]] = []
+    cursor: str | None = None
+    status_field_checked = False
+    status_field_exists = False
+
+    while True:
+        # Execute paginated query
+        variables = {
+            "owner": config.owner,
+            "number": config.number,
+            "cursor": cursor,
         }
-    )
+        result = _execute_graphql(query, variables)
+
+        if not result.success:
+            assert result.error is not None
+            output_error(result.error.code, result.error.message, result.error.details)
+
+        assert result.data is not None
+        data = result.data.get("data", {})
+
+        # Navigate to project data (user or organization)
+        owner_data = data.get(config.owner_type, {})
+        project_data = owner_data.get("projectV2")
+
+        if not project_data:
+            output_error(
+                API_ERROR,
+                "Project not found",
+                f"Could not find project #{config.number} for {config.owner_type} "
+                f"'{config.owner}'. Verify the project exists and you have access.",
+            )
+
+        # Check for Status field on first iteration
+        if not status_field_checked:
+            status_field_checked = True
+            status_field = project_data.get("field")
+            if status_field and status_field.get("name") == "Status":
+                status_field_exists = True
+
+        # Extract items from this page
+        items_data = project_data.get("items", {})
+        nodes = items_data.get("nodes", [])
+
+        for node in nodes:
+            issue = _parse_issue_from_node(node)
+            if issue is not None:
+                all_issues.append(issue)
+
+        # Check for more pages
+        page_info = items_data.get("pageInfo", {})
+        if not page_info.get("hasNextPage", False):
+            break
+        cursor = page_info.get("endCursor")
+
+    # Check if Status field was missing (only if we got items to check)
+    if not status_field_exists and not status_field_checked:
+        # We never even made a query - this shouldn't happen, but handle it
+        pass
+    elif not status_field_exists:
+        output_error(
+            FIELD_NOT_FOUND,
+            "Status field not found in project",
+            "The project does not have a 'Status' field configured. "
+            "Add a Status single-select field to the project in GitHub.",
+        )
+
+    output_success({"issues": all_issues, "count": len(all_issues)})
 
 
 def cmd_get_issue(args: argparse.Namespace) -> None:
