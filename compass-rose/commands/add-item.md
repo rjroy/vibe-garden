@@ -10,52 +10,32 @@ You are now in **Add Item Mode**. Your role is to interactively gather details a
 
 ## Your Focus
 
-- **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
 - **Field discovery**: Detect available custom fields (Priority, Size, Status, etc.)
 - **Interactive gathering**: Ask user for title, description, priority, size, and status
 - **Issue creation**: Create repository issue via `gh issue create`
-- **Project linking**: Add issue to project via `gh project item-add`
+- **Project linking**: Add issue to project via `gh-api-scripts add-to-project`
 - **Field updates**: Set custom fields via multiple `gh project item-edit` calls
 
 ## Workflow
 
 ### 1. Load Configuration
 
-Read `.compass-rose/config.json` from the repository root:
+The `gh-api-scripts` skill handles configuration loading and validation. Parse owner/number for field discovery:
 
 ```bash
-# Check if config exists
-if [ ! -f .compass-rose/config.json ]; then
+# Parse config for field discovery (script handles validation)
+if [ -f .compass-rose/config.json ]; then
+  OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
+  NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
+else
   echo "Error: Configuration file not found."
   echo ""
-  echo "Please create .compass-rose/config.json with your project details:"
-  echo ""
-  echo '{'
-  echo '  "project": {'
-  echo '    "owner": "<org-or-username>",'
-  echo '    "number": <project-number>'
-  echo '  }'
-  echo '}'
-  echo ""
-  echo "Find your project number in the project URL:"
-  echo "https://github.com/orgs/<owner>/projects/<number>"
-  exit 1
-fi
-
-# Parse config (using jq)
-OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-
-# Validate required fields
-if [ "$OWNER" = "null" ] || [ "$NUMBER" = "null" ]; then
-  echo "Error: Invalid configuration."
-  echo ""
-  echo "Both 'project.owner' and 'project.number' are required."
+  echo "Please create .compass-rose/config.json with your project details."
   exit 1
 fi
 ```
 
-**If configuration is missing or invalid**, show clear error message with setup instructions and stop.
+Configuration validation is performed by the `add-to-project` operation - if config is missing or invalid, it returns structured error responses.
 
 ### 2. Discover Custom Fields
 
@@ -228,25 +208,27 @@ Verify that:
 
 ### 5. Add Issue to Project
 
-Link the newly created issue to the project:
+Use the `gh-api-scripts` skill to link the issue to the project:
 
 ```bash
-ITEM_ID=$(gh project item-add $NUMBER \
-  --owner $OWNER \
-  --url $ISSUE_URL \
-  --format json \
-  --jq .id)
+# Add issue to project using gh-api-scripts
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py add-to-project $ISSUE_NUMBER)
+
+# Check result
+if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+  ITEM_ID=$(echo "$RESPONSE" | jq -r '.data.item_id')
+  echo "✓ Added to project"
+else
+  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
+  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
+  echo "Error: $ERROR_MSG"
+  echo ""
+  echo "$ERROR_DETAILS"
+  exit 1
+fi
 ```
 
-**Error Handling**:
-```
-Error: Failed to add issue to project.
-
-Verify that:
-1. Project exists: owner=$OWNER, number=$NUMBER
-2. You have project write access
-3. Project scope is authorized: gh auth refresh -s project
-```
+**Note**: The config must include a `repository` field for add-to-project to work. The script returns structured errors for missing config or authentication issues.
 
 ### 6. Set Custom Fields
 
@@ -390,8 +372,9 @@ This command implements the following specification requirements:
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
 - `project` scope authorized (`gh auth refresh -s project`)
-- `jq` for JSON parsing (check availability, provide clear error if missing)
+- `jq` for JSON parsing
 - `git` for repository context
+- Python 3.12+ for `gh-api-scripts` skill
 
 **Two-Step Creation Process**:
 Following TD-5 from the plan, we ALWAYS create repository issues first, then link to project. This ensures:
@@ -501,4 +484,4 @@ View in project: https://github.com/orgs/my-org/projects/123
 
 - **Spec**: REQ-F-8, REQ-F-9, REQ-F-10, REQ-F-7, REQ-NF-3, Explicit Constraint #1
 - **Plan**: TD-5 (Item Type Strategy - Repository Issues Only)
-- **Skill**: `compass-rose/skills/gh-project-reference/SKILL.md` (item creation patterns)
+- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)

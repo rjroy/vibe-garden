@@ -10,9 +10,8 @@ You are now in **Reprioritize Mode**. Your role is to analyze the current codeba
 
 ## Your Focus
 
-- **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
+- **Item querying**: Fetch all project items using `gh-api-scripts list-issues`
 - **Field discovery**: Detect available custom fields (Priority, Status, etc.)
-- **Item querying**: Fetch all project items for analysis
 - **Codebase analysis**: Spawn codebase-scanner agent to assess relevance
 - **Recommendation presentation**: Show priority changes with evidence-based rationale
 - **Batch updates**: Execute approved changes via `gh` CLI
@@ -22,41 +21,22 @@ You are now in **Reprioritize Mode**. Your role is to analyze the current codeba
 
 ### 1. Load Configuration
 
-Read `.compass-rose/config.json` from the repository root:
+The `gh-api-scripts` skill handles configuration loading and validation. Parse owner/number for field discovery:
 
 ```bash
-# Check if config exists
-if [ ! -f .compass-rose/config.json ]; then
+# Parse config for field discovery (script handles validation)
+if [ -f .compass-rose/config.json ]; then
+  OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
+  NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
+else
   echo "Error: Configuration file not found."
   echo ""
-  echo "Please create .compass-rose/config.json with your project details:"
-  echo ""
-  echo '{'
-  echo '  "project": {'
-  echo '    "owner": "<org-or-username>",'
-  echo '    "number": <project-number>'
-  echo '  }'
-  echo '}'
-  echo ""
-  echo "Find your project number in the project URL:"
-  echo "https://github.com/orgs/<owner>/projects/<number>"
-  exit 1
-fi
-
-# Parse config (using jq)
-OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-
-# Validate required fields
-if [ "$OWNER" = "null" ] || [ "$NUMBER" = "null" ]; then
-  echo "Error: Invalid configuration."
-  echo ""
-  echo "Both 'project.owner' and 'project.number' are required."
+  echo "Please create .compass-rose/config.json with your project details."
   exit 1
 fi
 ```
 
-**If configuration is missing or invalid**, show clear error message with setup instructions and stop.
+Configuration validation is performed by the `list-issues` operation - if config is missing or invalid, it returns structured error responses.
 
 ### 2. Discover Custom Fields
 
@@ -99,80 +79,55 @@ Stop execution if Priority field is missing - cannot reprioritize without it.
 
 ### 3. Query All Project Items
 
-Use GraphQL to fetch items with their GitHub issue state (OPEN/CLOSED). This is critical because:
-- `gh project item-list` only shows project Status field, not GitHub issue state
-- We must filter to OPEN issues only - closed issues should not be reprioritized
+Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
 
 ```bash
-# GraphQL query to get items with issue state
-# Note: Use "user" for personal accounts, "organization" for org-owned projects
-gh api graphql -f query='
-query($owner: String!, $number: Int!) {
-  user(login: $owner) {
-    projectV2(number: $number) {
-      id
-      items(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          content {
-            ... on Issue {
-              number
-              title
-              body
-              state
-              url
-              repository { nameWithOwner }
-            }
-            ... on PullRequest {
-              number
-              title
-              body
-              state
-              url
-              repository { nameWithOwner }
-            }
-          }
-          fieldValues(first: 10) {
-            nodes {
-              ... on ProjectV2ItemFieldSingleSelectValue {
-                name
-                field { ... on ProjectV2SingleSelectField { name } }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}' -f owner="$OWNER" -F number="$NUMBER"
+# Fetch all project items
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues)
+
+# Check for errors
+if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
+  echo "$RESPONSE" | jq -r '.error.details'
+  exit 1
+fi
+
+# The script already returns OPEN issues only with all field values
+echo "$RESPONSE" | jq '.data.issues'
 ```
 
-**Pagination for Large Backlogs**:
-If `hasNextPage` is true, make additional requests with `after: $endCursor` until all items are fetched.
+**Output Format** (JSON):
+```json
+{
+  "success": true,
+  "data": {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix login timeout",
+        "body": "Description...",
+        "url": "https://github.com/...",
+        "state": "OPEN",
+        "labels": ["bug", "priority-high"],
+        "status": "Ready",
+        "priority": "P0",
+        "size": "S"
+      }
+    ],
+    "count": 15
+  }
+}
+```
 
 **Item Filtering** (filter BEFORE passing to agent):
-- **CRITICAL**: Only include items where `content.state == "OPEN"`
-- Also exclude items with "Done" project status (completed work)
-- Filter at query level using jq:
+- The script already filters to OPEN issues only
+- Exclude items with "Done" project status (completed work):
 
 ```bash
-# Extract and filter to OPEN issues only
-echo "$response" | jq '[
-  .data.user.projectV2.items.nodes[] |
-  select(.content.state == "OPEN") |
-  {
-    id: .id,
-    title: .content.title,
-    body: .content.body,
-    number: .content.number,
-    url: .content.url,
-    repository: .content.repository.nameWithOwner,
-    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
-    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // "Unset"),
-    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // "Unset")
-  }
-] | [.[] | select(.status | test("done"; "i") | not)]'
+# Filter out "Done" status items
+echo "$RESPONSE" | jq '[
+  .data.issues[] |
+  select(.status | test("done"; "i") | not)
+]'
 ```
 
 **If no open items found**:
@@ -522,6 +477,13 @@ This command implements the following specification requirements:
 - Always fetch fresh data (no caching between sessions per spec constraint)
 - Ensures recommendations reflect current project and codebase state
 
+**CLI Dependencies**:
+- `gh` CLI installed and authenticated
+- `project` scope authorized (`gh auth refresh -s project`)
+- `jq` for JSON filtering (optional - script handles parsing)
+- `git` for codebase analysis
+- Python 3.12+ for `gh-api-scripts` skill
+
 ## Anti-Patterns to Avoid
 
 - **Don't cache project data**: Always fetch fresh data from GitHub
@@ -622,4 +584,4 @@ Report saved to: .compass-rose/reprioritize-report-2025-12-14.md
 - **Spec**: REQ-F-14, REQ-F-15, REQ-F-16, REQ-F-17, REQ-NF-4
 - **Plan**: TD-1 (gh CLI), TD-3 (Stateless), Command Spec for /reprioritize
 - **Agent**: `compass-rose/agents/codebase-scanner.md` (spawned by this command)
-- **Skill**: `compass-rose/skills/gh-project-reference/SKILL.md` (gh CLI patterns)
+- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)

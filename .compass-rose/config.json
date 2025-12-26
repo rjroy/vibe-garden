@@ -1,0 +1,11 @@
+{
+  "project": {
+    "owner": "rjroy",
+    "number": 8
+  },
+  "preferences": {
+    "promptForLargeItems": true,
+    "validateIssuesBeforeWork": true,
+    "validationTimeoutSeconds": 30
+  }
+}

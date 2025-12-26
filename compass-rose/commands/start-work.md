@@ -11,11 +11,10 @@ You are now in **Start Work Mode**. Your role is to help the user begin work on 
 ## Your Focus
 
 - **Item selection**: Accept issue number, URL, or "next" for recommendation
-- **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
+- **Issue retrieval**: Use `gh-api-scripts` skill to fetch issue details
 - **Issue validation**: Check if issue is still relevant before starting work
-- **Field discovery**: Detect available custom fields (Size, Status, etc.)
 - **Size-based escalation**: Check for XL/L items and prompt about spec-writing
-- **Status update**: Update item Status to "In Progress"
+- **Status update**: Update item Status to "In Progress" via `set-status` operation
 - **Context loading**: Read full issue description and linked context
 - **Implementation guidance**: Help user start working on the item
 
@@ -59,116 +58,71 @@ Valid formats:
 
 ### 2. Load Configuration
 
-Read `.compass-rose/config.json` from the repository root:
+The `gh-api-scripts` skill handles configuration loading and validation. Load preferences separately:
 
 ```bash
-# Check if config exists
-if [ ! -f .compass-rose/config.json ]; then
-  echo "Error: Configuration file not found."
-  echo ""
-  echo "Please create .compass-rose/config.json with your project details:"
-  echo ""
-  echo '{'
-  echo '  "project": {'
-  echo '    "owner": "<org-or-username>",'
-  echo '    "number": <project-number>'
-  echo '  }'
-  echo '}'
-  echo ""
-  echo "Find your project number in the project URL:"
-  echo "https://github.com/orgs/<owner>/projects/<number>"
-  exit 1
-fi
-
-# Parse config (using jq)
-OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-
-# Load preferences (with defaults)
-PROMPT_FOR_LARGE=$(jq -r '.preferences.promptForLargeItems // true' .compass-rose/config.json)
-LARGE_THRESHOLD=$(jq -r '.preferences.largeSizeThreshold // ["L", "XL"] | @json' .compass-rose/config.json)
-
-# Validate required fields
-if [ "$OWNER" = "null" ] || [ "$NUMBER" = "null" ]; then
-  echo "Error: Invalid configuration."
-  echo ""
-  echo "Both 'project.owner' and 'project.number' are required."
-  exit 1
+# Load preferences from config (with defaults)
+if [ -f .compass-rose/config.json ]; then
+  PROMPT_FOR_LARGE=$(jq -r '.preferences.promptForLargeItems // true' .compass-rose/config.json)
+  LARGE_THRESHOLD=$(jq -r '.preferences.largeSizeThreshold // ["L", "XL"] | @json' .compass-rose/config.json)
+else
+  PROMPT_FOR_LARGE=true
+  LARGE_THRESHOLD='["L", "XL"]'
 fi
 ```
 
-**If configuration is missing or invalid**, show clear error message with setup instructions and stop.
+Configuration validation is performed by the gh-api-scripts commands - if config is missing or invalid, they return structured error responses.
 
 ### 3. Get Item Details
 
-Retrieve the full issue details and project item metadata using GraphQL (never use `gh project item-list` - it silently truncates):
+Use the `gh-api-scripts` skill to retrieve issue details from the project:
 
 ```bash
-# Get repository name from git remote
-REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+# Get issue details from project (handles pagination automatically)
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py get-issue $ISSUE_NUMBER)
 
-# Read full issue details
-ISSUE_DATA=$(gh issue view $ISSUE_NUMBER --repo $REPO --json title,body,url,number)
+# Check for errors
+if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
+  ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code')
+  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
+  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
 
-TITLE=$(echo "$ISSUE_DATA" | jq -r .title)
-BODY=$(echo "$ISSUE_DATA" | jq -r .body)
-ISSUE_URL=$(echo "$ISSUE_DATA" | jq -r .url)
-ISSUE_NUMBER=$(echo "$ISSUE_DATA" | jq -r .number)
+  echo "Error: $ERROR_MSG"
+  echo ""
+  echo "$ERROR_DETAILS"
+  exit 1
+fi
 
-# Get project item data using GraphQL for reliable results
-# Note: Use "user" for personal accounts, "organization" for org-owned projects
-PROJECT_ITEMS=$(gh api graphql -f query='
-query($owner: String!, $number: Int!) {
-  user(login: $owner) {
-    projectV2(number: $number) {
-      id
-      items(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          content {
-            ... on Issue {
-              number
-              url
-            }
-          }
-          fieldValues(first: 10) {
-            nodes {
-              ... on ProjectV2ItemFieldSingleSelectValue {
-                name
-                field { ... on ProjectV2SingleSelectField { name id } }
-                optionId
-              }
-            }
-          }
-        }
-      }
-    }
+# Parse issue data
+TITLE=$(echo "$RESPONSE" | jq -r '.data.title')
+BODY=$(echo "$RESPONSE" | jq -r '.data.body')
+ISSUE_URL=$(echo "$RESPONSE" | jq -r '.data.url')
+STATUS=$(echo "$RESPONSE" | jq -r '.data.status')
+PRIORITY=$(echo "$RESPONSE" | jq -r '.data.priority')
+SIZE_VALUE=$(echo "$RESPONSE" | jq -r '.data.size')
+```
+
+**Output Format** (JSON):
+```json
+{
+  "success": true,
+  "data": {
+    "number": 156,
+    "title": "Implement feature X",
+    "body": "Full issue description...",
+    "url": "https://github.com/.../issues/156",
+    "state": "OPEN",
+    "labels": ["feature"],
+    "status": "Ready",
+    "priority": "P1",
+    "size": "L"
   }
-}' -f owner="$OWNER" -F number="$NUMBER")
-
-# Get project ID for later updates
-PROJECT_ID=$(echo "$PROJECT_ITEMS" | jq -r '.data.user.projectV2.id')
-
-# Find this issue in project items
-ITEM_DATA=$(echo "$PROJECT_ITEMS" | jq --arg url "$ISSUE_URL" '
-  .data.user.projectV2.items.nodes[] | select(.content.url == $url)
-')
-
-ITEM_ID=$(echo "$ITEM_DATA" | jq -r .id)
+}
 ```
 
-**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor` to find the issue if not in first 100 items.
-
-**Error Handling**:
-```
-Error: Issue #<number> not found in project.
-
-Verify that:
-1. Issue exists: gh issue view <number>
-2. Issue is linked to project: <project-url>
-3. Issue URL matches project item
-```
+**Error Handling**: The script returns structured errors:
+- `ISSUE_NOT_FOUND` - Issue doesn't exist in repository
+- `ISSUE_NOT_IN_PROJECT` - Issue exists but not linked to project (suggest `/add-item`)
 
 ### 4. Validate Issue Relevance
 
@@ -670,29 +624,28 @@ To disable L-item prompts, user can edit `.compass-rose/config.json`:
 
 **Requirement**: REQ-F-22
 
-Update the item's Status field to "In Progress":
+Use the `gh-api-scripts` skill to update the item's Status field:
 
 ```bash
-if [ -n "$STATUS_FIELD_ID" ] && [ -n "$IN_PROGRESS_OPTION_ID" ]; then
-  gh project item-edit \
-    --id $ITEM_ID \
-    --project-id $PROJECT_ID \
-    --field-id $STATUS_FIELD_ID \
-    --single-select-option-id $IN_PROGRESS_OPTION_ID
+# Update status to "In Progress"
+RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py set-status $ISSUE_NUMBER "In Progress")
 
-  echo "✓ Status updated to 'In Progress'"
+# Check result
+if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+  PREV_STATUS=$(echo "$RESPONSE" | jq -r '.data.previous_status')
+  echo "✓ Status updated from '$PREV_STATUS' to 'In Progress'"
 else
-  echo "Note: Status field not available. Manual status update required."
+  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
+  echo "Warning: $ERROR_MSG"
+  echo ""
+  echo "The item is still ready to work on, but you'll need to manually update the"
+  echo "status in the GitHub Projects web UI."
 fi
 ```
 
-**Error Handling**:
-```
-Warning: Could not update status to "In Progress".
-
-The item is still ready to work on, but you'll need to manually update the
-status in the GitHub Projects web UI.
-```
+**Error Handling**: The script returns structured errors:
+- `STATUS_INVALID` - "In Progress" not a valid status option (check project settings)
+- `FIELD_NOT_FOUND` - Status field doesn't exist in project
 
 ### 8. Read and Display Full Issue Context
 
@@ -877,8 +830,9 @@ This command implements the following specification requirements:
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
 - `project` scope authorized (`gh auth refresh -s project`)
-- `jq` for JSON parsing (check availability, provide clear error if missing)
+- `jq` for JSON parsing (used for response handling)
 - `git` for repository context
+- Python 3.12+ for `gh-api-scripts` skill
 
 **Spiral Grove Integration**:
 - Escalation prompts reference `/spec-writing` command
@@ -1240,4 +1194,4 @@ If this was incorrect, reopen with: gh issue reopen 201
 
 - **Spec**: REQ-F-18, REQ-F-19, REQ-F-20, REQ-F-21, REQ-F-22, REQ-F-23
 - **Plan**: TD-7 (Spiral Grove Integration Points)
-- **Skill**: `compass-rose/skills/gh-project-reference/SKILL.md` (config patterns, field discovery)
+- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)

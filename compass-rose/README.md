@@ -32,10 +32,15 @@ Create `.compass-rose/config.json` with your project details:
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   }
 }
 ```
+
+**Values for `owner_type`**:
+- `"organization"` - For projects owned by GitHub organizations
+- `"user"` - For projects owned by personal GitHub accounts
 
 **Finding your project number:**
 
@@ -54,6 +59,7 @@ Your configuration would be:
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 42
   }
 }
@@ -62,6 +68,7 @@ Your configuration would be:
 ### Required Fields
 
 - `project.owner` - GitHub organization or username that owns the project
+- `project.owner_type` - Either `"organization"` or `"user"` (determines API query format)
 - `project.number` - Project number (visible in project URL)
 
 ### Optional Fields
@@ -72,6 +79,7 @@ You can customize behavior with optional preferences:
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   },
   "preferences": {
@@ -88,12 +96,24 @@ You can customize behavior with optional preferences:
 
 ### Example Configurations
 
-**Minimal configuration** (just the required fields):
+**Minimal configuration** (personal project):
 ```json
 {
   "project": {
     "owner": "my-username",
+    "owner_type": "user",
     "number": 7
+  }
+}
+```
+
+**Minimal configuration** (organization project):
+```json
+{
+  "project": {
+    "owner": "my-org",
+    "owner_type": "organization",
+    "number": 123
   }
 }
 ```
@@ -103,6 +123,7 @@ You can customize behavior with optional preferences:
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   },
   "preferences": {
@@ -111,6 +132,38 @@ You can customize behavior with optional preferences:
   }
 }
 ```
+
+### Migrating Existing Configurations
+
+If you have an existing `.compass-rose/config.json` from before v0.2.0, you need to add the `owner_type` field:
+
+**Before** (legacy format):
+```json
+{
+  "project": {
+    "owner": "my-org",
+    "number": 123
+  }
+}
+```
+
+**After** (current format):
+```json
+{
+  "project": {
+    "owner": "my-org",
+    "owner_type": "organization",
+    "number": 123
+  }
+}
+```
+
+**How to determine your owner_type**:
+- Check your project URL:
+  - `github.com/orgs/<owner>/projects/<n>` → Use `"organization"`
+  - `github.com/users/<owner>/projects/<n>` → Use `"user"`
+
+The `owner_type` field is required because GitHub's GraphQL API uses different query roots for user and organization projects.
 
 ### Error Messages
 
@@ -125,6 +178,7 @@ Please create .compass-rose/config.json with your project details:
 {
   "project": {
     "owner": "<org-or-username>",
+    "owner_type": "<user|organization>",
     "number": <project-number>
   }
 }
@@ -137,15 +191,26 @@ https://github.com/orgs/<owner>/projects/<number>
 ```
 Error: Invalid configuration.
 
-Both 'project.owner' and 'project.number' are required.
+Fields 'project.owner', 'project.owner_type', and 'project.number' are required.
 
 Example:
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   }
 }
+```
+
+**Invalid owner_type:**
+```
+Error: Invalid owner_type.
+
+owner_type must be "user" or "organization", got: "invalid"
+
+- Use "organization" for org-owned projects (URL: github.com/orgs/<owner>/projects/<n>)
+- Use "user" for personal projects (URL: github.com/users/<owner>/projects/<n>)
 ```
 
 **Project not found:**
@@ -180,10 +245,13 @@ Get started with Compass Rose in 3 steps:
    {
      "project": {
        "owner": "my-org",
+       "owner_type": "organization",
        "number": 123
      }
    }
    ```
+
+   > **Note**: Use `"owner_type": "user"` for personal account projects.
 
 3. **Start using commands**:
    ```bash
@@ -369,6 +437,7 @@ Which approach would you prefer? (Enter 1 or 2):
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   },
   "preferences": {
@@ -612,6 +681,7 @@ Enter choice (1/2/3):
 {
   "project": {
     "owner": "my-org",
+    "owner_type": "organization",
     "number": 123
   }
 }
@@ -627,12 +697,13 @@ https://github.com/orgs/<owner>/projects/<number>
 
 **Problem**: `Error: Invalid configuration`
 
-**Solution**: Ensure both `project.owner` and `project.number` are present:
+**Solution**: Ensure all required fields are present:
 ```json
 {
   "project": {
-    "owner": "my-org",     // Required: GitHub org or username
-    "number": 123          // Required: Project number (not ID)
+    "owner": "my-org",           // Required: GitHub org or username
+    "owner_type": "organization", // Required: "user" or "organization"
+    "number": 123                 // Required: Project number (not ID)
   }
 }
 ```
