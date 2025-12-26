@@ -34,12 +34,16 @@ from gh_project import (  # noqa: E402
     CONFIG_INVALID,
     CONFIG_MISSING,
     FIELD_NOT_FOUND,
+    ISSUE_EXISTS_QUERY,
+    ISSUE_NOT_FOUND,
+    ISSUE_NOT_IN_PROJECT,
     LIST_ISSUES_QUERY,
     RATE_LIMITED,
     ExecutionResult,
     GhError,
     GraphQLResult,
     ProjectConfig,
+    _check_issue_exists_in_repo,
     _execute_graphql,
     _execute_with_retry,
     _extract_field_value,
@@ -47,6 +51,7 @@ from gh_project import (  # noqa: E402
     _is_retryable_error,
     _parse_gh_error,
     _parse_issue_from_node,
+    cmd_get_issue,
     cmd_list_issues,
     create_parser,
     load_config,
@@ -1714,3 +1719,591 @@ class TestGraphQLResultDataclass:
         assert result.success is False
         assert result.data is None
         assert result.error == error
+
+
+class TestCheckIssueExistsInRepo:
+    """Tests for _check_issue_exists_in_repo function."""
+
+    def test_issue_exists(self) -> None:
+        """Test returns True when issue exists."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps({
+            "data": {
+                "repository": {
+                    "issue": {"id": "I_123", "number": 42, "title": "Test"}
+                }
+            }
+        })
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _check_issue_exists_in_repo("owner", "repo", 42)
+            assert result is True
+
+    def test_issue_not_found(self) -> None:
+        """Test returns False when issue doesn't exist."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps({
+            "data": {"repository": {"issue": None}}
+        })
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _check_issue_exists_in_repo("owner", "repo", 999)
+            assert result is False
+
+    def test_repository_not_found(self) -> None:
+        """Test returns None when repository doesn't exist."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps({"data": {"repository": None}})
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _check_issue_exists_in_repo("owner", "nonexistent", 42)
+            assert result is None
+
+    def test_api_failure(self) -> None:
+        """Test returns None when API call fails."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "API error"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _check_issue_exists_in_repo("owner", "repo", 42)
+            assert result is None
+
+
+class TestIssueExistsQuery:
+    """Tests for ISSUE_EXISTS_QUERY constant."""
+
+    def test_query_structure(self) -> None:
+        """Test query has correct structure."""
+        assert "repository(owner: $owner, name: $repo)" in ISSUE_EXISTS_QUERY
+        assert "issue(number: $number)" in ISSUE_EXISTS_QUERY
+        assert "$owner: String!" in ISSUE_EXISTS_QUERY
+        assert "$repo: String!" in ISSUE_EXISTS_QUERY
+        assert "$number: Int!" in ISSUE_EXISTS_QUERY
+
+
+class TestCmdGetIssue:
+    """Tests for cmd_get_issue function."""
+
+    def _make_graphql_response(
+        self,
+        items: list,
+        has_next_page: bool = False,
+        end_cursor: str | None = None,
+        has_status_field: bool = True,
+    ) -> str:
+        """Helper to create a mock GraphQL response."""
+        response = {
+            "data": {
+                "user": {
+                    "projectV2": {
+                        "items": {
+                            "nodes": items,
+                            "pageInfo": {
+                                "hasNextPage": has_next_page,
+                                "endCursor": end_cursor,
+                            },
+                        },
+                        "field": {"id": "field123", "name": "Status"}
+                        if has_status_field
+                        else None,
+                    }
+                }
+            }
+        }
+        return json.dumps(response)
+
+    def _make_issue_node(
+        self,
+        number: int,
+        title: str = "Test issue",
+        status: str | None = "Ready",
+        priority: str | None = "P1",
+        size: str | None = "M",
+    ) -> dict:
+        """Helper to create a mock issue node."""
+        node = {
+            "id": f"item{number}",
+            "content": {
+                "number": number,
+                "title": title,
+                "body": f"Body for issue {number}",
+                "state": "OPEN",
+                "url": f"https://github.com/owner/repo/issues/{number}",
+                "labels": {"nodes": [{"name": "bug"}]},
+            },
+            "fieldValues": {"nodes": []},
+        }
+        if status:
+            node["fieldValues"]["nodes"].append(
+                {"name": status, "field": {"name": "Status"}}
+            )
+        if priority:
+            node["fieldValues"]["nodes"].append(
+                {"name": priority, "field": {"name": "Priority"}}
+            )
+        if size:
+            node["fieldValues"]["nodes"].append(
+                {"name": size, "field": {"name": "Size"}}
+            )
+        return node
+
+    def test_get_issue_found(self, tmp_path: Path, capsys) -> None:
+        """Test getting an issue that exists in the project."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        items = [
+            self._make_issue_node(42, "Found issue", "In Progress", "P0", "L"),
+        ]
+        mock_response = self._make_graphql_response(items, has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["number"] == 42
+        assert output["data"]["title"] == "Found issue"
+        assert output["data"]["status"] == "In Progress"
+        assert output["data"]["priority"] == "P0"
+        assert output["data"]["size"] == "L"
+        assert output["data"]["labels"] == ["bug"]
+        assert output["data"]["state"] == "OPEN"
+
+    def test_get_issue_found_on_second_page(self, tmp_path: Path, capsys) -> None:
+        """Test getting an issue that exists on second page of results."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # First page - doesn't have the issue
+        page1_items = [self._make_issue_node(1)]
+        page1_response = self._make_graphql_response(
+            page1_items, has_next_page=True, end_cursor="cursor123"
+        )
+
+        # Second page - has the issue
+        page2_items = [self._make_issue_node(42, "Found on page 2")]
+        page2_response = self._make_graphql_response(page2_items, has_next_page=False)
+
+        mock_results = [
+            mock.Mock(returncode=0, stdout=page1_response, stderr=""),
+            mock.Mock(returncode=0, stdout=page2_response, stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_results):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["number"] == 42
+        assert output["data"]["title"] == "Found on page 2"
+
+    def test_get_issue_not_in_project_no_repo_config(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test ISSUE_NOT_IN_PROJECT when issue not found and no repository configured."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # Project has different issues, not the one we're looking for
+        items = [self._make_issue_node(1), self._make_issue_node(2)]
+        mock_response = self._make_graphql_response(items, has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 999
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_IN_PROJECT
+        assert "999" in output["error"]["message"]
+        assert "add-to-project" in output["error"]["details"]
+
+    def test_get_issue_not_found_with_repo_config(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test ISSUE_NOT_FOUND when issue doesn't exist in repository."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "testrepo",
+                }
+            })
+        )
+
+        # Project listing response - issue not in project
+        project_items = [self._make_issue_node(1)]
+        project_response = self._make_graphql_response(
+            project_items, has_next_page=False
+        )
+
+        # Repository check response - issue doesn't exist
+        repo_response = json.dumps({"data": {"repository": {"issue": None}}})
+
+        mock_results = [
+            mock.Mock(returncode=0, stdout=project_response, stderr=""),
+            mock.Mock(returncode=0, stdout=repo_response, stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_results):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 999
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_FOUND
+        assert "999" in output["error"]["message"]
+        assert "testuser/testrepo" in output["error"]["details"]
+
+    def test_get_issue_exists_but_not_in_project(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test ISSUE_NOT_IN_PROJECT when issue exists but not linked to project."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "testrepo",
+                }
+            })
+        )
+
+        # Project listing response - issue not in project
+        project_items = [self._make_issue_node(1)]
+        project_response = self._make_graphql_response(
+            project_items, has_next_page=False
+        )
+
+        # Repository check response - issue exists
+        repo_response = json.dumps({
+            "data": {
+                "repository": {
+                    "issue": {"id": "I_999", "number": 999, "title": "Exists"}
+                }
+            }
+        })
+
+        mock_results = [
+            mock.Mock(returncode=0, stdout=project_response, stderr=""),
+            mock.Mock(returncode=0, stdout=repo_response, stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_results):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 999
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_IN_PROJECT
+        assert "999" in output["error"]["message"]
+        assert "add-to-project" in output["error"]["details"]
+
+    def test_get_issue_invalid_number_zero(self, tmp_path: Path, capsys) -> None:
+        """Test error for invalid issue number (zero)."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = 0
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_get_issue(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "0" in output["error"]["message"]
+
+    def test_get_issue_invalid_number_negative(self, tmp_path: Path, capsys) -> None:
+        """Test error for invalid issue number (negative)."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = -5
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_get_issue(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "-5" in output["error"]["message"]
+
+    def test_get_issue_organization_owner_type(self, tmp_path: Path, capsys) -> None:
+        """Test that organization owner_type uses correct query root."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testorg",
+                    "owner_type": "organization",
+                    "number": 5,
+                }
+            })
+        )
+
+        # Response with organization root
+        response = {
+            "data": {
+                "organization": {
+                    "projectV2": {
+                        "items": {
+                            "nodes": [self._make_issue_node(42)],
+                            "pageInfo": {"hasNextPage": False},
+                        },
+                        "field": {"id": "f1", "name": "Status"},
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 0
+
+            # Verify query used organization root
+            cmd = mock_run.call_args[0][0]
+            query_arg = next(arg for arg in cmd if "organization(login:" in arg)
+            assert query_arg is not None
+
+    def test_get_issue_project_not_found(self, tmp_path: Path, capsys) -> None:
+        """Test handling when project doesn't exist."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 999}
+            })
+        )
+
+        response = {"data": {"user": {"projectV2": None}}}
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == API_ERROR
+        assert "Project not found" in output["error"]["message"]
+
+    def test_get_issue_api_error(self, tmp_path: Path, capsys) -> None:
+        """Test handling of API errors."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "HTTP 500 Internal Server Error"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+
+    def test_get_issue_empty_project(self, tmp_path: Path, capsys) -> None:
+        """Test getting issue from empty project returns ISSUE_NOT_IN_PROJECT."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_response = self._make_graphql_response([], has_next_page=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_get_issue(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_IN_PROJECT
+
+
+class TestConfigWithRepository:
+    """Tests for config with repository field."""
+
+    def test_config_with_repository(self, tmp_path: Path) -> None:
+        """Test loading config with repository field."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "rjroy",
+                    "owner_type": "user",
+                    "number": 8,
+                    "repository": "vibe-garden",
+                }
+            })
+        )
+
+        config = load_config(str(config_file))
+
+        assert config.repository == "vibe-garden"
+
+    def test_config_without_repository(self, tmp_path: Path) -> None:
+        """Test loading config without repository field."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "rjroy",
+                    "owner_type": "user",
+                    "number": 8,
+                }
+            })
+        )
+
+        config = load_config(str(config_file))
+
+        assert config.repository is None

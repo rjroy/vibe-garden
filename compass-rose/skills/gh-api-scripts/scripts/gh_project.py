@@ -94,11 +94,13 @@ class ProjectConfig:
         owner: GitHub username or organization name
         owner_type: Either "user" or "organization"
         number: Project number (visible in project URL)
+        repository: Repository name (for issue existence checks)
     """
 
     owner: str
     owner_type: str
     number: int
+    repository: str | None = None
 
 
 def output_success(data: dict[str, Any]) -> None:
@@ -237,10 +239,14 @@ def load_config(config_path: str | None = None) -> ProjectConfig:
             "Find your project number in the project URL.",
         )
 
+    # Repository is optional - used for issue existence checks
+    repository = project.get("repository")
+
     return ProjectConfig(
         owner=project["owner"],
         owner_type=owner_type,
         number=number,
+        repository=repository,
     )
 
 
@@ -737,23 +743,174 @@ def cmd_list_issues(args: argparse.Namespace) -> None:
     output_success({"issues": all_issues, "count": len(all_issues)})
 
 
-def cmd_get_issue(args: argparse.Namespace) -> None:
-    """Get a single issue by number.
+# GraphQL query to check if an issue exists in the repository
+ISSUE_EXISTS_QUERY = """
+query($owner: String!, $repo: String!, $number: Int!) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $number) {
+      id
+      number
+      title
+    }
+  }
+}
+"""
 
-    Placeholder implementation - will be completed in TASK-005.
+
+def _check_issue_exists_in_repo(
+    owner: str, repo: str, issue_number: int
+) -> bool | None:
+    """Check if an issue exists in a repository.
+
+    Args:
+        owner: Repository owner (user or organization)
+        repo: Repository name
+        issue_number: Issue number to check
+
+    Returns:
+        True if issue exists, False if not found, None if check failed
     """
+    variables = {
+        "owner": owner,
+        "repo": repo,
+        "number": issue_number,
+    }
+    result = _execute_graphql(ISSUE_EXISTS_QUERY, variables)
+
+    if not result.success:
+        # Check failed - return None to indicate uncertainty
+        return None
+
+    assert result.data is not None
+    data = result.data.get("data", {})
+    repo_data = data.get("repository")
+
+    if repo_data is None:
+        # Repository doesn't exist or no access
+        return None
+
+    issue_data = repo_data.get("issue")
+    return issue_data is not None
+
+
+def cmd_get_issue(args: argparse.Namespace) -> None:
+    """Get a single issue by number with full project field values.
+
+    Fetches the issue from the configured project, including all project
+    field values (status, priority, size). Returns appropriate error codes
+    if the issue doesn't exist or isn't linked to the project.
+
+    Args:
+        args: Parsed CLI arguments including:
+            - number: Issue number to retrieve
+            - config: Optional path to config file
+    """
+    # Validate issue number is positive (argparse ensures it's an int)
+    if args.number <= 0:
+        output_error(
+            CONFIG_INVALID,
+            f"Invalid issue number: {args.number}",
+            "Issue number must be a positive integer.",
+        )
+
     config = load_config(args.config)
-    # TODO: Implement in TASK-005 - Get Issue Operation
-    output_success(
-        {
-            "message": "get-issue operation not yet implemented",
-            "issue_number": args.number,
-            "config": {
-                "owner": config.owner,
-                "owner_type": config.owner_type,
-                "number": config.number,
-            },
+
+    # Strategy: Query project items and find matching issue number.
+    # This reuses the list-issues infrastructure and is simpler than
+    # doing separate queries for issue existence and project membership.
+
+    # Format query with correct owner_type (user vs organization)
+    query = LIST_ISSUES_QUERY.format(owner_type=config.owner_type)
+
+    # We'll paginate through all items to find the matching issue
+    cursor: str | None = None
+    target_issue: dict[str, Any] | None = None
+
+    while True:
+        variables = {
+            "owner": config.owner,
+            "number": config.number,
+            "cursor": cursor,
         }
+        result = _execute_graphql(query, variables)
+
+        if not result.success:
+            assert result.error is not None
+            output_error(result.error.code, result.error.message, result.error.details)
+
+        assert result.data is not None
+        data = result.data.get("data", {})
+
+        # Navigate to project data (user or organization)
+        owner_data = data.get(config.owner_type, {})
+        project_data = owner_data.get("projectV2")
+
+        if not project_data:
+            output_error(
+                API_ERROR,
+                "Project not found",
+                f"Could not find project #{config.number} for {config.owner_type} "
+                f"'{config.owner}'. Verify the project exists and you have access.",
+            )
+
+        # Search through items for matching issue number
+        items_data = project_data.get("items", {})
+        nodes = items_data.get("nodes", [])
+
+        for node in nodes:
+            issue = _parse_issue_from_node(node)
+            if issue is not None and issue["number"] == args.number:
+                target_issue = issue
+                break
+
+        # If we found the issue, stop searching
+        if target_issue is not None:
+            break
+
+        # Check for more pages
+        page_info = items_data.get("pageInfo", {})
+        if not page_info.get("hasNextPage", False):
+            break
+        cursor = page_info.get("endCursor")
+
+    # If we found the issue in the project, return it
+    if target_issue is not None:
+        output_success(target_issue)
+
+    # Issue not found in project - determine if it doesn't exist or isn't linked
+    # We need repository info to check issue existence
+    if config.repository:
+        issue_exists = _check_issue_exists_in_repo(
+            config.owner, config.repository, args.number
+        )
+
+        if issue_exists is False:
+            # Issue definitely doesn't exist in the repository
+            output_error(
+                ISSUE_NOT_FOUND,
+                f"Issue #{args.number} not found",
+                f"Issue #{args.number} does not exist in repository "
+                f"'{config.owner}/{config.repository}'. "
+                f"Verify the issue number with: gh issue view {args.number}",
+            )
+        elif issue_exists is True:
+            # Issue exists but not in project
+            output_error(
+                ISSUE_NOT_IN_PROJECT,
+                f"Issue #{args.number} not linked to project",
+                f"Issue #{args.number} exists but is not linked to project "
+                f"#{config.number}. Use 'add-to-project {args.number}' to add it.",
+            )
+        # If issue_exists is None, we couldn't determine - fall through
+
+    # Without repository info or if the check failed, return ISSUE_NOT_IN_PROJECT
+    # as the more actionable error (user can try adding it)
+    output_error(
+        ISSUE_NOT_IN_PROJECT,
+        f"Issue #{args.number} not found in project",
+        f"Issue #{args.number} is not linked to project #{config.number}. "
+        f"Use 'add-to-project {args.number}' to add it to the project, "
+        f"or verify the issue number is correct.",
     )
 
 
