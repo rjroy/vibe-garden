@@ -828,6 +828,29 @@ mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
 }
 """
 
+# GraphQL mutation to add an issue to a project
+ADD_TO_PROJECT_MUTATION = """
+mutation($projectId: ID!, $contentId: ID!) {
+  addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+    item {
+      id
+    }
+  }
+}
+"""
+
+# GraphQL query to get project ID
+# Uses {owner_type} placeholder for user vs organization
+GET_PROJECT_ID_QUERY = """
+query($owner: String!, $number: Int!) {{
+  {owner_type}(login: $owner) {{
+    projectV2(number: $number) {{
+      id
+    }}
+  }}
+}}
+"""
+
 
 def _check_issue_exists_in_repo(
     owner: str, repo: str, issue_number: int
@@ -863,6 +886,138 @@ def _check_issue_exists_in_repo(
 
     issue_data = repo_data.get("issue")
     return issue_data is not None
+
+
+@dataclass
+class IssueNodeInfo:
+    """Information about an issue from the repository.
+
+    Attributes:
+        node_id: The GraphQL node ID of the issue
+        number: The issue number
+        title: The issue title
+    """
+
+    node_id: str
+    number: int
+    title: str
+
+
+def _get_issue_node_id(
+    owner: str, repo: str, issue_number: int
+) -> IssueNodeInfo | GhError:
+    """Get the node ID for an issue in a repository.
+
+    Args:
+        owner: Repository owner (user or organization)
+        repo: Repository name
+        issue_number: Issue number to look up
+
+    Returns:
+        IssueNodeInfo if issue found, GhError if not found or API error
+    """
+    variables = {
+        "owner": owner,
+        "repo": repo,
+        "number": issue_number,
+    }
+    result = _execute_graphql(ISSUE_EXISTS_QUERY, variables)
+
+    if not result.success:
+        assert result.error is not None
+        return result.error
+
+    assert result.data is not None
+    data = result.data.get("data", {})
+    repo_data = data.get("repository")
+
+    if repo_data is None:
+        return GhError(
+            code=API_ERROR,
+            message=f"Repository '{owner}/{repo}' not found",
+            details=f"Could not access repository '{owner}/{repo}'. "
+            "Verify the repository exists and you have access.",
+        )
+
+    issue_data = repo_data.get("issue")
+    if issue_data is None:
+        return GhError(
+            code=ISSUE_NOT_FOUND,
+            message=f"Issue #{issue_number} not found",
+            details=f"Issue #{issue_number} does not exist in repository "
+            f"'{owner}/{repo}'. Verify the issue number with: gh issue view {issue_number}",
+        )
+
+    return IssueNodeInfo(
+        node_id=issue_data["id"],
+        number=issue_data["number"],
+        title=issue_data.get("title", ""),
+    )
+
+
+def _get_project_id(config: ProjectConfig) -> str | GhError:
+    """Get the GraphQL node ID for a project.
+
+    Args:
+        config: Project configuration
+
+    Returns:
+        Project node ID string if successful, GhError if project not found or API error
+    """
+    query = GET_PROJECT_ID_QUERY.format(owner_type=config.owner_type)
+
+    result = _execute_graphql(
+        query,
+        {"owner": config.owner, "number": config.number},
+    )
+
+    if not result.success:
+        assert result.error is not None
+        return result.error
+
+    assert result.data is not None
+    data = result.data.get("data", {})
+
+    # Navigate to project data (user or organization)
+    owner_data = data.get(config.owner_type, {})
+    project_data = owner_data.get("projectV2")
+
+    if not project_data:
+        return GhError(
+            code=API_ERROR,
+            message="Project not found",
+            details=f"Could not find project #{config.number} for {config.owner_type} "
+            f"'{config.owner}'. Verify the project exists and you have access.",
+        )
+
+    project_id = project_data.get("id")
+    if not project_id:
+        return GhError(
+            code=API_ERROR,
+            message="Project ID not found in response",
+            details="Unexpected API response format. The project exists but no ID was returned.",
+        )
+
+    return project_id
+
+
+def _add_issue_to_project(project_id: str, issue_node_id: str) -> GraphQLResult:
+    """Add an issue to a project via GraphQL mutation.
+
+    Args:
+        project_id: GraphQL node ID of the project
+        issue_node_id: GraphQL node ID of the issue to add
+
+    Returns:
+        GraphQLResult with mutation response
+    """
+    return _execute_graphql(
+        ADD_TO_PROJECT_MUTATION,
+        {
+            "projectId": project_id,
+            "contentId": issue_node_id,
+        },
+    )
 
 
 def cmd_get_issue(args: argparse.Namespace) -> None:
@@ -1268,19 +1423,86 @@ def cmd_set_status(args: argparse.Namespace) -> None:
 def cmd_add_to_project(args: argparse.Namespace) -> None:
     """Add an existing repository issue to the configured project.
 
-    Placeholder implementation - will be completed in TASK-007.
+    Looks up the issue in the repository, then adds it to the project
+    via GraphQL mutation. Requires the repository field in config.
+
+    Args:
+        args: Parsed CLI arguments including:
+            - number: Issue number to add to the project
+            - config: Optional path to config file
+
+    Output (success):
+        {
+            "success": true,
+            "data": {
+                "number": 42,
+                "item_id": "PVTI_xxxx"
+            }
+        }
+
+    Error codes:
+        - CONFIG_INVALID: Missing repository field or invalid issue number
+        - ISSUE_NOT_FOUND: Issue doesn't exist in the repository
+        - API_ERROR: Project not found or other API errors
     """
+    # Validate issue number is positive
+    if args.number <= 0:
+        output_error(
+            CONFIG_INVALID,
+            f"Invalid issue number: {args.number}",
+            "Issue number must be a positive integer.",
+        )
+
     config = load_config(args.config)
-    # TODO: Implement in TASK-007 - Add to Project Operation
+
+    # Repository field is required for this operation
+    if not config.repository:
+        output_error(
+            CONFIG_INVALID,
+            "Missing 'repository' field in configuration",
+            "The add-to-project operation requires a repository field in config.\n"
+            "Add the repository to .compass-rose/config.json:\n\n"
+            '{\n  "project": {\n    "owner": "owner-name",\n'
+            '    "owner_type": "user",\n    "number": 8,\n'
+            '    "repository": "repo-name"\n  }\n}',
+        )
+
+    # Parse repository into owner/repo parts
+    # The config stores just the repo name, and owner is the project owner
+    repo_owner = config.owner
+    repo_name = config.repository
+
+    # If repository contains a slash, it's a full owner/repo format
+    if "/" in config.repository:
+        parts = config.repository.split("/", 1)
+        repo_owner = parts[0]
+        repo_name = parts[1]
+
+    # Step 1: Get the issue's node ID from the repository
+    issue_info = _get_issue_node_id(repo_owner, repo_name, args.number)
+    if isinstance(issue_info, GhError):
+        output_error(issue_info.code, issue_info.message, issue_info.details)
+
+    # Step 2: Get the project ID
+    project_id = _get_project_id(config)
+    if isinstance(project_id, GhError):
+        output_error(project_id.code, project_id.message, project_id.details)
+
+    # Step 3: Add the issue to the project
+    result = _add_issue_to_project(project_id, issue_info.node_id)
+    if not result.success:
+        assert result.error is not None
+        output_error(result.error.code, result.error.message, result.error.details)
+
+    # Extract item ID from response
+    assert result.data is not None
+    item_data = result.data.get("data", {}).get("addProjectV2ItemById", {}).get("item", {})
+    item_id = item_data.get("id", "")
+
     output_success(
         {
-            "message": "add-to-project operation not yet implemented",
-            "issue_number": args.number,
-            "config": {
-                "owner": config.owner,
-                "owner_type": config.owner_type,
-                "number": config.number,
-            },
+            "number": args.number,
+            "item_id": item_id,
         }
     )
 

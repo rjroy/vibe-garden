@@ -46,6 +46,7 @@ from gh_project import (  # noqa: E402
     ExecutionResult,
     GhError,
     GraphQLResult,
+    IssueNodeInfo,
     ProjectConfig,
     ProjectItemInfo,
     StatusFieldInfo,
@@ -55,11 +56,14 @@ from gh_project import (  # noqa: E402
     _extract_field_value,
     _extract_retry_after,
     _find_project_item,
+    _get_issue_node_id,
+    _get_project_id,
     _get_status_field_info,
     _is_retryable_error,
     _parse_gh_error,
     _parse_issue_from_node,
     _update_project_item_status,
+    cmd_add_to_project,
     cmd_get_issue,
     cmd_list_issues,
     cmd_set_status,
@@ -3306,3 +3310,611 @@ class TestCLISetStatusIntegration:
 
         with pytest.raises(SystemExit):
             parser.parse_args(["set-status", "42"])
+
+
+class TestGetIssueNodeId:
+    """Tests for _get_issue_node_id helper function."""
+
+    def test_issue_found(self) -> None:
+        """Test successful issue lookup returns IssueNodeInfo."""
+        mock_response = {
+            "data": {
+                "repository": {
+                    "issue": {
+                        "id": "I_kwDOABCDEF",
+                        "number": 42,
+                        "title": "Test Issue",
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_issue_node_id("owner", "repo", 42)
+
+        assert isinstance(result, IssueNodeInfo)
+        assert result.node_id == "I_kwDOABCDEF"
+        assert result.number == 42
+        assert result.title == "Test Issue"
+
+    def test_issue_not_found(self) -> None:
+        """Test ISSUE_NOT_FOUND when issue doesn't exist."""
+        mock_response = {
+            "data": {
+                "repository": {
+                    "issue": None
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_issue_node_id("owner", "repo", 999)
+
+        assert isinstance(result, GhError)
+        assert result.code == ISSUE_NOT_FOUND
+        assert "999" in result.message
+
+    def test_repository_not_found(self) -> None:
+        """Test API_ERROR when repository doesn't exist."""
+        mock_response = {
+            "data": {
+                "repository": None
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_issue_node_id("nonexistent", "repo", 42)
+
+        assert isinstance(result, GhError)
+        assert result.code == API_ERROR
+        assert "nonexistent/repo" in result.message
+
+
+class TestGetProjectId:
+    """Tests for _get_project_id helper function."""
+
+    def test_project_found_user(self) -> None:
+        """Test successful project ID lookup for user project."""
+        mock_response = {
+            "data": {
+                "user": {
+                    "projectV2": {
+                        "id": "PVT_kwDOABCDEF"
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        config = ProjectConfig(owner="testuser", owner_type="user", number=1)
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_project_id(config)
+
+        assert result == "PVT_kwDOABCDEF"
+
+    def test_project_found_organization(self) -> None:
+        """Test successful project ID lookup for organization project."""
+        mock_response = {
+            "data": {
+                "organization": {
+                    "projectV2": {
+                        "id": "PVT_kwDOXYZABC"
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        config = ProjectConfig(owner="testorg", owner_type="organization", number=5)
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_project_id(config)
+
+        assert result == "PVT_kwDOXYZABC"
+
+    def test_project_not_found(self) -> None:
+        """Test API_ERROR when project doesn't exist."""
+        mock_response = {
+            "data": {
+                "user": {
+                    "projectV2": None
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        config = ProjectConfig(owner="testuser", owner_type="user", number=999)
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _get_project_id(config)
+
+        assert isinstance(result, GhError)
+        assert result.code == API_ERROR
+        assert "999" in result.details
+
+
+class TestCmdAddToProject:
+    """Tests for cmd_add_to_project function."""
+
+    def _make_issue_response(
+        self,
+        issue_id: str = "I_kwDOABCDEF",
+        issue_number: int = 42,
+        title: str = "Test Issue",
+    ) -> str:
+        """Helper to create a mock issue query response."""
+        return json.dumps({
+            "data": {
+                "repository": {
+                    "issue": {
+                        "id": issue_id,
+                        "number": issue_number,
+                        "title": title,
+                    }
+                }
+            }
+        })
+
+    def _make_project_id_response(
+        self,
+        project_id: str = "PVT_kwDOABCDEF",
+        owner_type: str = "user",
+    ) -> str:
+        """Helper to create a mock project ID query response."""
+        return json.dumps({
+            "data": {
+                owner_type: {
+                    "projectV2": {
+                        "id": project_id,
+                    }
+                }
+            }
+        })
+
+    def _make_add_response(self, item_id: str = "PVTI_lADOABCDEF") -> str:
+        """Helper to create a mock add mutation response."""
+        return json.dumps({
+            "data": {
+                "addProjectV2ItemById": {
+                    "item": {
+                        "id": item_id,
+                    }
+                }
+            }
+        })
+
+    def test_add_to_project_success(self, tmp_path: Path, capsys) -> None:
+        """Test successful add-to-project operation."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_issue_response("I_kwDO123", 42, "My Issue"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_id_response("PVT_kwDO456"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_add_response("PVTI_lADO789"),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["number"] == 42
+        assert output["data"]["item_id"] == "PVTI_lADO789"
+
+    def test_add_to_project_with_full_repo_path(self, tmp_path: Path, capsys) -> None:
+        """Test add-to-project with repository in owner/repo format."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "project-owner",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "repo-owner/test-repo",
+                }
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_issue_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_id_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_add_response(),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+
+    def test_add_to_project_missing_repository(self, tmp_path: Path, capsys) -> None:
+        """Test CONFIG_INVALID when repository field is missing."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                }
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = 42
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_add_to_project(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "repository" in output["error"]["message"]
+
+    def test_add_to_project_issue_not_found(self, tmp_path: Path, capsys) -> None:
+        """Test ISSUE_NOT_FOUND when issue doesn't exist in repository."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        # Issue query returns null for issue
+        mock_response = {
+            "data": {
+                "repository": {
+                    "issue": None
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 999
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_FOUND
+        assert "999" in output["error"]["message"]
+
+    def test_add_to_project_project_not_found(self, tmp_path: Path, capsys) -> None:
+        """Test API_ERROR when project doesn't exist."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 999,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        mock_responses = [
+            # Issue lookup succeeds
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_issue_response(),
+                stderr="",
+            ),
+            # Project lookup fails
+            mock.Mock(
+                returncode=0,
+                stdout=json.dumps({
+                    "data": {
+                        "user": {
+                            "projectV2": None
+                        }
+                    }
+                }),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == API_ERROR
+        assert "Project not found" in output["error"]["message"]
+
+    def test_add_to_project_invalid_issue_number_zero(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test CONFIG_INVALID for issue number zero."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = 0
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_add_to_project(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "0" in output["error"]["message"]
+
+    def test_add_to_project_invalid_issue_number_negative(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test CONFIG_INVALID for negative issue number."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = -5
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_add_to_project(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "-5" in output["error"]["message"]
+
+    def test_add_to_project_organization_owner_type(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test add-to-project works with organization owner_type."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testorg",
+                    "owner_type": "organization",
+                    "number": 5,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_issue_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_id_response(owner_type="organization"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_add_response(),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+
+    def test_add_to_project_mutation_fails(self, tmp_path: Path, capsys) -> None:
+        """Test API_ERROR when add mutation fails."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testuser",
+                    "owner_type": "user",
+                    "number": 1,
+                    "repository": "test-repo",
+                }
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_issue_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_id_response(),
+                stderr="",
+            ),
+            # Mutation fails with GraphQL error
+            mock.Mock(
+                returncode=0,
+                stdout=json.dumps({
+                    "errors": [
+                        {"message": "Cannot add item: already exists in project"}
+                    ]
+                }),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_add_to_project(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == API_ERROR
+
+
+class TestCLIAddToProjectIntegration:
+    """CLI integration tests for add-to-project command."""
+
+    def test_cli_add_to_project_parsing(self) -> None:
+        """Test CLI parsing of add-to-project command."""
+        parser = create_parser()
+        args = parser.parse_args(["add-to-project", "42"])
+
+        assert args.operation == "add-to-project"
+        assert args.number == 42
+        assert hasattr(args, "func")
+
+    def test_cli_add_to_project_missing_number(self) -> None:
+        """Test CLI error when number is missing."""
+        parser = create_parser()
+
+        with pytest.raises(SystemExit):
+            parser.parse_args(["add-to-project"])
