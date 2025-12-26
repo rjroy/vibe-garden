@@ -728,11 +728,8 @@ def cmd_list_issues(args: argparse.Namespace) -> None:
             break
         cursor = page_info.get("endCursor")
 
-    # Check if Status field was missing (only if we got items to check)
-    if not status_field_exists and not status_field_checked:
-        # We never even made a query - this shouldn't happen, but handle it
-        pass
-    elif not status_field_exists:
+    # Check if Status field was missing
+    if not status_field_exists:
         output_error(
             FIELD_NOT_FOUND,
             "Status field not found in project",
