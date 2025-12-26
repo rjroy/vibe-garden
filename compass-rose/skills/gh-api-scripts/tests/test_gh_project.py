@@ -34,25 +34,35 @@ from gh_project import (  # noqa: E402
     CONFIG_INVALID,
     CONFIG_MISSING,
     FIELD_NOT_FOUND,
+    FIND_PROJECT_ITEM_QUERY,
+    GET_STATUS_FIELD_QUERY,
     ISSUE_EXISTS_QUERY,
     ISSUE_NOT_FOUND,
     ISSUE_NOT_IN_PROJECT,
     LIST_ISSUES_QUERY,
     RATE_LIMITED,
+    STATUS_INVALID,
+    UPDATE_PROJECT_ITEM_FIELD_MUTATION,
     ExecutionResult,
     GhError,
     GraphQLResult,
     ProjectConfig,
+    ProjectItemInfo,
+    StatusFieldInfo,
     _check_issue_exists_in_repo,
     _execute_graphql,
     _execute_with_retry,
     _extract_field_value,
     _extract_retry_after,
+    _find_project_item,
+    _get_status_field_info,
     _is_retryable_error,
     _parse_gh_error,
     _parse_issue_from_node,
+    _update_project_item_status,
     cmd_get_issue,
     cmd_list_issues,
+    cmd_set_status,
     create_parser,
     load_config,
 )
@@ -2307,3 +2317,992 @@ class TestConfigWithRepository:
         config = load_config(str(config_file))
 
         assert config.repository is None
+
+
+class TestGetStatusFieldQuery:
+    """Tests for GET_STATUS_FIELD_QUERY constant."""
+
+    def test_query_user_format(self) -> None:
+        """Test query formats correctly for user owner_type."""
+        query = GET_STATUS_FIELD_QUERY.format(owner_type="user")
+        assert "user(login: $owner)" in query
+        assert "organization" not in query
+
+    def test_query_organization_format(self) -> None:
+        """Test query formats correctly for organization owner_type."""
+        query = GET_STATUS_FIELD_QUERY.format(owner_type="organization")
+        assert "organization(login: $owner)" in query
+        assert "user(login:" not in query
+
+    def test_query_includes_status_field_and_options(self) -> None:
+        """Test query includes Status field with options."""
+        query = GET_STATUS_FIELD_QUERY.format(owner_type="user")
+        assert 'field(name: "Status")' in query
+        assert "options" in query
+        assert "ProjectV2SingleSelectField" in query
+
+
+class TestFindProjectItemQuery:
+    """Tests for FIND_PROJECT_ITEM_QUERY constant."""
+
+    def test_query_user_format(self) -> None:
+        """Test query formats correctly for user owner_type."""
+        query = FIND_PROJECT_ITEM_QUERY.format(owner_type="user")
+        assert "user(login: $owner)" in query
+        assert "organization" not in query
+
+    def test_query_includes_pagination(self) -> None:
+        """Test query includes pagination fields."""
+        query = FIND_PROJECT_ITEM_QUERY.format(owner_type="user")
+        assert "pageInfo" in query
+        assert "hasNextPage" in query
+        assert "endCursor" in query
+        assert "$cursor" in query
+
+    def test_query_includes_issue_number(self) -> None:
+        """Test query includes issue number in content."""
+        query = FIND_PROJECT_ITEM_QUERY.format(owner_type="user")
+        assert "content" in query
+        assert "Issue" in query
+        assert "number" in query
+
+
+class TestUpdateProjectItemFieldMutation:
+    """Tests for UPDATE_PROJECT_ITEM_FIELD_MUTATION constant."""
+
+    def test_mutation_structure(self) -> None:
+        """Test mutation has correct structure."""
+        assert "updateProjectV2ItemFieldValue" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+        assert "$projectId: ID!" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+        assert "$itemId: ID!" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+        assert "$fieldId: ID!" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+        assert "$optionId: String!" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+        assert "singleSelectOptionId" in UPDATE_PROJECT_ITEM_FIELD_MUTATION
+
+
+class TestStatusFieldInfoDataclass:
+    """Tests for the StatusFieldInfo dataclass."""
+
+    def test_status_field_info_structure(self) -> None:
+        """Test StatusFieldInfo has correct fields."""
+        info = StatusFieldInfo(
+            project_id="proj123",
+            field_id="field456",
+            options={"Ready": "opt1", "In Progress": "opt2", "Done": "opt3"},
+        )
+        assert info.project_id == "proj123"
+        assert info.field_id == "field456"
+        assert info.options == {"Ready": "opt1", "In Progress": "opt2", "Done": "opt3"}
+
+
+class TestProjectItemInfoDataclass:
+    """Tests for the ProjectItemInfo dataclass."""
+
+    def test_project_item_info_structure(self) -> None:
+        """Test ProjectItemInfo has correct fields."""
+        info = ProjectItemInfo(
+            item_id="item789",
+            issue_number=42,
+            current_status="Ready",
+        )
+        assert info.item_id == "item789"
+        assert info.issue_number == 42
+        assert info.current_status == "Ready"
+
+    def test_project_item_info_with_no_status(self) -> None:
+        """Test ProjectItemInfo with no current status."""
+        info = ProjectItemInfo(
+            item_id="item789",
+            issue_number=42,
+            current_status=None,
+        )
+        assert info.current_status is None
+
+
+class TestGetStatusFieldInfo:
+    """Tests for _get_status_field_info function."""
+
+    def _make_status_field_response(
+        self,
+        owner_type: str = "user",
+        project_id: str = "proj123",
+        field_id: str = "field456",
+        options: list | None = None,
+        has_field: bool = True,
+        has_project: bool = True,
+    ) -> str:
+        """Helper to create a mock Status field query response."""
+        if options is None:
+            options = [
+                {"id": "opt1", "name": "Ready"},
+                {"id": "opt2", "name": "In Progress"},
+                {"id": "opt3", "name": "Done"},
+            ]
+
+        field = None
+        if has_field:
+            field = {
+                "id": field_id,
+                "name": "Status",
+                "options": options,
+            }
+
+        project = None
+        if has_project:
+            project = {
+                "id": project_id,
+                "field": field,
+            }
+
+        response = {"data": {owner_type: {"projectV2": project}}}
+        return json.dumps(response)
+
+    def test_get_status_field_info_success(self) -> None:
+        """Test successful Status field info retrieval."""
+        mock_response = self._make_status_field_response()
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _get_status_field_info(config)
+
+            assert isinstance(result, StatusFieldInfo)
+            assert result.project_id == "proj123"
+            assert result.field_id == "field456"
+            assert result.options == {
+                "Ready": "opt1",
+                "In Progress": "opt2",
+                "Done": "opt3",
+            }
+
+    def test_get_status_field_info_organization(self) -> None:
+        """Test Status field info for organization project."""
+        mock_response = self._make_status_field_response(owner_type="organization")
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            config = ProjectConfig(
+                owner="testorg", owner_type="organization", number=5
+            )
+            result = _get_status_field_info(config)
+
+            assert isinstance(result, StatusFieldInfo)
+
+            # Verify query used organization root
+            cmd = mock_run.call_args[0][0]
+            query_arg = next(arg for arg in cmd if "organization(login:" in arg)
+            assert query_arg is not None
+
+    def test_get_status_field_info_project_not_found(self) -> None:
+        """Test FIELD_NOT_FOUND when project doesn't exist."""
+        mock_response = self._make_status_field_response(has_project=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=999
+            )
+            result = _get_status_field_info(config)
+
+            assert isinstance(result, GhError)
+            assert result.code == API_ERROR
+            assert "Project not found" in result.message
+
+    def test_get_status_field_info_field_not_found(self) -> None:
+        """Test FIELD_NOT_FOUND when Status field doesn't exist."""
+        mock_response = self._make_status_field_response(has_field=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _get_status_field_info(config)
+
+            assert isinstance(result, GhError)
+            assert result.code == FIELD_NOT_FOUND
+            assert "Status" in result.message
+
+    def test_get_status_field_info_api_error(self) -> None:
+        """Test handling of API errors."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "To authenticate, run: gh auth login"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _get_status_field_info(config)
+
+            assert isinstance(result, GhError)
+            assert result.code == AUTH_REQUIRED
+
+
+class TestFindProjectItem:
+    """Tests for _find_project_item function."""
+
+    def _make_project_item_response(
+        self,
+        items: list,
+        owner_type: str = "user",
+        has_next_page: bool = False,
+        end_cursor: str | None = None,
+        has_project: bool = True,
+    ) -> str:
+        """Helper to create a mock project item query response."""
+        project = None
+        if has_project:
+            project = {
+                "id": "proj123",
+                "items": {
+                    "nodes": items,
+                    "pageInfo": {
+                        "hasNextPage": has_next_page,
+                        "endCursor": end_cursor,
+                    },
+                },
+            }
+
+        response = {"data": {owner_type: {"projectV2": project}}}
+        return json.dumps(response)
+
+    def _make_item_node(
+        self,
+        item_id: str,
+        issue_number: int,
+        status: str | None = "Ready",
+    ) -> dict:
+        """Helper to create a mock project item node."""
+        node = {
+            "id": item_id,
+            "content": {"number": issue_number},
+            "fieldValues": {"nodes": []},
+        }
+        if status:
+            node["fieldValues"]["nodes"].append(
+                {"name": status, "field": {"name": "Status"}}
+            )
+        return node
+
+    def test_find_project_item_found(self) -> None:
+        """Test finding an existing project item."""
+        items = [
+            self._make_item_node("item1", 1, "Ready"),
+            self._make_item_node("item42", 42, "In Progress"),
+        ]
+        mock_response = self._make_project_item_response(items)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _find_project_item(config, 42)
+
+            assert isinstance(result, ProjectItemInfo)
+            assert result.item_id == "item42"
+            assert result.issue_number == 42
+            assert result.current_status == "In Progress"
+
+    def test_find_project_item_on_second_page(self) -> None:
+        """Test finding an item on the second page of results."""
+        page1_items = [self._make_item_node("item1", 1)]
+        page1_response = self._make_project_item_response(
+            page1_items, has_next_page=True, end_cursor="cursor123"
+        )
+
+        page2_items = [self._make_item_node("item42", 42, "Done")]
+        page2_response = self._make_project_item_response(page2_items)
+
+        mock_results = [
+            mock.Mock(returncode=0, stdout=page1_response, stderr=""),
+            mock.Mock(returncode=0, stdout=page2_response, stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_results):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _find_project_item(config, 42)
+
+            assert isinstance(result, ProjectItemInfo)
+            assert result.item_id == "item42"
+            assert result.current_status == "Done"
+
+    def test_find_project_item_not_found(self) -> None:
+        """Test ISSUE_NOT_IN_PROJECT when item not found."""
+        items = [self._make_item_node("item1", 1)]
+        mock_response = self._make_project_item_response(items)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _find_project_item(config, 999)
+
+            assert isinstance(result, GhError)
+            assert result.code == ISSUE_NOT_IN_PROJECT
+            assert "999" in result.message
+            assert "add-to-project" in result.details
+
+    def test_find_project_item_no_status_set(self) -> None:
+        """Test finding item with no status set."""
+        items = [self._make_item_node("item42", 42, status=None)]
+        mock_response = self._make_project_item_response(items)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _find_project_item(config, 42)
+
+            assert isinstance(result, ProjectItemInfo)
+            assert result.current_status is None
+
+    def test_find_project_item_project_not_found(self) -> None:
+        """Test API_ERROR when project doesn't exist."""
+        mock_response = self._make_project_item_response([], has_project=False)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=999
+            )
+            result = _find_project_item(config, 42)
+
+            assert isinstance(result, GhError)
+            assert result.code == API_ERROR
+
+    def test_find_project_item_skips_draft_items(self) -> None:
+        """Test that draft items (no content) are skipped."""
+        items = [
+            {"id": "draft1", "content": None, "fieldValues": {"nodes": []}},
+            self._make_item_node("item42", 42, "Ready"),
+        ]
+        mock_response = self._make_project_item_response(items)
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = mock_response
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            config = ProjectConfig(
+                owner="testuser", owner_type="user", number=1
+            )
+            result = _find_project_item(config, 42)
+
+            assert isinstance(result, ProjectItemInfo)
+            assert result.item_id == "item42"
+
+
+class TestUpdateProjectItemStatus:
+    """Tests for _update_project_item_status function."""
+
+    def test_update_success(self) -> None:
+        """Test successful status update."""
+        mock_response = {
+            "data": {
+                "updateProjectV2ItemFieldValue": {
+                    "projectV2Item": {"id": "item42"}
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(mock_response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            result = _update_project_item_status(
+                "proj123", "item42", "field456", "opt2"
+            )
+
+            assert result.success is True
+            assert result.data is not None
+
+            # Verify mutation was called with correct parameters
+            cmd = mock_run.call_args[0][0]
+            cmd_str = " ".join(cmd)
+            assert "projectId=proj123" in cmd_str
+            assert "itemId=item42" in cmd_str
+            assert "fieldId=field456" in cmd_str
+            assert "optionId=opt2" in cmd_str
+
+    def test_update_api_error(self) -> None:
+        """Test handling of API errors during update."""
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "HTTP 500 Internal Server Error"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            result = _update_project_item_status(
+                "proj123", "item42", "field456", "opt2"
+            )
+
+            assert result.success is False
+            assert result.error is not None
+
+
+class TestCmdSetStatus:
+    """Tests for cmd_set_status function."""
+
+    def _make_status_field_response(
+        self,
+        owner_type: str = "user",
+        project_id: str = "proj123",
+        field_id: str = "field456",
+        options: list | None = None,
+    ) -> str:
+        """Helper to create a mock Status field query response."""
+        if options is None:
+            options = [
+                {"id": "opt1", "name": "Ready"},
+                {"id": "opt2", "name": "In Progress"},
+                {"id": "opt3", "name": "Done"},
+            ]
+
+        response = {
+            "data": {
+                owner_type: {
+                    "projectV2": {
+                        "id": project_id,
+                        "field": {
+                            "id": field_id,
+                            "name": "Status",
+                            "options": options,
+                        },
+                    }
+                }
+            }
+        }
+        return json.dumps(response)
+
+    def _make_project_item_response(
+        self,
+        item_id: str,
+        issue_number: int,
+        current_status: str | None = "Ready",
+        owner_type: str = "user",
+    ) -> str:
+        """Helper to create a mock project item query response."""
+        field_values = []
+        if current_status:
+            field_values.append(
+                {"name": current_status, "field": {"name": "Status"}}
+            )
+
+        response = {
+            "data": {
+                owner_type: {
+                    "projectV2": {
+                        "id": "proj123",
+                        "items": {
+                            "nodes": [
+                                {
+                                    "id": item_id,
+                                    "content": {"number": issue_number},
+                                    "fieldValues": {"nodes": field_values},
+                                }
+                            ],
+                            "pageInfo": {"hasNextPage": False, "endCursor": None},
+                        },
+                    }
+                }
+            }
+        }
+        return json.dumps(response)
+
+    def _make_update_response(self, item_id: str = "item42") -> str:
+        """Helper to create a mock update mutation response."""
+        return json.dumps({
+            "data": {
+                "updateProjectV2ItemFieldValue": {
+                    "projectV2Item": {"id": item_id}
+                }
+            }
+        })
+
+    def test_set_status_success(self, tmp_path: Path, capsys) -> None:
+        """Test successful status update."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_status_field_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_item_response("item42", 42, "Ready"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_update_response(),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "In Progress"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["number"] == 42
+        assert output["data"]["previous_status"] == "Ready"
+        assert output["data"]["new_status"] == "In Progress"
+
+    def test_set_status_no_previous_status(self, tmp_path: Path, capsys) -> None:
+        """Test status update when issue had no previous status."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_status_field_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_item_response("item42", 42, None),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_update_response(),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "Ready"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 0
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is True
+        assert output["data"]["previous_status"] is None
+        assert output["data"]["new_status"] == "Ready"
+
+    def test_set_status_invalid_status(self, tmp_path: Path, capsys) -> None:
+        """Test STATUS_INVALID when status value not in options."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = self._make_status_field_response()
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "InvalidStatus"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == STATUS_INVALID
+        assert "InvalidStatus" in output["error"]["message"]
+        # Should list valid options
+        assert "Ready" in output["error"]["details"]
+        assert "In Progress" in output["error"]["details"]
+        assert "Done" in output["error"]["details"]
+
+    def test_set_status_field_not_found(self, tmp_path: Path, capsys) -> None:
+        """Test FIELD_NOT_FOUND when Status field doesn't exist."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # Response with no Status field
+        response = {
+            "data": {
+                "user": {
+                    "projectV2": {
+                        "id": "proj123",
+                        "field": None,
+                    }
+                }
+            }
+        }
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = json.dumps(response)
+        mock_result.stderr = ""
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "In Progress"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == FIELD_NOT_FOUND
+        assert "Status" in output["error"]["message"]
+
+    def test_set_status_issue_not_in_project(self, tmp_path: Path, capsys) -> None:
+        """Test ISSUE_NOT_IN_PROJECT when issue not linked to project."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        # Status field response
+        status_response = self._make_status_field_response()
+
+        # Project items response - issue 42 not present
+        items_response = {
+            "data": {
+                "user": {
+                    "projectV2": {
+                        "id": "proj123",
+                        "items": {
+                            "nodes": [
+                                {
+                                    "id": "item1",
+                                    "content": {"number": 1},
+                                    "fieldValues": {"nodes": []},
+                                }
+                            ],
+                            "pageInfo": {"hasNextPage": False, "endCursor": None},
+                        },
+                    }
+                }
+            }
+        }
+
+        mock_responses = [
+            mock.Mock(returncode=0, stdout=status_response, stderr=""),
+            mock.Mock(returncode=0, stdout=json.dumps(items_response), stderr=""),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "In Progress"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == ISSUE_NOT_IN_PROJECT
+        assert "42" in output["error"]["message"]
+
+    def test_set_status_invalid_issue_number_zero(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test CONFIG_INVALID for issue number zero."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = 0
+        args.status = "In Progress"
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_set_status(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+        assert "0" in output["error"]["message"]
+
+    def test_set_status_invalid_issue_number_negative(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test CONFIG_INVALID for negative issue number."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        args = mock.Mock()
+        args.config = str(config_file)
+        args.number = -5
+        args.status = "In Progress"
+
+        with pytest.raises(SystemExit) as exc_info:
+            cmd_set_status(args)
+
+        assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == CONFIG_INVALID
+
+    def test_set_status_organization_owner_type(self, tmp_path: Path, capsys) -> None:
+        """Test status update for organization project."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {
+                    "owner": "testorg",
+                    "owner_type": "organization",
+                    "number": 5,
+                }
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_status_field_response(owner_type="organization"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_item_response(
+                    "item42", 42, "Ready", owner_type="organization"
+                ),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_update_response(),
+                stderr="",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses) as mock_run:
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "Done"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 0
+
+            # Verify organization queries were used
+            first_call_cmd = mock_run.call_args_list[0][0][0]
+            query_arg = next(
+                arg for arg in first_call_cmd if "organization(login:" in arg
+            )
+            assert query_arg is not None
+
+    def test_set_status_update_fails(self, tmp_path: Path, capsys) -> None:
+        """Test handling of mutation failure."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_responses = [
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_status_field_response(),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout=self._make_project_item_response("item42", 42, "Ready"),
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=1,
+                stdout="",
+                stderr="HTTP 500 Internal Server Error",
+            ),
+        ]
+
+        with mock.patch("subprocess.run", side_effect=mock_responses):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "In Progress"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+
+    def test_set_status_api_error_on_field_lookup(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        """Test handling of API error during field lookup."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(
+            json.dumps({
+                "project": {"owner": "testuser", "owner_type": "user", "number": 1}
+            })
+        )
+
+        mock_result = mock.Mock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "To authenticate, run: gh auth login"
+
+        with mock.patch("subprocess.run", return_value=mock_result):
+            args = mock.Mock()
+            args.config = str(config_file)
+            args.number = 42
+            args.status = "In Progress"
+
+            with pytest.raises(SystemExit) as exc_info:
+                cmd_set_status(args)
+
+            assert exc_info.value.code == 1
+
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+
+        assert output["success"] is False
+        assert output["error"]["code"] == AUTH_REQUIRED
+
+
+class TestCLISetStatusIntegration:
+    """Integration tests for set-status CLI command."""
+
+    def test_cli_set_status_parsing(self) -> None:
+        """Test CLI parsing of set-status command."""
+        parser = create_parser()
+        args = parser.parse_args(["set-status", "42", "In Progress"])
+
+        assert args.operation == "set-status"
+        assert args.number == 42
+        assert args.status == "In Progress"
+        assert hasattr(args, "func")
+
+    def test_cli_set_status_quoted_status(self) -> None:
+        """Test CLI parsing with quoted status value."""
+        parser = create_parser()
+        args = parser.parse_args(["set-status", "42", "In Progress"])
+
+        assert args.status == "In Progress"
+
+    def test_cli_set_status_missing_number(self) -> None:
+        """Test CLI error when number is missing."""
+        parser = create_parser()
+
+        with pytest.raises(SystemExit):
+            parser.parse_args(["set-status"])
+
+    def test_cli_set_status_missing_status(self) -> None:
+        """Test CLI error when status is missing."""
+        parser = create_parser()
+
+        with pytest.raises(SystemExit):
+            parser.parse_args(["set-status", "42"])

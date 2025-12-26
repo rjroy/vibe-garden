@@ -756,6 +756,78 @@ query($owner: String!, $repo: String!, $number: Int!) {
 }
 """
 
+# GraphQL query to get project Status field with options
+# Uses {owner_type} placeholder for user vs organization
+GET_STATUS_FIELD_QUERY = """
+query($owner: String!, $number: Int!) {{
+  {owner_type}(login: $owner) {{
+    projectV2(number: $number) {{
+      id
+      field(name: "Status") {{
+        ... on ProjectV2SingleSelectField {{
+          id
+          name
+          options {{
+            id
+            name
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+
+# GraphQL query to find a project item by issue number
+# Returns the project item ID and current field values for the issue
+# Uses {owner_type} placeholder for user vs organization
+FIND_PROJECT_ITEM_QUERY = """
+query($owner: String!, $number: Int!, $cursor: String) {{
+  {owner_type}(login: $owner) {{
+    projectV2(number: $number) {{
+      id
+      items(first: 100, after: $cursor) {{
+        pageInfo {{ hasNextPage endCursor }}
+        nodes {{
+          id
+          content {{
+            ... on Issue {{
+              number
+            }}
+          }}
+          fieldValues(first: 20) {{
+            nodes {{
+              ... on ProjectV2ItemFieldSingleSelectValue {{
+                name
+                field {{ ... on ProjectV2SingleSelectField {{ name }} }}
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+
+# GraphQL mutation to update a project item field value
+UPDATE_PROJECT_ITEM_FIELD_MUTATION = """
+mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+  updateProjectV2ItemFieldValue(
+    input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }
+  ) {
+    projectV2Item {
+      id
+    }
+  }
+}
+"""
+
 
 def _check_issue_exists_in_repo(
     owner: str, repo: str, issue_number: int
@@ -914,23 +986,281 @@ def cmd_get_issue(args: argparse.Namespace) -> None:
     )
 
 
-def cmd_set_status(args: argparse.Namespace) -> None:
-    """Update the status of an issue.
+@dataclass
+class StatusFieldInfo:
+    """Information about a project's Status field.
 
-    Placeholder implementation - will be completed in TASK-006.
+    Attributes:
+        project_id: The GraphQL ID of the project
+        field_id: The GraphQL ID of the Status field
+        options: Mapping of status option names to their IDs
     """
+
+    project_id: str
+    field_id: str
+    options: dict[str, str]  # option_name -> option_id
+
+
+def _get_status_field_info(config: ProjectConfig) -> StatusFieldInfo | GhError:
+    """Get the Status field ID and valid options for a project.
+
+    Args:
+        config: Project configuration
+
+    Returns:
+        StatusFieldInfo if successful, GhError if field not found or API error
+    """
+    query = GET_STATUS_FIELD_QUERY.format(owner_type=config.owner_type)
+
+    result = _execute_graphql(
+        query,
+        {"owner": config.owner, "number": config.number},
+    )
+
+    if not result.success:
+        assert result.error is not None
+        return result.error
+
+    assert result.data is not None
+    data = result.data.get("data", {})
+
+    # Navigate to project data (user or organization)
+    owner_data = data.get(config.owner_type, {})
+    project_data = owner_data.get("projectV2")
+
+    if not project_data:
+        return GhError(
+            code=API_ERROR,
+            message="Project not found",
+            details=f"Could not find project #{config.number} for {config.owner_type} "
+            f"'{config.owner}'. Verify the project exists and you have access.",
+        )
+
+    project_id = project_data.get("id")
+    field_data = project_data.get("field")
+
+    if not field_data or not field_data.get("id"):
+        return GhError(
+            code=FIELD_NOT_FOUND,
+            message="Status field not found in project",
+            details="The project does not have a 'Status' field configured. "
+            "Add a Status single-select field to the project in GitHub.",
+        )
+
+    field_id = field_data.get("id")
+    options_list = field_data.get("options", [])
+
+    # Build options mapping: name -> id
+    options = {}
+    for opt in options_list:
+        opt_name = opt.get("name")
+        opt_id = opt.get("id")
+        if opt_name and opt_id:
+            options[opt_name] = opt_id
+
+    return StatusFieldInfo(
+        project_id=project_id,
+        field_id=field_id,
+        options=options,
+    )
+
+
+@dataclass
+class ProjectItemInfo:
+    """Information about a project item (issue linked to project).
+
+    Attributes:
+        item_id: The GraphQL ID of the project item
+        issue_number: The issue number
+        current_status: The current Status field value, if set
+    """
+
+    item_id: str
+    issue_number: int
+    current_status: str | None
+
+
+def _find_project_item(
+    config: ProjectConfig, issue_number: int
+) -> ProjectItemInfo | GhError:
+    """Find the project item ID for a given issue number.
+
+    Args:
+        config: Project configuration
+        issue_number: Issue number to find
+
+    Returns:
+        ProjectItemInfo if found, GhError if not found or API error
+    """
+    query = FIND_PROJECT_ITEM_QUERY.format(owner_type=config.owner_type)
+    cursor: str | None = None
+
+    while True:
+        result = _execute_graphql(
+            query,
+            {"owner": config.owner, "number": config.number, "cursor": cursor},
+        )
+
+        if not result.success:
+            assert result.error is not None
+            return result.error
+
+        assert result.data is not None
+        data = result.data.get("data", {})
+
+        # Navigate to project data
+        owner_data = data.get(config.owner_type, {})
+        project_data = owner_data.get("projectV2")
+
+        if not project_data:
+            return GhError(
+                code=API_ERROR,
+                message="Project not found",
+                details=f"Could not find project #{config.number} for "
+                f"{config.owner_type} '{config.owner}'.",
+            )
+
+        items_data = project_data.get("items", {})
+        nodes = items_data.get("nodes", [])
+
+        for node in nodes:
+            content = node.get("content")
+            if not content:
+                continue
+
+            node_issue_number = content.get("number")
+            if node_issue_number == issue_number:
+                # Found the issue - extract current status
+                item_id = node.get("id")
+                field_values = node.get("fieldValues", {}).get("nodes", [])
+                current_status = _extract_field_value(field_values, "Status")
+
+                return ProjectItemInfo(
+                    item_id=item_id,
+                    issue_number=issue_number,
+                    current_status=current_status,
+                )
+
+        # Check for more pages
+        page_info = items_data.get("pageInfo", {})
+        if not page_info.get("hasNextPage", False):
+            break
+        cursor = page_info.get("endCursor")
+
+    # Issue not found in project
+    return GhError(
+        code=ISSUE_NOT_IN_PROJECT,
+        message=f"Issue #{issue_number} not linked to project",
+        details=f"Issue #{issue_number} is not linked to project #{config.number}. "
+        f"Use 'add-to-project {issue_number}' to add it first.",
+    )
+
+
+def _update_project_item_status(
+    project_id: str, item_id: str, field_id: str, option_id: str
+) -> GraphQLResult:
+    """Update the status field of a project item.
+
+    Args:
+        project_id: GraphQL ID of the project
+        item_id: GraphQL ID of the project item
+        field_id: GraphQL ID of the Status field
+        option_id: GraphQL ID of the status option to set
+
+    Returns:
+        GraphQLResult with mutation response
+    """
+    return _execute_graphql(
+        UPDATE_PROJECT_ITEM_FIELD_MUTATION,
+        {
+            "projectId": project_id,
+            "itemId": item_id,
+            "fieldId": field_id,
+            "optionId": option_id,
+        },
+    )
+
+
+def cmd_set_status(args: argparse.Namespace) -> None:
+    """Update the Status field of an issue in the project.
+
+    Sets the issue's Status field to the specified value. The status must
+    be a valid option defined in the project's Status field configuration.
+
+    Args:
+        args: Parsed CLI arguments including:
+            - number: Issue number to update
+            - status: New status value to set
+            - config: Optional path to config file
+
+    Output (success):
+        {
+            "success": true,
+            "data": {
+                "number": 42,
+                "previous_status": "Ready",
+                "new_status": "In Progress"
+            }
+        }
+
+    Error codes:
+        - CONFIG_INVALID: Invalid issue number (zero or negative)
+        - FIELD_NOT_FOUND: Status field doesn't exist in project
+        - STATUS_INVALID: Requested status value not in field options
+        - ISSUE_NOT_IN_PROJECT: Issue not linked to the project
+    """
+    # Validate issue number is positive
+    if args.number <= 0:
+        output_error(
+            CONFIG_INVALID,
+            f"Invalid issue number: {args.number}",
+            "Issue number must be a positive integer.",
+        )
+
     config = load_config(args.config)
-    # TODO: Implement in TASK-006 - Set Status Operation
+    new_status = args.status
+
+    # Step 1: Get Status field info and validate the requested status
+    status_info = _get_status_field_info(config)
+    if isinstance(status_info, GhError):
+        output_error(status_info.code, status_info.message, status_info.details)
+
+    # Validate requested status exists in field options
+    if new_status not in status_info.options:
+        valid_options = ", ".join(sorted(status_info.options.keys()))
+        output_error(
+            STATUS_INVALID,
+            f"Invalid status value: '{new_status}'",
+            f"Status must be one of: {valid_options}",
+        )
+
+    option_id = status_info.options[new_status]
+
+    # Step 2: Find the project item for this issue
+    item_info = _find_project_item(config, args.number)
+    if isinstance(item_info, GhError):
+        output_error(item_info.code, item_info.message, item_info.details)
+
+    previous_status = item_info.current_status
+
+    # Step 3: Update the status
+    result = _update_project_item_status(
+        status_info.project_id,
+        item_info.item_id,
+        status_info.field_id,
+        option_id,
+    )
+
+    if not result.success:
+        assert result.error is not None
+        output_error(result.error.code, result.error.message, result.error.details)
+
+    # Success - return previous and new status
     output_success(
         {
-            "message": "set-status operation not yet implemented",
-            "issue_number": args.number,
-            "status": args.status,
-            "config": {
-                "owner": config.owner,
-                "owner_type": config.owner_type,
-                "number": config.number,
-            },
+            "number": args.number,
+            "previous_status": previous_status,
+            "new_status": new_status,
         }
     )
 
