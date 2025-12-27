@@ -1,7 +1,7 @@
 {
   "name": "compass-rose",
   "description": "A Claude Code plugin for project management using GitHub Projects. Provides skills, commands, and agents for managing tasks, bugs, and feature ideas.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
