@@ -10,8 +10,7 @@ You are now in **Backlog Review Mode**. Your role is to analyze all non-Done pro
 
 ## Your Focus
 
-- **Item retrieval**: Use `gh-api-scripts` skill to fetch all project items
-- **Field discovery**: Detect available custom fields (Priority, Size, Status, etc.)
+- **Item retrieval**: Use `gh-api-scripts` skill to fetch all project items (includes field values)
 - **Status filtering**: Filter out completed items from the results
 - **Quality analysis**: Spawn backlog-analyzer agent to assess definition quality
 - **Recommendation**: Present 2-3 best options with detailed rationale
@@ -63,32 +62,7 @@ compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues
 
 **If configuration is missing or invalid**, display the error details and stop.
 
-### 2. Discover Custom Fields
-
-Use `gh project field-list` to detect available fields:
-
-```bash
-gh project field-list $NUMBER --owner $OWNER --format json
-```
-
-**Field Matching Patterns** (case-insensitive):
-- **Priority**: Fields containing "priority", "p0-p3", "severity", "importance"
-- **Size**: Fields containing "size", "estimate", "points", "effort"
-- **Status**: Fields containing "status", "state", "column"
-- **Iteration**: Fields containing "iteration", "sprint", "cycle", "milestone"
-
-**Graceful Degradation**: If Priority field is missing:
-```
-Warning: Priority field not found in project. Recommendations will be based on size and definition quality only.
-
-Available fields: Status, Size, Iteration
-
-To enable priority-based sorting, add a "Priority" field to your project with values like P0, P1, P2, P3.
-```
-
-Continue with available data even if some fields are missing.
-
-### 3. Filter Non-Done Items
+### 2. Filter Non-Done Items
 
 The `list-issues` script returns all open issues from the project. Filter out completed items:
 
@@ -123,7 +97,7 @@ All items appear to be marked as "Done" or the project is empty.
 Would you like to create a new item? (/add-item command)
 ```
 
-### 4. Prepare Data for Agent Analysis
+### 3. Prepare Data for Agent Analysis
 
 The `list-issues` script already returns data in a clean format suitable for the backlog-analyzer agent:
 
@@ -141,9 +115,9 @@ The `list-issues` script already returns data in a clean format suitable for the
 }
 ```
 
-**Note**: The script handles GraphQL complexity internally. The filtered array from step 3 is ready for agent consumption.
+**Note**: The script handles GraphQL complexity internally. The filtered array from step 2 is ready for agent consumption.
 
-### 5. Spawn Backlog Analyzer Agent
+### 4. Spawn Backlog Analyzer Agent
 
 Invoke the backlog-analyzer agent with the prepared item data:
 
@@ -171,7 +145,7 @@ The agent will:
 5. Provide backlog health summary
 6. List items needing clarification
 
-### 6. Present Agent Recommendations
+### 5. Present Agent Recommendations
 
 Display the agent's analysis output directly to the user. The agent returns structured markdown with:
 
@@ -244,7 +218,7 @@ Would you like to:
 4. Clarify one of the poorly-defined items?
 ```
 
-### 7. Handle Edge Cases
+### 6. Handle Edge Cases
 
 **No Active Items**:
 ```
@@ -318,9 +292,7 @@ This command implements the following specification requirements:
 ## Implementation Notes
 
 **Performance Targets**:
-- Config load: <100ms (local file read)
-- Field discovery: <1s (single API call)
-- Item listing: <2s (typical backlog of <100 items)
+- Issue retrieval: <2s (gh-api-scripts handles pagination)
 - Agent analysis: 5-10s (depends on item count and description length)
 - Total operation: <15s end-to-end
 
@@ -438,8 +410,7 @@ Would you like to:
 
 ## Anti-Patterns to Avoid
 
-- **Don't skip config validation**: Always verify config exists and is valid before querying
-- **Don't assume field names**: Use discovery pattern, don't hardcode "Priority" or "Status"
+- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations
 - **Don't fail silently**: If fields are missing, warn the user and explain impact
 - **Don't bypass the agent**: Always use backlog-analyzer for quality assessment (don't try to implement scoring in the command)
 - **Don't filter too aggressively**: Include all non-Done items so agent sees full backlog context

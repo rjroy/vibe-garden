@@ -11,73 +11,14 @@ You are now in **Reprioritize Mode**. Your role is to analyze the current codeba
 ## Your Focus
 
 - **Item querying**: Fetch all project items using `gh-api-scripts list-issues`
-- **Field discovery**: Detect available custom fields (Priority, Status, etc.)
 - **Codebase analysis**: Spawn codebase-scanner agent to assess relevance
 - **Recommendation presentation**: Show priority changes with evidence-based rationale
-- **Batch updates**: Execute approved changes via `gh` CLI
+- **Batch updates**: Execute approved changes via `gh-api-scripts` operations (`set-priority`, `set-status`)
 - **Summary reporting**: Report count of changes made
 
 ## Workflow
 
-### 1. Load Configuration
-
-The `gh-api-scripts` skill handles configuration loading and validation. Parse owner/number for field discovery:
-
-```bash
-# Parse config for field discovery (script handles validation)
-if [ -f .compass-rose/config.json ]; then
-  OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-  NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-else
-  echo "Error: Configuration file not found."
-  echo ""
-  echo "Please create .compass-rose/config.json with your project details."
-  exit 1
-fi
-```
-
-Configuration validation is performed by the `list-issues` operation - if config is missing or invalid, it returns structured error responses.
-
-### 2. Discover Custom Fields
-
-Use `gh project field-list` to detect available fields and their option IDs:
-
-```bash
-gh project field-list $NUMBER --owner $OWNER --format json
-```
-
-**Critical Fields to Discover**:
-- **Priority field**: Used for updates (P0, P1, P2, P3 options)
-- **Status field**: Filter out "Done" items from analysis (optional)
-- **Project ID**: Required for `gh project item-edit` commands
-
-**Store Field Metadata**:
-```bash
-# Extract priority field ID and option IDs
-PRIORITY_FIELD_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("priority"; "i")) | .id')
-
-# Extract option IDs for each priority level
-P0_OPTION_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("priority"; "i")) | .options[] | select(.name == "P0") | .id')
-P1_OPTION_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("priority"; "i")) | .options[] | select(.name == "P1") | .id')
-P2_OPTION_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("priority"; "i")) | .options[] | select(.name == "P2") | .id')
-P3_OPTION_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("priority"; "i")) | .options[] | select(.name == "P3") | .id')
-
-# Get project ID (required for item-edit)
-PROJECT_ID=$(gh project view $NUMBER --owner $OWNER --format json | jq -r '.id')
-```
-
-**If Priority field is missing**:
-```
-Error: Priority field not found in project.
-
-Reprioritization requires a Priority field with values like P0, P1, P2, P3.
-
-Add a Priority field to your GitHub Project before running this command.
-```
-
-Stop execution if Priority field is missing - cannot reprioritize without it.
-
-### 3. Query All Project Items
+### 1. Query All Project Items
 
 Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
 
@@ -146,7 +87,7 @@ This may take 5-10 minutes to complete. Continue? (y/n)
 
 Wait for user confirmation before proceeding with large backlogs.
 
-### 4. Spawn Codebase Scanner Agent
+### 2. Spawn Codebase Scanner Agent
 
 Invoke the `codebase-scanner` agent with the filtered project items:
 
@@ -210,7 +151,7 @@ Phase 2: Analyzing issues...
 [Progress: 5/25 issues analyzed]
 ```
 
-### 5. Present Recommendations
+### 3. Present Recommendations
 
 Display the agent's findings with clear categorization:
 
@@ -282,26 +223,36 @@ Enter choice (1/2/3):
 **Option 2**: Show interactive checklist for user to select specific items
 **Option 3**: Exit without making changes
 
-### 6. Batch Update Execution
+### 4. Batch Update Execution
 
-For approved changes, execute `gh project item-edit` commands:
+For approved changes, use `gh-api-scripts` operations:
 
 ```bash
 # Example batch update script
 echo "Executing priority updates..."
 
 # Update #456 from P2 to P0
-gh project item-edit --id PVTI_456 --project-id $PROJECT_ID --field-id $PRIORITY_FIELD_ID --single-select-option-id $P0_OPTION_ID
-echo "✓ Updated #456: P2 → P0"
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority 456 "P0")
+if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+  echo "✓ Updated #456: P2 → P0"
+else
+  echo "Warning: Could not update #456 priority"
+fi
 
 # Update #789 from P1 to P3
-gh project item-edit --id PVTI_789 --project-id $PROJECT_ID --field-id $PRIORITY_FIELD_ID --single-select-option-id $P3_OPTION_ID
-echo "✓ Updated #789: P1 → P3"
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority 789 "P3")
+if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+  echo "✓ Updated #789: P1 → P3"
+else
+  echo "Warning: Could not update #789 priority"
+fi
 
 # For items marked to close: update to Done status and add closing comment
-DONE_STATUS_ID=$(echo "$fields" | jq -r '.fields[] | select(.name | test("status"; "i")) | .options[] | select(.name | test("done"; "i")) | .id')
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status 123 "Done")
+if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+  echo "✓ Updated #123: Status → Done"
+fi
 
-gh project item-edit --id PVTI_123 --project-id $PROJECT_ID --field-id $STATUS_FIELD_ID --single-select-option-id $DONE_STATUS_ID
 gh issue close 123 --comment "Closing as resolved. Feature implemented in commit abc123 (auth/login.ts). Discovered during codebase reprioritization."
 echo "✓ Closed #123 (feature already implemented)"
 ```
@@ -320,7 +271,7 @@ Retry failed items? (y/n)
 
 Track successes and failures separately. Allow retry for failed items.
 
-### 7. Report Summary
+### 5. Report Summary
 
 After batch update completes, show final summary:
 
@@ -448,11 +399,9 @@ This command implements the following specification requirements:
 
 ## Performance Targets
 
-- **Config load**: <100ms (local file read)
-- **Field discovery**: <1s (single API call)
-- **Item listing**: <3s (up to 500 items)
+- **Item listing**: <3s (up to 500 items, includes pagination)
 - **Codebase analysis**: 2-15 minutes (depends on backlog size)
-- **Batch update**: ~1s per item (sequential `gh project item-edit` calls)
+- **Batch update**: ~1s per item (sequential `set-priority`/`set-status` calls)
 
 ## Implementation Notes
 
@@ -468,7 +417,7 @@ This command implements the following specification requirements:
 - Clear error message directs user to add Priority field to project
 
 **Batch Update Limitations**:
-- `gh project item-edit` can only update one field per invocation
+- Each `set-priority`/`set-status` operation is a separate API call
 - Must make separate API call for each item being updated
 - Sequential execution (not parallel) to avoid rate limiting
 - Each update takes ~1 second (rate limiting consideration)
@@ -486,6 +435,7 @@ This command implements the following specification requirements:
 
 ## Anti-Patterns to Avoid
 
+- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations
 - **Don't cache project data**: Always fetch fresh data from GitHub
 - **Don't skip user approval**: Always get explicit confirmation before batch updates
 - **Don't auto-apply medium confidence changes**: Require review for uncertain recommendations
@@ -506,15 +456,8 @@ This command implements the following specification requirements:
 ```
 User: /reprioritize
 
-Loading project configuration...
-✓ Config loaded: vibe-garden/project-42
-
-Discovering custom fields...
-✓ Found fields: Status, Priority, Size, Iteration
-✓ Priority field detected with options: P0, P1, P2, P3
-
 Querying project items...
-✓ Found 25 items (excluding Done items)
+✓ Found 25 open issues (excluding Done items)
 
 Spawning codebase-scanner agent...
 

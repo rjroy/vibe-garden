@@ -775,6 +775,28 @@ query($owner: String!, $number: Int!) {{
 }}
 """
 
+# GraphQL query to get any single-select field by name
+# Uses {owner_type} and {field_name} placeholders
+GET_SINGLE_SELECT_FIELD_QUERY = """
+query($owner: String!, $number: Int!) {{
+  {owner_type}(login: $owner) {{
+    projectV2(number: $number) {{
+      id
+      field(name: "{field_name}") {{
+        ... on ProjectV2SingleSelectField {{
+          id
+          name
+          options {{
+            id
+            name
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+
 # GraphQL query to find a project item by issue number
 # Returns the project item ID and current field values for the issue
 # Uses {owner_type} placeholder for user vs organization
@@ -1308,16 +1330,16 @@ def _find_project_item(
     )
 
 
-def _update_project_item_status(
+def _update_project_item_field(
     project_id: str, item_id: str, field_id: str, option_id: str
 ) -> GraphQLResult:
-    """Update the status field of a project item.
+    """Update a single-select field of a project item.
 
     Args:
         project_id: GraphQL ID of the project
         item_id: GraphQL ID of the project item
-        field_id: GraphQL ID of the Status field
-        option_id: GraphQL ID of the status option to set
+        field_id: GraphQL ID of the field (Status, Priority, Size, etc.)
+        option_id: GraphQL ID of the option to set
 
     Returns:
         GraphQLResult with mutation response
@@ -1396,7 +1418,7 @@ def cmd_set_status(args: argparse.Namespace) -> None:
     previous_status = item_info.current_status
 
     # Step 3: Update the status
-    result = _update_project_item_status(
+    result = _update_project_item_field(
         status_info.project_id,
         item_info.item_id,
         status_info.field_id,
@@ -1504,6 +1526,188 @@ def cmd_add_to_project(args: argparse.Namespace) -> None:
     )
 
 
+@dataclass
+class SingleSelectFieldInfo:
+    """Information about a project's single-select field.
+
+    Attributes:
+        project_id: The GraphQL ID of the project
+        field_id: The GraphQL ID of the field
+        field_name: The name of the field
+        options: Mapping of option names to their IDs
+    """
+
+    project_id: str
+    field_id: str
+    field_name: str
+    options: dict[str, str]  # option_name -> option_id
+
+
+def _get_single_select_field_info(
+    config: ProjectConfig, field_name: str
+) -> SingleSelectFieldInfo | GhError:
+    """Get a single-select field's ID and valid options for a project.
+
+    Args:
+        config: Project configuration
+        field_name: Name of the field to retrieve (e.g., "Priority", "Size")
+
+    Returns:
+        SingleSelectFieldInfo if successful, GhError if field not found or API error
+    """
+    query = GET_SINGLE_SELECT_FIELD_QUERY.format(
+        owner_type=config.owner_type, field_name=field_name
+    )
+
+    result = _execute_graphql(
+        query,
+        {"owner": config.owner, "number": config.number},
+    )
+
+    if not result.success:
+        assert result.error is not None
+        return result.error
+
+    assert result.data is not None
+    data = result.data.get("data", {})
+
+    # Navigate to project data (user or organization)
+    owner_data = data.get(config.owner_type, {})
+    project_data = owner_data.get("projectV2")
+
+    if not project_data:
+        return GhError(
+            code=API_ERROR,
+            message="Project not found",
+            details=f"Could not find project #{config.number} for {config.owner_type} "
+            f"'{config.owner}'. Verify the project exists and you have access.",
+        )
+
+    project_id = project_data.get("id")
+    field_data = project_data.get("field")
+
+    if not field_data or not field_data.get("id"):
+        return GhError(
+            code=FIELD_NOT_FOUND,
+            message=f"{field_name} field not found in project",
+            details=f"The project does not have a '{field_name}' field configured. "
+            f"Add a {field_name} single-select field to the project in GitHub.",
+        )
+
+    field_id = field_data.get("id")
+    options_list = field_data.get("options", [])
+
+    # Build options mapping: name -> id
+    options = {}
+    for opt in options_list:
+        opt_name = opt.get("name")
+        opt_id = opt.get("id")
+        if opt_name and opt_id:
+            options[opt_name] = opt_id
+
+    return SingleSelectFieldInfo(
+        project_id=project_id,
+        field_id=field_id,
+        field_name=field_name,
+        options=options,
+    )
+
+
+def _set_single_select_field(
+    args: argparse.Namespace, field_name: str, value_attr: str
+) -> None:
+    """Generic function to set a single-select field value.
+
+    Args:
+        args: Parsed CLI arguments including number and the value
+        field_name: Name of the field (e.g., "Priority", "Size")
+        value_attr: Attribute name on args containing the new value
+    """
+    # Validate issue number is positive
+    if args.number <= 0:
+        output_error(
+            CONFIG_INVALID,
+            f"Invalid issue number: {args.number}",
+            "Issue number must be a positive integer.",
+        )
+
+    config = load_config(args.config)
+    new_value = getattr(args, value_attr)
+
+    # Step 1: Get field info and validate the requested value
+    field_info = _get_single_select_field_info(config, field_name)
+    if isinstance(field_info, GhError):
+        output_error(field_info.code, field_info.message, field_info.details)
+
+    # Validate requested value exists in field options
+    if new_value not in field_info.options:
+        valid_options = ", ".join(sorted(field_info.options.keys()))
+        # STATUS_INVALID is reused as a generic error code for all invalid
+        # single-select field values (Status, Priority, Size). The error
+        # message and details provide field-specific context.
+        output_error(
+            STATUS_INVALID,
+            f"Invalid {field_name.lower()} value: '{new_value}'",
+            f"{field_name} must be one of: {valid_options}",
+        )
+
+    option_id = field_info.options[new_value]
+
+    # Step 2: Find the project item for this issue
+    item_info = _find_project_item(config, args.number)
+    if isinstance(item_info, GhError):
+        output_error(item_info.code, item_info.message, item_info.details)
+
+    # Get current field value (need to query again since _find_project_item only gets Status)
+    # For now, we don't track previous value for non-Status fields
+    previous_value = None
+
+    # Step 3: Update the field
+    result = _update_project_item_field(
+        field_info.project_id,
+        item_info.item_id,
+        field_info.field_id,
+        option_id,
+    )
+
+    if not result.success:
+        assert result.error is not None
+        output_error(result.error.code, result.error.message, result.error.details)
+
+    # Success - return previous and new value
+    output_success(
+        {
+            "number": args.number,
+            f"previous_{field_name.lower()}": previous_value,
+            f"new_{field_name.lower()}": new_value,
+        }
+    )
+
+
+def cmd_set_priority(args: argparse.Namespace) -> None:
+    """Update the Priority field of an issue in the project.
+
+    Args:
+        args: Parsed CLI arguments including:
+            - number: Issue number to update
+            - priority: New priority value to set
+            - config: Optional path to config file
+    """
+    _set_single_select_field(args, "Priority", "priority")
+
+
+def cmd_set_size(args: argparse.Namespace) -> None:
+    """Update the Size field of an issue in the project.
+
+    Args:
+        args: Parsed CLI arguments including:
+            - number: Issue number to update
+            - size: New size value to set
+            - config: Optional path to config file
+    """
+    _set_single_select_field(args, "Size", "size")
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser with all subcommands.
 
@@ -1519,6 +1723,8 @@ Examples:
     %(prog)s list-issues
     %(prog)s get-issue 42
     %(prog)s set-status 42 "In Progress"
+    %(prog)s set-priority 42 "P1"
+    %(prog)s set-size 42 "M"
     %(prog)s add-to-project 42
 
 All operations read config from .compass-rose/config.json
@@ -1595,6 +1801,42 @@ Exit codes: 0 = success, 1 = error (details in JSON)
         help="Issue number to add to project",
     )
     parser_add.set_defaults(func=cmd_add_to_project)
+
+    # set-priority subcommand
+    parser_priority = subparsers.add_parser(
+        "set-priority",
+        help="Update issue priority",
+        description="Updates the Priority field of an issue in the project.",
+    )
+    parser_priority.add_argument(
+        "number",
+        type=int,
+        help="Issue number to update",
+    )
+    parser_priority.add_argument(
+        "priority",
+        type=str,
+        help='New priority value (e.g., "P0", "P1", "P2", "P3")',
+    )
+    parser_priority.set_defaults(func=cmd_set_priority)
+
+    # set-size subcommand
+    parser_size = subparsers.add_parser(
+        "set-size",
+        help="Update issue size",
+        description="Updates the Size field of an issue in the project.",
+    )
+    parser_size.add_argument(
+        "number",
+        type=int,
+        help="Issue number to update",
+    )
+    parser_size.add_argument(
+        "size",
+        type=str,
+        help='New size value (e.g., "S", "M", "L", "XL")',
+    )
+    parser_size.set_defaults(func=cmd_set_size)
 
     return parser
 

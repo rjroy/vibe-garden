@@ -176,10 +176,78 @@ ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh add-to-project
 
 **Notes**:
 - Issue must exist in the repository before adding to project
-- The returned `item_id` can be used for subsequent field updates via `gh project item-edit`
+- The returned `item_id` can be used for subsequent field updates
 
 **Error Cases**:
 - `ISSUE_NOT_FOUND` - Issue number doesn't exist in the repository
+
+### set-priority
+
+Update the Priority field of an issue in the project.
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-priority <number> "<priority>"
+```
+
+**Example**:
+```bash
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-priority 42 "P1"
+```
+
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "number": 42,
+    "previous_priority": null,
+    "new_priority": "P1"
+  }
+}
+```
+
+**Notes**:
+- Priority value must match one of the project's configured priority options (case-sensitive)
+- Common priority values: `"P0"`, `"P1"`, `"P2"`, `"P3"`
+
+**Error Cases**:
+- `STATUS_INVALID` - Provided priority value doesn't match project options
+- `FIELD_NOT_FOUND` - Project doesn't have a Priority field configured
+- `ISSUE_NOT_IN_PROJECT` - Issue is not linked to the configured project
+
+### set-size
+
+Update the Size field of an issue in the project.
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-size <number> "<size>"
+```
+
+**Example**:
+```bash
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-size 42 "M"
+```
+
+**Example Output**:
+```json
+{
+  "success": true,
+  "data": {
+    "number": 42,
+    "previous_size": null,
+    "new_size": "M"
+  }
+}
+```
+
+**Notes**:
+- Size value must match one of the project's configured size options (case-sensitive)
+- Common size values: `"S"`, `"M"`, `"L"`, `"XL"`
+
+**Error Cases**:
+- `STATUS_INVALID` - Provided size value doesn't match project options
+- `FIELD_NOT_FOUND` - Project doesn't have a Size field configured
+- `ISSUE_NOT_IN_PROJECT` - Issue is not linked to the configured project
 
 ## Output Format
 
@@ -235,8 +303,8 @@ This skill is used by Compass Rose commands to interact with GitHub Projects:
 | `/backlog` | `list-issues` |
 | `/next-item` | `list-issues` |
 | `/start-work` | `get-issue`, `set-status` |
-| `/add-item` | `add-to-project` |
-| `/reprioritize` | `list-issues` |
+| `/add-item` | `add-to-project`, `set-status`, `set-priority`, `set-size` |
+| `/reprioritize` | `list-issues`, `set-priority`, `set-status` |
 
 ### Common Patterns
 

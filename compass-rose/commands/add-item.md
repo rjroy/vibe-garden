@@ -10,24 +10,20 @@ You are now in **Add Item Mode**. Your role is to interactively gather details a
 
 ## Your Focus
 
-- **Field discovery**: Detect available custom fields (Priority, Size, Status, etc.)
 - **Interactive gathering**: Ask user for title, description, priority, size, and status
 - **Issue creation**: Create repository issue via `gh issue create`
 - **Project linking**: Add issue to project via `gh-api-scripts add-to-project`
-- **Field updates**: Set custom fields via multiple `gh project item-edit` calls
+- **Field updates**: Set custom fields via `gh-api-scripts` operations (`set-status`, `set-priority`, `set-size`)
 
 ## Workflow
 
-### 1. Load Configuration
+### 1. Verify Configuration
 
-The `gh-api-scripts` skill handles configuration loading and validation. Parse owner/number for field discovery:
+The `gh-api-scripts` skill handles configuration loading and validation. Verify config exists before gathering user input:
 
 ```bash
-# Parse config for field discovery (script handles validation)
-if [ -f .compass-rose/config.json ]; then
-  OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-  NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-else
+# Check config exists (detailed validation done by gh-api-scripts operations)
+if [ ! -f .compass-rose/config.json ]; then
   echo "Error: Configuration file not found."
   echo ""
   echo "Please create .compass-rose/config.json with your project details."
@@ -37,60 +33,11 @@ fi
 
 Configuration validation is performed by the `add-to-project` operation - if config is missing or invalid, it returns structured error responses.
 
-### 2. Discover Custom Fields
+### 2. Gather Item Details
 
-Use `gh project field-list` to detect available fields:
+**Interactively prompt the user** for the following details:
 
-```bash
-# Get project ID first (needed for item-edit later)
-PROJECT_ID=$(gh project view $NUMBER --owner $OWNER --format json --jq .id)
-
-# Discover fields
-gh project field-list $NUMBER --owner $OWNER --format json
-```
-
-**Field Matching Patterns** (case-insensitive):
-- **Priority**: Fields containing "priority", "p0-p3", "severity", "importance"
-- **Size**: Fields containing "size", "estimate", "points", "effort"
-- **Status**: Fields containing "status", "state", "column"
-- **Iteration**: Fields containing "iteration", "sprint", "cycle", "milestone"
-
-**Store Field Metadata**:
-For each discovered field, extract:
-- Field ID (required for `gh project item-edit`)
-- Field name (for user-friendly prompts)
-- Field options (for single-select fields like Priority, Size, Status)
-- Option IDs (required for setting field values)
-
-Example parsing:
-```bash
-# Extract Priority field and options
-PRIORITY_FIELD_ID=$(echo "$fields" | jq -r '
-  .fields[] |
-  select(.name | test("priority"; "i")) |
-  .id
-')
-
-PRIORITY_OPTIONS=$(echo "$fields" | jq -r '
-  .fields[] |
-  select(.name | test("priority"; "i")) |
-  .options[] |
-  "\(.name):\(.id)"
-')
-```
-
-**Graceful Degradation**: If any field is missing:
-```
-Note: <Field> field not found in project. Skipping <field> selection.
-```
-
-Continue with available fields even if some are missing.
-
-### 3. Gather Item Details
-
-**Interactively prompt the user** for the following details. Present discovered field options to guide input:
-
-#### 3.1. Title (Required)
+#### 2.1. Title (Required)
 
 ```
 What is the title of the new item?
@@ -102,7 +49,7 @@ Example: "Fix login timeout bug" or "Add dark mode support"
 - Must not be empty
 - Keep concise (ideally <80 characters)
 
-#### 3.2. Description (Optional)
+#### 2.2. Description (Optional)
 
 ```
 Provide a description for this item (optional, press Enter to skip):
@@ -116,7 +63,7 @@ Include:
 
 **Default**: Empty string if user skips
 
-#### 3.3. Priority (If available)
+#### 2.3. Priority
 
 ```
 Select priority for this item:
@@ -131,9 +78,9 @@ Enter number (1-4) or press Enter for P2 (default):
 ```
 
 **Default**: P2 (medium priority) if user skips
-**Validation**: Must be one of the available options from field discovery
+**Validation**: Must be one of the project's configured priority options
 
-#### 3.4. Size (If available)
+#### 2.4. Size
 
 ```
 Select size estimate for this item:
@@ -148,7 +95,7 @@ Enter number (1-4) or press Enter for M (default):
 ```
 
 **Default**: M (medium) if user skips
-**Validation**: Must be one of the available options from field discovery
+**Validation**: Must be one of the project's configured size options
 
 **XL Warning**: If user selects XL:
 ```
@@ -160,7 +107,7 @@ This ensures clear success criteria and reduces scope creep.
 Continue with XL size? (y/n):
 ```
 
-#### 3.5. Status (If available)
+#### 2.5. Status
 
 ```
 Select initial status for this item:
@@ -174,9 +121,9 @@ Enter number (1-3) or press Enter for "Ready" (default):
 ```
 
 **Default**: "Ready" if user skips
-**Validation**: Must be one of the available options from field discovery
+**Validation**: Must be one of the project's configured status options
 
-### 4. Create Repository Issue
+### 3. Create Repository Issue
 
 Use `gh issue create` to create the issue first:
 
@@ -206,7 +153,7 @@ Verify that:
 3. The repository exists: gh repo view
 ```
 
-### 5. Add Issue to Project
+### 4. Add Issue to Project
 
 Use the `gh-api-scripts` skill to link the issue to the project:
 
@@ -230,40 +177,46 @@ fi
 
 **Note**: The config must include a `repository` field for add-to-project to work. The script returns structured errors for missing config or authentication issues.
 
-### 6. Set Custom Fields
+### 5. Set Custom Fields
 
-**IMPORTANT**: `gh project item-edit` can only update one field per invocation. Multiple fields require sequential calls.
+Use the `gh-api-scripts` skill operations to set field values. Each operation handles field discovery internally:
 
 ```bash
-# Set Priority (if available and user provided)
-if [ -n "$PRIORITY_OPTION_ID" ]; then
-  gh project item-edit \
-    --id $ITEM_ID \
-    --project-id $PROJECT_ID \
-    --field-id $PRIORITY_FIELD_ID \
-    --single-select-option-id $PRIORITY_OPTION_ID
+# Set Status (if user provided)
+if [ -n "$STATUS_VALUE" ]; then
+  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status $ISSUE_NUMBER "$STATUS_VALUE")
+  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+    echo "✓ Status set to $STATUS_VALUE"
+  else
+    echo "Warning: Could not set Status field"
+  fi
 fi
 
-# Set Size (if available and user provided)
-if [ -n "$SIZE_OPTION_ID" ]; then
-  gh project item-edit \
-    --id $ITEM_ID \
-    --project-id $PROJECT_ID \
-    --field-id $SIZE_FIELD_ID \
-    --single-select-option-id $SIZE_OPTION_ID
+# Set Priority (if user provided)
+if [ -n "$PRIORITY_VALUE" ]; then
+  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority $ISSUE_NUMBER "$PRIORITY_VALUE")
+  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+    echo "✓ Priority set to $PRIORITY_VALUE"
+  else
+    echo "Warning: Could not set Priority field"
+  fi
 fi
 
-# Set Status (if available and user provided)
-if [ -n "$STATUS_OPTION_ID" ]; then
-  gh project item-edit \
-    --id $ITEM_ID \
-    --project-id $PROJECT_ID \
-    --field-id $STATUS_FIELD_ID \
-    --single-select-option-id $STATUS_OPTION_ID
+# Set Size (if user provided)
+if [ -n "$SIZE_VALUE" ]; then
+  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-size $ISSUE_NUMBER "$SIZE_VALUE")
+  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
+    echo "✓ Size set to $SIZE_VALUE"
+  else
+    echo "Warning: Could not set Size field"
+  fi
 fi
 ```
 
-**Note**: Each `gh project item-edit` call is independent. If one fails, continue with the remaining fields and report which fields were successfully set.
+**Notes**:
+- Each operation is independent - if one fails, continue with the remaining fields
+- Operations handle field discovery internally (no need to query field IDs)
+- The `FIELD_NOT_FOUND` error indicates the project doesn't have that field configured
 
 **Error Handling**:
 ```
@@ -273,7 +226,7 @@ The item was created successfully but some fields could not be set.
 You can manually update these fields in the GitHub Projects web UI.
 ```
 
-### 7. Confirm Creation
+### 6. Confirm Creation
 
 Display summary of created item:
 
@@ -307,7 +260,7 @@ Fields set:
 View in project: https://github.com/orgs/<owner>/projects/<number>
 ```
 
-### 8. Handle Edge Cases
+### 7. Handle Edge Cases
 
 **No Custom Fields Available**:
 ```
@@ -358,16 +311,15 @@ This command implements the following specification requirements:
 ## Implementation Notes
 
 **Performance Targets**:
-- Config load: <100ms (local file read)
-- Field discovery: <1s (single API call)
+- Config check: <100ms (local file read)
 - Issue creation: <2s (gh issue create)
-- Project linking: <1s (gh project item-add)
-- Field updates: <1s per field (sequential gh project item-edit calls)
+- Project linking: <1s (gh-api-scripts add-to-project)
+- Field updates: <1s per field (gh-api-scripts set-status/set-priority/set-size)
 - Total operation: <5s end-to-end (for 3 fields)
 
 **Data Flow**:
-1. Load config → 2. Discover fields → 3. Gather input → 4. Create issue →
-5. Link to project → 6. Set fields → 7. Confirm
+1. Verify config → 2. Gather input → 3. Create issue →
+4. Link to project → 5. Set fields → 6. Confirm
 
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
@@ -386,12 +338,6 @@ Following TD-5 from the plan, we ALWAYS create repository issues first, then lin
 ## Example Session
 
 ```
-Loading project configuration...
-✓ Config loaded: my-org/project-123
-
-Discovering custom fields...
-✓ Found fields: Status, Priority, Size
-
 --- Create New Item ---
 
 What is the title of the new item?
@@ -464,11 +410,10 @@ View in project: https://github.com/orgs/my-org/projects/123
 
 ## Anti-Patterns to Avoid
 
-- **Don't skip config validation**: Always verify config exists and is valid before proceeding
-- **Don't assume field names**: Use discovery pattern, don't hardcode "Priority" or "Status"
+- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations
+- **Don't skip config validation**: Always verify config exists before proceeding
 - **Don't fail on missing fields**: Warn user and continue with available fields
 - **Don't create draft items**: ALWAYS create repository issues (per spec constraint)
-- **Don't batch field updates**: Use sequential `gh project item-edit` calls (gh CLI limitation)
 - **Don't skip confirmation**: Always show summary of created item with link
 - **Don't store credentials**: Rely on `gh` CLI authentication
 - **Don't skip XL warning**: Always prompt user when they select XL size
