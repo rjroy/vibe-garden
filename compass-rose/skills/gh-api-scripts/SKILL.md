@@ -213,6 +213,7 @@ ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-priority 4
 **Error Cases**:
 - `STATUS_INVALID` - Provided priority value doesn't match project options
 - `FIELD_NOT_FOUND` - Project doesn't have a Priority field configured
+- `ISSUE_NOT_IN_PROJECT` - Issue is not linked to the configured project
 
 ### set-size
 
@@ -246,6 +247,7 @@ ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-size 42 "M
 **Error Cases**:
 - `STATUS_INVALID` - Provided size value doesn't match project options
 - `FIELD_NOT_FOUND` - Project doesn't have a Size field configured
+- `ISSUE_NOT_IN_PROJECT` - Issue is not linked to the configured project
 
 ## Output Format
 
@@ -302,7 +304,7 @@ This skill is used by Compass Rose commands to interact with GitHub Projects:
 | `/next-item` | `list-issues` |
 | `/start-work` | `get-issue`, `set-status` |
 | `/add-item` | `add-to-project`, `set-status`, `set-priority`, `set-size` |
-| `/reprioritize` | `list-issues`, `set-priority` |
+| `/reprioritize` | `list-issues`, `set-priority`, `set-status` |
 
 ### Common Patterns
 
