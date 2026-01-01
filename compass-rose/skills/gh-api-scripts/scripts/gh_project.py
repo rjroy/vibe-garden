@@ -1330,16 +1330,16 @@ def _find_project_item(
     )
 
 
-def _update_project_item_status(
+def _update_project_item_field(
     project_id: str, item_id: str, field_id: str, option_id: str
 ) -> GraphQLResult:
-    """Update the status field of a project item.
+    """Update a single-select field of a project item.
 
     Args:
         project_id: GraphQL ID of the project
         item_id: GraphQL ID of the project item
-        field_id: GraphQL ID of the Status field
-        option_id: GraphQL ID of the status option to set
+        field_id: GraphQL ID of the field (Status, Priority, Size, etc.)
+        option_id: GraphQL ID of the option to set
 
     Returns:
         GraphQLResult with mutation response
@@ -1418,7 +1418,7 @@ def cmd_set_status(args: argparse.Namespace) -> None:
     previous_status = item_info.current_status
 
     # Step 3: Update the status
-    result = _update_project_item_status(
+    result = _update_project_item_field(
         status_info.project_id,
         item_info.item_id,
         status_info.field_id,
@@ -1642,8 +1642,11 @@ def _set_single_select_field(
     # Validate requested value exists in field options
     if new_value not in field_info.options:
         valid_options = ", ".join(sorted(field_info.options.keys()))
+        # STATUS_INVALID is reused as a generic error code for all invalid
+        # single-select field values (Status, Priority, Size). The error
+        # message and details provide field-specific context.
         output_error(
-            STATUS_INVALID,  # Reuse error code for invalid field value
+            STATUS_INVALID,
             f"Invalid {field_name.lower()} value: '{new_value}'",
             f"{field_name} must be one of: {valid_options}",
         )
@@ -1660,7 +1663,7 @@ def _set_single_select_field(
     previous_value = None
 
     # Step 3: Update the field
-    result = _update_project_item_status(
+    result = _update_project_item_field(
         field_info.project_id,
         item_info.item_id,
         field_info.field_id,
