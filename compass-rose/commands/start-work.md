@@ -79,7 +79,7 @@ Use the `gh-api-scripts` skill to retrieve issue details from the project:
 
 ```bash
 # Get issue details from project (handles pagination automatically)
-RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py get-issue $ISSUE_NUMBER)
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh get-issue $ISSUE_NUMBER)
 
 # Check for errors
 if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
@@ -628,7 +628,7 @@ Use the `gh-api-scripts` skill to update the item's Status field:
 
 ```bash
 # Update status to "In Progress"
-RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py set-status $ISSUE_NUMBER "In Progress")
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status $ISSUE_NUMBER "In Progress")
 
 # Check result
 if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then

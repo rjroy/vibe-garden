@@ -83,7 +83,7 @@ Use the `gh-api-scripts` skill to fetch all project items with automatic paginat
 
 ```bash
 # Fetch all project items
-RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues)
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
 
 # Check for errors
 if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then

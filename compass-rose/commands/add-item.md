@@ -212,7 +212,7 @@ Use the `gh-api-scripts` skill to link the issue to the project:
 
 ```bash
 # Add issue to project using gh-api-scripts
-RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py add-to-project $ISSUE_NUMBER)
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh add-to-project $ISSUE_NUMBER)
 
 # Check result
 if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then

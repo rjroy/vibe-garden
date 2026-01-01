@@ -23,7 +23,7 @@ You are now in **Backlog Review Mode**. Your role is to analyze all non-Done pro
 Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
 
 ```bash
-python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues
+compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues
 ```
 
 **Output Format** (JSON):
@@ -94,7 +94,7 @@ The `list-issues` script returns all open issues from the project. Filter out co
 
 ```bash
 # Parse script output and filter
-RESPONSE=$(python3 compass-rose/skills/gh-api-scripts/scripts/gh_project.py list-issues)
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
 
 # Check for errors
 if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
