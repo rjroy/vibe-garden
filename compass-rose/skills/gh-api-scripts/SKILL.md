@@ -38,7 +38,7 @@ Operations require a configuration file at `.compass-rose/config.json`:
 List all open issues in the configured project with automatic pagination.
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py list-issues
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh list-issues
 ```
 
 **Example Output**:
@@ -85,12 +85,12 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py list-i
 Get a single issue by number with full project field values.
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py get-issue <number>
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh get-issue <number>
 ```
 
 **Example**:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py get-issue 42
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh get-issue 42
 ```
 
 **Example Output**:
@@ -122,12 +122,12 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py get-is
 Update the Status field of an issue in the project.
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py set-status <number> "<status>"
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status <number> "<status>"
 ```
 
 **Example**:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py set-status 42 "In Progress"
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status 42 "In Progress"
 ```
 
 **Example Output**:
@@ -155,12 +155,12 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py set-st
 Add an existing repository issue to the configured project.
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py add-to-project <number>
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh add-to-project <number>
 ```
 
 **Example**:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py add-to-project 156
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh add-to-project 156
 ```
 
 **Example Output**:
@@ -242,7 +242,7 @@ This skill is used by Compass Rose commands to interact with GitHub Projects:
 
 **Check for errors before processing:**
 ```bash
-RESPONSE=$(python3 ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.py list-issues)
+RESPONSE=$(${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
 
 if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
   echo "$RESPONSE" | jq -r '.error.details'
