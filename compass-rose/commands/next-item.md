@@ -10,146 +10,82 @@ You are now in **Next Item Recommendation Mode**. Your role is to analyze the pr
 
 ## Your Focus
 
-- **Configuration loading**: Read `.compass-rose/config.json` and validate project settings
-- **Field discovery**: Detect available custom fields (Priority, Size, Status, etc.)
-- **Item filtering**: Query items with Ready status (or equivalent)
+- **Issue retrieval**: Use `gh-api-scripts` to get all project issues with field values
+- **Item filtering**: Filter items with Ready status (or equivalent)
 - **Priority sorting**: Sort by Priority field (P0 > P1 > P2 > P3)
 - **Codebase signals**: Use lightweight git heuristics as secondary tiebreaker
 - **Presentation**: Display top 2-3 options in tabular format with rationale
 
 ## Workflow
 
-### 1. Load Configuration
+### 1. Query All Issues
 
-Read `.compass-rose/config.json` from the repository root:
+Use the `gh-api-scripts` skill to retrieve all project issues:
 
 ```bash
-# Check if config exists
-if [ ! -f .compass-rose/config.json ]; then
-  echo "Error: Configuration file not found."
+# Get all issues from project (handles pagination and config automatically)
+RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
+
+# Check for errors
+if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
+  ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code')
+  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
+  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
+
+  echo "Error: $ERROR_MSG"
   echo ""
-  echo "Please create .compass-rose/config.json with your project details:"
-  echo ""
-  echo '{'
-  echo '  "project": {'
-  echo '    "owner": "<org-or-username>",'
-  echo '    "number": <project-number>'
-  echo '  }'
-  echo '}'
-  echo ""
-  echo "Find your project number in the project URL:"
-  echo "https://github.com/orgs/<owner>/projects/<number>"
+  echo "$ERROR_DETAILS"
   exit 1
 fi
 
-# Parse config (using jq)
-OWNER=$(jq -r '.project.owner' .compass-rose/config.json)
-NUMBER=$(jq -r '.project.number' .compass-rose/config.json)
-
-# Validate required fields
-if [ "$OWNER" = "null" ] || [ "$NUMBER" = "null" ]; then
-  echo "Error: Invalid configuration."
-  echo ""
-  echo "Both 'project.owner' and 'project.number' are required."
-  exit 1
-fi
+# Extract issues
+ALL_ISSUES=$(echo "$RESPONSE" | jq '.data.issues')
 ```
 
-**If configuration is missing or invalid**, show clear error message with setup instructions and stop.
+**Output Format** (JSON):
+```json
+{
+  "success": true,
+  "data": {
+    "issues": [
+      {
+        "number": 42,
+        "title": "Fix login timeout",
+        "body": "Users experiencing timeouts...",
+        "url": "https://github.com/.../issues/42",
+        "state": "OPEN",
+        "labels": ["bug"],
+        "status": "Ready",
+        "priority": "P0",
+        "size": "S"
+      }
+    ],
+    "count": 8
+  }
+}
+```
 
-### 2. Discover Custom Fields
+### 2. Filter Ready Items
 
-Use `gh project field-list` to detect available fields:
+Filter for items with "Ready" status (case-insensitive):
 
 ```bash
-gh project field-list $NUMBER --owner $OWNER --format json
+# Filter items with "Ready" status
+ready_items=$(echo "$ALL_ISSUES" | jq -r '[
+  .[] |
+  select(.state == "OPEN") |
+  select(.status | test("ready"; "i"))
+]')
 ```
 
-**Field Matching Patterns** (case-insensitive):
-- **Priority**: Fields containing "priority", "p0-p3", "severity", "importance"
-- **Size**: Fields containing "size", "estimate", "points", "effort"
-- **Status**: Fields containing "status", "state", "column"
-- **Iteration**: Fields containing "iteration", "sprint", "cycle", "milestone"
-
-**Graceful Degradation**: If Priority field is missing:
+**Graceful Degradation**: If Priority field values are all null:
 ```
-Warning: Priority field not found in project. All items will be treated as equal priority.
-
-Available fields: Status, Size, Iteration
+Warning: Priority field not found or not set on items. All items will be treated as equal priority.
 
 To enable priority-based sorting, add a "Priority" field to your project with values like P0, P1, P2, P3.
 ```
 
 Continue with available data even if some fields are missing.
-
-### 3. Query Ready Items
-
-Fetch project items using GraphQL (never use `gh project item-list` - it silently truncates results):
-
-```bash
-# Use GraphQL for reliable, complete item retrieval
-# Note: Use "user" for personal accounts, "organization" for org-owned projects
-ITEMS_RESPONSE=$(gh api graphql -f query='
-query($owner: String!, $number: Int!) {
-  user(login: $owner) {
-    projectV2(number: $number) {
-      id
-      items(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          content {
-            ... on Issue {
-              number
-              title
-              body
-              state
-              url
-              createdAt
-            }
-          }
-          fieldValues(first: 10) {
-            nodes {
-              ... on ProjectV2ItemFieldSingleSelectValue {
-                name
-                field { ... on ProjectV2SingleSelectField { name } }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}' -f owner="$OWNER" -F number="$NUMBER")
-```
-
-**Pagination**: If `pageInfo.hasNextPage` is true, make additional requests with `after: $endCursor`.
-
-**Status Filtering**:
-- Look for items with Status field value matching "Ready" (case-insensitive)
-- Also filter to OPEN issues only (exclude closed GitHub issues)
-- If no exact match, look for similar values: "Ready for Dev", "To Do", "Backlog"
-
-Example filter:
-```bash
-# Filter items with "Ready" status and OPEN state
-ready_items=$(echo "$ITEMS_RESPONSE" | jq -r '[
-  .data.user.projectV2.items.nodes[] |
-  select(.content.state == "OPEN") |
-  {
-    id: .id,
-    title: .content.title,
-    body: .content.body,
-    number: .content.number,
-    url: .content.url,
-    createdAt: .content.createdAt,
-    status: ([.fieldValues.nodes[] | select(.field.name == "Status") | .name] | first // "Unknown"),
-    priority: ([.fieldValues.nodes[] | select(.field.name == "Priority") | .name] | first // null),
-    size: ([.fieldValues.nodes[] | select(.field.name == "Size") | .name] | first // null)
-  } |
-  select(.status | test("ready"; "i"))
-]')
-```
 
 **If no ready items found**:
 ```
@@ -160,11 +96,11 @@ Available statuses in project: To Do, In Progress, Done
 Would you like me to show items from a different status instead?
 ```
 
-### 4. Analyze Codebase Signals and Sort
+### 3. Analyze Codebase Signals and Sort
 
 This step uses lightweight git heuristics to add codebase relevance as a secondary tiebreaker (after priority, before creation date). Budget: 2-5 seconds total.
 
-#### Step 4a: Initial Priority Sort
+#### Step 3a: Initial Priority Sort
 
 Sort items by priority to identify top 5 candidates:
 
@@ -176,7 +112,7 @@ top_candidates=$(echo "$ready_items" | jq -r '
 ')
 ```
 
-#### Step 4b: Codebase Signal Analysis
+#### Step 3b: Codebase Signal Analysis
 
 **Check Git Availability**:
 
@@ -242,7 +178,7 @@ calculate_signal_score() {
 - **+5 per commit**: Related directories have recent activity (30 days, max 50 points)
 - **Maximum**: 100 points
 
-#### Step 4c: Final Sort with Codebase Signals
+#### Step 3c: Final Sort with Codebase Signals
 
 **Sort Order** (most significant to least):
 1. **Priority** (P0=0, P1=1, P2=2, P3=3, missing=999)
@@ -281,7 +217,7 @@ If git operations time out:
 - Fall back to priority + creation date sort
 - Do not block the command
 
-### 5. Present Recommendations
+### 4. Present Recommendations
 
 Display top 2-3 options in tabular format following TD-8 specification:
 
@@ -336,7 +272,7 @@ to complete in one session.
 **Codebase Relevance**: N/A - Not a git repository.
 ```
 
-### 6. Handle Edge Cases
+### 5. Handle Edge Cases
 
 **No Ready Items**:
 ```
@@ -390,9 +326,7 @@ This command implements the following specification requirements:
 ## Implementation Notes
 
 **Performance Targets**:
-- Config load: <100ms (local file read)
-- Field discovery: <1s (single API call)
-- Item listing: <2s (typical backlog of <100 items)
+- Issue retrieval: <2s (gh-api-scripts handles pagination)
 - Codebase analysis: 2-5s (top 5 items, git heuristics)
 - Total operation: <8s end-to-end
 
@@ -415,13 +349,7 @@ This command implements the following specification requirements:
 ## Example Output
 
 ```
-Loading project configuration...
-✓ Config loaded: my-org/project-123
-
-Discovering custom fields...
-✓ Found fields: Status, Priority, Size, Iteration
-
-Querying ready items...
+Retrieving project issues...
 ✓ Found 8 items with "Ready" status
 
 Analyzing codebase signals...
@@ -457,8 +385,7 @@ Would you like to start work on item #1? (/start-work command)
 
 ## Anti-Patterns to Avoid
 
-- **Don't skip config validation**: Always verify config exists and is valid before querying
-- **Don't assume field names**: Use discovery pattern, don't hardcode "Priority" or "Status"
+- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations
 - **Don't fail silently**: If fields are missing, warn the user and explain impact
 - **Don't show too many options**: Limit to top 2-3 items to avoid decision paralysis
 - **Don't forget rationale**: Always explain WHY you're recommending an item
@@ -476,4 +403,4 @@ Would you like to start work on item #1? (/start-work command)
 
 - **Spec**: REQ-F-4, REQ-F-5, REQ-F-6, REQ-F-11, REQ-NF-3, REQ-NF-4
 - **Plan**: TD-6 (Priority Sorting), TD-8 (Item Presentation Format)
-- **Skill**: `compass-rose/skills/gh-project-reference/SKILL.md` (config patterns, field discovery)
+- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)

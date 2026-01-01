@@ -461,70 +461,7 @@ Note: No acceptance criteria found in issue. Skipping AC analysis.
 Note: Issue has no description. Skipping validation.
 ```
 
-### 5. Discover Custom Fields
-
-Use `gh project field-list` to detect available fields:
-
-```bash
-# Get project ID (needed for item-edit later)
-PROJECT_ID=$(gh project view $NUMBER --owner $OWNER --format json --jq .id)
-
-# Discover fields
-FIELDS=$(gh project field-list $NUMBER --owner $OWNER --format json)
-```
-
-**Field Matching Patterns** (case-insensitive):
-- **Size**: Fields containing "size", "estimate", "points", "effort"
-- **Status**: Fields containing "status", "state", "column"
-
-**Extract Field and Option IDs**:
-```bash
-# Get Size field metadata
-SIZE_FIELD_ID=$(echo "$FIELDS" | jq -r '
-  .fields[] |
-  select(.name | test("size|estimate|points|effort"; "i")) |
-  .id
-' | head -1)
-
-SIZE_OPTIONS=$(echo "$FIELDS" | jq -r --arg fid "$SIZE_FIELD_ID" '
-  .fields[] |
-  select(.id == $fid) |
-  .options[] |
-  "\(.name):\(.id)"
-')
-
-# Get current size value from item
-SIZE_VALUE=$(echo "$ITEM_DATA" | jq -r --arg fid "$SIZE_FIELD_ID" '
-  .fieldValues[] |
-  select(.field.id == $fid) |
-  .name
-')
-
-# Get Status field metadata
-STATUS_FIELD_ID=$(echo "$FIELDS" | jq -r '
-  .fields[] |
-  select(.name | test("status|state|column"; "i")) |
-  .id
-' | head -1)
-
-# Find "In Progress" status option ID
-IN_PROGRESS_OPTION_ID=$(echo "$FIELDS" | jq -r --arg fid "$STATUS_FIELD_ID" '
-  .fields[] |
-  select(.id == $fid) |
-  .options[] |
-  select(.name | test("in.?progress"; "i")) |
-  .id
-' | head -1)
-```
-
-**Graceful Degradation**: If Size or Status fields are missing:
-```
-Note: <Field> field not found in project. Skipping <field>-based features.
-```
-
-Continue with available fields even if some are missing.
-
-### 6. XL/L Escalation Check
+### 5. XL/L Escalation Check
 
 **Requirements**: REQ-F-18, REQ-F-19, REQ-F-20
 
@@ -620,7 +557,7 @@ To disable L-item prompts, user can edit `.compass-rose/config.json`:
 }
 ```
 
-### 7. Update Status to "In Progress"
+### 6. Update Status to "In Progress"
 
 **Requirement**: REQ-F-22
 
@@ -647,7 +584,7 @@ fi
 - `STATUS_INVALID` - "In Progress" not a valid status option (check project settings)
 - `FIELD_NOT_FOUND` - Status field doesn't exist in project
 
-### 8. Read and Display Full Issue Context
+### 7. Read and Display Full Issue Context
 
 **Requirement**: REQ-F-23
 
@@ -680,7 +617,7 @@ Acceptance Criteria:
 ───────────────────────────────────────────────────────────────
 ```
 
-### 9. Explore Codebase and Identify Affected Code
+### 8. Explore Codebase and Identify Affected Code
 
 **IMPORTANT**: This step requires you to actively explore the codebase, not just display guidance. You must identify the specific code that needs to change before declaring readiness.
 
@@ -755,7 +692,7 @@ Would you like me to:
 ───────────────────────────────────────────────────────────────
 ```
 
-### 10. Handle Edge Cases
+### 9. Handle Edge Cases
 
 **Issue Not in Project**:
 ```
@@ -815,7 +752,6 @@ This command implements the following specification requirements:
 
 **Performance Targets**:
 - Config load: <100ms (local file read)
-- Field discovery: <1s (single API call)
 - Item lookup: <2s (project item-list query)
 - Issue validation: 15-30s (codebase analysis for relevance)
 - Status update: <1s (gh project item-edit)
@@ -824,8 +760,8 @@ This command implements the following specification requirements:
 
 **Data Flow**:
 1. Select item → 2. Load config → 3. Get item details → 4. Validate issue →
-5. Discover fields → 6. Check size escalation → 7. Update status →
-8. Display context → 9. Explore codebase and identify affected code
+5. Check size escalation → 6. Update status → 7. Display context →
+8. Explore codebase and identify affected code
 
 **CLI Dependencies**:
 - `gh` CLI installed and authenticated
@@ -1181,7 +1117,8 @@ If this was incorrect, reopen with: gh issue reopen 201
 - **Don't ignore preferences**: Respect `promptForLargeItems` configuration
 - **Don't proceed if user selects spec-writing**: Transfer to /spec-writing command
 - **Don't skip codebase exploration**: Always search for and read the affected code before declaring readiness
-- **Don't display guidance as output**: Step 9 is actions to execute, not templates to display; you must actually explore the codebase
+- **Don't display guidance as output**: Step 8 is actions to execute, not templates to display; you must actually explore the codebase
+- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations; never use `gh project view`, `gh project field-list`, or `gh project item-edit` directly with jq parsing
 
 ## Related Commands
 
