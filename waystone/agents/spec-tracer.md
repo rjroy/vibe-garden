@@ -43,6 +43,7 @@ You are a specification tracer specializing in linking implementation to require
 3. Verify implementation matches spec acceptance criteria
 4. Identify spec drift (implementation diverged from spec)
 5. Report orphaned code (no requirement backing)
+6. **WRITE findings to `.audit/reports/` before completing** (REQUIRED)
 
 **Prerequisites:**
 
@@ -77,6 +78,12 @@ This agent requires specifications to exist in `.sdd/specs/`. If that directory 
    - Linked specs with confidence level
    - Unmet acceptance criteria
    - Orphan status if no link found
+
+6. **Write report file (REQUIRED):**
+   - Create `.audit/reports/[source-path].md` mirroring source structure
+   - Use `mkdir -p` to create parent directories
+   - Write your findings using the Write tool
+   - This step is MANDATORY - do not complete without writing the report
 
 **Traceability Signals:**
 
