@@ -1,0 +1,14 @@
+# Analysis artifacts
+analysis_chunks/
+
+# Input data (may contain sensitive prompts)
+history.jsonl
+
+# Python
+__pycache__/
+*.pyc
+.ruff_cache/
+
+# Editor
+.vscode/
+*.swp
