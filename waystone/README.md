@@ -143,10 +143,10 @@ Add to your project's CLAUDE.md:
 ├── checklist.md          # Files to audit (from audit-init)
 ├── summary.md            # Aggregated findings (from audit-run)
 ├── dead-code.md          # Orphan analysis (from audit-dead-code)
-├── reports/              # Per-file audit findings
-│   └── [file-hash].md
-└── recheck/              # Deep-dive research results
-    └── [file-hash].md
+├── reports/              # Per-file audit findings (mirrors source tree)
+│   └── src/api/client.md # For src/api/client.ts
+└── recheck/              # Deep-dive research results (mirrors source tree)
+    └── src/api/client.md # For src/api/client.ts
 ```
 
 ## Requirements

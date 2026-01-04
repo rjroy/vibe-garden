@@ -103,7 +103,7 @@ For each mismatch, categorize:
 
 ### 5. Generate Detailed Report
 
-Create report at `.audit/recheck/[file-hash].md`:
+Create report at `.audit/recheck/[relative-path].md` (mirroring source structure):
 
 ```markdown
 # API Contract Recheck: [file path]
