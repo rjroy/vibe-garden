@@ -25,15 +25,12 @@ Spec tracer. Link implementation to requirements in `.sdd/specs/`.
 - **N/A**: No specs exist, or file is infrastructure
 
 **Process:**
-1. Use Glob: check if `.sdd/specs/` exists
-2. Use Read: examine specs, match to file by name/purpose
-3. Use Grep: find spec references in comments
-4. Use Bash: `git log --oneline -10 [file]` for spec mentions
-5. Use Bash: `mkdir -p .audit/reports/[parent-dirs]`
-6. Use Write tool (NOT Bash, NOT cat) to save report
-
-**Report path:** `.audit/reports/[source-path].md`
-- Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
+1. Check if `.sdd/specs/` exists (if not, report N/A)
+2. Read specs, match to file by name/purpose
+3. Search for spec references in comments
+4. Check git history for spec mentions
+5. Write report to `.audit/reports/[source-path].md`
+   - Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
 
 **Output format:**
 ```markdown
