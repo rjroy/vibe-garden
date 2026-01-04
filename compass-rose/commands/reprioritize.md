@@ -16,25 +16,26 @@ You are now in **Reprioritize Mode**. Your role is to analyze the current codeba
 - **Batch updates**: Execute approved changes via `gh-api-scripts` operations (`set-priority`, `set-status`)
 - **Summary reporting**: Report count of changes made
 
+## Required Skills
+
+**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
+
+```
+Skill(compass-rose:gh-api-scripts)
+```
+
+This skill provides:
+- `list-issues` - Fetch all project items
+- `set-priority` - Update priority field
+- `set-status` - Update status field
+
+**Do NOT use raw `gh project` commands.** The skill documentation shows exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
+
 ## Workflow
 
 ### 1. Query All Project Items
 
-Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
-
-```bash
-# Fetch all project items
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
-
-# Check for errors
-if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
-  echo "$RESPONSE" | jq -r '.error.details'
-  exit 1
-fi
-
-# The script already returns OPEN issues only with all field values
-echo "$RESPONSE" | jq '.data.issues'
-```
+Use the `list-issues` operation from the `gh-api-scripts` skill (which you invoked above). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
 **Output Format** (JSON):
 ```json
@@ -225,37 +226,9 @@ Enter choice (1/2/3):
 
 ### 4. Batch Update Execution
 
-For approved changes, use `gh-api-scripts` operations:
+For approved changes, use the `set-priority` and `set-status` operations from the `gh-api-scripts` skill (which you invoked earlier). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
-```bash
-# Example batch update script
-echo "Executing priority updates..."
-
-# Update #456 from P2 to P0
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority 456 "P0")
-if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-  echo "✓ Updated #456: P2 → P0"
-else
-  echo "Warning: Could not update #456 priority"
-fi
-
-# Update #789 from P1 to P3
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority 789 "P3")
-if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-  echo "✓ Updated #789: P1 → P3"
-else
-  echo "Warning: Could not update #789 priority"
-fi
-
-# For items marked to close: update to Done status and add closing comment
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status 123 "Done")
-if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-  echo "✓ Updated #123: Status → Done"
-fi
-
-gh issue close 123 --comment "Closing as resolved. Feature implemented in commit abc123 (auth/login.ts). Discovered during codebase reprioritization."
-echo "✓ Closed #123 (feature already implemented)"
-```
+For items marked to close, also use `gh issue close` with an appropriate comment.
 
 **Error Handling During Batch Update**:
 

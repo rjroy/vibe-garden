@@ -16,31 +16,21 @@ You are now in **Next Item Recommendation Mode**. Your role is to analyze the pr
 - **Codebase signals**: Use lightweight git heuristics as secondary tiebreaker
 - **Presentation**: Display top 2-3 options in tabular format with rationale
 
+## Required Skills
+
+**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
+
+```
+Skill(compass-rose:gh-api-scripts)
+```
+
+This skill provides the `list-issues` operation needed for this command. **Do NOT use raw `gh project` commands.**
+
 ## Workflow
 
 ### 1. Query All Issues
 
-Use the `gh-api-scripts` skill to retrieve all project issues:
-
-```bash
-# Get all issues from project (handles pagination and config automatically)
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
-
-# Check for errors
-if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
-  ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code')
-  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
-  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
-
-  echo "Error: $ERROR_MSG"
-  echo ""
-  echo "$ERROR_DETAILS"
-  exit 1
-fi
-
-# Extract issues
-ALL_ISSUES=$(echo "$RESPONSE" | jq '.data.issues')
-```
+Use the `list-issues` operation from the `gh-api-scripts` skill (which you invoked above). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
 **Output Format** (JSON):
 ```json

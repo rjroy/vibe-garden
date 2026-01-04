@@ -15,6 +15,22 @@ You are now in **Add Item Mode**. Your role is to interactively gather details a
 - **Project linking**: Add issue to project via `gh-api-scripts add-to-project`
 - **Field updates**: Set custom fields via `gh-api-scripts` operations (`set-status`, `set-priority`, `set-size`)
 
+## Required Skills
+
+**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
+
+```
+Skill(compass-rose:gh-api-scripts)
+```
+
+This skill provides:
+- `add-to-project` - Link issue to project
+- `set-status` - Set status field
+- `set-priority` - Set priority field
+- `set-size` - Set size field
+
+**Do NOT use raw `gh project` commands.** The skill documentation shows exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
+
 ## Workflow
 
 ### 1. Verify Configuration
@@ -155,63 +171,13 @@ Verify that:
 
 ### 4. Add Issue to Project
 
-Use the `gh-api-scripts` skill to link the issue to the project:
-
-```bash
-# Add issue to project using gh-api-scripts
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh add-to-project $ISSUE_NUMBER)
-
-# Check result
-if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-  ITEM_ID=$(echo "$RESPONSE" | jq -r '.data.item_id')
-  echo "✓ Added to project"
-else
-  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
-  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
-  echo "Error: $ERROR_MSG"
-  echo ""
-  echo "$ERROR_DETAILS"
-  exit 1
-fi
-```
+Use the `add-to-project` operation from the `gh-api-scripts` skill (which you invoked earlier). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
 **Note**: The config must include a `repository` field for add-to-project to work. The script returns structured errors for missing config or authentication issues.
 
 ### 5. Set Custom Fields
 
-Use the `gh-api-scripts` skill operations to set field values. Each operation handles field discovery internally:
-
-```bash
-# Set Status (if user provided)
-if [ -n "$STATUS_VALUE" ]; then
-  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status $ISSUE_NUMBER "$STATUS_VALUE")
-  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-    echo "✓ Status set to $STATUS_VALUE"
-  else
-    echo "Warning: Could not set Status field"
-  fi
-fi
-
-# Set Priority (if user provided)
-if [ -n "$PRIORITY_VALUE" ]; then
-  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-priority $ISSUE_NUMBER "$PRIORITY_VALUE")
-  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-    echo "✓ Priority set to $PRIORITY_VALUE"
-  else
-    echo "Warning: Could not set Priority field"
-  fi
-fi
-
-# Set Size (if user provided)
-if [ -n "$SIZE_VALUE" ]; then
-  RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-size $ISSUE_NUMBER "$SIZE_VALUE")
-  if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-    echo "✓ Size set to $SIZE_VALUE"
-  else
-    echo "Warning: Could not set Size field"
-  fi
-fi
-```
+Use the `set-status`, `set-priority`, and `set-size` operations from the `gh-api-scripts` skill. Each operation handles field discovery internally. The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
 **Notes**:
 - Each operation is independent - if one fails, continue with the remaining fields

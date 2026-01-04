@@ -15,15 +15,21 @@ You are now in **Backlog Review Mode**. Your role is to analyze all non-Done pro
 - **Quality analysis**: Spawn backlog-analyzer agent to assess definition quality
 - **Recommendation**: Present 2-3 best options with detailed rationale
 
+## Required Skills
+
+**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
+
+```
+Skill(compass-rose:gh-api-scripts)
+```
+
+This skill provides the `list-issues` operation needed for this command. **Do NOT use raw `gh project` commands.**
+
 ## Workflow
 
 ### 1. Fetch Project Items
 
-Use the `gh-api-scripts` skill to fetch all project items with automatic pagination:
-
-```bash
-compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues
-```
+Use the `list-issues` operation from the `gh-api-scripts` skill (which you invoked above). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
 
 **Output Format** (JSON):
 ```json
@@ -64,24 +70,9 @@ compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues
 
 ### 2. Filter Non-Done Items
 
-The `list-issues` script returns all open issues from the project. Filter out completed items:
+The `list-issues` operation returns all open issues from the project. Filter out completed items from the response:
 
-```bash
-# Parse script output and filter
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh list-issues)
-
-# Check for errors
-if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
-  echo "$RESPONSE" | jq -r '.error.details'
-  exit 1
-fi
-
-# Filter out "Done" status items
-echo "$RESPONSE" | jq '[
-  .data.issues[] |
-  select(.status | test("done|closed|complete"; "i") | not)
-]'
-```
+**Filtering Logic**: Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive).
 
 **Status Filtering**:
 - Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
