@@ -18,6 +18,21 @@ You are now in **Start Work Mode**. Your role is to help the user begin work on 
 - **Context loading**: Read full issue description and linked context
 - **Implementation guidance**: Help user start working on the item
 
+## Required Skills
+
+**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
+
+```
+Skill(compass-rose:gh-api-scripts)
+```
+
+This skill provides:
+- `get-issue` - Retrieve issue details with project field values
+- `set-status` - Update issue status in project
+- `list-issues` - List all project issues (for "next" selection)
+
+**Do NOT use raw `gh project` commands** (`gh project item-list`, `gh project field-list`, `gh project item-edit`, etc.). These commands have consistency issues and lack proper error handling. The skill provides tested, reliable abstractions.
+
 ## Workflow
 
 ### 1. Item Selection
@@ -75,32 +90,9 @@ Configuration validation is performed by the gh-api-scripts commands - if config
 
 ### 3. Get Item Details
 
-Use the `gh-api-scripts` skill to retrieve issue details from the project:
+Use the `get-issue` operation from the `gh-api-scripts` skill (which you invoked earlier).
 
-```bash
-# Get issue details from project (handles pagination automatically)
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh get-issue $ISSUE_NUMBER)
-
-# Check for errors
-if echo "$RESPONSE" | jq -e '.success == false' > /dev/null; then
-  ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code')
-  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
-  ERROR_DETAILS=$(echo "$RESPONSE" | jq -r '.error.details')
-
-  echo "Error: $ERROR_MSG"
-  echo ""
-  echo "$ERROR_DETAILS"
-  exit 1
-fi
-
-# Parse issue data
-TITLE=$(echo "$RESPONSE" | jq -r '.data.title')
-BODY=$(echo "$RESPONSE" | jq -r '.data.body')
-ISSUE_URL=$(echo "$RESPONSE" | jq -r '.data.url')
-STATUS=$(echo "$RESPONSE" | jq -r '.data.status')
-PRIORITY=$(echo "$RESPONSE" | jq -r '.data.priority')
-SIZE_VALUE=$(echo "$RESPONSE" | jq -r '.data.size')
-```
+The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`. Execute the `get-issue` operation with the issue number.
 
 **Output Format** (JSON):
 ```json
@@ -561,24 +553,9 @@ To disable L-item prompts, user can edit `.compass-rose/config.json`:
 
 **Requirement**: REQ-F-22
 
-Use the `gh-api-scripts` skill to update the item's Status field:
+Use the `set-status` operation from the `gh-api-scripts` skill to update the item's Status field to "In Progress".
 
-```bash
-# Update status to "In Progress"
-RESPONSE=$(compass-rose/skills/gh-api-scripts/scripts/gh_project.sh set-status $ISSUE_NUMBER "In Progress")
-
-# Check result
-if echo "$RESPONSE" | jq -e '.success == true' > /dev/null; then
-  PREV_STATUS=$(echo "$RESPONSE" | jq -r '.data.previous_status')
-  echo "✓ Status updated from '$PREV_STATUS' to 'In Progress'"
-else
-  ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message')
-  echo "Warning: $ERROR_MSG"
-  echo ""
-  echo "The item is still ready to work on, but you'll need to manually update the"
-  echo "status in the GitHub Projects web UI."
-fi
-```
+The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`. Execute the `set-status` operation with the issue number and "In Progress" as the status value.
 
 **Error Handling**: The script returns structured errors:
 - `STATUS_INVALID` - "In Progress" not a valid status option (check project settings)
@@ -1106,6 +1083,27 @@ If this was incorrect, reopen with: gh issue reopen 201
 
 ## Anti-Patterns to Avoid
 
+### CRITICAL: No Raw GitHub CLI Commands
+
+**NEVER use raw `gh project` commands**. This is the most common failure mode:
+
+❌ **WRONG** (do not do this):
+```bash
+gh project item-list --owner rjroy --number 8 --format json
+gh project field-list --owner rjroy --number 8
+gh project item-edit --id PVTI_xxx --field-id xxx --single-select-option-id xxx
+```
+
+✅ **CORRECT** (use the skill):
+```
+1. Invoke Skill(compass-rose:gh-api-scripts)
+2. Use the script path from the skill: ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh
+```
+
+Raw `gh project` commands cause data consistency issues and lack proper error handling.
+
+### Other Anti-Patterns
+
 - **Don't skip config validation**: Always verify config exists and is valid before proceeding
 - **Don't skip issue validation**: Always run relevance check (unless disabled via config)
 - **Don't block on validation failures**: If checks timeout or fail, warn and continue
@@ -1118,7 +1116,7 @@ If this was incorrect, reopen with: gh issue reopen 201
 - **Don't proceed if user selects spec-writing**: Transfer to /spec-writing command
 - **Don't skip codebase exploration**: Always search for and read the affected code before declaring readiness
 - **Don't display guidance as output**: Step 8 is actions to execute, not templates to display; you must actually explore the codebase
-- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations; never use `gh project view`, `gh project field-list`, or `gh project item-edit` directly with jq parsing
+- **Don't skip skill invocation**: You MUST invoke `compass-rose:gh-api-scripts` before any GitHub Project operations
 
 ## Related Commands
 
