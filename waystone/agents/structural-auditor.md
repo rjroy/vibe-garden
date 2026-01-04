@@ -11,7 +11,7 @@ Checks size, logging, tests, secrets.
 </commentary>
 </example>
 
-model: haiku
+model: sonnet
 color: cyan
 tools: ["Read", "Glob", "Grep", "Bash", "Write"]
 ---

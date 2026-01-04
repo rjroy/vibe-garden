@@ -11,7 +11,7 @@ Links code to .sdd/specs/.
 </commentary>
 </example>
 
-model: haiku
+model: sonnet
 color: magenta
 tools: ["Read", "Glob", "Grep", "Bash", "Write"]
 ---

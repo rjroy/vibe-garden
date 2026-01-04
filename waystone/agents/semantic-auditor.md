@@ -11,7 +11,7 @@ Checks if code does what it claims.
 </commentary>
 </example>
 
-model: haiku
+model: sonnet
 color: green
 tools: ["Read", "Glob", "Grep", "Bash", "Write"]
 ---
