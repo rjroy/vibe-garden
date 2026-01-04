@@ -1,5 +1,8 @@
 ---
 name: structural-auditor
+model: sonnet
+color: cyan
+tools: ["Read", "Glob", "Grep", "Bash", "Write"]
 description: Use this agent when auditing a file for structural quality metrics. Examples:
 
 <example>
@@ -11,9 +14,6 @@ Checks size, logging, tests, secrets.
 </commentary>
 </example>
 
-model: sonnet
-color: cyan
-tools: ["Read", "Glob", "Grep", "Bash", "Write"]
 ---
 
 Structural code auditor. Analyze files against quantitative thresholds.
