@@ -58,30 +58,41 @@ For each file:
 
 ### 4. Agent Invocations
 
+Use the Task tool with explicit `subagent_type` for each agent. **Do not analyze files yourself - spawn agents.**
+
 **structural-auditor:**
 ```
-Audit [file] for structural quality metrics.
-Apply thresholds: [from quality rules]
-Report: size, logging, tests, secrets
+Task(
+  subagent_type="waystone:structural-auditor",
+  prompt="Audit [absolute-file-path] for structural quality metrics. Apply thresholds: [from quality rules]. Write report to .audit/reports/[relative-path].md"
+)
 ```
 
 **semantic-auditor:**
 ```
-Audit [file] for semantic correctness.
-Check: name-behavior alignment, comment accuracy, logic errors, test quality.
+Task(
+  subagent_type="waystone:semantic-auditor",
+  prompt="Audit [absolute-file-path] for semantic correctness. Write report to .audit/reports/[relative-path].md"
+)
 ```
 
 **api-contract-auditor:**
 ```
-Quick pass on [file] for API documentation evidence.
-Categorize as YES/NO/RECHECK.
+Task(
+  subagent_type="waystone:api-contract-auditor",
+  prompt="Quick pass on [absolute-file-path] for API documentation evidence. Write report to .audit/reports/[relative-path].md"
+)
 ```
 
 **spec-tracer:**
 ```
-Trace [file] to specifications in .sdd/specs/.
-Report traceability status.
+Task(
+  subagent_type="waystone:spec-tracer",
+  prompt="Trace [absolute-file-path] to specifications in .sdd/specs/. Write report to .audit/reports/[relative-path].md"
+)
 ```
+
+**CRITICAL:** You MUST use the Task tool with the exact `subagent_type` values shown above. Do NOT attempt to analyze files yourself.
 
 ### 5. Track Results
 
