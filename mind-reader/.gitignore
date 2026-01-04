@@ -8,6 +8,11 @@ history.jsonl
 __pycache__/
 *.pyc
 .ruff_cache/
+.venv/
+
+# Model caches (sentence-transformers, torch)
+.cache/
+models/
 
 # Editor
 .vscode/

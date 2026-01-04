@@ -13,13 +13,14 @@ Analyze the user's Claude Code usage history from `$ARGUMENTS` (or `./history.js
 ## Process
 
 1. **Preprocess**: Run `python3 preprocess.py` to split the JSONL into analysis chunks
-2. **Parallel Analysis**: Launch 6 sub-agents to analyze different dimensions:
+2. **Topic Modeling**: Run `python3 topic_model.py` to discover topics with BERTopic (requires `uv sync --group ml` first)
+3. **Parallel Analysis**: Launch 6 sub-agents to analyze different dimensions:
    - Temporal patterns (when do they work?)
    - Project focus (what do they build?)
    - Command patterns (how do they interact?)
    - Session behavior (how long/deep are sessions?)
    - Prompt complexity (terse vs verbose?)
-   - Content themes (what topics recur?)
+   - Discovered topics (what themes emerge from BERTopic?)
 3. **Synthesize**: Combine findings into `USAGE_REPORT.md`
 
 ## Agent Prompts
@@ -39,8 +40,13 @@ Read `analysis_chunks/sessions.json` and provide insights about session length d
 ### Complexity Analysis
 Read `analysis_chunks/complexity.json` and provide insights about prompt length distribution, what triggers verbose prompts, technical depth (file refs, code blocks), and communication efficiency. Be specific with numbers.
 
-### Content Themes Analysis
-Read `analysis_chunks/content_themes.json` and provide insights about primary activities, recurring topics, working style, and notable/revealing prompts. Be specific with numbers.
+### Topic Analysis
+Read `analysis_chunks/topics.json` and provide insights about:
+- The main topics discovered by BERTopic and what they reveal about work focus
+- Topic evolution over time (how has focus shifted week-to-week?)
+- Surprising or unexpected topic clusters that keywords wouldn't catch
+- Representative prompts that best illustrate each major topic
+Be specific with topic counts, keywords, and evolution patterns.
 
 ## Output
 
@@ -50,7 +56,7 @@ Generate `USAGE_REPORT.md` with sections:
 - What You Build (projects)
 - How You Interact (commands, complexity)
 - Session Behavior
-- Themes & Patterns
+- Discovered Topics (BERTopic analysis, topic evolution)
 - Key Takeaways
 
 Keep insights specific and data-driven. Include notable quotes from prompts that reveal personality or working style.
