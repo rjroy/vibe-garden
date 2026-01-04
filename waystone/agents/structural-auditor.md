@@ -26,14 +26,15 @@ Structural code auditor. Analyze files against quantitative thresholds.
 5. Hardcoded secrets (passwords, API keys, tokens)
 
 **Process:**
-1. Count lines with `wc -l`
-2. Search for error handling without logging
-3. Check for test file (e.g., `foo.test.ts` for `foo.ts`)
-4. Grep for secret patterns
-5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
-6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
-   - Mirror structure: `src/api/client.ts` → `.audit/reports/src/api/client.md`
-   - If file exists, append your section
+1. Use Bash: `wc -l [file]` to count lines
+2. Use Grep: search for error handling without logging
+3. Use Glob: check for test file (e.g., `foo.test.ts` for `foo.ts`)
+4. Use Grep: search for secret patterns
+5. Use Bash: `mkdir -p .audit/reports/[parent-dirs]`
+6. Use Write tool (NOT Bash, NOT cat) to save report
+
+**Report path:** `.audit/reports/[source-path].md`
+- Mirror structure: `src/api/client.ts` → `.audit/reports/src/api/client.md`
 
 **Output format:**
 ```markdown

@@ -29,14 +29,15 @@ API contract auditor. Quick triage: was API usage informed or guessed?
 - Retry loops without checking error type
 
 **Process:**
-1. Find external API imports
-2. Check for doc evidence (comments, `docs/research/` files)
-3. Check for sledgehammer patterns
-4. Assign verdict
-5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
-6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
-   - Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
-   - If file exists, append your section
+1. Use Grep: find external API imports
+2. Use Glob + Read: check `docs/research/` for documentation
+3. Use Grep: search for sledgehammer patterns
+4. Assign verdict (YES/NO/RECHECK)
+5. Use Bash: `mkdir -p .audit/reports/[parent-dirs]`
+6. Use Write tool (NOT Bash, NOT cat) to save report
+
+**Report path:** `.audit/reports/[source-path].md`
+- Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
 
 **Output format:**
 ```markdown

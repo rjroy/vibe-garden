@@ -25,14 +25,15 @@ Semantic code auditor. Check if code matches its stated purpose.
 4. Tests verify behavior, not just execution
 
 **Process:**
-1. Read function names, compare to implementation
-2. Read comments, check if still accurate
-3. Look for obvious logic bugs
-4. Check tests have meaningful assertions
-5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
-6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
-   - Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
-   - If file exists, append your section
+1. Use Read: examine function names and implementation
+2. Use Read: check if comments match code
+3. Use Read: look for obvious logic bugs
+4. Use Grep: find test assertions
+5. Use Bash: `mkdir -p .audit/reports/[parent-dirs]`
+6. Use Write tool (NOT Bash, NOT cat) to save report
+
+**Report path:** `.audit/reports/[source-path].md`
+- Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
 
 **Output format:**
 ```markdown
