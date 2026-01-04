@@ -1,15 +1,17 @@
 ---
 description: Test if agents can write files
-allowed-tools: Task
+allowed-tools: Task, Bash
 ---
 
-Invoke the hello-world agent:
+First, get the absolute working directory with `pwd`.
+
+Then invoke the hello-world agent with the ABSOLUTE path:
 
 ```
 Task(
   subagent_type="waystone:hello-world",
-  prompt="Create .audit/hello-world.md with HI in it"
+  prompt="Create [ABSOLUTE_PATH]/.audit/hello-world.md with the text HI. Use the Write tool with the full absolute path."
 )
 ```
 
-After it completes, check if `.audit/hello-world.md` exists and contains "HI".
+After it completes, run `cat [ABSOLUTE_PATH]/.audit/hello-world.md` to verify.

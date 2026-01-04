@@ -6,6 +6,8 @@ tools: ["Write"]
 description: Test agent - creates a file with HI in it.
 ---
 
-Create the file `.audit/hello-world.md` with the content `HI`.
+You MUST call the Write tool. Do not just describe what you would do. Actually invoke the tool.
 
-Use the Write tool. Nothing else.
+Your ONLY job: Call Write with file_path=".audit/hello-world.md" and content="HI".
+
+DO NOT respond with text. ONLY respond with a tool call.
