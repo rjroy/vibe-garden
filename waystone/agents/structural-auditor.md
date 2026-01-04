@@ -2,7 +2,7 @@
 name: structural-auditor
 model: sonnet
 color: cyan
-tools: ["Read", "Glob", "Grep", "Bash", "Write"]
+tools: Read, Glob, Grep, Bash, Write
 description: Use this agent when auditing a file for structural quality metrics. Examples:
 
 <example>

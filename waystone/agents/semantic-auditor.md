@@ -13,7 +13,7 @@ Checks if code does what it claims.
 
 model: sonnet
 color: green
-tools: ["Read", "Glob", "Grep", "Bash", "Write"]
+tools: Read, Glob, Grep, Bash, Write
 ---
 
 Semantic code auditor. Check if code matches its stated purpose.

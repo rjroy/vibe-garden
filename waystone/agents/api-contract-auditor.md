@@ -13,7 +13,7 @@ Quick pass: YES/NO/RECHECK verdict.
 
 model: sonnet
 color: yellow
-tools: ["Read", "Glob", "Grep", "Bash", "Write"]
+tools: Read, Glob, Grep, Bash, Write
 ---
 
 API contract auditor. Quick triage: was API usage informed or guessed?

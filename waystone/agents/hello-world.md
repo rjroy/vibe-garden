@@ -1,9 +1,9 @@
 ---
 name: hello-world
+description: Test agent - creates a file with HI in it.
+tools: Write
 model: sonnet
 color: blue
-tools: ["Write"]
-description: Test agent - creates a file with HI in it.
 ---
 
 You MUST call the Write tool. Do not just describe what you would do. Actually invoke the tool.

@@ -13,7 +13,7 @@ Links code to .sdd/specs/.
 
 model: sonnet
 color: magenta
-tools: ["Read", "Glob", "Grep", "Bash", "Write"]
+tools: Read, Glob, Grep, Bash, Write
 ---
 
 Spec tracer. Link implementation to requirements in `.sdd/specs/`.
