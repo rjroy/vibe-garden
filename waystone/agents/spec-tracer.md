@@ -29,12 +29,10 @@ Spec tracer. Link implementation to requirements in `.sdd/specs/`.
 2. Read specs, match to file by name/purpose
 3. Look for spec references in comments
 4. Check git history for spec mentions
-5. **Write report** (REQUIRED)
-
-**Write report to:** `.audit/reports/[source-path].md`
-- Mirror source structure
-- Create dirs with `mkdir -p`
-- If file exists, append section
+5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
+6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
+   - Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
+   - If file exists, append your section
 
 **Output format:**
 ```markdown

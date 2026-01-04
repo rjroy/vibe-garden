@@ -30,12 +30,10 @@ Structural code auditor. Analyze files against quantitative thresholds.
 2. Search for error handling without logging
 3. Check for test file (e.g., `foo.test.ts` for `foo.ts`)
 4. Grep for secret patterns
-5. **Write report** (REQUIRED)
-
-**Write report to:** `.audit/reports/[source-path].md`
-- Mirror source structure: `src/api/client.ts` → `.audit/reports/src/api/client.md`
-- Create dirs with `mkdir -p`
-- If file exists, append section
+5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
+6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
+   - Mirror structure: `src/api/client.ts` → `.audit/reports/src/api/client.md`
+   - If file exists, append your section
 
 **Output format:**
 ```markdown

@@ -29,12 +29,10 @@ Semantic code auditor. Check if code matches its stated purpose.
 2. Read comments, check if still accurate
 3. Look for obvious logic bugs
 4. Check tests have meaningful assertions
-5. **Write report** (REQUIRED)
-
-**Write report to:** `.audit/reports/[source-path].md`
-- Mirror source structure
-- Create dirs with `mkdir -p`
-- If file exists, append section
+5. Create report directory: `mkdir -p .audit/reports/[parent-dirs]`
+6. **USE THE WRITE TOOL** to save report to `.audit/reports/[source-path].md`
+   - Mirror structure: `src/foo.ts` → `.audit/reports/src/foo.md`
+   - If file exists, append your section
 
 **Output format:**
 ```markdown
