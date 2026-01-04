@@ -11,7 +11,7 @@ Quick pass: YES/NO/RECHECK verdict.
 </commentary>
 </example>
 
-model: sonnet
+model: opus
 color: yellow
 tools: Read, Glob, Grep, Bash, Write
 ---
