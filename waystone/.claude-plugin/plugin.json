@@ -1,0 +1,12 @@
+{
+  "name": "waystone",
+  "version": "0.1.0",
+  "description": "AI Code Quality Audit plugin - catches dead code, skipped research, sledgehammer fixes, missing tests, and spec drift",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden",
+  "license": "MIT",
+  "keywords": ["audit", "quality", "code-review", "dead-code", "testing"]
+}
