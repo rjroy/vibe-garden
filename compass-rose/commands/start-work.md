@@ -94,7 +94,7 @@ Use the `get-issue` operation from the `gh-api-scripts` skill (which you invoked
 
 The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`. Execute the `get-issue` operation with the issue number.
 
-**Expected Response** (JSON):
+**Output Format** (JSON):
 ```json
 {
   "success": true,

@@ -72,9 +72,7 @@ Use the `list-issues` operation from the `gh-api-scripts` skill (which you invok
 
 The `list-issues` operation returns all open issues from the project. Filter out completed items from the response:
 
-**Filtering Logic**: Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive).
-
-**Status Filtering**:
+**Filtering Logic**:
 - Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
 - The script already filters to OPEN issues only
 - Include all other statuses: "Ready", "To Do", "In Progress", "Backlog", etc.
