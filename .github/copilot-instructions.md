@@ -25,7 +25,7 @@ Be concise. One sentence per comment when possible.
 - Error handling for conditions that cannot occur by construction
 
 ### Style and Formatting
-- These are handled by ruff (Python) and eslint (TypeScript)
+- These are handled by ruff (Python)
 - Do not comment on import ordering, line length, or formatting
 
 ### Preference Items
@@ -65,16 +65,14 @@ Be concise. One sentence per comment when possible.
 
 This repository contains:
 - Python scripts (use ruff for linting)
-- TypeScript/JavaScript (use eslint for linting)
 - Claude Code plugins (markdown-based)
 - Research documentation
 
-Testing is done with pytest (Python) and bun test (TypeScript).
+Testing is done with pytest.
 
 ## CI Already Checks
 
 Do not duplicate warnings for:
 - ruff check, ruff format
-- eslint
-- pytest, bun test
-- Type checking (pyright, tsc)
+- pytest
+- Type checking (pyright)
