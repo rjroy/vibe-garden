@@ -1,110 +1,231 @@
-# Claude Code Usage Analysis
+# Claude Code Usage Report
 
-**Period**: September 30, 2025 - January 2, 2026 (94 days)
-**Total Interactions**: 6,025 prompts
-**Sessions Tracked**: 820
+**Analysis Period**: September 30, 2025 - January 3, 2026 (95 days)
+**Total Interactions**: 6,169 prompts across 858 sessions
+**Topics Discovered**: 69 (via BERTopic)
 
 ---
 
 ## Executive Summary
 
-You're a senior engineering manager with 20+ years experience who uses Claude Code as both a technical pair programmer and organizational thinking partner. Your usage reveals a disciplined, evening-focused developer who works intensely on weekends, manages context deliberately, and communicates with remarkable terseness during active work.
+This analysis reveals a developer with a distinctive bimodal work pattern: highly productive mornings and evenings, with weekend deep-work sessions driving nearly 40% of total activity. The work spans professional development (Claude Agent SDK, EOS SDK) and an ambitious creative portfolio including music production, tabletop RPG engines, and interactive fiction.
+
+Key characteristics:
+- **Weekend warrior**: Saturday alone accounts for 21% of all activity
+- **Methodology-driven**: Heavy investment in Spec-Driven Development (327 SDD commands)
+- **AI skeptic**: Systematic auditing of Copilot PR suggestions rather than blind acceptance
+- **Terse communicator**: 63% of prompts under 50 characters, median just 27 chars
+- **Context-conscious**: `/clear` is the most-used command (895 times, 32.5% of all commands)
 
 ---
 
 ## When You Work
 
-**Peak Hours**: 6-8 PM dominates, with hour 19 (7 PM) seeing the highest activity (778 entries). A secondary peak occurs 8-10 AM (400-465 entries). Activity drops sharply after 9 PM and is minimal overnight.
+### Daily Rhythm
 
-**Day of Week**: Surprisingly, Saturday leads with 1,173 entries (19%), followed by Sunday (982). Weekend usage exceeds weekday by 35%. Friday trails at 622.
+The data reveals a clear bimodal work pattern with two distinct productive windows:
 
-**Notable Spike**: October 18 saw 469 entries in a single day, your busiest session ever.
+| Time Block | Activity Share | Peak Hour |
+|------------|---------------|-----------|
+| Morning (06:00-12:00) | 35.1% | 08:00 |
+| Midday (12:00-17:00) | 22.2% | --- |
+| Evening (17:00-21:00) | 42.7% | **19:00 (13.1%)** |
 
-**Interpretation**: You're an evening-focused developer with disciplined sleep habits (6 AM start, 10 PM cutoff). The heavy weekend usage suggests personal projects or flexible work arrangements. Low mid-afternoon activity (2-3 PM) indicates breaks or meetings.
+**Peak hour is 7 PM**, with the 6-8 PM window representing a third of all activity. Morning activity starts as early as 5-6 AM, suggesting an early riser who codes before the traditional workday.
+
+### Weekly Pattern
+
+| Day | Share | vs Average |
+|-----|-------|------------|
+| **Saturday** | **21.2%** | **+48.6%** |
+| Sunday | 15.9% | +11.5% |
+| Monday | 15.5% | +8.4% |
+| Thursday | 13.1% | -8.3% |
+| Tuesday | 12.0% | -15.6% |
+| Wednesday | 12.0% | -15.8% |
+| Friday | 10.2% | -28.5% |
+
+**Saturday is nearly twice as active as Friday**. Weekend activity (37.1% total) suggests Claude Code is primarily used for personal/side projects rather than day-job work.
+
+### Usage Trends
+
+Activity peaked in Week 41 (1,068 prompts), dipped mid-November (Week 45: 165 prompts), then surged again in December. Holiday week (W52) showed a dip, with a new-year recovery in Week 0, 2026.
 
 ---
 
 ## What You Build
 
-### Top Projects (77% of usage)
-| Project | Entries | Description |
-|---------|---------|-------------|
-| rowan-wyrd | 989 | Personal branding, logo generation, plugin development |
-| pi-controller | 975 | Raspberry Pi remote management for home dashboard |
-| adventure-engine-corvran | 914 | Claude Code plugin for tabletop RPG adventures |
-| vibe-garden | 891 | Spec-driven development (SDD) methodology tooling |
-| wyrd-gateway | 424 | Plugin marketplace (music/story/judgment engines) |
+### Project Focus Distribution
 
-### Work Categories
-- **AI Tooling** (45%): Claude Code plugins, SDD workflows, agent development
-- **Creative Tools** (25%): RPG engines, story/music generators, image generation
-- **Home Automation** (15%): Pi dashboard, gallery displays
-- **Personal Knowledge** (15%): Obsidian vaults, second-brain systems
+Four projects account for nearly two-thirds of all activity:
 
-### Project Lifecycle
-Most projects span 2-3 months. Some show short intense bursts (shelf-judge: 14 hours, bad-idea: 2 hours). Multiple worktrees (feat-24, feat-26) on memory-loop indicate disciplined branch-based development.
+| Project | Count | Share | Type |
+|---------|-------|-------|------|
+| rowan-wyrd | 989 | 16.9% | Creative/Media Management |
+| pi-controller | 975 | 16.7% | IoT/Raspberry Pi |
+| adventure-engine-corvran | 914 | 15.7% | Interactive Fiction |
+| vibe-garden | 904 | 15.5% | AI Research/SDD |
+
+**61 total projects** were touched, but the top 4 represent 64.8% of activity. 38 projects had fewer than 10 interactions, including many git feature branches (feat-24, feat-26, etc.).
+
+### Project Categories
+
+| Category | Projects | Key Examples |
+|----------|----------|--------------|
+| AI/ML Development | 9 | vibe-garden, investigator, waystone |
+| Creative/Media | 8 | rowan-wyrd, wyrd-gen, music-engine-rowan |
+| Interactive Fiction | 7 | adventure-engine-corvran, virelan, kaels-story |
+| IoT/Hardware | 3 | pi-controller, pi-gallery |
+| Knowledge Management | 6 | memory-loop, second-brain |
+
+### Lifecycle Patterns
+
+**Long-running active**: vibe-garden (88 days, still active)
+**Intensive bursts**: shelf-judge (64 interactions in 1 day)
+**Rapid development**: adventure-engine-corvran averaged 61 prompts/day during active development
 
 ---
 
 ## How You Interact
 
-### Command Style
-- `/clear` dominates at 892 uses (34% of slash commands), showing deliberate context management
-- Heavy plugin development: `/plugin` (478), `/mcp` (219)
-- SDD workflow deeply integrated: implementation (96), task-breakdown (73), plan-generation (72), spec-writing (65), review (21)
-- Git operations delegated to Claude: "branch + PR" (63), "commit" (40)
+### Command Usage
+
+| Command | Count | Share |
+|---------|-------|-------|
+| `/clear` | 895 | 32.5% |
+| `/plugin` | 488 | 17.7% |
+| `/mcp` | 219 | 8.0% |
+| `/compact` | 139 | 5.0% |
+| `/compass-rose:start-work` | 120 | 4.4% |
+
+**Context management dominates**: `/clear` + `/compact` represent 37.5% of all commands, indicating active management of conversation context.
+
+### SDD Methodology Adoption
+
+All four Spiral Grove phases see consistent use:
+- `/spiral-grove:implementation`: 96
+- `/spiral-grove:task-breakdown`: 73
+- `/spiral-grove:plan-generation`: 72
+- `/spiral-grove:spec-writing`: 65
+- `/spiral-grove:review`: 21
+
+**Total: 327 SDD commands** representing systematic methodology adoption.
 
 ### Communication Efficiency
-Your prompts are remarkably terse:
-- Median: 27 characters
-- 37% are tiny (<10 chars): "y", "doit", "continue"
-- 3% are very long (500+): log dumps or specifications
 
-You rely on Claude's file-reading rather than pasting code (only 37 prompts with code blocks). When verbose, you paste raw console output (longest: 19,821 chars of debug logs).
+| Metric | Value |
+|--------|-------|
+| Median prompt length | 27 characters |
+| Average prompt length | 94 characters |
+| Under 50 characters | 63.3% |
+| Over 500 characters | 2.5% |
 
-### Working Style
-Directive and iterative. Prompts include mid-stream corrections ("stop... you're making stuff up"), pivots ("okay you've messed this all up"), and context dumps. You think out loud and expect Claude to keep up without hand-holding.
+**Highly efficient communication style**: Most interactions are terse commands or confirmations. Verbose prompts (2.5%) typically involve pasting logs for debugging or detailed requirements.
+
+### Short Response Patterns
+
+| Response | Count | Context |
+|----------|-------|---------|
+| "branch + PR" | 63 | Git workflow |
+| "1" (menu selection) | 48 | Option picking |
+| "commit" | 40 | Git workflow |
+| "doit" | 26 | Confirmation |
+| "please" | 25 | Polite confirmation |
+
+**47.9% of short responses are git-related** (branch, commit, PR). The distinctive "doit" (26 uses) and vim-style `:qa` commands reveal terminal muscle memory.
 
 ---
 
 ## Session Behavior
 
-- Average: 4.8 prompts per session, 41.6 minutes
-- 72% of sessions have 5 or fewer prompts (quick tasks)
-- Only 3% exceed 15 prompts (deep work)
+### Session Distribution
 
-**Long sessions involve**:
-- Debugging complex integration issues (WebSocket, Safari quirks)
-- Iterative creative work (theme systems, lyrics workflows)
-- The longest prompt-dense session: 835 minutes, 56 prompts (15 min average between interactions, contemplative debugging)
+| Session Size | Count | Share |
+|--------------|-------|-------|
+| Quick (1-5 prompts) | 627 | 73.1% |
+| Working (6-15 prompts) | 203 | 23.7% |
+| Deep (16-30 prompts) | 25 | 2.9% |
+| Marathon (31+ prompts) | 3 | 0.3% |
+
+**Average session**: 4.7 prompts, 41 minutes
+**Longest session**: 56 prompts over 14 hours (debugging wyrd-gateway)
+
+### What Triggers Long Sessions
+
+Analysis of the 5 longest sessions reveals consistent patterns:
+
+1. **Implementation debugging** (wyrd-gateway, 56 prompts, 14 hours): Started with `/spiral-grove:implementation`, hit real-time issues, spent hours on logging and server behavior.
+
+2. **Plugin creation with scope negotiation** (waystone, 53 prompts, 13 hours): Iterative design refinement, scope creep identification, requirements negotiation.
+
+3. **Test debugging and knowledge capture** (pi-controller, 37 prompts, 3 hours): "wait... if it passes in isolation, why is that?" followed by meta-reflection.
+
+4. **Cross-browser debugging** (adventure-engine-corvran, 27 prompts, 11 hours): Hours on Safari-specific WebSocket issues.
+
+### Workflow Patterns
+
+- **Command-driven starts**: Many sessions begin with slash commands (`/spiral-grove:implementation`, `/compass-rose:start-work`)
+- **Debugging escalation**: Long sessions follow hit issue -> add logging -> iterate pattern
+- **Context cycling**: Repeated `/clear` commands in extended sessions
 
 ---
 
-## Themes & Patterns
+## Discovered Topics
 
-### Recurring Topics
-1. **Pi Dashboard**: Flask, SQLite, Fortnite metrics (think mini fortnite.gg), weather, AQI, news feeds
-2. **Knowledge Management**: Obsidian, PARA methodology, note-taking friction
+BERTopic identified **69 distinct topic clusters** from 2,683 meaningful prompts.
 
-### Notable Self-Insights from Your Prompts
-- "I don't suffer fools and people shouldn't suffer me when I'm being one"
-- "In my experience if you don't at least try to put timelines on things nothing happens"
-- "These are current problems, assume we get past this"
+### Major Topic Categories
 
-### Vim Muscle Memory
-`:wqa` (3) and `:qa` (2) appear in your prompts.
+| Topic | Count | Focus |
+|-------|-------|-------|
+| Spec-Driven Development | 94 | SDD methodology refinement |
+| Claude Agent SDK | 87 | Professional SDK work |
+| Frontend TSX | 74 | React component development |
+| Git Workflow | 67 | Commits, branches, PRs |
+| Pi Dashboard | 61 | News/research dashboard |
+| Testing Strategy | 61 | Unit tests, coverage |
+| UI Styling (Nord) | 49 | Color schemes, buttons |
+| Database Debugging | 48 | SQLite corruption issues |
+
+### Topic Evolution Over Time
+
+**October (W40-43)**: Database debugging, Claude Agent SDK, Courier MCP development, SDD methodology heavy use
+
+**November (W44-47)**: Ruff linting focus, Python services architecture, pre-commit hooks, story writing begins
+
+**December (W48-51)**: **Major creative pivot**: Christmas music production (23 prompts Week 48), adventure engine development, Daggerheart RPG system, cover art generation
+
+**January 2026 (W0)**: Frontend work, Claude Agent SDK resurgence, Copilot auditing
+
+### Surprising Discoveries
+
+1. **Christmas Music Production Pipeline**: An unexpected workflow emerged around Christmas songs in the fictional world of "Valdris", with Suno AI integration, MIDI analysis, and cover art generation.
+
+2. **Tabletop RPG Engine**: Full implementation of Daggerheart system, D20 rules, GM AI state management, and adventure world persistence.
+
+3. **GitHub Copilot Skepticism**: 58+ prompts about "copilot reviewed, audit and validate comments" showing systematic skepticism toward AI-generated PR feedback.
+
+4. **SQLite Corruption Debugging**: 48 prompts concentrated in weeks 40-42 about B-tree page corruption on Raspberry Pi, a persistent infrastructure pain point.
 
 ---
 
 ## Key Takeaways
 
-1. **You're a power user**: 892 context clears, heavy slash command usage, custom plugin ecosystem
-2. **Weekend warrior**: 35% more usage on weekends than weekdays
-3. **Terse communicator**: 27-char median, verbose only for context dumps
-4. **Deliberate context management**: Frequent clears suggest methodical resets between work streams
-5. **Trust in Claude**: Git operations, file reading, and creative work delegated freely
-6. **Deep work capable**: Extended debugging sessions spanning hours with focused interaction
+1. **Dual Professional/Creative Focus**: Work spans professional SDK development (on-call incident tooling) and ambitious creative projects (music, games, fiction). The December creative sprint shows significant investment in non-work projects.
+
+2. **Methodology Matters**: Heavy investment in Spec-Driven Development (327 commands) and disciplined workflows (feature branches, PR reviews, pre-commit hooks). The SDD topic alone represents the largest single cluster.
+
+3. **AI Tools with Skepticism**: Uses AI extensively but maintains healthy skepticism. The Copilot audit pattern (58+ prompts) demonstrates critical evaluation rather than blind acceptance.
+
+4. **Efficient Communication Style**: Most interactions are short (median 27 chars) with context dumps reserved for debugging. High use of `/clear` shows active context management.
+
+5. **Weekend Deep Work**: Saturday/Sunday account for 37% of activity. Complex debugging sessions and creative work happen on weekends when extended focus time is available.
+
+6. **Infrastructure Pain Points**: Database corruption and deployment scripts represent recurring friction. Long debugging sessions (10+ hours) often involve environmental/tooling issues.
+
+7. **Claude Code Plugin Ecosystem Builder**: Multiple Claude Code plugins in development: Spiral Grove, Compass Rose, Courier MCP, Wyrd-Gen MCP, Adventure Engine Corvran. This represents significant investment in extending Claude Code's capabilities.
 
 ---
 
-*Generated: 2026-01-02*
+*Report generated January 3, 2026*
+*Analysis powered by BERTopic (all-MiniLM-L6-v2 embeddings)*
