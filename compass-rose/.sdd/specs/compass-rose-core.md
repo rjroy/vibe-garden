@@ -44,7 +44,7 @@ The plugin complements Spiral Grove (SDD) by managing ad-hoc tasks and bugs that
 
 ### Issue Viewing
 
-- **REQ-F-4**: System must retrieve project items filtered by status (e.g., "Ready", "In Progress")
+- **REQ-F-4**: System must retrieve project items filtered by status (e.g., "Ready", "In progress")
 - **REQ-F-5**: System must sort items by priority field (P0 > P1 > P2 > P3)
 - **REQ-F-6**: System must display item summary, priority, size, and iteration when presenting options
 - **REQ-F-7**: System must handle projects with custom field configurations gracefully
@@ -77,7 +77,7 @@ The plugin complements Spiral Grove (SDD) by managing ad-hoc tasks and bugs that
 ### Work Initiation
 
 - **REQ-F-21**: System must allow user to request starting work on next ready item
-- **REQ-F-22**: System must update issue status to "In Progress" when work begins
+- **REQ-F-22**: System must update issue status to "In progress" when work begins
 - **REQ-F-23**: System must read full issue description and any linked context before starting
 
 ## Non-Functional Requirements
@@ -115,7 +115,7 @@ The following fields are expected but not required. System should discover and a
 | Priority | P0, P1, P2, P3 | Treat all as equal priority |
 | Size | S, M, L, XL | Skip size-based recommendations |
 | Iteration | Sprint number | Ignore iteration filtering |
-| Status | Ready, In Progress, Done, etc. | Use project column position |
+| Status | Ready, In progress, Done, etc. | Use project column position |
 
 ## Acceptance Tests
 

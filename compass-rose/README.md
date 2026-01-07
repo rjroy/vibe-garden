@@ -360,7 +360,7 @@ Begin work on an item with size-based escalation prompts and status tracking.
 **What it does**:
 - Retrieves full issue details and project metadata
 - Checks item size (XL/L) and prompts about spec-writing if appropriate
-- Updates item status to "In Progress"
+- Updates item status to "In progress"
 - Displays full issue description and acceptance criteria
 - Provides implementation guidance based on item size
 
@@ -377,7 +377,7 @@ Selected: #142 - "Fix login timeout bug"
 Size: S (no escalation needed)
 
 Updating status...
-✓ Status updated to 'In Progress'
+✓ Status updated to 'In progress'
 
 ═══════════════════════════════════════════════════════════════
 Issue #142: Fix login timeout bug
@@ -385,7 +385,7 @@ Issue #142: Fix login timeout bug
 
 Priority: P0
 Size: S
-Status: In Progress
+Status: In progress
 
 Description:
 ───────────────────────────────────────────────────────────────
@@ -764,10 +764,10 @@ gh auth refresh -s project
 
 **Impact**:
 - Cannot filter by Ready status
-- Cannot auto-update to "In Progress"
+- Cannot auto-update to "In progress"
 - Manual status management required
 
-**Solution**: Add a "Status" field to your GitHub Project with options like Ready, In Progress, Done.
+**Solution**: Add a "Status" field to your GitHub Project with options like Ready, In progress, Done.
 
 ---
 
@@ -787,7 +787,7 @@ gh auth refresh -s project
 
 **Solution**: Check available statuses and update items:
 ```
-Available statuses: To Do, In Progress, Done
+Available statuses: To Do, In progress, Done
 
 Would you like to analyze "To Do" items instead?
 ```

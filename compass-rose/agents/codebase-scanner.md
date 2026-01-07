@@ -27,7 +27,7 @@ This agent is invoked by:
 - `repository`: Repository name (owner/repo)
 - `priority`: Current priority (P0/P1/P2/P3 or "Unset")
 - `size`: Estimated size (S/M/L/XL or "Unset")
-- `status`: Project status (Ready, In Progress, Backlog, etc.)
+- `status`: Project status (Ready, In progress, Backlog, etc.)
 
 **Note**: Closed issues are filtered out before agent invocation. All items passed to this agent are OPEN GitHub issues.
 

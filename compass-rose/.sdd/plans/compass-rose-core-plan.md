@@ -427,7 +427,7 @@ makes it achievable in a single session.
 **Flow**:
 1. Select item (from /next-item or user-specified)
 2. Check Size field for XL/L escalation (REQ-F-18, REQ-F-19)
-3. Update Status to "In Progress"
+3. Update Status to "In progress"
 4. Read full issue description
 5. Begin implementation guidance
 

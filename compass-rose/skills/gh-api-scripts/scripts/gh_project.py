@@ -1373,7 +1373,7 @@ def cmd_set_status(args: argparse.Namespace) -> None:
             "data": {
                 "number": 42,
                 "previous_status": "Ready",
-                "new_status": "In Progress"
+                "new_status": "In progress"
             }
         }
 
@@ -1722,7 +1722,7 @@ def create_parser() -> argparse.ArgumentParser:
 Examples:
     %(prog)s list-issues
     %(prog)s get-issue 42
-    %(prog)s set-status 42 "In Progress"
+    %(prog)s set-status 42 "In progress"
     %(prog)s set-priority 42 "P1"
     %(prog)s set-size 42 "M"
     %(prog)s add-to-project 42
@@ -1785,7 +1785,7 @@ Exit codes: 0 = success, 1 = error (details in JSON)
     parser_status.add_argument(
         "status",
         type=str,
-        help='New status value (e.g., "In Progress", "Ready", "Done")',
+        help='New status value (e.g., "In progress", "Ready", "Done")',
     )
     parser_status.set_defaults(func=cmd_set_status)
 

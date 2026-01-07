@@ -158,7 +158,7 @@ Total: 14 tasks | Complexity Distribution: 4×S, 7×M, 3×L
 - [ ] Allows item selection (from /next-item or user-specified)
 - [ ] Checks Size field for XL → always prompts about spec-writing
 - [ ] Checks Size field for L → prompts based on `preferences.promptForLargeItems`
-- [ ] Updates Status to "In Progress" via `gh project item-edit`
+- [ ] Updates Status to "In progress" via `gh project item-edit`
 - [ ] Reads full issue description via `gh issue view`
 - [ ] Provides options: "Write spec first" or "Start implementation directly"
 
