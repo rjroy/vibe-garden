@@ -28,7 +28,7 @@ Create a test GitHub Project with the following configuration:
 
 | Field Name | Field Type | Values |
 |------------|-----------|--------|
-| Status | Single Select | Backlog, Ready, In Progress, Done |
+| Status | Single Select | Backlog, Ready, In progress, Done |
 | Priority | Single Select | P0, P1, P2, P3 |
 | Size | Single Select | S, M, L, XL |
 | Iteration | Single Select | Sprint 1, Sprint 2, Sprint 3 |
@@ -517,7 +517,7 @@ Your choice: _
 
 - If user chooses "1", Claude invokes `/spec-writing` (Spiral Grove)
 - If user chooses "2", Claude proceeds with implementation
-- Status is updated to "In Progress" (if user proceeds)
+- Status is updated to "In progress" (if user proceeds)
 
 ### Failure Scenarios
 
@@ -713,7 +713,7 @@ Expected: Recommendations with quality scores
 
 # 5. Verify start-work
 /start-work next
-Expected: Status updated to In Progress, XL prompt if applicable
+Expected: Status updated to In progress, XL prompt if applicable
 ```
 
 Run this suite after any significant changes to verify no regressions.

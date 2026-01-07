@@ -81,7 +81,7 @@ Continue with available data even if some fields are missing.
 ```
 No items found with "Ready" status.
 
-Available statuses in project: To Do, In Progress, Done
+Available statuses in project: To Do, In progress, Done
 
 Would you like me to show items from a different status instead?
 ```
@@ -268,7 +268,7 @@ to complete in one session.
 ```
 No items found with "Ready" status.
 
-Available statuses: To Do (15 items), In Progress (3 items), Done (42 items)
+Available statuses: To Do (15 items), In progress (3 items), Done (42 items)
 
 Would you like me to analyze the "To Do" backlog instead?
 ```

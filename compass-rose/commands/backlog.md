@@ -75,7 +75,7 @@ The `list-issues` operation returns all open issues from the project. Filter out
 **Filtering Logic**:
 - Exclude items with Status field value matching "Done", "Closed", "Complete" (case-insensitive)
 - The script already filters to OPEN issues only
-- Include all other statuses: "Ready", "To Do", "In Progress", "Backlog", etc.
+- Include all other statuses: "Ready", "To Do", "In progress", "Backlog", etc.
 
 **If no items found**:
 ```

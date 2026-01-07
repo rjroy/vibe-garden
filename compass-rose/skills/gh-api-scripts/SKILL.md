@@ -127,7 +127,7 @@ ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status <nu
 
 **Example**:
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status 42 "In Progress"
+${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status 42 "In progress"
 ```
 
 **Example Output**:
@@ -137,14 +137,14 @@ ${CLAUDE_PLUGIN_ROOT}/skills/gh-api-scripts/scripts/gh_project.sh set-status 42 
   "data": {
     "issue_number": 42,
     "previous_status": "Ready",
-    "new_status": "In Progress"
+    "new_status": "In progress"
   }
 }
 ```
 
 **Notes**:
 - Status value must match one of the project's configured status options (case-sensitive)
-- Common status values: `"Ready"`, `"In Progress"`, `"Done"`, `"To Do"`
+- Common status values: `"Ready"`, `"In progress"`, `"Done"`, `"To Do"`
 
 **Error Cases**:
 - `STATUS_INVALID` - Provided status value doesn't match project options

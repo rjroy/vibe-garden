@@ -14,7 +14,7 @@ You are now in **Start Work Mode**. Your role is to help the user begin work on 
 - **Issue retrieval**: Use `gh-api-scripts` skill to fetch issue details
 - **Issue validation**: Check if issue is still relevant before starting work
 - **Size-based escalation**: Check for XL/L items and prompt about spec-writing
-- **Status update**: Update item Status to "In Progress" via `set-status` operation
+- **Status update**: Update item Status to "In progress" via `set-status` operation
 - **Context loading**: Read full issue description and linked context
 - **Implementation guidance**: Help user start working on the item
 
@@ -549,16 +549,16 @@ To disable L-item prompts, user can edit `.compass-rose/config.json`:
 }
 ```
 
-### 6. Update Status to "In Progress"
+### 6. Update Status to "In progress"
 
 **Requirement**: REQ-F-22
 
-Use the `set-status` operation from the `gh-api-scripts` skill to update the item's Status field to "In Progress".
+Use the `set-status` operation from the `gh-api-scripts` skill to update the item's Status field to "In progress".
 
-The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`. Execute the `set-status` operation with the issue number and "In Progress" as the status value.
+The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`. Execute the `set-status` operation with the issue number and "In progress" as the status value.
 
 **Error Handling**: The script returns structured errors:
-- `STATUS_INVALID` - "In Progress" not a valid status option (check project settings)
+- `STATUS_INVALID` - "In progress" not a valid status option (check project settings)
 - `FIELD_NOT_FOUND` - Status field doesn't exist in project
 
 ### 7. Read and Display Full Issue Context
@@ -574,7 +574,7 @@ Display the full issue details to provide context for implementation:
 
 Priority: <priority>
 Size: <size>
-Status: In Progress
+Status: In progress
 
 URL: <issue-url>
 
@@ -682,13 +682,13 @@ Or manually add it via the GitHub Projects web UI:
   <project-url>
 ```
 
-**Status Already "In Progress"**:
+**Status Already "In progress"**:
 ```
-Note: This item is already marked "In Progress".
+Note: This item is already marked "In progress".
 
 If you're resuming work, great! If not, verify no one else is working on it.
 
-Current Status: In Progress (no change needed)
+Current Status: In progress (no change needed)
 ```
 
 **Authentication Issues**:
@@ -720,7 +720,7 @@ This command implements the following specification requirements:
 - **REQ-F-19**: Optionally prompt for L-sized items (user preference)
 - **REQ-F-20**: Prompt must offer choice: "Write spec first" or "Start implementation directly"
 - **REQ-F-21**: Allow user to request starting work on next ready item
-- **REQ-F-22**: Update issue status to "In Progress" when work begins
+- **REQ-F-22**: Update issue status to "In progress" when work begins
 - **REQ-F-23**: Read full issue description and any linked context before starting
 - **REQ-F-24**: Validate issue relevance before starting work (detect resolved/outdated/stale)
 - **REQ-F-25**: Present validation findings with recommendation and allow user override
@@ -860,7 +860,7 @@ Discovering custom fields...
 Size: S (no escalation needed)
 
 Updating status...
-✓ Status updated to 'In Progress'
+✓ Status updated to 'In progress'
 
 ═══════════════════════════════════════════════════════════════
 📋 Issue #142: Fix login timeout bug
@@ -868,7 +868,7 @@ Updating status...
 
 Priority: P0
 Size: S
-Status: In Progress
+Status: In progress
 
 URL: https://github.com/my-org/my-repo/issues/142
 
@@ -966,7 +966,7 @@ Understood. Proceeding with direct implementation.
 Note: You can create a spec later if you find the scope expanding.
 
 Updating status...
-✓ Status updated to 'In Progress'
+✓ Status updated to 'In progress'
 
 ═══════════════════════════════════════════════════════════════
 📋 Issue #158: Add export to CSV feature
@@ -974,7 +974,7 @@ Updating status...
 
 Priority: P1
 Size: L
-Status: In Progress
+Status: In progress
 
 URL: https://github.com/my-org/my-repo/issues/158
 
