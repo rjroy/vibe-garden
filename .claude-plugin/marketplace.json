@@ -19,13 +19,6 @@
       "license": "MIT"
     },
     {
-      "name": "courier-mcp",
-      "source": "./courier-mcp",
-      "description": "Provides a MCP which accesses GMail service for a specific user.",
-      "repository": "https://github.com/rjroy/vibe-garden.git",
-      "license": "MIT"
-    },
-    {
       "name": "notify-hook",
       "source": "./notify-hook",
       "description": "Desktop/mobile notifications when Claude needs user attention. Supports ntfy.sh, Discord, and Slack.",
