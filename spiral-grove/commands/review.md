@@ -1,5 +1,5 @@
 ---
-argument-hint: [spec|plan|tasks|progress]
+argument-hint: "[spec|plan|tasks|progress]"
 description: Validate phase documents before moving to next phase
 ---
 

@@ -1,5 +1,5 @@
 ---
-argument-hint: [optional: feature brief or parent spec context]
+argument-hint: "[optional: feature brief or parent spec context]"
 description: Generate SDD spec documentation for a feature
 allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
 ---

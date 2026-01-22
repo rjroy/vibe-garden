@@ -1,5 +1,5 @@
 ---
-argument-hint: [feature-name | spec-path]
+argument-hint: "[feature-name | spec-path]"
 description: Skeptically verify implementation completeness against spec requirements
 allowed-tools: Task, Read, Glob, Grep, Bash, Write
 ---
