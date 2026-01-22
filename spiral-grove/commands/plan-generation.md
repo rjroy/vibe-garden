@@ -1,5 +1,5 @@
 ---
-argument-hint: [optional: spec context]
+argument-hint: "[optional: spec context]"
 description: Generate SDD plan documentation for a feature based on an existing spec
 allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
 ---

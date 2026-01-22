@@ -1,5 +1,5 @@
 ---
-argument-hint: [scope]
+argument-hint: "[scope]"
 description: Generate operational CLAUDE.md documentation from implementation
 allowed-tools: Skill(spiral-grove:sdd-format-docs), Task, Read, Write, Glob, Grep, Bash
 ---

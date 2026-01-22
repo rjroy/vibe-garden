@@ -1,5 +1,5 @@
 ---
-argument-hint: [scope]
+argument-hint: "[scope]"
 description: Reverse-engineer specifications from implementation across the codebase
 allowed-tools: Skill(spiral-grove:sdd-format-docs), Task, Read, Write, Glob, Grep, Bash
 ---

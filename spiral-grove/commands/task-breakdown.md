@@ -1,5 +1,5 @@
 ---
-argument-hint: [optional: plan context]
+argument-hint: "[optional: plan context]"
 description: Generate SDD tasks documentation for a feature based on an existing plan
 allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata)
 ---

@@ -1,5 +1,5 @@
 ---
-argument-hint: [optional: tasks context]
+argument-hint: "[optional: tasks context]"
 description: Execute tasks from breakdown, validate against spec, track progress
 allowed-tools: Skill(spiral-grove:sdd-templates), Skill(spiral-grove:sdd-metadata), Task
 ---
