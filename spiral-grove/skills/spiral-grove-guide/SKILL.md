@@ -1,6 +1,6 @@
 ---
 name: spiral-grove-guide
-description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove commands (/spec-writing, /plan-generation, /task-breakdown, /implementation, /review, /synthesize-docs, /synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
+description: Guide for Spec-Driven Development (SDD) methodology. This skill should be used when working with the spiral-grove skills (/spiral-grove:spec-writing, /spiral-grove:plan-generation, /spiral-grove:task-breakdown, /spiral-grove:implementation, /spiral-grove:review, /spiral-grove:synthesize-docs, /spiral-grove:synthesize-specs), when deciding whether to use SDD for a feature, when stuck during SDD workflow, when retrofitting legacy codebases, or when needing clarification about SDD phases and principles.
 ---
 
 # Spiral Grove Guide
@@ -11,7 +11,7 @@ Spiral Grove is a Spec-Driven Development (SDD) methodology implementation that 
 
 This skill provides guidance on when and how to use SDD, explains the methodology's principles, and helps navigate the workflow phases.
 
-**Version:** 2.0.0 introduces template externalization, metadata automation, and agent delegation for improved modularity and maintainability.
+**Version:** 2.2.0 refactors commands to skills architecture. All workflow phases are now invoked via `/spiral-grove:skill-name` pattern for automatic discovery and progressive disclosure.
 
 **Project Charter:** For Spiral Grove's foundational philosophy, mission, and design principles, see **references/CHARTER.md**. The charter defines what Spiral Grove is, why it exists, and provides decision-making guidance grounded in v2.0.0 implementation experience.
 
@@ -37,7 +37,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 
 ## The Four-Phase SDD Workflow
 
-### Phase 1: Specification (`/spec-writing`)
+### Phase 1: Specification (`/spiral-grove:spec-writing`)
 
 **Purpose:** Define WHAT to build in user terms, not technical jargon.
 
@@ -50,7 +50,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Define stakeholders and acceptance tests
 - Avoid technical implementation details
 
-**Command:** `/spec-writing`
+**Skill:** `/spiral-grove:spec-writing`
 
 **Output:** `.sdd/specs/[feature-name].md`
 
@@ -61,7 +61,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Integration points with existing systems are identified
 - Acceptance tests are concrete and testable
 
-### Phase 2: Planning (`/plan-generation`)
+### Phase 2: Planning (`/spiral-grove:plan-generation`)
 
 **Purpose:** Design HOW to build, considering the entire system architecture.
 
@@ -74,7 +74,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Design for the whole system (data, errors, security, testing)
 - Respect existing patterns and conventions
 
-**Command:** `/plan-generation`
+**Skill:** `/spiral-grove:plan-generation`
 
 **Input:** Approved specification
 
@@ -87,7 +87,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Includes database schema, API design, and error handling
 - Addresses non-functional requirements (performance, security)
 
-### Phase 3: Task Breakdown (`/task-breakdown`)
+### Phase 3: Task Breakdown (`/spiral-grove:task-breakdown`)
 
 **Purpose:** Break the plan into discrete, testable STEPS.
 
@@ -100,7 +100,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Identify dependencies clearly
 - Each task should be PR-able
 
-**Command:** `/task-breakdown`
+**Skill:** `/spiral-grove:task-breakdown`
 
 **Input:** Approved plan
 
@@ -113,7 +113,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Each task corresponds to a single PR
 - Tasks map back to specification requirements
 
-### Phase 4: Implementation (`/implementation`)
+### Phase 4: Implementation (`/spiral-grove:implementation`)
 
 **Purpose:** Execute tasks and track progress with continuous validation.
 
@@ -126,7 +126,7 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 - Test everything against acceptance criteria
 - Document deviations immediately
 
-**Command:** `/implementation`
+**Skill:** `/spiral-grove:implementation`
 
 **Input:** Task list
 
@@ -143,24 +143,24 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 
 **Starting point questions:**
 
-- "I have a feature idea" → `/spec-writing`
-- "I have an approved spec" → `/plan-generation`
-- "I have a technical plan" → `/task-breakdown`
-- "I have a task list" → `/implementation`
+- "I have a feature idea" → `/spiral-grove:spec-writing`
+- "I have an approved spec" → `/spiral-grove:plan-generation`
+- "I have a technical plan" → `/spiral-grove:task-breakdown`
+- "I have a task list" → `/spiral-grove:implementation`
 
 **Problem-solving questions:**
 
 - "I'm implementing and confused" → Check the spec and plan
-- "The spec is unclear" → `/spec-writing` (to update)
-- "The architecture needs changing" → `/plan-generation` (to revise)
-- "Tasks need adjusting" → `/task-breakdown` (to refine)
+- "The spec is unclear" → `/spiral-grove:spec-writing` (to update)
+- "The architecture needs changing" → `/spiral-grove:plan-generation` (to revise)
+- "Tasks need adjusting" → `/spiral-grove:task-breakdown` (to refine)
 - "I found a major issue during implementation" → Stop, document, return to appropriate phase
 
 **Emergency procedures:**
 
 - **Stuck on implementation:** Check spec (what is success?), check plan (what's the architecture?), check task (what's the acceptance criteria?)
 - **Spec and code conflict:** Stop implementing, document conflict, propose solution, get approval, update docs, continue
-- **Major architecture issue:** Stop, document problem, return to `/plan-generation`, revise plan, update tasks, continue
+- **Major architecture issue:** Stop, document problem, return to `/spiral-grove:plan-generation`, revise plan, update tasks, continue
 
 ## SDD Principles
 
@@ -210,22 +210,22 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 
 ### Starting fresh:
 ```
-/spec-writing → /plan-generation → /task-breakdown → /implementation
+/spiral-grove:spec-writing → /spiral-grove:plan-generation → /spiral-grove:task-breakdown → /spiral-grove:implementation
 ```
 
 ### Updating requirements:
 ```
-/spec-writing (update spec) → /plan-generation (revise plan)
+/spiral-grove:spec-writing (update spec) → /spiral-grove:plan-generation (revise plan)
 ```
 
 ### Architecture change:
 ```
-/plan-generation (update plan) → /task-breakdown (update tasks)
+/spiral-grove:plan-generation (update plan) → /spiral-grove:task-breakdown (update tasks)
 ```
 
 ### Adding tasks mid-implementation:
 ```
-/task-breakdown (refine tasks) → /implementation (continue)
+/spiral-grove:task-breakdown (refine tasks) → /spiral-grove:implementation (continue)
 ```
 
 ## Red Flags and Anti-Patterns
@@ -273,9 +273,9 @@ This skill provides guidance on when and how to use SDD, explains the methodolog
 └── progress/       # Implementation tracking
 ```
 
-## v2.0.0 Architecture
+## Architecture (v2.2.0)
 
-Spiral Grove v2.0.0 introduces a modular architecture with external templates, automated metadata, and agent delegation:
+Spiral Grove v2.2.0 uses a skill-based architecture with automatic discovery, external templates, automated metadata, and agent delegation:
 
 ### Skills for Resource Bundling
 
@@ -314,18 +314,21 @@ Commands orchestrate workflows by delegating to specialized agents:
 - `module-doc-synthesizer` - Generates CLAUDE.md for single module
 - `module-spec-synthesizer` - Reverse-engineers spec from module code
 
-### Benefits of v2.0.0 Architecture
+### Benefits of Skill Architecture
 
+- **Auto-discovery:** Skills load automatically based on trigger phrases in descriptions
+- **Progressive disclosure:** Metadata always in context, body loads on trigger
 - **Modularity:** Templates, metadata, and validation logic externalized
-- **Maintainability:** Update templates/agents without changing commands
-- **Composability:** Agents reusable across multiple commands
+- **Maintainability:** Update templates/agents without changing skills
+- **Composability:** Agents reusable across multiple skills
 - **Consistency:** Centralized templates ensure uniform document structure
 - **Performance:** Parallel agent execution for faster synthesis
 - **Zero-token operations:** Metadata detection happens outside context window
+- **Single source of truth:** No command→skill indirection (skills replace commands)
 
-## Additional Commands
+## Additional Skills
 
-### Review Command (`/review`)
+### Review Skill (`/spiral-grove:review`)
 
 **Purpose:** Validate phase documents before progression using specialized validator agents.
 
@@ -340,13 +343,13 @@ Commands orchestrate workflows by delegating to specialized agents:
 - Tasks: Mapping to spec acceptance criteria, proper dependencies (tasks-validator agent)
 - Progress: Deviation tracking and documentation (progress-validator agent)
 
-**Command:** `/review [spec|plan|tasks|progress]`
+**Skill:** `/spiral-grove:review [spec|plan|tasks|progress]`
 
-**Agent Delegation (v2.0.0):** Command spawns specialized validator agents to perform comprehensive checks and present structured reports to user.
+**Agent Delegation:** Skill spawns specialized validator agents to perform comprehensive checks and present structured reports to user.
 
 **Key benefit:** Catches issues before they cascade through later phases.
 
-### Retrofit Commands (`/synthesize-docs`, `/synthesize-specs`)
+### Retrofit Skills (`/spiral-grove:synthesize-docs`, `/spiral-grove:synthesize-specs`)
 
 **Purpose:** Enable SDD adoption on legacy codebases by reverse-engineering documentation and specifications from implementation.
 
@@ -357,15 +360,15 @@ Commands orchestrate workflows by delegating to specialized agents:
 - Onboarding team members to large codebase
 - Detecting drift between specs and implementation
 
-**Commands:**
-- `/synthesize-docs` - Generate CLAUDE.md files (HOW - operational knowledge)
-- `/synthesize-specs` - Generate specifications (WHAT - requirements)
+**Skills:**
+- `/spiral-grove:synthesize-docs` - Generate CLAUDE.md files (HOW - operational knowledge)
+- `/spiral-grove:synthesize-specs` - Generate specifications (WHAT - requirements)
 
 **Key features:**
 - Automatic module discovery
 - Parallel processing (100 modules in ~10-45 minutes)
 - Drift detection (specs vs implementation)
-- Cross-command integration (reuse manifests)
+- Cross-skill integration (reuse manifests)
 - Resumable if interrupted
 
 **See:** SYNTHESIZE-REFERENCE.md for comprehensive guide

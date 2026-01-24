@@ -1,10 +1,10 @@
 ---
-argument-hint: "[scope]"
-description: Reverse-engineer specifications from implementation across the codebase
+name: synthesize-specs
+description: This skill should be used when the user asks to "reverse-engineer specs", "create specs from code", "extract requirements", "synthesize specifications", or invokes /spiral-grove:synthesize-specs. Reverse-engineers specification documents from module implementations.
 allowed-tools: Skill(spiral-grove:sdd-format-docs), Task, Read, Write, Glob, Grep, Bash
 ---
 
-# Specification Synthesis Mode
+# Specification Synthesis
 
 Reverse-engineer specification documents by analyzing module implementations, generating `.sdd/specs/[module-name].md` files.
 
@@ -15,28 +15,29 @@ Reverse-engineer specification documents by analyzing module implementations, ge
 /spiral-grove:synthesize-specs src/auth  # Single module spec regeneration
 ```
 
-## Your Role
+## Role
 
-You orchestrate the three-phase workflow:
+Orchestrate the three-phase workflow:
 1. **Phase 1: Module Discovery** - Detect modules, get user approval, create manifest
 2. **Phase 2: Parallel Generation** - Spawn module-spec-synthesizer agents, track drift
 3. **Phase 3: Summary** - Analyze drift, provide recommendations
 
 ## Phase 1: Module Discovery
 
-### If scope provided (e.g., `src/auth`):
+### If Scope Provided (e.g., `src/auth`)
+
 1. Validate path exists: `Glob: [scope]/**/*`
 2. If no files: Exit with error
 3. Create single-module manifest, skip to Phase 2
 
-### If no scope (full project):
+### If No Scope (Full Project)
 
-**Step 1: Check for Resumability**
+**Step 1: Check Resumability**
 ```
 Read: .sdd/spec-manifest.json
 
 If exists and valid:
-  Count statuses: completed, pending, failed
+  Count: completed, pending, failed
 
   If all completed:
     Ask: "All X modules complete. Re-run to regenerate all? [y/n]"
@@ -45,7 +46,7 @@ If exists and valid:
 
   If pending or failed exist:
     Ask: "Found progress: X completed, Y pending, Z failed. Continue? [y/n]"
-    If yes: Skip to Phase 2 (use pending/failed modules only)
+    If yes: Skip to Phase 2 (use pending/failed only)
     If no: Exit
 
 If not exists: Continue to Step 2
@@ -58,22 +59,15 @@ Read: .sdd/module-manifest.json
 If exists:
   Ask: "Found module manifest from /synthesize-docs. Use it? [y/n]"
   If yes:
-    Convert to spec-manifest.json format:
-    - Copy modules array
-    - Add spec_path: ".sdd/specs/[module-name].md"
-    - Add drift_detected: false
-    - Set all status: "pending"
-    Write: .sdd/spec-manifest.json
+    Convert to spec-manifest.json format
     Skip to Phase 2
-
-If not exists: Continue to Step 3
 ```
 
 **Step 3: Invoke Module Discovery**
 ```
 Task(
   description: "Discover modules in codebase",
-  prompt: "Analyze codebase and detect logical module boundaries using all 5 heuristics. Return ranked list with confidence ≥50%. Project root: [pwd]",
+  prompt: "Analyze codebase and detect logical module boundaries using all 5 heuristics. Return ranked list with confidence >= 50%. Project root: [pwd]",
   subagent_type: "spiral-grove:module-discovery-agent"
 )
 ```
@@ -83,23 +77,17 @@ Task(
 Display agent's module table
 
 Ask: "Approve? Options: yes | add <path> | remove <path> | cancel"
-
-Handle response:
-- yes/approve/ok → Continue
-- add <path> → Add to list, repeat
-- remove <path> → Remove from list, repeat
-- cancel/no → Exit
 ```
 
 **Step 5: Create Manifest and Directory**
 ```
 Bash: mkdir -p .sdd/specs
-Bash: pwd  # Get project root
+Bash: pwd
 
-Construct JSON:
+Write .sdd/spec-manifest.json:
 {
   "generated_at": "[ISO 8601 timestamp]",
-  "project_root": "[pwd output]",
+  "project_root": "[pwd]",
   "modules": [
     {
       "path": "[module path]",
@@ -111,11 +99,7 @@ Construct JSON:
     }
   ]
 }
-
-Write: .sdd/spec-manifest.json
 ```
-
----
 
 ## Phase 2: Parallel Specification Generation
 
@@ -123,13 +107,11 @@ Write: .sdd/spec-manifest.json
 ```
 Read: .sdd/spec-manifest.json
 Filter: status === "pending" OR status === "failed"
-Count: N modules to process
 ```
 
 **Step 2: Spawn Agents (Batches of 10)**
 ```
-Split into batches of 10
-For each batch:
+For each batch of 10 modules:
 
   Send SINGLE message with MULTIPLE Task calls:
 
@@ -140,59 +122,45 @@ For each batch:
   )
 
   Wait for all agents in batch
-  Parse results (see Step 3)
 ```
 
 **Step 3: Update Manifest with Drift Detection**
 ```
 For each agent response:
 
-  If contains "✅ Spec written to .sdd/specs/":
+  If contains "Spec written to .sdd/specs/":
     Extract drift status:
-      If contains "Drift: NONE":
-        modules[i].drift_detected = false
-        modules[i].drift_summary = null
-      Else if contains "Drift: DETECTED":
-        modules[i].drift_detected = true
-        Extract summary after "Drift: DETECTED -"
-        modules[i].drift_summary = "[summary]"
+      If "Drift: NONE":
+        drift_detected = false
+      Else if "Drift: DETECTED":
+        drift_detected = true
+        Extract drift_summary
 
     modules[i].status = "completed"
-    modules[i].error = null
-    Log: "✓ [path] [DRIFT] or [CLEAN]"
+    Log: "[path] [DRIFT] or [CLEAN]"
 
-  Else if contains "❌ ERROR:":
+  Else if contains "ERROR:":
     modules[i].status = "failed"
     modules[i].error = "[error message]"
-    Log: "✗ Failed [path]: [error]"
     Continue (don't stop)
 
-Update manifest.generated_at
 Write: .sdd/spec-manifest.json
 ```
 
 **Step 4: Display Progress**
 ```
-Count: successful, failed, drift_detected
-
 Output:
 ## Generation Complete: [successful] / [total] modules
 
-**Successful**: ✓ [list paths with [DRIFT] markers]
-**Failed**: ✗ [list paths with errors]
+**Successful**: [list paths with [DRIFT] markers]
+**Failed**: [list paths with errors]
 **Drift Detected**: [count] modules
-
-**Next**: Phase 3 (Summary and Recommendations)
 ```
-
----
 
 ## Phase 3: Summary and Recommendations
 
 **Step 1: Analyze Drift**
 ```
-Read: .sdd/spec-manifest.json
-
 Count:
 - total = modules.length
 - completed = status === "completed"
@@ -200,28 +168,25 @@ Count:
 - drift = drift_detected === true
 - clean = completed - drift
 
-Group by drift type (if drift > 0):
-- Requirements added: modules with "added" in drift_summary
-- Requirements modified: modules with "modified" in drift_summary
-- Requirements removed: modules with "removed" in drift_summary
+Group by drift type:
+- Requirements added
+- Requirements modified
+- Requirements removed
 ```
 
 **Step 2: Generate Recommendations**
 ```
-Based on drift analysis:
-
 If drift === 0:
   "All implementations match specs. No action needed."
 
 If drift > 0 && drift < total * 0.3:
   "Minor drift detected. Review and update specs or fix implementations."
-  "Priority: High-confidence modules first"
 
 If drift >= total * 0.3:
-  "Significant drift detected. Consider:"
-  "1. Update specs to match implementation (accept reality)"
-  "2. Plan refactoring to match specs (enforce intent)"
-  "3. Document rationale for divergence"
+  "Significant drift detected. Consider:
+   1. Update specs to match implementation (accept reality)
+   2. Plan refactoring to match specs (enforce intent)
+   3. Document rationale for divergence"
 
 If failed > 0:
   "Address failures: [list common causes]"
@@ -230,27 +195,22 @@ If failed > 0:
 **Step 3: Display Final Report**
 ```
 Output:
-✅ Specification Synthesis Complete
+Specification Synthesis Complete
 
 **Generated Specs**:
-- Total: [total] specs
-- Clean: [clean] modules
-- Drift: [drift] modules
-- Failed: [failed] modules
+- Total: [count] specs
+- Clean: [count] modules
+- Drift: [count] modules
+- Failed: [count] modules
 
 [If drift > 0:]
 **Drift Details**:
 | Module | Drift Summary |
 |--------|---------------|
 | [path] | [summary] |
-...
-
-[If failed > 0:]
-**Failed Modules**:
-- [path]: [error]
 
 **Recommendations**:
-[Generated recommendations from Step 2]
+[From Step 2]
 
 **Next Steps**:
 1. Review generated specs in .sdd/specs/
@@ -259,54 +219,6 @@ Output:
 
 **Manifest**: .sdd/spec-manifest.json
 ```
-
-**Step 4: Edge Cases**
-```
-If all drift:
-  "⚠️ All modules show drift. Implementation has diverged significantly from specs."
-
-If no tests found (common in agent errors):
-  "⚠️ Modules without tests produced lower-quality specs. Consider adding tests."
-
-If all failed:
-  "❌ All modules failed. Common causes: No source files, permission issues, structure mismatch."
-```
-
----
-
-## Final Output
-
-```
-Read: .sdd/spec-manifest.json
-
-Count: totalGenerated, totalFailed, drift, clean
-
-Output:
-✅ Specification Synthesis Complete
-
-**Generated Specs**: [totalGenerated] in .sdd/specs/
-
-**Drift Analysis**:
-- Clean: [clean] modules (implementation matches spec)
-- Drift: [drift] modules (implementation diverged)
-
-[If drift > 0:]
-**Modules with Drift**:
-[List with summaries]
-
-[If failed > 0:]
-**Failed Modules**:
-- [path]: [error]
-
-**Recommendations**:
-[From Phase 3 analysis]
-
-**Manifest**: .sdd/spec-manifest.json
-
-✓ Specs ready for review!
-```
-
----
 
 ## Error Handling
 
@@ -318,9 +230,7 @@ Output:
 | Manifest corruption | Prompt to regenerate |
 | No tests found | Warn, continue (lower quality) |
 
----
-
-## Notes
+## Key Points
 
 - **Reverse engineering**: Specs describe existing behavior
 - **Drift detection**: Compares intended (spec) vs actual (code)

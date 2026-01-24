@@ -1,6 +1,6 @@
 # Spiral Grove Plugin
 
-**Last Generated**: 2025-11-04T00:00:00Z
+**Last Generated**: 2026-01-24T00:00:00Z
 
 ## Purpose
 
@@ -8,18 +8,21 @@ A Claude Code plugin implementing Spec-Driven Development (SDD) methodology thro
 
 ## Key Components
 
-### Commands (`commands/*.md`)
+### Workflow Skills (`skills/`)
 
-Slash commands that execute specific SDD workflow phases:
+User-invocable skills that execute specific SDD workflow phases. Invoked via `/spiral-grove:skill-name`:
 
-- `spec-writing.md`: Creates feature specifications defining requirements and success criteria
-- `plan-generation.md`: Generates technical plans with architectural decisions and rationale
-- `task-breakdown.md`: Decomposes plans into discrete, implementable tasks
-- `implementation.md`: Executes tasks with progress tracking and deviation management
-- `review.md`: Validates phase documents before progression (spec/plan/tasks/progress)
-- `validate-completeness.md`: Skeptically audits implementation against spec requirements
-- `synthesize-docs.md`: Generates operational CLAUDE.md documentation from implementation
-- `synthesize-specs.md`: Reverse-engineers specifications from existing codebases
+**Core Workflow Skills**:
+- `spec-writing/`: Creates feature specifications defining requirements and success criteria
+- `plan-generation/`: Generates technical plans with architectural decisions and rationale
+- `task-breakdown/`: Decomposes plans into discrete, implementable tasks
+- `implementation/`: Executes tasks with progress tracking and deviation management (includes `references/validation-procedures.md` for detailed gate procedures)
+
+**Validation & Synthesis Skills**:
+- `review/`: Validates phase documents before progression (spec/plan/tasks/progress)
+- `validate-completeness/`: Skeptically audits implementation against spec requirements
+- `synthesize-docs/`: Generates operational CLAUDE.md documentation from implementation
+- `synthesize-specs/`: Reverse-engineers specifications from existing codebases
 
 ### Agents (`agents/*.md`)
 
@@ -38,7 +41,7 @@ Autonomous agents invoked by commands for complex operations:
 - `module-doc-synthesizer.md`: Analyzes single module implementation to generate CLAUDE.md (≤400 lines)
 - `module-spec-synthesizer.md`: Reverse-engineers specifications from module code
 
-### Skills (`skills/`)
+### Support Skills (`skills/`)
 
 Contextual guidance and resources invoked automatically when working with SDD:
 
@@ -47,7 +50,7 @@ Contextual guidance and resources invoked automatically when working with SDD:
 - `references/SDD-FOUNDATIONS.md`: Academic foundations and methodology theory
 - `references/SDD-QUICK-REFERENCE.md`: Practical operational guide
 - `references/SYNTHESIZE-REFERENCE.md`: Documentation and spec synthesis guidance
-- `references/SPIRAL-GROVE-IMPLEMENTATION-DETAIL.md`: Technical implementation reference (v2.1.0)
+- `references/SPIRAL-GROVE-IMPLEMENTATION-DETAIL.md`: Technical implementation reference (v2.2.0)
 
 **sdd-templates**: Externalized document templates (spec, plan, tasks, progress)
 **sdd-metadata**: Author/date detection scripts for YAML frontmatter
@@ -63,7 +66,7 @@ Format specifications and schemas:
 
 ### Configuration
 
-- `.claude-plugin/plugin.json`: Plugin metadata (name: "spiral-grove", version: "2.1.0", author: Ronald Roy)
+- `.claude-plugin/plugin.json`: Plugin metadata (name: "spiral-grove", version: "2.2.0", author: Ronald Roy)
 
 ## Public API
 
@@ -72,20 +75,23 @@ Format specifications and schemas:
 /plugin install spiral-grove@claude-code-plugins
 ```
 
-**Core Workflow Commands**:
-- `/spec-writing` → Creates `.sdd/specs/[feature].md`
-- `/plan-generation` → Creates `.sdd/plans/[feature]-plan.md`
-- `/task-breakdown` → Creates `.sdd/tasks/[feature]-tasks.md`
-- `/implementation` → Executes tasks, creates `.sdd/progress/[feature]-progress.md`
+**Core Workflow Skills** (invoked via `/spiral-grove:skill-name`):
+- `/spiral-grove:spec-writing` → Creates `.sdd/specs/[feature].md`
+- `/spiral-grove:plan-generation` → Creates `.sdd/plans/[feature]-plan.md`
+- `/spiral-grove:task-breakdown` → Creates `.sdd/tasks/[feature]-tasks.md`
+- `/spiral-grove:implementation` → Executes tasks, creates `.sdd/progress/[feature]-progress.md`
 
-**Validation & Synthesis Commands**:
-- `/review [spec|plan|tasks|progress]` → Validates phase documents
-- `/validate-completeness [feature]` → Skeptically audits implementation, creates `.sdd/validation/[feature]-validation-report.md`
-- `/synthesize-docs [module]` → Generates `[module]/CLAUDE.md`
-- `/synthesize-specs [module]` → Generates `.sdd/specs/[module].md` from code
+**Validation & Synthesis Skills**:
+- `/spiral-grove:review [spec|plan|tasks|progress]` → Validates phase documents
+- `/spiral-grove:validate-completeness [feature]` → Skeptically audits implementation, creates `.sdd/validation/[feature]-validation-report.md`
+- `/spiral-grove:synthesize-docs [module]` → Generates `[module]/CLAUDE.md`
+- `/spiral-grove:synthesize-specs [module]` → Generates `.sdd/specs/[module].md` from code
 
-**Skill**:
+**Support Skills** (auto-invoked or referenced by workflow skills):
 - `spiral-grove-guide` → Auto-invoked for methodology guidance
+- `sdd-templates` → Document templates for SDD phases
+- `sdd-metadata` → Author/date auto-detection
+- `sdd-format-docs` → Format specifications and schemas
 
 ## Integration Points
 
@@ -120,15 +126,15 @@ project-root/
 
 **Steps**:
 1. Install plugin: `/plugin install spiral-grove@claude-code-plugins`
-2. Create specification: `/spec-writing`
-3. Generate technical plan: `/plan-generation`
-4. Break down tasks: `/task-breakdown`
-5. Implement: `/implementation`
+2. Create specification: `/spiral-grove:spec-writing`
+3. Generate technical plan: `/spiral-grove:plan-generation`
+4. Break down tasks: `/spiral-grove:task-breakdown`
+5. Implement: `/spiral-grove:implementation`
 
 **Example**:
 ```
 User: I want to build a rate limiting system for our API
-Claude: [Invokes /spec-writing]
+Claude: [Invokes /spiral-grove:spec-writing]
 → Creates .sdd/specs/api-rate-limiter.md
 → Prompts for requirements, success criteria, constraints
 ```
@@ -139,13 +145,13 @@ Claude: [Invokes /spec-writing]
 
 **Steps**:
 1. Complete phase document (spec/plan/tasks)
-2. Run validation: `/review [type]`
+2. Run validation: `/spiral-grove:review [type]`
 3. Address validation findings
 4. Proceed to next phase
 
 **Example**:
 ```
-/review spec
+/spiral-grove:review spec
 → Checks for measurable success criteria
 → Verifies no HOW details in spec
 → Confirms all requirements numbered
@@ -159,21 +165,21 @@ Claude: [Invokes /spec-writing]
 
 **Steps**:
 1. Complete implementation (all tasks marked done)
-2. Run completeness audit: `/validate-completeness [feature]`
+2. Run completeness audit: `/spiral-grove:validate-completeness [feature]`
 3. Address critical issues (blocking gaps)
 4. Optionally address advisory issues (improvements)
 5. Re-run validation until satisfied
 
 **Example**:
 ```
-/validate-completeness api-rate-limiter
+/spiral-grove:validate-completeness api-rate-limiter
 → Examines codebase against spec requirements
 → Verifies each REQ-F-N and REQ-NF-N with code evidence
 → Identifies "close enough" issues (happy path only, untested functionality)
 → Creates .sdd/validation/api-rate-limiter-validation-report.md
 ```
 
-**Key Difference from `/review progress`**: The review command validates the progress *document*. The validate-completeness command examines the actual *code* against the spec, ignoring what the progress document claims.
+**Key Difference from `/spiral-grove:review progress`**: The review skill validates the progress *document*. The validate-completeness skill examines the actual *code* against the spec, ignoring what the progress document claims.
 
 ### Generating Documentation Post-Implementation
 
@@ -181,13 +187,13 @@ Claude: [Invokes /spec-writing]
 
 **Steps**:
 1. Complete implementation
-2. Run synthesis: `/synthesize-docs [module-path]`
+2. Run synthesis: `/spiral-grove:synthesize-docs [module-path]`
 3. Review generated CLAUDE.md
 4. Add hand-edited content between markers if needed
 
 **Example**:
 ```
-/synthesize-docs src/auth
+/spiral-grove:synthesize-docs src/auth
 → Analyzes auth module code
 → Generates src/auth/CLAUDE.md (≤400 lines)
 → Preserves existing hand-edited sections
@@ -198,21 +204,21 @@ Claude: [Invokes /spec-writing]
 **Purpose**: Bootstrap SDD workflow on existing codebases
 
 **Steps**:
-1. Run spec synthesis: `/synthesize-specs [module-path]`
+1. Run spec synthesis: `/spiral-grove:synthesize-specs [module-path]`
 2. Review generated specifications
 3. Use as baseline for future SDD workflow
 
 **Example**:
 ```
-/synthesize-specs src/payment
+/spiral-grove:synthesize-specs src/payment
 → Analyzes payment module implementation
 → Generates .sdd/specs/payment.md
 → Extracts requirements from code/tests
 ```
 
-## Command Implementation Patterns
+## Skill Implementation Patterns
 
-### Spec Writing (`/spec-writing`)
+### Spec Writing (`/spiral-grove:spec-writing`)
 
 **Key Behaviors**:
 - Asks clarifying questions to extract requirements
@@ -221,9 +227,9 @@ Claude: [Invokes /spec-writing]
 - Works incrementally, saves often to avoid timeouts
 - Stays at WHAT level (capabilities), avoids HOW (implementation)
 
-**Anti-Verbosity Principle**: Command prompts are detailed to guide Claude, but output specs are concise and scannable.
+**Anti-Verbosity Principle**: Skill prompts are detailed to guide Claude, but output specs are concise and scannable.
 
-### Plan Generation (`/plan-generation`)
+### Plan Generation (`/spiral-grove:plan-generation`)
 
 **Key Behaviors**:
 - Analyzes existing codebase before designing (Glob/Grep patterns)
@@ -234,7 +240,7 @@ Claude: [Invokes /spec-writing]
 
 **Target Size**: 15-25 pages for typical features
 
-### Task Breakdown (`/task-breakdown`)
+### Task Breakdown (`/spiral-grove:task-breakdown`)
 
 **Key Behaviors**:
 - Creates independently implementable tasks (single PR each)
@@ -245,7 +251,7 @@ Claude: [Invokes /spec-writing]
 
 **Conciseness Check**: Consolidates redundant tasks before finalizing
 
-### Implementation (`/implementation`)
+### Implementation (`/spiral-grove:implementation`)
 
 **Key Behaviors**:
 - Works one task at a time
@@ -262,7 +268,7 @@ Claude: [Invokes /spec-writing]
 
 **Code Review**: Prefers specialized reviewers (language/domain-specific) over general-purpose. Three-tier feedback: Approve/Minor → Concerns/Major → Reject/Blockers
 
-### Review (`/review [type]`)
+### Review (`/spiral-grove:review [type]`)
 
 **Key Behaviors**:
 - Performs semantic validation (not just keyword matching)
@@ -282,7 +288,7 @@ Claude: [Invokes /spec-writing]
 
 **Proportional Quality**: More critical phases (spec) receive deeper quality scrutiny than tracking phases (progress)
 
-### Synthesize Docs (`/synthesize-docs`)
+### Synthesize Docs (`/spiral-grove:synthesize-docs`)
 
 **Key Behaviors**:
 - Three-phase workflow: Discovery → Approval → Generation
@@ -300,7 +306,7 @@ Claude: [Invokes /spec-writing]
 6. Validate ≤400 lines
 7. Return markdown content
 
-### Synthesize Specs (`/synthesize-specs`)
+### Synthesize Specs (`/spiral-grove:synthesize-specs`)
 
 **Key Behaviors**:
 - Reverse-engineers WHAT from HOW (code → requirements)
@@ -311,10 +317,10 @@ Claude: [Invokes /spec-writing]
 
 ## Testing
 
-**Test Approach**: Plugin commands are markdown prompts loaded into Claude's context. Testing involves:
+**Test Approach**: Plugin skills are markdown prompts loaded into Claude's context. Testing involves:
 1. Installing plugin locally
-2. Invoking commands and verifying expanded prompts appear
-3. Validating command behavior and output structure
+2. Invoking skills via `/spiral-grove:skill-name` and verifying expanded prompts appear
+3. Validating skill behavior and output structure
 4. Checking file creation in `.sdd/` directories
 
 **Key Scenarios**:
@@ -386,6 +392,14 @@ Claude: [Invokes /spec-writing]
 - Deviations documented immediately
 
 ## Version History
+
+**v2.2.0** (2026-01-24):
+- Refactored commands to skills architecture
+- Skills invoked via `/spiral-grove:skill-name` pattern
+- Automatic discovery through skill descriptions with trigger phrases
+- Progressive disclosure: metadata always in context, body loads on trigger
+- Implementation skill uses `references/validation-procedures.md` for detailed gate procedures
+- Removed commands directory (skills replace commands entirely)
 
 **v2.1.0** (2025-11-04):
 - Two-tier validation structure (Process Compliance vs Quality Checks)
