@@ -4,7 +4,7 @@ A Claude Code plugin for project management using GitHub Projects.
 
 ## Overview
 
-Compass Rose provides skills, commands, and agents to help users and Claude manage a project together. It uses GitHub's project functionality (`gh project ...`) to track work items.
+Compass Rose provides skills and agents to help users and Claude manage a project together. It uses GitHub's project functionality (`gh project ...`) to track work items.
 
 ## Purpose
 
@@ -253,21 +253,21 @@ Get started with Compass Rose in 3 steps:
 
    > **Note**: Use `"owner_type": "user"` for personal account projects.
 
-3. **Start using commands**:
+3. **Start using skills**:
    ```bash
-   /next-item        # Find what to work on next
-   /start-work next  # Begin work on recommended item
+   /compass-rose:next-item        # Find what to work on next
+   /compass-rose:start-work next  # Begin work on recommended item
    ```
 
-## Commands Reference
+## Skills Reference
 
-### `/next-item`
+### `/compass-rose:next-item`
 
 Get the highest-priority ready item to work on next.
 
 **Usage**:
 ```bash
-/next-item
+/compass-rose:next-item
 ```
 
 **What it does**:
@@ -295,13 +295,13 @@ focused session.
 
 ---
 
-### `/add-item`
+### `/compass-rose:add-item`
 
 Create a new repository issue and add it to the project with custom fields.
 
 **Usage**:
 ```bash
-/add-item
+/compass-rose:add-item
 ```
 
 **What it does**:
@@ -346,15 +346,15 @@ Fields set:
 
 ---
 
-### `/start-work`
+### `/compass-rose:start-work`
 
 Begin work on an item with size-based escalation prompts and status tracking.
 
 **Usage**:
 ```bash
-/start-work <issue-number>       # Start work on issue #123
-/start-work <issue-url>          # Start work using full URL
-/start-work next                 # Start work on highest-priority ready item
+/compass-rose:start-work <issue-number>       # Start work on issue #123
+/compass-rose:start-work <issue-url>          # Start work using full URL
+/compass-rose:start-work next                 # Start work on highest-priority ready item
 ```
 
 **What it does**:
@@ -366,7 +366,7 @@ Begin work on an item with size-based escalation prompts and status tracking.
 
 **Example session (small item)**:
 ```
-User: /start-work next
+User: /compass-rose:start-work next
 
 Loading project configuration...
 ✓ Config loaded: my-org/project-123
@@ -408,7 +408,7 @@ This is a small item (estimated < 4 hours). Recommended approach:
 
 **Example session (XL item)**:
 ```
-User: /start-work 156
+User: /compass-rose:start-work 156
 
 ═══════════════════════════════════════════════════════════════
 Large Item Detected: XL
@@ -418,13 +418,13 @@ This item is sized XL, which typically requires detailed planning and
 specification before implementation.
 
 XL items often benefit from Spiral Grove's Spec-Driven Development workflow:
-1. /spec-writing - Define clear success criteria and constraints
-2. /plan-generation - Create technical architecture and decisions
-3. /task-breakdown - Decompose into manageable tasks
-4. /implementation - Execute with progress tracking
+1. /spiral-grove:spec-writing - Define clear success criteria and constraints
+2. /spiral-grove:plan-generation - Create technical architecture and decisions
+3. /spiral-grove:task-breakdown - Decompose into manageable tasks
+4. /spiral-grove:implementation - Execute with progress tracking
 
 Options:
-  1. Write spec first (/spec-writing) - ⭐ RECOMMENDED for XL items
+  1. Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items
   2. Start implementation directly
 
 Which approach would you prefer? (Enter 1 or 2):
@@ -448,13 +448,13 @@ Which approach would you prefer? (Enter 1 or 2):
 
 ---
 
-### `/backlog`
+### `/compass-rose:backlog`
 
 Review entire backlog with quality analysis and recommendations.
 
 **Usage**:
 ```bash
-/backlog
+/compass-rose:backlog
 ```
 
 **What it does**:
@@ -520,9 +520,9 @@ Observations:
 - You want to identify poorly-defined items for cleanup
 - You're planning a sprint and want multiple options
 
-**Comparison to `/next-item`**:
+**Comparison to `/compass-rose:next-item`**:
 
-| Aspect | /next-item | /backlog |
+| Aspect | /compass-rose:next-item | /compass-rose:backlog |
 |--------|------------|----------|
 | Speed | Fast (<3s) | Slower (~15s) |
 | Scope | Ready items only | All non-Done items |
@@ -531,13 +531,13 @@ Observations:
 
 ---
 
-### `/reprioritize`
+### `/compass-rose:reprioritize`
 
 Codebase-aware priority recommendations with batch update capability.
 
 **Usage**:
 ```bash
-/reprioritize
+/compass-rose:reprioritize
 ```
 
 **What it does**:
@@ -619,10 +619,10 @@ Enter choice (1/2/3):
 
 ```bash
 # 1. Find what to work on next
-/next-item
+/compass-rose:next-item
 
 # 2. Start work on recommended item
-/start-work next
+/compass-rose:start-work next
 
 # 3. Implement the feature/fix
 
@@ -633,41 +633,41 @@ Enter choice (1/2/3):
 
 ```bash
 # 1. Review entire backlog health
-/backlog
+/compass-rose:backlog
 
 # 2. Add new item from user feedback
-/add-item
+/compass-rose:add-item
 
 # 3. Start work on highest priority well-defined item
-/start-work next
+/compass-rose:start-work next
 ```
 
 ### Periodic Backlog Maintenance
 
 ```bash
 # 1. Analyze codebase and get priority recommendations
-/reprioritize
+/compass-rose:reprioritize
 
 # 2. Review recommendations and apply changes
 
 # 3. Check updated backlog
-/next-item
+/compass-rose:next-item
 ```
 
 ### Large Item Escalation to Spiral Grove
 
 ```bash
 # 1. Attempt to start work on large item
-/start-work 156
+/compass-rose:start-work 156
 
 # 2. Compass Rose detects XL size and prompts:
-#    "Write spec first (/spec-writing) - RECOMMENDED for XL items"
+#    "Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items"
 
 # 3. User chooses Option 1 (Write spec first)
-#    → Transfers to Spiral Grove /spec-writing
+#    -> Transfers to Spiral Grove /spiral-grove:spec-writing
 
 # 4. Follow Spiral Grove SDD workflow:
-#    /spec-writing → /plan-generation → /task-breakdown → /implementation
+#    /spiral-grove:spec-writing -> /spiral-grove:plan-generation -> /spiral-grove:task-breakdown -> /spiral-grove:implementation
 ```
 
 ## Troubleshooting
@@ -752,9 +752,9 @@ gh auth refresh -s project
 **Problem**: `Warning: Priority field not found in project`
 
 **Impact**:
-- `/next-item`: Falls back to creation date sorting
-- `/backlog`: Recommendations based on size and quality only
-- `/reprioritize`: Command requires Priority field and will not run
+- `/compass-rose:next-item`: Falls back to creation date sorting
+- `/compass-rose:backlog`: Recommendations based on size and quality only
+- `/compass-rose:reprioritize`: Skill requires Priority field and will not run
 
 **Solution**: Add a "Priority" field to your GitHub Project with options like P0, P1, P2, P3.
 
@@ -777,7 +777,7 @@ gh auth refresh -s project
 
 **Solution**: Add the issue to the project:
 ```bash
-/add-item
+/compass-rose:add-item
 # Or manually add via GitHub Projects web UI
 ```
 
@@ -798,13 +798,13 @@ Either update items to "Ready" status or analyze a different status.
 
 ### Performance Issues
 
-**Problem**: `/backlog` or `/reprioritize` taking too long
+**Problem**: `/compass-rose:backlog` or `/compass-rose:reprioritize` taking too long
 
 **Context**: Large backlogs (50+ items) can take 5-15 minutes to analyze.
 
 **Solutions**:
-1. **For `/backlog`**: Use `/next-item` for quick recommendations
-2. **For `/reprioritize`**: Filter backlog to only P0/P1 items before running
+1. **For `/compass-rose:backlog`**: Use `/compass-rose:next-item` for quick recommendations
+2. **For `/compass-rose:reprioritize`**: Filter backlog to only P0/P1 items before running
 3. **General**: Archive or close Done items to reduce backlog size
 
 ---
@@ -845,7 +845,7 @@ sudo pacman -S git
 
 ### Batch Update Failures
 
-**Problem**: `/reprioritize` reports partial update failures
+**Problem**: `/compass-rose:reprioritize` reports partial update failures
 
 **Example**:
 ```
@@ -864,4 +864,8 @@ Failed updates:
 
 ## Status
 
-**v0.1.0** - Initial project setup. Spec phase next.
+**v1.2.0** - Converted commands to skills architecture for automatic discovery.
+
+**v1.1.3** - Previous release with command-based interface.
+
+**v0.1.0** - Initial project setup.

@@ -14,7 +14,7 @@ You are a codebase scanner for the Compass Rose methodology. Your role is to ana
 ## Invocation Context
 
 This agent is invoked by:
-- `/reprioritize` command (Phase 2: Codebase Analysis)
+- `/compass-rose:reprioritize` skill (Phase 2: Codebase Analysis)
 
 **Purpose**: Provide data-driven priority change recommendations based on actual codebase state rather than issue metadata alone.
 

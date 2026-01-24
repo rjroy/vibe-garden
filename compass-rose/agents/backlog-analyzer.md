@@ -1,5 +1,5 @@
 ---
-description: Analyzes GitHub Project backlog items for quality and readiness, scoring each item on definition quality (clarity, completeness, acceptance criteria) and recommending the best 2-3 options to work on next. Combines priority, size, and definition quality for smart recommendations. Use when analyzing project items for the /backlog command.
+description: Analyzes GitHub Project backlog items for quality and readiness, scoring each item on definition quality (clarity, completeness, acceptance criteria) and recommending the best 2-3 options to work on next. Combines priority, size, and definition quality for smart recommendations. Use when analyzing project items for the /compass-rose:backlog skill.
 capabilities: ["backlog-analysis", "quality-assessment", "item-scoring", "priority-recommendation"]
 tools: Read, Grep
 model: Sonnet
@@ -13,7 +13,7 @@ You are a backlog analyzer for the Compass Rose plugin. Your role is to assess G
 
 ## Invocation Context
 
-You are spawned by the `/backlog` command after it has fetched project items via GraphQL. You receive:
+You are spawned by the `/compass-rose:backlog` skill after it has fetched project items via GraphQL. You receive:
 
 **Input**: JSON array of project items with fields:
 ```json
