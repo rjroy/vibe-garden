@@ -17,6 +17,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:plan` | Direct AI planner with context, save output |
 | `/lore-development:validate` | Define testing approach, record deviations |
 | `/lore-development:retro` | Review work, capture lessons learned |
+| `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
 
 ## Artifact Storage
 
@@ -30,7 +31,12 @@ All context lives in `.lore/`:
 ├── work/           # Releasable breakdowns
 ├── plans/          # Saved planning sessions
 ├── validations/    # Testing guidelines, deviation logs
-└── retros/         # Lessons learned
+├── retros/         # Lessons learned
+└── excavations/    # Design archaeology findings
+    ├── layer-1-survey.md
+    ├── layer-2-features.md
+    ├── layer-3-design.md
+    └── sessions/
 ```
 
 ## Usage
@@ -58,7 +64,25 @@ Skills can run independently. Use what you need:
 
 # Reflecting on completed work
 /lore-development:retro
+
+# Documenting an existing codebase (design archaeology)
+/lore-development:excavate
 ```
+
+## Two Modes of Operation
+
+### Forward Mode (Building New)
+Use `research → brainstorm → specify → breakdown → plan → validate → retro` when building something new. This creates lore as you work.
+
+### Backward Mode (Excavating Existing)
+Use `excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented.
+
+```
+Forward:  Intent → Spec → Plan → Code → Lore
+Backward: Code → Survey → Features → Design → Lore
+```
+
+The output is the same (`.lore/specs/`, architecture docs), but the process is inverted.
 
 ## Principles
 
@@ -66,3 +90,4 @@ Skills can run independently. Use what you need:
 - **Context over process** - build lore, not bureaucracy
 - **Independent but connected** - each skill works alone but knows about the others
 - **Trust the LLM** - don't over-specify what modern AI already does well
+- **Human checkpoints** - excavation requires confirmation at each layer
