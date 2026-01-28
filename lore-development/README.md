@@ -18,6 +18,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:validate` | Define testing approach, record deviations |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
+| `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
 
 ## Artifact Storage
 
@@ -32,11 +33,12 @@ All context lives in `.lore/`:
 ├── plans/          # Saved planning sessions
 ├── validations/    # Testing guidelines, deviation logs
 ├── retros/         # Lessons learned
-└── excavations/    # Design archaeology findings
-    ├── layer-1-survey.md
-    ├── layer-2-features.md
-    ├── layer-3-design.md
-    └── sessions/
+├── excavations/    # Design archaeology findings
+│   ├── layer-1-survey.md
+│   ├── layer-2-features.md
+│   ├── layer-3-design.md
+│   └── sessions/
+└── diagrams/       # Visual representations (Mermaid)
 ```
 
 ## Usage
@@ -67,6 +69,9 @@ Skills can run independently. Use what you need:
 
 # Documenting an existing codebase (design archaeology)
 /lore-development:excavate
+
+# Visualizing flows and relationships
+/lore-development:ddp how messages flow from user to AI
 ```
 
 ## Two Modes of Operation
