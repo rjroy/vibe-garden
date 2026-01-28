@@ -1,0 +1,9 @@
+{
+  "name": "lore-development",
+  "description": "A lightweight plugin for building and organizing project context. Skills for research, brainstorming, specifications, work breakdown, planning, validation, and retrospectives.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  }
+}
