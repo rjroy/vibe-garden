@@ -1,63 +1,45 @@
 ---
 skill: excavate
-description: Discover and document the implicit design of an existing codebase
-artifact_path: .lore/excavations
+description: Progressively discover and document features in an existing codebase
+artifact_path: .lore/specs
 ---
 
-# Excavate: Design Archaeology for Existing Codebases
+# Excavate: Progressive Design Discovery
 
 ## Purpose
 
-Extract the implicit design from an existing codebase. This is the reverse of normal SDD - instead of Spec → Plan → Code, we're doing Code → Inferred Plan → Reconstructed Spec.
+Document an existing codebase **one feature at a time**. Each excavation produces one spec file. Features link to other features, building a map incrementally.
 
-Use this when:
-- Joining an undocumented project
-- Inheriting a legacy codebase
-- Needing to understand "what does this system actually do?"
-- Preparing for major refactoring
+This is the opposite of trying to understand everything at once.
 
-## The Challenge
+## The Problem with "Survey Everything First"
 
-Large codebases (100+ files, 100k+ LOC) can't be understood in one pass:
-- **Features ≠ modules** - A feature might span auth, database, API, and UI
-- **Implicit decisions** - The "why" behind patterns isn't in the code
-- **Accidental complexity** - Some structure is intentional, some is historical accident
-- **Context limits** - Can't load everything into memory
+Trying to document a 100k LOC codebase by surveying all of it first leads to:
+- One massive, unusable document
+- Analysis paralysis
+- Features that blur together
+- No clear stopping point
 
-## Approach: Layered Excavation
-
-Excavation happens in **layers**, each building on the previous. Human checkpoints between layers allow correction before investing more effort.
+## The Progressive Discovery Approach
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Layer 1: SURFACE SURVEY                                        │
-│  ├── Directory structure analysis                               │
-│  ├── Entry point identification (CLI, API, UI, main)            │
-│  ├── Configuration discovery (env, config files)                │
-│  ├── Dependency graph (package.json, imports)                   │
-│  └── Output: structure.md, entry-points.md                      │
-├────────────────────[HUMAN CHECKPOINT]───────────────────────────┤
-│  Layer 2: FEATURE EXTRACTION                                    │
-│  ├── Trace execution paths from entry points                    │
-│  ├── Identify cross-cutting concerns                            │
-│  ├── Cluster related files into "feature units"                 │
-│  ├── Map feature boundaries (what calls what)                   │
-│  └── Output: features.md, feature-map.md                        │
-├────────────────────[HUMAN CHECKPOINT]───────────────────────────┤
-│  Layer 3: DESIGN INFERENCE                                      │
-│  ├── Identify patterns in use (factory, repository, etc.)       │
-│  ├── Infer architectural decisions                              │
-│  ├── Document apparent constraints                              │
-│  ├── Flag inconsistencies and tech debt                         │
-│  └── Output: patterns.md, decisions.md, debt.md                 │
-├────────────────────[HUMAN CHECKPOINT]───────────────────────────┤
-│  Layer 4: DOCUMENTATION GENERATION                              │
-│  ├── Generate feature specs (reconstructed)                     │
-│  ├── Create architecture overview                               │
-│  ├── Document integration points                                │
-│  └── Output: .lore/specs/[feature].md (per feature)             │
+│                                                                 │
+│   Pick Entry Point  →  Trace Feature  →  Document Feature       │
+│         ↑                                      │                │
+│         │                                      ↓                │
+│         └──────────  Discover Connections  ────┘                │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+Each cycle produces **one spec file** for **one feature**.
+
+Features can be:
+- **Leaf features**: Do one thing (e.g., "password reset")
+- **Container features**: Provide access to other features (e.g., "dashboard")
+
+A container feature's spec lists what it contains. You excavate those separately.
 
 ## Invocation
 
@@ -65,263 +47,320 @@ Excavation happens in **layers**, each building on the previous. Human checkpoin
 /lore-development:excavate
 ```
 
-The skill is **conversational** - it will:
-1. Start with Layer 1 (surface survey)
-2. Present findings and ask for confirmation/correction
-3. Proceed to next layer only after user approval
-4. Allow focusing on specific features or areas
+### First Run: Find Entry Points
 
-### Optional Parameters
+On first invocation (no existing specs), the skill:
+1. Performs a quick scan for entry points
+2. Presents them as starting options
+3. User picks one to excavate first
 
-You can focus the excavation:
 ```
-/lore-development:excavate path=src/auth    # Focus on a subdirectory
-/lore-development:excavate layer=2          # Resume at specific layer
-/lore-development:excavate feature=payment  # Deep dive on known feature
+Found entry points:
+
+  API Routes:
+    • GET /           → src/routes/index.ts (home/dashboard)
+    • POST /auth/*    → src/routes/auth.ts (authentication)
+    • GET /products/* → src/routes/products.ts (catalog)
+
+  CLI Commands:
+    • npm start       → src/index.ts (app bootstrap)
+    • npm run migrate → src/db/migrate.ts (database setup)
+
+  UI Pages:
+    • /              → src/pages/Home.tsx
+    • /login         → src/pages/Login.tsx
+
+Which would you like to excavate first?
 ```
 
-## Layer Details
+### Subsequent Runs: Continue or Branch
 
-### Layer 1: Surface Survey
+With existing specs, the skill:
+1. Shows what's been documented
+2. Shows discovered-but-not-documented features
+3. User picks what to excavate next
 
-**Goal**: Understand the terrain before digging.
+```
+Excavation Progress:
 
-**Discovery Methods**:
-| Method | What It Finds |
-|--------|--------------|
-| Directory structure | Package boundaries, module organization |
-| File naming patterns | Conventions (*.controller.ts, *.service.ts) |
-| Config files | Feature flags, environment variables |
-| Package manifests | Dependencies, scripts, entry points |
-| README files | Documented intent (often outdated) |
-| Git history | Most-changed files, active areas |
+  Documented:
+    ✓ home-dashboard.md (links to: auth, products, cart)
+    ✓ authentication.md (links to: user-profile)
 
-**Output**: `.lore/excavations/layer-1-survey.md`
+  Discovered (not yet documented):
+    ○ products (from: home-dashboard)
+    ○ cart (from: home-dashboard)
+    ○ user-profile (from: authentication)
+
+  Unexplored entry points:
+    • CLI: migrate, seed
+    • API: /admin/*
+
+What would you like to excavate next?
+```
+
+## The Excavation Process (Per Feature)
+
+When you pick a feature to excavate:
+
+### Step 1: Trace the Feature
+
+Starting from the entry point, trace:
+- What files are involved?
+- What data does it touch?
+- What other features does it call/depend on?
+- What can the user DO with this feature?
+
+### Step 2: Ask Clarifying Questions
+
+The skill may not understand the business context:
+
+```
+Tracing "products" feature...
+
+I found these capabilities:
+  • List products (paginated)
+  • Search products
+  • View product details
+  • Filter by category
+
+Questions:
+  1. Is "add to cart" part of products or a separate cart feature?
+  2. The "wishlist" button - is that a distinct feature?
+  3. Are product reviews part of this or their own thing?
+```
+
+Your answers shape the feature boundary.
+
+### Step 3: Document the Feature
+
+Produces a spec file:
 
 ```markdown
-# Surface Survey: [Project Name]
+# Feature: Product Catalog
 
-## Structure Overview
-[Directory tree with annotations]
+## What It Does
+
+Users can browse, search, and view products available for purchase.
+
+## Capabilities
+
+- **Browse products**: Paginated list of all products
+- **Search**: Full-text search by name, description
+- **Filter**: By category, price range, availability
+- **View details**: Product page with images, description, specs
 
 ## Entry Points
-| Entry Point | Type | File | Purpose |
-|-------------|------|------|---------|
-| /api/users | REST | src/routes/users.ts | User management |
-| /login | Page | src/pages/login.tsx | Authentication |
-| npm start | CLI | src/index.ts | Application bootstrap |
 
-## Configuration
-| Config | Location | Purpose |
-|--------|----------|---------|
-| DATABASE_URL | .env | Database connection |
-| src/config.ts | Code | Application settings |
+| Entry | Type | Handler |
+|-------|------|---------|
+| GET /products | API | src/routes/products.ts:list |
+| GET /products/:id | API | src/routes/products.ts:show |
+| GET /products/search | API | src/routes/products.ts:search |
+| /products | Page | src/pages/Products.tsx |
+| /products/:id | Page | src/pages/ProductDetail.tsx |
 
-## Dependencies (key)
-[Significant dependencies with notes]
+## Implementation
 
-## Git Insights
-- Most active areas: [list]
-- Recent major changes: [list]
+### Files Involved
 
-## Initial Observations
-[Notable patterns, anomalies, or questions]
+| File | Role |
+|------|------|
+| src/routes/products.ts | API routes |
+| src/services/product-service.ts | Business logic |
+| src/models/product.ts | Data model |
+| src/pages/Products.tsx | List UI |
+| src/pages/ProductDetail.tsx | Detail UI |
+| src/components/ProductCard.tsx | Shared component |
+
+### Data
+
+- **products** table: id, name, description, price, category_id, ...
+- **categories** table: id, name, parent_id
+
+### Dependencies
+
+- Uses: authentication (optional, for personalization)
+- Uses: categories (for filtering)
+
+## Connected Features
+
+| Feature | Relationship |
+|---------|-------------|
+| [shopping-cart](./shopping-cart.md) | "Add to cart" button |
+| [product-reviews](./product-reviews.md) | Review section on detail page |
+| [categories](./categories.md) | Category filtering |
+| [search](./search.md) | Search functionality (shared?) |
+
+## Notes
+
+- Search uses Elasticsearch (see src/services/search-service.ts)
+- Images stored in S3, URLs in product.images JSON array
+- Price display respects user locale (src/utils/currency.ts)
 ```
 
-### Layer 2: Feature Extraction
+### Step 4: Record Discoveries
 
-**Goal**: Identify what this system *does* (not how it's organized).
+The skill notes features discovered but not yet documented:
+- shopping-cart (mentioned in product detail)
+- product-reviews (embedded in product page)
+- categories (used for filtering)
 
-**Discovery Methods**:
-| Method | What It Finds |
-|--------|--------------|
-| Entry point tracing | Execution paths through the system |
-| Import graph analysis | What depends on what |
-| Test organization | What developers considered "units" |
-| Route/handler mapping | User-facing capabilities |
-| Event/message patterns | Async feature boundaries |
+These become candidates for the next excavation.
 
-**The Core Insight**: A "feature" is defined by:
-- User-facing capability (what they can do)
-- Data it operates on
-- Entry points that trigger it
-- Components that implement it
+## Feature Hierarchy
 
-**Output**: `.lore/excavations/layer-2-features.md`
+Features naturally form a hierarchy:
+
+```
+.lore/specs/
+├── home-dashboard.md        # Container: links to main features
+├── authentication.md        # Leaf: login, logout, register
+├── authentication/
+│   └── password-reset.md    # Sub-feature of auth
+├── products.md              # Container: browsing products
+├── products/
+│   ├── search.md            # Sub-feature
+│   └── reviews.md           # Sub-feature
+└── shopping-cart.md         # Leaf: cart management
+```
+
+A container feature lists what it contains. You can excavate sub-features as needed.
+
+## Tracking Progress
+
+The skill maintains a discovery index:
+
+```
+.lore/excavations/
+└── index.md                 # What's documented, what's discovered
+```
 
 ```markdown
-# Feature Extraction: [Project Name]
+# Excavation Index
 
-## Discovered Features
+## Documented Features
 
-### Feature: User Authentication
-**Capability**: Users can register, login, logout, reset password
-**Entry Points**:
-  - POST /api/auth/register
-  - POST /api/auth/login
-  - POST /api/auth/logout
-  - POST /api/auth/reset-password
-**Files Involved**:
-  - src/routes/auth.ts (routes)
-  - src/services/auth-service.ts (business logic)
-  - src/models/user.ts (data model)
-  - src/middleware/auth.ts (session handling)
-  - src/utils/password.ts (hashing)
-**Data**: users table, sessions table
-**Dependencies**: bcrypt, jsonwebtoken
-**Cross-cuts**: Logging, error handling
+| Feature | Spec | Excavated | Connected To |
+|---------|------|-----------|--------------|
+| Home Dashboard | [home-dashboard.md](../specs/home-dashboard.md) | 2025-01-28 | auth, products, cart |
+| Authentication | [authentication.md](../specs/authentication.md) | 2025-01-28 | user-profile |
 
-### Feature: Shopping Cart
-[...]
+## Discovered (Not Yet Documented)
 
-## Feature Dependency Map
-[Mermaid diagram or ASCII showing feature relationships]
+| Feature | Discovered From | Entry Point |
+|---------|-----------------|-------------|
+| products | home-dashboard | GET /products |
+| cart | home-dashboard | GET /cart |
+| user-profile | authentication | GET /profile |
 
-## Cross-Cutting Concerns
-| Concern | Implementation | Used By |
-|---------|---------------|---------|
-| Logging | src/utils/logger.ts | All features |
-| Error Handling | src/middleware/errors.ts | All routes |
-| Caching | src/utils/cache.ts | Product queries |
+## Unexplored Entry Points
 
-## Uncertain Areas
-[Code that doesn't clearly belong to any feature]
+| Entry Point | Type | Notes |
+|-------------|------|-------|
+| /admin/* | API | Admin interface |
+| npm run seed | CLI | Database seeding |
 ```
 
-### Layer 3: Design Inference
-
-**Goal**: Understand *why* the system is built this way.
-
-**This is the hardest layer.** Code shows WHAT, not WHY. We must:
-- Identify patterns and infer intent
-- Look for comments explaining decisions
-- Check commit messages for context
-- Make educated guesses (clearly labeled)
-
-**Output**: `.lore/excavations/layer-3-design.md`
-
-```markdown
-# Design Inference: [Project Name]
-
-## Architectural Patterns
-
-### Pattern: Repository + Service Layers
-**Evidence**:
-  - All database access through *Repository classes
-  - Business logic in *Service classes
-  - Controllers only handle HTTP concerns
-**Inferred Intent**: Separation of concerns, testability
-**Consistency**: 8/10 files follow pattern, 2 exceptions noted
-
-### Pattern: Event-Driven Updates
-**Evidence**:
-  - EventEmitter usage in order processing
-  - Subscriber patterns for notifications
-**Inferred Intent**: Decoupling, async processing
-**Consistency**: Partially adopted (orders only)
-
-## Key Design Decisions (Inferred)
-
-### Decision: PostgreSQL over MongoDB
-**Evidence**: pg dependency, SQL migrations folder
-**Possible Rationale**:
-  - Relational data model (users, orders, products)
-  - ACID transactions for payments
-**Confidence**: Medium (no documentation found)
-
-### Decision: JWT for Authentication
-**Evidence**: jsonwebtoken in auth service
-**Possible Rationale**: Stateless API, microservice readiness
-**Trade-offs**:
-  - Pro: No session store needed
-  - Con: Can't revoke tokens immediately
-**Confidence**: High (common pattern)
-
-## Technical Debt Identified
-
-### Debt: Inconsistent Error Handling
-**Location**: Various controllers
-**Issue**: Some throw, some return error objects
-**Impact**: Unpredictable API responses
-**Suggested Fix**: Standardize on middleware error handler
-
-### Debt: Hardcoded Configuration
-**Location**: src/services/email-service.ts
-**Issue**: SMTP settings in code, not config
-**Impact**: Can't change without deployment
-
-## Questions for Team
-[Things that couldn't be inferred from code]
-```
-
-### Layer 4: Documentation Generation
-
-**Goal**: Produce the specs/docs that *should* have existed.
-
-After human review of layers 1-3, generate:
-- Feature specifications (reconstructed)
-- Architecture overview
-- Integration documentation
-
-**Output**:
-- `.lore/specs/[feature].md` (per feature)
-- `.lore/architecture.md` (system overview)
-
-These become living documents that can be updated going forward.
-
-## Implementation Strategy
-
-### For Large Codebases (100+ files)
-
-1. **Don't read everything** - Use sampling and heuristics
-2. **Start from edges** - Entry points tell you what matters
-3. **Follow the data** - Data models reveal feature boundaries
-4. **Trust git history** - Recently changed = currently relevant
-5. **Iterate** - Make a pass, refine, make another pass
-
-### Execution
-
-Layer 1 uses an exploration agent internally:
-- Directory scanning with Glob
-- Dependency analysis
-- Git history analysis
-- Config file reading
-
-Layers 2-4 are more interactive:
-- User provides domain knowledge
-- Skill synthesizes with code analysis
-- Checkpoints allow correction
-
-## Artifact Structure
+## Parameters
 
 ```
-.lore/
-├── excavations/
-│   ├── layer-1-survey.md       # Surface survey results
-│   ├── layer-2-features.md     # Feature extraction
-│   ├── layer-3-design.md       # Design inference
-│   └── sessions/
-│       └── 2025-01-28.md       # Session transcript/notes
-├── specs/                      # Generated specs (same as forward SDD)
-│   ├── authentication.md
-│   ├── shopping-cart.md
-│   └── [feature].md
-└── architecture.md             # Generated architecture overview
+/lore-development:excavate                    # Interactive: show progress, pick next
+/lore-development:excavate feature=products   # Excavate specific feature
+/lore-development:excavate entry=/api/admin   # Start from specific entry point
+/lore-development:excavate continue           # Continue with first undocumented
 ```
 
-## Limitations
+## What Makes a Feature Boundary?
 
-**What this skill CAN do**:
-- Discover structure and patterns
-- Identify features from entry points
-- Infer likely design decisions
-- Generate documentation scaffolding
+A feature is:
+- **User-centric**: Defined by what users can DO, not by code structure
+- **Cohesive**: The parts belong together conceptually
+- **Bounded**: Has clear entry points and dependencies
 
-**What this skill CANNOT do**:
-- Know the original intent with certainty
-- Understand business context you don't provide
-- Distinguish intentional patterns from accidents
-- Find features with no entry points (dead code)
+Signs you've found a feature boundary:
+- It has its own entry points (routes, commands, pages)
+- It has its own data (tables, entities)
+- It could theoretically be removed without breaking unrelated things
+- Users would describe it as "a thing the app does"
+
+Signs you should split:
+- "This feature does two very different things"
+- Entry points serve different user goals
+- Data is unrelated
+
+Signs you should merge:
+- "These are really the same capability"
+- Always used together
+- Share all the same data
+
+## Dealing with Cross-Cutting Concerns
+
+Some code isn't a feature - it's infrastructure:
+- Logging
+- Error handling
+- Authentication middleware
+- Database connections
+- Caching
+
+Document these separately as **infrastructure specs**:
+
+```
+.lore/specs/
+├── _infrastructure/
+│   ├── logging.md
+│   ├── error-handling.md
+│   ├── caching.md
+│   └── database.md
+└── [feature specs...]
+```
+
+These are referenced by features but excavated differently (no user-facing entry points).
+
+## Why This Works Better
+
+### vs. "Document Everything"
+
+| Approach | Problem |
+|----------|---------|
+| Survey all → Document all | Context overload, massive docs, no stopping point |
+| Progressive discovery | Bounded scope, modular output, natural stopping points |
+
+### vs. "One Big Spec"
+
+| Approach | Problem |
+|----------|---------|
+| Single spec file | Unwieldy, hard to maintain, hard to navigate |
+| Spec per feature | Each file is focused, cross-linked, independently useful |
+
+### vs. "Follow Directory Structure"
+
+| Approach | Problem |
+|----------|---------|
+| Document by module/folder | Features span modules, misses the user perspective |
+| Document by feature | Captures what users care about, regardless of code structure |
+
+## The Compound Effect
+
+A feature can be a gateway to other features:
+
+```
+Home Dashboard
+    ├── links to → Authentication
+    │                 └── contains → Password Reset
+    ├── links to → Product Catalog
+    │                 ├── contains → Search
+    │                 └── contains → Reviews
+    └── links to → Shopping Cart
+                      └── links to → Checkout
+```
+
+Each excavation:
+1. Documents one node
+2. Discovers edges to other nodes
+3. Makes the next excavation easier (you know what you're looking for)
+
+Over time, you build a complete map without ever trying to hold it all at once.
 
 ## Example Session
 
