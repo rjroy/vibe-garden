@@ -24,6 +24,13 @@
       "description": "Desktop/mobile notifications when Claude needs user attention. Supports ntfy.sh, Discord, and Slack.",
       "repository": "https://github.com/rjroy/vibe-garden.git",
       "license": "MIT"
+    },
+    {
+      "name": "lore-development",
+      "source": "./lore-development",
+      "description": "A lightweight plugin for building and organizing project context. Skills for research, brainstorming, specifications, work breakdown, planning, validation, and retrospectives.",
+      "repository": "https://github.com/rjroy/vibe-garden.git",
+      "license": "MIT"
     }
   ]
 }
