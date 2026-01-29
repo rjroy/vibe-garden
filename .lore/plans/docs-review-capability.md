@@ -1,5 +1,7 @@
 # Plan: Docs Review Capability
 
+**Status**: complete (merged in PR #68)
+
 ## Context
 
 - **Brainstorm**: `.lore/brainstorm/docs-review-capability.md`

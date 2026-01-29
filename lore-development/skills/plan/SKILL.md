@@ -1,11 +1,11 @@
 ---
 name: plan
-description: This skill creates implementation plans by gathering project context and saving planning sessions. Use when ready to plan implementation, thinking through technical approach, or wanting to capture planning decisions. Triggers include "plan the implementation", "how should we build this", "create a plan for", "think through the approach".
+description: This skill orchestrates Claude Code's plan mode with project context, then persists the approved plan. Use when ready to plan implementation, thinking through technical approach, or wanting to capture planning decisions. Triggers include "plan the implementation", "how should we build this", "create a plan for", "think through the approach".
 ---
 
 # Plan
 
-Direct the AI's planning capabilities with project context, then save the output.
+Orchestrate planning with context, persist the result.
 
 ## When to Use
 
@@ -15,14 +15,21 @@ Direct the AI's planning capabilities with project context, then save the output
 
 ## Process
 
-1. Gather context from `.lore/`:
+1. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/`
    - Work breakdown from `.lore/work/`
    - Research from `.lore/research/`
    - Brainstorms from `.lore/brainstorm/`
-2. Present this context to inform planning
-3. Plan the implementation (use native planning capabilities)
-4. Save the plan to `.lore/plans/`
+
+2. **Enter plan mode** using the `EnterPlanMode` tool. This transitions to Claude Code's native planning workflow where:
+   - The codebase can be explored
+   - Architecture can be designed
+   - Trade-offs can be analyzed
+   - The user approves or refines the plan
+
+3. **After plan approval**, save the approved plan to `.lore/plans/` using the document structure below.
+
+4. **If user declines plan mode**: Offer to save any discussion notes to `.lore/brainstorm/` instead. Planning conversations have value even if formal plan mode isn't used.
 
 ## Output
 
@@ -50,10 +57,13 @@ Any technical decisions, trade-offs, or risks noted.
 
 ## Philosophy
 
-This skill doesn't teach planning - the AI already knows how to plan. It ensures:
-1. Relevant project context is loaded
-2. The plan gets saved for future reference
-3. Decisions are documented
+This skill is a wrapper around Claude Code's native plan mode. It adds:
+
+1. **Context loading** - Relevant `.lore/` documents are gathered before planning begins
+2. **Persistence** - Approved plans are saved to `.lore/plans/` for future reference
+3. **Graceful fallback** - If plan mode is declined, discussion notes can still be captured
+
+The planning itself happens in plan mode, which has access to exploration tools (Glob, Grep, Read) and can design implementation approaches interactively with the user.
 
 ## Specialized Agents
 

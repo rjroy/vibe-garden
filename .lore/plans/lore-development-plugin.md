@@ -1,5 +1,7 @@
 # Plan: Lore Development Plugin
 
+**Status**: complete (plugin exists and is in active use)
+
 ## Context
 
 Spiral Grove works but feels heavy for modern LLMs. The bones are good (spec, plan, breakdown, implement) but:
