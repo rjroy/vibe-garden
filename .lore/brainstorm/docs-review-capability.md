@@ -1,5 +1,7 @@
 # Brainstorm: Documentation Review via Fresh Context
 
+**Status**: incorporated (led to plan, then lore-docs-reviewer agent in PR #68)
+
 ## Context
 
 Lore-development is missing a concept: documentation should be reviewed with fresh eyes. In Claude Code, "fresh eyes" means a sub-agent with a clean context window. The main thread accumulates assumptions and mental models that can blind it to problems in its own output.
