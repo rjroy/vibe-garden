@@ -34,6 +34,7 @@ Check the Task tool description for available agents. The Task tool lists all su
 Scan this list and categorize agents by their function:
 
 - **Discovery**: Codebase exploration, entry point finding, structure scanning
+- **Documentation Review**: Fresh-context review of specs and plans
 - **Security**: Auth review, vulnerability analysis, secrets handling
 - **Architecture**: System design, dependency analysis, patterns
 - **Performance**: Profiling, optimization, caching strategies
@@ -42,6 +43,13 @@ Scan this list and categorize agents by their function:
 - **Domain-Specific**: Agents tied to specific technologies or frameworks
 
 Focus on agents with analysis/review capabilities (tools like Read, Grep, Glob, Bash). Skip generative agents (image/video), workflow-specific agents (music, stories), and internal system agents.
+
+**Built-in lore-development agents** (always include these with consistent descriptions):
+
+| Agent | Category | Standard Description |
+|-------|----------|---------------------|
+| `lore-development:surface-surveyor` | Discovery | Entry point discovery for progressive feature excavation |
+| `lore-development:lore-docs-reviewer` | Documentation Review | Fresh-context review of specs and plans to catch clarity issues |
 
 ### Step 2: Present Findings
 
@@ -84,6 +92,12 @@ Last updated: [date]
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
 | surface-surveyor | Entry point discovery | During excavation, finding codebase entry points |
+
+## Documentation Review
+
+| Agent | Purpose | When to Use |
+|-------|---------|-------------|
+| lore-docs-reviewer | Fresh-context review of specs and plans | After completing a spec or plan, when docs feel unclear |
 
 ## Security
 
