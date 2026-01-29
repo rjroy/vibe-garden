@@ -54,3 +54,7 @@ Spec: `.lore/specs/[feature-name].md`
 - Each chunk should deliver something usable or testable
 - Smaller is better - aim for chunks that take hours, not days
 - Don't over-plan - enough detail to start, refine as you go
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific concerns. Architecture or sizing experts can validate chunk boundaries and dependencies. Invoke relevant agents via Task tool and incorporate their insights.

@@ -55,3 +55,7 @@ Links to related `.lore/` documents.
 ## Purpose
 
 This builds organizational memory. Future work benefits from past experience - but only if it's written down.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help identify patterns. Reviewers can spot recurring issues or opportunities worth capturing. Invoke relevant agents via Task tool and incorporate their insights.

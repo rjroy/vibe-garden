@@ -19,6 +19,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
+| `/lore-development:update-lore-agents` | Build/update the project's agent registry |
 
 ## Artifact Storage
 
@@ -38,8 +39,23 @@ All context lives in `.lore/`:
 │   ├── layer-2-features.md
 │   ├── layer-3-design.md
 │   └── sessions/
-└── diagrams/       # Visual representations (Mermaid)
+├── diagrams/       # Visual representations (Mermaid)
+└── lore-agents.md  # Agent registry (optional)
 ```
+
+## Agent Registry
+
+Skills can leverage specialized agents for domain-specific concerns (security, performance, architecture, etc.). Instead of hardcoding agent names into every skill, the plugin uses a project-level registry.
+
+**How it works**:
+1. Run `/lore-development:update-lore-agents` to scan available agents
+2. The skill creates `.lore/lore-agents.md` with agents relevant to your project
+3. Other skills check this file and invoke agents when appropriate
+
+**Benefits**:
+- Add new agents without updating the plugin
+- Each project declares what's relevant to it
+- Project-specific notes (e.g., "always use security-guidance for auth specs")
 
 ## Usage
 
@@ -72,6 +88,9 @@ Skills can run independently. Use what you need:
 
 # Visualizing flows and relationships
 /lore-development:ddp how messages flow from user to AI
+
+# Setting up/updating agent registry
+/lore-development:update-lore-agents
 ```
 
 ## Two Modes of Operation

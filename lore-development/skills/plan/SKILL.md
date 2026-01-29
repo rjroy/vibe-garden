@@ -54,3 +54,7 @@ This skill doesn't teach planning - the AI already knows how to plan. It ensures
 1. Relevant project context is loaded
 2. The plan gets saved for future reference
 3. Decisions are documented
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific concerns. Security, performance, or architecture reviewers can validate technical decisions. Invoke relevant agents via Task tool and incorporate their insights.
