@@ -1,5 +1,7 @@
 # Plan: Integrate Plan Skill with Claude Code Plan Mode
 
+**Status**: complete (implemented 2026-01-29)
+
 ## Context
 
 - **Discussion**: During docs-review-capability planning, identified that lore `/plan` skill and Claude Code's built-in plan mode serve complementary purposes
@@ -44,6 +46,3 @@ The skill becomes a wrapper that adds context-loading and persistence around Cla
 - If user declines plan mode, skill should gracefully handle (maybe still offer to save what was discussed).
 - This changes the skill from "do planning" to "orchestrate planning" which is more aligned with lore-development's philosophy of not teaching what the AI already knows.
 
-## Status
-
-Tracked for future implementation. Not blocking docs-review-capability work.
