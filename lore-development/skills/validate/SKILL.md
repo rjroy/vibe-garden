@@ -1,6 +1,6 @@
 ---
 name: validate
-description: Use when the user wants to define validation guidelines, record deviations from plan, or document testing approach. Invoked via /lore-development:validate.
+description: This skill defines validation guidelines and records deviations from plans. Use when defining testing approach before implementation, recording what changed during implementation, or documenting why deviations occurred. Triggers include "how do we validate this", "record the deviation", "what changed from the plan", "define testing approach".
 ---
 
 # Validate

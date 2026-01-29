@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Use when the user wants to create an implementation plan, direct the AI planner with project context, or save a planning session. Invoked via /lore-development:plan.
+description: This skill creates implementation plans by gathering project context and saving planning sessions. Use when ready to plan implementation, thinking through technical approach, or wanting to capture planning decisions. Triggers include "plan the implementation", "how should we build this", "create a plan for", "think through the approach".
 ---
 
 # Plan

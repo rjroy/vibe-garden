@@ -1,6 +1,6 @@
 ---
 name: specify
-description: Use when the user wants to define requirements, capture what needs to be built, or document success criteria. Invoked via /lore-development:specify.
+description: This skill defines requirements and success criteria for features. Use when capturing requirements, defining what "done" looks like, or documenting constraints. Triggers include "write a spec for", "define the requirements", "what should this do", "capture the requirements".
 ---
 
 # Specify

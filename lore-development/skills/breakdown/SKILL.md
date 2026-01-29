@@ -1,6 +1,6 @@
 ---
 name: breakdown
-description: Use when the user wants to decompose work into releasable chunks, break down a feature into tasks, or organize implementation steps. Invoked via /lore-development:breakdown.
+description: This skill decomposes work into releasable chunks. Use for breaking specs into implementable pieces, organizing work into logical phases, or identifying incremental release boundaries. Triggers include "break this down", "decompose the work", "what are the tasks", "chunk this into pieces".
 ---
 
 # Breakdown
