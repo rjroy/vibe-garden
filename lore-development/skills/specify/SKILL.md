@@ -52,3 +52,7 @@ Links to related `.lore/` documents if relevant.
 ## Keep It Light
 
 Don't over-specify. Capture the essence. Trust that implementation will fill gaps appropriately.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific concerns. Security, compliance, or architecture experts can identify requirements you might miss. Invoke relevant agents via Task tool and incorporate their insights.

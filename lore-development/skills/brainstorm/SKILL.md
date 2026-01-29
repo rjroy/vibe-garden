@@ -61,3 +61,7 @@ Questions that emerged but weren't resolved.
 ## Context
 
 Check `.lore/research/` for external context that might inform the brainstorm.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific concerns. Domain experts can expand thinking in areas like security, architecture, or performance. Invoke relevant agents via Task tool and incorporate their insights.

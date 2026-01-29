@@ -51,3 +51,7 @@ Any additional context or observations.
 ## Context
 
 Check `.lore/brainstorm/` for related ideas that prompted this research.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help focus research. Domain experts can identify what's worth investigating and what to prioritize. Invoke relevant agents via Task tool and incorporate their insights.

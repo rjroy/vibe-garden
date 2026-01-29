@@ -265,3 +265,7 @@ Each excavation cycle:
 3. Makes the next excavation easier (you know what you're looking for)
 
 Over time, you build a complete map without ever trying to hold it all at once.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents beyond surface-surveyor. Domain experts can help identify patterns, security concerns, or architectural boundaries during excavation. Invoke relevant agents via Task tool and incorporate their insights.

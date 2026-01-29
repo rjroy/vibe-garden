@@ -58,3 +58,7 @@ Changes from the original plan:
 ## Keep It Honest
 
 The point is capturing what actually happened, not enforcing rigid adherence. Deviations are information, not failures.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific validation. Security auditors, performance analyzers, or testing specialists can catch issues in their domain. Invoke relevant agents via Task tool and incorporate their insights.

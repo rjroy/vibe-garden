@@ -142,3 +142,7 @@ For Mermaid syntax patterns and diagram examples, consult:
 
 Check `.lore/specs/` for feature documentation that might need visualization.
 Check `.lore/brainstorm/` for ideas that might benefit from a picture.
+
+## Specialized Agents
+
+If `.lore/lore-agents.md` exists, consult it for specialized agents that can help identify what needs visualization. Architecture agents can highlight complex relationships worth diagramming. Invoke relevant agents via Task tool and incorporate their insights.
