@@ -1,7 +1,7 @@
 ---
 skill: excavate
 description: This skill should be used when the user asks to "document this codebase", "excavate features", "what does this code do", "map out the system", "create specs from code", or needs to progressively discover and document features in an existing codebase. Invoked via /lore-development:excavate.
-artifact_path: .lore/specs
+artifact_path: .lore/reference
 ---
 
 # Excavate: Progressive Design Discovery
@@ -35,7 +35,7 @@ This is the opposite of trying to understand everything at once.
 **Action**: Check for existing excavation work.
 
 1. Look for `.lore/excavations/index.md` to see what's been documented
-2. Look for existing specs in `.lore/specs/`
+2. Look for existing reference docs in `.lore/reference/`
 3. Determine if this is a fresh start or continuation
 
 If continuing, present:
@@ -86,7 +86,7 @@ The code alone doesn't tell you where one feature ends and another begins. Ask:
 
 ### Step 5: Document the Feature
 
-**Action**: Write a spec file to `.lore/specs/[feature-name].md`
+**Action**: Write a reference document to `.lore/reference/[feature-name].md`
 
 Use the document structure below.
 
@@ -116,7 +116,7 @@ If gaps found, return to Step 3 for missed features before declaring the session
 
 ## Output
 
-### Feature Spec (`.lore/specs/[feature-name].md`)
+### Feature Reference (`.lore/reference/[feature-name].md`)
 
 ```markdown
 # Feature: [Name]
@@ -188,7 +188,7 @@ Implementation details, gotchas, or context worth preserving.
 
 | Feature | Spec | Excavated | Connected To |
 |---------|------|-----------|--------------|
-| feature-name | [feature-name.md](../specs/feature-name.md) | YYYY-MM-DD | other, features |
+| feature-name | [feature-name.md](../reference/feature-name.md) | YYYY-MM-DD | other, features |
 
 ## Discovered (Not Yet Documented)
 
@@ -232,7 +232,7 @@ Signs you should merge:
 Features naturally form a hierarchy:
 
 ```
-.lore/specs/
+.lore/reference/
 ├── home-dashboard.md        # Container: links to main features
 ├── authentication.md        # Leaf: login, logout, register
 ├── authentication/
@@ -255,7 +255,7 @@ Some code isn't a feature, it's infrastructure:
 - Database connections
 - Caching
 
-Document these separately as infrastructure specs in `.lore/specs/_infrastructure/`.
+Document these separately as infrastructure docs in `.lore/reference/_infrastructure/`.
 
 ## The Progressive Discovery Model
 
