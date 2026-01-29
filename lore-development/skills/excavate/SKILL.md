@@ -68,6 +68,10 @@ Investigate:
 - What other features does it call/depend on?
 - What can the user DO with this feature?
 
+**Trace both contents AND actions**: "What does this show?" finds widgets and sub-views. "What can you DO from here?" finds connected features like edit buttons, action menus, and navigation links. Each feature should be traced for both.
+
+**Verify endpoints against code**: Don't document endpoint paths from memory. Grep the actual route files to confirm paths match reality (e.g., `/api/vaults/:vaultId/files/*` not simplified `/files/*`).
+
 ### Step 4: Clarify Boundaries
 
 **Action**: Ask the user questions to establish feature boundaries.
@@ -76,6 +80,9 @@ The code alone doesn't tell you where one feature ends and another begins. Ask:
 - "Is X part of this feature or separate?"
 - "Should Y be its own spec?"
 - "Are these two capabilities the same feature?"
+- "What are the user-facing names vs internal names?" (e.g., "Ground" tab vs "home" mode in code)
+
+**Ask about naming early**: Getting naming conventions upfront prevents rework when internal code names don't match user-facing terminology.
 
 ### Step 5: Document the Feature
 
@@ -89,6 +96,23 @@ Use the document structure below.
 - The newly documented feature
 - Any discovered (not yet documented) features
 - Remaining unexplored entry points
+
+### Step 7: Verify Coverage (Before Declaring Complete)
+
+**Action**: Before ending an excavation session, run the verification checklist.
+
+The UI structure doesn't reveal backend-only features, and discovery can miss entry points that aren't visually prominent. This step catches gaps.
+
+**Verification Checklist**:
+- [ ] Run surface-surveyor to enumerate all entry points
+- [ ] Compare entry points against documented specs (any undocumented?)
+- [ ] Grep route files for undocumented endpoints
+- [ ] Check for backend-only features (API exists but no UI entry point)
+- [ ] Verify documented API paths match actual route definitions
+
+If gaps found, return to Step 3 for missed features before declaring the session complete.
+
+**When to run verification**: After documenting several features (not after every single spec), or when the user indicates they think excavation is complete.
 
 ## Output
 
@@ -136,6 +160,19 @@ Bullet list of what users can DO with this feature:
 | Feature | Relationship |
 |---------|-------------|
 | [feature-name](./feature-name.md) | How it connects |
+
+## Implementation Status
+
+| Layer | Status | Notes |
+|-------|--------|-------|
+| Backend API | Complete/Partial/None | Location of routes/handlers |
+| Frontend UI | Complete/Partial/None | Components involved |
+| Tests | Complete/Partial/None | Test coverage notes |
+
+Status values:
+- **Complete**: Fully implemented and functional
+- **Partial**: Some implementation exists but incomplete
+- **None**: Layer not implemented
 
 ## Notes
 
