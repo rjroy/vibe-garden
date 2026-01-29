@@ -1,6 +1,6 @@
 ---
 name: research
-description: Use when the user wants to research external context, find information outside the project, explore documentation, APIs, or prior art. Invoked via /lore-development:research.
+description: This skill gathers context from outside the project scope. Use for exploring external documentation, finding prior art, understanding libraries or frameworks, or gathering reference material. Triggers include "research this", "find documentation for", "what's the prior art", "look up how X works".
 ---
 
 # Research

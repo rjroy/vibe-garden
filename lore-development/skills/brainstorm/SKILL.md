@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: Use when the user wants to explore ideas, think through possibilities, record "what if" scenarios, or consume sketches/diagrams. Emphasis on exploration over solutions. Invoked via /lore-development:brainstorm.
+description: This skill explores ideas and possibilities, recording "what if" scenarios. Use when brainstorming approaches, thinking through trade-offs, consuming sketches or diagrams into a session, or exploring before committing. Triggers include "let's brainstorm", "what if we...", "explore options for", "think through possibilities".
 ---
 
 # Brainstorm

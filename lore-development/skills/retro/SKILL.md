@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Use when the user wants to review completed work, record lessons learned, or reflect on what went well or could improve. Invoked via /lore-development:retro.
+description: This skill reviews completed work and records lessons learned. Use after completing a feature, when capturing insights before they fade, or for periodic reflection on progress. Triggers include "let's do a retro", "what did we learn", "review what happened", "capture lessons from".
 ---
 
 # Retro
