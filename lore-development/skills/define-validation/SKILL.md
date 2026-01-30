@@ -1,0 +1,98 @@
+---
+name: define-validation
+description: This skill defines AI validation criteria for work in progress. Use when validation wasn't defined in spec/plan, or when starting work without formal documentation. Triggers include "how will the AI validate", "define validation criteria", "what should the AI check", "validation for this work".
+---
+
+# Define Validation
+
+Define how the AI validates its work before declaring done.
+
+## When to Use
+
+- Spec or plan exists but lacks AI Validation section
+- Starting work without formal spec/plan
+- Want to make validation criteria explicit for any chunk of work
+- Reviewing existing criteria for completeness
+
+## Process
+
+1. **Identify the work**: Read any existing spec, plan, or gather context from conversation
+2. **Start with defaults**: Always include the standard validation checklist
+3. **Probe for custom needs**: Ask "Does this feature need any specific verification beyond the defaults?"
+4. **Output the criteria**: Present for user confirmation
+5. **Save or append**: Either update existing spec/plan or save standalone
+
+## Output
+
+If a spec or plan exists, offer to append the AI Validation section to it.
+
+If no formal document exists, save to `.lore/validation/[feature-or-work].md`
+
+### Validation Criteria Structure
+
+```markdown
+## AI Validation
+
+**Defaults** (apply unless overridden):
+- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
+- 90%+ coverage on new code
+- Code review by fresh-context sub-agent
+
+**Custom**:
+- [Feature-specific validation steps]
+```
+
+## Defaults Explained
+
+These apply to virtually all work:
+
+| Default | Why |
+|---------|-----|
+| Mock time | Tests shouldn't depend on when they run |
+| Mock network | Tests shouldn't fail due to connectivity |
+| Mock filesystem | Tests should be isolated and reproducible |
+| Mock LLM calls | Agent SDK `query()` is an external API, costs money, can fail |
+| 90%+ coverage | New code should be exercised by tests |
+| Code review | Fresh-context sub-agent catches what the implementer misses |
+
+## Custom Validation Examples
+
+When probing for custom needs, consider:
+
+- **CLI tools**: "Output matches expected format in examples/"
+- **Parsers**: "All test fixtures parse without errors"
+- **Generators**: "Generated files are syntactically valid"
+- **Integrations**: "Integration test passes against staging/mock API"
+- **UI components**: "Renders without console errors in test harness"
+- **Data migrations**: "Round-trip preserves data integrity"
+
+## Standalone Document Structure
+
+When no spec/plan exists:
+
+```markdown
+# Validation: [Work Description]
+
+**For**: Brief description of what's being built
+
+## AI Validation
+
+**Defaults** (apply unless overridden):
+- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
+- 90%+ coverage on new code
+- Code review by fresh-context sub-agent
+
+**Custom**:
+- [Feature-specific items]
+
+## Context
+How this validation criteria was derived (conversation, informal description, etc.)
+```
+
+## Keep It Actionable
+
+Validation criteria must be things the AI can actually do:
+- "Run the test suite" - actionable
+- "Verify the user experience is good" - not actionable
+- "Check output matches examples/expected.json" - actionable
+- "Ensure performance is acceptable" - not actionable (unless threshold defined)

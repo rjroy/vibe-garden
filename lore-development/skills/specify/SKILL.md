@@ -19,9 +19,10 @@ Define what to build and how to know it's done.
 2. Ask clarifying questions about scope and success
 3. Draft the specification
 4. **Probe for stubs**: For each major action identified, ask "Are we stubbing [action], or defining it now?" User can choose to define inline or mark as stub.
-5. Confirm with user before saving
-6. Save to `.lore/specs/`
-7. **Offer fresh-eyes review** (see below)
+5. **Probe for validation**: Ask "Are defaults sufficient for AI validation, or does this feature need custom checks?" Most features use defaults; some need specific verification.
+6. Confirm with user before saving
+7. Save to `.lore/specs/`
+8. **Offer fresh-eyes review** (see below)
 
 ## Output
 
@@ -54,6 +55,18 @@ How users arrive at this feature:
 How we know this is done:
 - [ ] Criterion 1
 - [ ] Criterion 2
+
+## AI Validation
+How the AI verifies completion before declaring done.
+
+**Defaults** (apply unless overridden):
+- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
+- 90%+ coverage on new code
+- Code review by fresh-context sub-agent
+
+**Custom** (feature-specific, if needed):
+- [e.g., "CLI output matches format in examples/"]
+- [e.g., "Generated files parse without errors"]
 
 ## Constraints
 Any boundaries or limitations.
