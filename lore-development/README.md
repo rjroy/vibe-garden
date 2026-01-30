@@ -2,6 +2,8 @@
 
 A lightweight plugin for building and organizing project context.
 
+<img src="logo.webp" align="right" width="128" height="128" alt="Lore Development Logo">
+
 ## Philosophy
 
 Modern LLMs have strong native planning and implementation capabilities. This plugin doesn't teach process - it helps build findable, organized context (the "lore" of your project) that informs better work.
