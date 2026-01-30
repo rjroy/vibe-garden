@@ -15,7 +15,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:specify` | Define requirements and success criteria |
 | `/lore-development:breakdown` | Decompose work into releasable chunks |
 | `/lore-development:execute` | Orchestrate implement → review → test cycle per chunk |
-| `/lore-development:plan` | Direct AI planner with context, save output |
+| `/lore-development:prep-plan` | Load context, enter plan mode, save output |
 | `/lore-development:validate` | Define testing approach, record deviations |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
 | `/lore-development:retro` | Review work, capture lessons learned |
@@ -79,8 +79,8 @@ Skills can run independently. Use what you need:
 # Executing the breakdown (implement → review → test)
 /lore-development:execute
 
-# Planning implementation
-/lore-development:plan
+# Planning implementation (with lore context)
+/lore-development:prep-plan
 
 # Checking document health
 /lore-development:tend
@@ -104,7 +104,7 @@ Skills can run independently. Use what you need:
 ## Two Modes of Operation
 
 ### Forward Mode (Building New)
-Use `research → brainstorm → specify → breakdown → plan → validate → retro` when building something new. This creates lore as you work.
+Use `research → brainstorm → specify → breakdown → prep-plan → validate → retro` when building something new. This creates lore as you work.
 
 ### Backward Mode (Excavating Existing)
 Use `excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented.
