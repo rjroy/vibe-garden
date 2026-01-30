@@ -47,10 +47,6 @@ Each document type has appropriate status values:
 - `reference` - Useful ongoing reference
 - `stale` - Information likely outdated
 
-### Validations (`.lore/validations/`)
-- `active` - Testing guidelines in use
-- `complete` - Testing phase done
-
 ### Retros (`.lore/retros/`)
 Retros don't need status - they're historical records.
 
@@ -68,7 +64,7 @@ Don't trust claimed status. Verify using these techniques:
 
 **For "complete" plans**:
 - Check if implementation appears done (code exists, tests pass)
-- Look for retro or validation documents referencing this plan
+- Look for retro documents referencing this plan
 
 **For "incorporated" brainstorms**:
 - Use Grep to search for the brainstorm filename or key terms in `.lore/specs/`

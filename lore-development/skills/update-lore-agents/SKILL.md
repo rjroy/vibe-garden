@@ -143,7 +143,6 @@ This registry is consumed by other lore-development skills:
 - `specify` - domain experts for requirements
 - `plan` - architecture and security reviewers
 - `prep-plan` - architecture and sizing validation
-- `validate` - security, testing, performance analyzers
 - `excavate` - discovery agents beyond surface-surveyor
 - `brainstorm`, `research`, `retro`, `ddp` - various domain experts
 
