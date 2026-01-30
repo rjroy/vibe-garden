@@ -30,6 +30,8 @@ Save to `.lore/specs/[feature-name].md`
 ```markdown
 # Spec: [Feature Name]
 
+**Status**: draft
+
 ## Overview
 One paragraph describing what this is.
 

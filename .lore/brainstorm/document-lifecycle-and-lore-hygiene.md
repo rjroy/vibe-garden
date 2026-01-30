@@ -1,6 +1,6 @@
 # Brainstorm: Document Lifecycle and Lore Hygiene
 
-**Status**: direction chosen, awaiting tend skill design
+**Status**: incorporated (implemented via tend skill)
 
 Date: 2026-01-29
 

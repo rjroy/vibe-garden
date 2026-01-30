@@ -40,6 +40,8 @@ Save to `.lore/plans/[feature-or-chunk-name].md`
 ```markdown
 # Plan: [Feature/Chunk Name]
 
+**Status**: draft
+
 ## Context
 Links to relevant `.lore/` documents.
 

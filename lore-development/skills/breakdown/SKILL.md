@@ -35,11 +35,13 @@ Spec: `.lore/specs/[feature-name].md`
 ## Chunks
 
 ### 1. [Chunk Name]
+**Status**: Not Started
 **What**: Brief description
 **Delivers**: What's usable after this chunk
 **Depends on**: Any prerequisites
 
 ### 2. [Chunk Name]
+**Status**: Not Started
 **What**: Brief description
 **Delivers**: What's usable after this chunk
 **Depends on**: Any prerequisites
@@ -48,6 +50,15 @@ Spec: `.lore/specs/[feature-name].md`
 1. Chunk name (reason)
 2. Chunk name (reason)
 ```
+
+## Status Values
+
+Chunks track progress with a **Status** field:
+- `Not Started` - Work hasn't begun
+- `In Progress` - Currently being worked on
+- `Done` - Implementation, review, and testing complete
+
+The `/lore-development:execute` skill uses these statuses to find the next incomplete chunk.
 
 ## Principles
 
