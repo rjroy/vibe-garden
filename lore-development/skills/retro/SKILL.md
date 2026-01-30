@@ -18,7 +18,6 @@ Review artifacts and record lessons learned.
 1. Review relevant `.lore/` artifacts:
    - Original spec in `.lore/specs/`
    - Plan in `.lore/plans/`
-   - Validation notes in `.lore/validations/`
 2. Reflect on what happened vs. what was expected
 3. Capture lessons learned
 4. Save to `.lore/retros/`

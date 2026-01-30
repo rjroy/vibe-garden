@@ -13,10 +13,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:research` | Gather context from outside the project |
 | `/lore-development:brainstorm` | Explore ideas, record "what if" thinking |
 | `/lore-development:specify` | Define requirements and success criteria |
-| `/lore-development:breakdown` | Decompose work into releasable chunks |
-| `/lore-development:execute` | Orchestrate implement → review → test cycle per chunk |
-| `/lore-development:plan` | Direct AI planner with context, save output |
-| `/lore-development:validate` | Define testing approach, record deviations |
+| `/lore-development:prep-plan` | Load context, enter plan mode, save output |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
@@ -32,9 +29,7 @@ All context lives in `.lore/`:
 ├── research/       # External findings
 ├── brainstorm/     # Recorded explorations
 ├── specs/          # Requirements
-├── work/           # Releasable breakdowns
 ├── plans/          # Saved planning sessions
-├── validations/    # Testing guidelines, deviation logs
 ├── retros/         # Lessons learned
 ├── excavations/    # Design archaeology findings
 │   ├── layer-1-survey.md
@@ -73,20 +68,11 @@ Skills can run independently. Use what you need:
 # Ready to define what to build
 /lore-development:specify
 
-# Breaking it into pieces
-/lore-development:breakdown
-
-# Executing the breakdown (implement → review → test)
-/lore-development:execute
-
-# Planning implementation
-/lore-development:plan
+# Planning implementation (with lore context)
+/lore-development:prep-plan
 
 # Checking document health
 /lore-development:tend
-
-# During/after implementation
-/lore-development:validate
 
 # Reflecting on completed work
 /lore-development:retro
@@ -104,7 +90,7 @@ Skills can run independently. Use what you need:
 ## Two Modes of Operation
 
 ### Forward Mode (Building New)
-Use `research → brainstorm → specify → breakdown → plan → validate → retro` when building something new. This creates lore as you work.
+Use `research → brainstorm → specify → prep-plan → retro` when building something new. This creates lore as you work.
 
 ### Backward Mode (Excavating Existing)
 Use `excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented.

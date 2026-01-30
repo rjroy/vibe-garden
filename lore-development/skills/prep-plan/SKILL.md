@@ -1,11 +1,11 @@
 ---
-name: plan
-description: This skill orchestrates Claude Code's plan mode with project context, then persists the approved plan. Use when ready to plan implementation, thinking through technical approach, or wanting to capture planning decisions. Triggers include "plan the implementation", "how should we build this", "create a plan for", "think through the approach".
+name: prep-plan
+description: This skill loads project context then enters Claude Code's plan mode. Use when ready to plan implementation with lore context, or wanting to capture planning decisions. Triggers include "prep for planning", "plan with context", "load context and plan", "prep-plan".
 ---
 
-# Plan
+# Prep Plan
 
-Orchestrate planning with context, persist the result.
+Load lore context, then enter plan mode.
 
 ## When to Use
 
@@ -17,7 +17,6 @@ Orchestrate planning with context, persist the result.
 
 1. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/`
-   - Work breakdown from `.lore/work/`
    - Research from `.lore/research/`
    - Brainstorms from `.lore/brainstorm/`
 

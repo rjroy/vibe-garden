@@ -18,9 +18,10 @@ Define what to build and how to know it's done.
 1. Review any relevant `.lore/research/` or `.lore/brainstorm/` context
 2. Ask clarifying questions about scope and success
 3. Draft the specification
-4. Confirm with user before saving
-5. Save to `.lore/specs/`
-6. **Offer fresh-eyes review** (see below)
+4. **Probe for stubs**: For each major action identified, ask "Are we stubbing [action], or defining it now?" User can choose to define inline or mark as stub.
+5. Confirm with user before saving
+6. Save to `.lore/specs/`
+7. **Offer fresh-eyes review** (see below)
 
 ## Output
 
@@ -36,9 +37,18 @@ Save to `.lore/specs/[feature-name].md`
 ## Overview
 One paragraph describing what this is.
 
+## Entry Points
+How users arrive at this feature:
+- [Entry description] (from [source])
+
 ## Requirements
 - REQ-1: [requirement]
 - REQ-2: [requirement]
+
+## Exit Points
+| Exit | Triggers When | Target |
+|------|---------------|--------|
+| [Exit name] | [User action or condition] | [STUB: target-name] or [Spec: existing-spec] |
 
 ## Success Criteria
 How we know this is done:
@@ -51,6 +61,20 @@ Any boundaries or limitations.
 ## Context
 Links to related `.lore/` documents if relevant.
 ```
+
+## Stub Notation
+
+When a feature connects to undefined areas, mark them as stubs:
+
+**Format**: `[STUB: stub-name]`
+
+**Naming**: Use kebab-case matching spec filename conventions (e.g., `auth-flow`, `payment-processing`). The stub name should match what the spec file would be named when defined.
+
+**Examples**:
+- `[STUB: user-authentication]` - Links to undefined auth feature
+- `[Spec: checkout-flow]` - Links to existing `.lore/specs/checkout-flow.md`
+
+**When to stub**: Mark something as a stub when it's needed by this feature but defining it would expand scope beyond the current layer. The stub becomes a documented "known unknown" that can be specified later.
 
 ## Keep It Light
 
