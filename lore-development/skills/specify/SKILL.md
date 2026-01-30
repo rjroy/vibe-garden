@@ -20,6 +20,7 @@ Define what to build and how to know it's done.
 3. Draft the specification
 4. Confirm with user before saving
 5. Save to `.lore/specs/`
+6. **Offer fresh-eyes review** (see below)
 
 ## Output
 
@@ -54,6 +55,18 @@ Links to related `.lore/` documents if relevant.
 ## Keep It Light
 
 Don't over-specify. Capture the essence. Trust that implementation will fill gaps appropriately.
+
+## After Saving: Fresh-Eyes Review
+
+After the spec is saved, offer a review:
+
+> "Spec saved. Would you like a fresh-eyes review? This catches clarity issues and gaps that are easy to miss when you're close to the work."
+
+If yes: Invoke the `lore-docs-reviewer` agent on the saved spec using the Task tool. Present the findings and offer to address critical issues before moving on.
+
+If no: Proceed. The user can always run the review later.
+
+**Why this matters**: Specs written in conversation accumulate assumptions. A reviewer with fresh context reads only what's on the page, catching what the author can't see.
 
 ## Specialized Agents
 

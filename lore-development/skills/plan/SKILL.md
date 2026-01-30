@@ -29,7 +29,9 @@ Orchestrate planning with context, persist the result.
 
 3. **After plan approval**, save the approved plan to `.lore/plans/` using the document structure below.
 
-4. **If user declines plan mode**: Offer to save any discussion notes to `.lore/brainstorm/` instead. Planning conversations have value even if formal plan mode isn't used.
+4. **Offer fresh-eyes review** (see below).
+
+5. **If user declines plan mode**: Offer to save any discussion notes to `.lore/brainstorm/` instead. Planning conversations have value even if formal plan mode isn't used.
 
 ## Output
 
@@ -66,6 +68,18 @@ This skill is a wrapper around Claude Code's native plan mode. It adds:
 3. **Graceful fallback** - If plan mode is declined, discussion notes can still be captured
 
 The planning itself happens in plan mode, which has access to exploration tools (Glob, Grep, Read) and can design implementation approaches interactively with the user.
+
+## After Saving: Fresh-Eyes Review
+
+After the plan is saved, offer a review:
+
+> "Plan saved. Would you like a fresh-eyes review? This catches gaps and assumptions that are easy to miss when you're close to the work."
+
+If yes: Invoke the `lore-docs-reviewer` agent on the saved plan using the Task tool. Present the findings and offer to address critical issues before moving on.
+
+If no: Proceed. The user can always run the review later.
+
+**Why this matters**: Plans written in conversation accumulate assumptions. A reviewer with fresh context reads only what's on the page, catching what the author can't see.
 
 ## Specialized Agents
 
