@@ -34,6 +34,8 @@ Save to `.lore/validations/[feature-name].md`
 ```markdown
 # Validation: [Feature Name]
 
+**Status**: active
+
 Plan: `.lore/plans/[feature-name].md`
 
 ## Testing Approach

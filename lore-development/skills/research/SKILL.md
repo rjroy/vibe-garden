@@ -34,6 +34,8 @@ Keep it simple:
 ```markdown
 # Research: [Topic]
 
+**Status**: reference
+
 ## Summary
 Brief overview of what was found.
 

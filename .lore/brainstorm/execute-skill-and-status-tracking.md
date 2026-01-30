@@ -1,6 +1,6 @@
 # Brainstorm: Execute Skill and Status Tracking
 
-**Status**: open (ideas captured, not yet acted on)
+**Status**: incorporated (implemented via execute skill and breakdown status tracking)
 
 Date: 2026-01-29
 

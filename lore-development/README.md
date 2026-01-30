@@ -14,8 +14,10 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:brainstorm` | Explore ideas, record "what if" thinking |
 | `/lore-development:specify` | Define requirements and success criteria |
 | `/lore-development:breakdown` | Decompose work into releasable chunks |
+| `/lore-development:execute` | Orchestrate implement → review → test cycle per chunk |
 | `/lore-development:plan` | Direct AI planner with context, save output |
 | `/lore-development:validate` | Define testing approach, record deviations |
+| `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
@@ -74,8 +76,14 @@ Skills can run independently. Use what you need:
 # Breaking it into pieces
 /lore-development:breakdown
 
+# Executing the breakdown (implement → review → test)
+/lore-development:execute
+
 # Planning implementation
 /lore-development:plan
+
+# Checking document health
+/lore-development:tend
 
 # During/after implementation
 /lore-development:validate

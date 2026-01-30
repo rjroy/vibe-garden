@@ -41,6 +41,8 @@ Use kebab-case. Include session date if ongoing (e.g., `auth-flow-ideas-2026-01-
 ```markdown
 # Brainstorm: [Topic]
 
+**Status**: open
+
 ## Context
 What prompted this exploration.
 
