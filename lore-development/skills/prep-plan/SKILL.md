@@ -56,6 +56,17 @@ High-level approach and key decisions.
 
 ## Considerations
 Any technical decisions, trade-offs, or risks noted.
+
+## AI Validation
+How the AI verifies completion (inherit from spec if exists, or define here).
+
+**Defaults** (apply unless overridden):
+- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
+- 90%+ coverage on new code
+- Code review by fresh-context sub-agent
+
+**Custom** (if needed):
+- [Feature-specific validation steps]
 ```
 
 ## Philosophy
