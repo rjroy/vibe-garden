@@ -1,6 +1,6 @@
 # Spec: Bounded Specification Model for /specify
 
-**Status**: draft
+**Status**: complete
 
 ## Overview
 
