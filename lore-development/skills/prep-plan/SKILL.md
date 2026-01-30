@@ -17,7 +17,6 @@ Load lore context, then enter plan mode.
 
 1. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/`
-   - Work breakdown from `.lore/work/`
    - Research from `.lore/research/`
    - Brainstorms from `.lore/brainstorm/`
 

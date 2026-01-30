@@ -43,12 +43,6 @@ Each document type has appropriate status values:
 - `incorporated` - Ideas moved into specs/plans
 - `parked` - Not pursuing now, might revisit
 
-### Work Breakdowns (`.lore/work/`)
-Work breakdowns don't have a document-level status field. Status is tracked per chunk (via `/lore-development:execute`). When reporting, derive document-level status from chunks:
-- If any chunk is `In Progress`: document is `active`
-- If all chunks are `Done`: document is `complete`
-- If all chunks are `Not Started` and document is old: may be `stale`
-
 ### Research (`.lore/research/`)
 - `reference` - Useful ongoing reference
 - `stale` - Information likely outdated
@@ -73,9 +67,8 @@ Don't trust claimed status. Verify using these techniques:
 - If no plan exists, the spec likely isn't complete
 
 **For "complete" plans**:
-- Look for `.lore/work/[name].md`
-- Read the breakdown and verify all chunks are marked Done
-- If no breakdown or chunks remain, the plan isn't complete
+- Check if implementation appears done (code exists, tests pass)
+- Look for retro or validation documents referencing this plan
 
 **For "incorporated" brainstorms**:
 - Use Grep to search for the brainstorm filename or key terms in `.lore/specs/`
@@ -149,7 +142,7 @@ After generating the report, handle each category:
 
 **Update only status**: Don't rewrite documents. Add or modify only the status field.
 
-**Auto-update vs ask**: Missing status can be auto-added (with report). Changing existing status requires confirmation unless clearly verifiable (e.g., work breakdown shows all chunks Done).
+**Auto-update vs ask**: Missing status can be auto-added (with report). Changing existing status requires confirmation unless clearly verifiable.
 
 **Preserve history**: If a document has no status, add one. Don't delete or archive documents (that's a separate decision).
 
