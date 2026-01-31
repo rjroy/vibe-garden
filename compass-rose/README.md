@@ -8,12 +8,12 @@ Compass Rose provides skills and agents to help users and Claude manage a projec
 
 ## Purpose
 
-Compass Rose complements [Spiral Grove](../spiral-grove/) (the Spec-Driven Development plugin) by providing a place for:
+Compass Rose complements [Lore Development](../lore-development/) (the specification and planning plugin) by providing a place for:
 
 - **Tasks/Bugs**: Small, actionable items like "the input box is too big" or "when refresh is hit during a refresh the server crashes"
 - **Feature Ideas**: Larger questions that may eventually need a full spec, like "add functionality for different rule-based RPG systems into the engine"
 
-While Spiral Grove handles the structured development workflow (Spec → Plan → Tasks → Implementation), Compass Rose manages the backlog of work items that feed into that process.
+While Lore Development handles specification and planning (Spec → Plan), Compass Rose manages the backlog of work items that feed into that process. After planning, Claude Code handles implementation natively.
 
 ## Requirements
 
@@ -91,7 +91,7 @@ You can customize behavior with optional preferences:
 
 **Preferences:**
 
-- `promptForLargeItems` (default: `true`) - Whether to prompt before starting L-sized items, suggesting spec-writing via Spiral Grove
+- `promptForLargeItems` (default: `true`) - Whether to prompt before starting L-sized items, suggesting spec-writing via Lore Development
 - `largeSizeThreshold` (default: `["L", "XL"]`) - Array of size values that trigger spec-writing prompts
 
 ### Example Configurations
@@ -417,14 +417,14 @@ Large Item Detected: XL
 This item is sized XL, which typically requires detailed planning and
 specification before implementation.
 
-XL items often benefit from Spiral Grove's Spec-Driven Development workflow:
-1. /spiral-grove:spec-writing - Define clear success criteria and constraints
-2. /spiral-grove:plan-generation - Create technical architecture and decisions
-3. /spiral-grove:task-breakdown - Decompose into manageable tasks
-4. /spiral-grove:implementation - Execute with progress tracking
+XL items benefit from formal specification before implementation:
+1. /lore-development:specify - Define requirements and success criteria
+2. /lore-development:prep-plan - Plan technical approach
+
+After planning, proceed with implementation directly.
 
 Options:
-  1. Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items
+  1. Write spec first (/lore-development:specify) - RECOMMENDED for XL items
   2. Start implementation directly
 
 Which approach would you prefer? (Enter 1 or 2):
@@ -505,7 +505,7 @@ Definition Quality:
 Observations:
 - P0 items are generally well-defined
 - Many P1 features lack explicit acceptance criteria
-- XL item should be broken down or escalated to Spiral Grove spec
+- XL item should be broken down or escalated to Lore Development spec
 
 ## Items Needing Clarification
 
@@ -654,20 +654,20 @@ Enter choice (1/2/3):
 /compass-rose:next-item
 ```
 
-### Large Item Escalation to Spiral Grove
+### Large Item Escalation to Lore Development
 
 ```bash
 # 1. Attempt to start work on large item
 /compass-rose:start-work 156
 
 # 2. Compass Rose detects XL size and prompts:
-#    "Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items"
+#    "Write spec first (/lore-development:specify) - RECOMMENDED for XL items"
 
 # 3. User chooses Option 1 (Write spec first)
-#    -> Transfers to Spiral Grove /spiral-grove:spec-writing
+#    -> Transfers to /lore-development:specify
 
-# 4. Follow Spiral Grove SDD workflow:
-#    /spiral-grove:spec-writing -> /spiral-grove:plan-generation -> /spiral-grove:task-breakdown -> /spiral-grove:implementation
+# 4. Follow Lore Development workflow:
+#    /lore-development:specify -> /lore-development:prep-plan -> implementation
 ```
 
 ## Troubleshooting
