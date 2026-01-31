@@ -26,9 +26,11 @@ vibe-garden/
 │   ├── hooks/                 # Hook implementations
 │   └── scripts/               # Notification scripts
 │
-└── mind-reader/               # Usage analysis utility (not a plugin)
-    ├── preprocess.py          # History preprocessing
-    └── topic_model.py         # BERTopic analysis
+└── mind-reader/               # Active feedback plugin (v1.0.0)
+    ├── .claude-plugin/        # Plugin metadata
+    ├── hooks/                 # UserPromptSubmit hook
+    ├── skills/                # Init skill
+    └── scripts/               # Hook and baseline scripts
 ```
 
 ## Plugins
@@ -45,6 +47,10 @@ Project context and workflow management. Skills for research, brainstorming, spe
 
 Desktop and mobile notifications when Claude needs attention (questions, task completion).
 
+### Mind Reader
+
+Active feedback based on session patterns and sentiment analysis. Nudges when sessions exceed typical duration or detect frustration.
+
 ## Package Metadata Guidelines
 
 When creating package configuration files (pyproject.toml, package.json, setup.py, etc.):
@@ -54,3 +60,7 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 - **Repository URLs**: Use paths under `rjroy/vibe-garden` (e.g., `https://github.com/rjroy/vibe-garden`)
 - **Do NOT** use Anthropic as author or include Anthropic URLs in code artifacts
 - **Commit messages**: Anthropic attribution in commit messages is acceptable
+
+## Critical Lessons
+
+- Marketplace registration for vibe-garden is just an entry in `.claude-plugin/marketplace.json` at repo root
