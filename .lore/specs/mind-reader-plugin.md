@@ -7,6 +7,7 @@ modules: [mind-reader]
 related:
   - .lore/brainstorm/mind-reader-plugin-2026-01-31.md
   - .lore/research/session-analysis-and-hooks-prior-art.md
+  - .lore/research/typical-hours-algorithm.md
 ---
 
 # Spec: mind-reader Plugin
@@ -75,8 +76,8 @@ A Claude Code plugin that provides active feedback during sessions via hooks. Tw
   ```
   Note: Example values are illustrative; actual values depend on user's history.
 - REQ-8a: Baseline is considered stale if `computed_at` is older than 14 days
-- REQ-8b: `typical_hours` algorithm: hours containing >10% of historical prompts (TBD: research optimal threshold)
-- REQ-8c: `typical_days` algorithm: days with above-median session count
+- REQ-8b: `typical_hours` algorithm: hours in top 20% of activity (80th percentile by prompt count)
+- REQ-8c: `typical_days` algorithm: days with prompt count at or above median
 - REQ-9: Temporal nudges trigger when:
   - Session duration exceeds `p95` threshold
   - Prompt count exceeds `p95` threshold
