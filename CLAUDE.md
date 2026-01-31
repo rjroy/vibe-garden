@@ -1,297 +1,49 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## Repository Overview
 
-**Vibe Garden** is a research and development repository focused on AI agent design patterns, cognitive architectures, and Spec-Driven Development (SDD) methodology. The repository contains:
-
-- **Research notes** on emerging AI agent theories and patterns
-- **Agent type taxonomy** documenting 30+ agent types across 6 categories
-- **Agent design patterns** (8 major patterns documented)
-- **Spiral Grove** - A Claude Code plugin implementing Spec-Driven Development workflow
+**Vibe Garden** is a collection of Claude Code plugins for project management, development workflows, and notifications.
 
 ## Repository Structure
 
 ```
 vibe-garden/
-├── seeds/                       # Research materials and brainstorming
-│   ├── brainstorm/
-│   │   ├── agents/             # Agent type documentation (30+ types)
-│   │   └── patterns/           # Agent design patterns (8 patterns)
-│   ├── notes/                  # Research papers and theory
-│   └── scripts/                # Utility scripts (PDF conversion, etc.)
-├── spiral-grove/               # Claude Code plugin for SDD
-│   ├── .claude-plugin/         # Plugin configuration
-│   └── commands/               # SDD command implementations
-│       ├── spec-writing.md     # Specification phase
-│       ├── plan-generation.md  # Planning phase
-│       ├── task-breakdown.md   # Task decomposition phase
-│       ├── implementation.md   # Implementation tracking phase
-│       └── review.md           # Meta-phase validation command
-└── .sdd/                       # SDD artifacts (created during workflow)
-    ├── specs/                  # Feature specifications
-    │   ├── parent-feature.md   # Parent spec (optional, for large projects)
-    │   └── parent-feature/     # Child specs (organize related features)
-    │       ├── child-a.md
-    │       └── child-b.md
-    ├── plans/                  # Technical plans (mirror spec structure)
-    │   ├── parent-feature-plan.md
-    │   └── parent-feature/
-    │       ├── child-a-plan.md
-    │       └── child-b-plan.md
-    ├── tasks/                  # Task breakdowns (mirror spec structure)
-    │   ├── parent-feature-tasks.md
-    │   └── parent-feature/
-    │       ├── child-a-tasks.md
-    │       └── child-b-tasks.md
-    └── progress/               # Implementation progress (mirror spec structure)
-        ├── parent-feature-progress.md
-        └── parent-feature/
-            ├── child-a-progress.md
-            └── child-b-progress.md
+├── compass-rose/              # GitHub Projects management plugin (v1.3.0)
+│   ├── .claude-plugin/        # Plugin metadata
+│   ├── skills/                # Skill implementations
+│   └── agents/                # Agent definitions
+│
+├── lore-development/          # Project context and workflow plugin (v0.12.0)
+│   ├── .claude-plugin/        # Plugin metadata
+│   ├── skills/                # Workflow skills (research, brainstorm, specify, etc.)
+│   ├── agents/                # Agent definitions
+│   └── shared/                # Shared resources
+│
+├── notify-hook/               # Desktop/mobile notification plugin (v1.0.0)
+│   ├── .claude-plugin/        # Plugin metadata
+│   ├── hooks/                 # Hook implementations
+│   └── scripts/               # Notification scripts
+│
+└── mind-reader/               # Usage analysis utility (not a plugin)
+    ├── preprocess.py          # History preprocessing
+    └── topic_model.py         # BERTopic analysis
 ```
 
-## Spec-Driven Development (SDD) Workflow
+## Plugins
 
-This repository implements a structured development methodology via the **Spiral Grove** plugin. When working on features, follow this four-phase workflow:
+### Compass Rose
 
-### Phase 1: Specification (`/spec-writing`)
-- Define WHAT to build (not HOW)
-- Create measurable success criteria
-- Identify stakeholders and constraints
-- Output: `.sdd/specs/[feature-name].md`
+GitHub Projects integration. Skills for task tracking, backlog analysis, and priority recommendations.
 
-### Phase 2: Planning (`/plan-generation`)
-- Design technical architecture
-- Make and document technical decisions with rationale
-- Map integration points and dependencies
-- Analyze existing codebase patterns
-- Output: `.sdd/plans/[feature-name]-plan.md`
+### Lore Development
 
-### Phase 3: Task Breakdown (`/task-breakdown`)
-- Decompose plan into discrete, implementable tasks
-- Map dependencies and execution order
-- Define acceptance criteria per task
-- Output: `.sdd/tasks/[feature-name]-tasks.md`
+Project context and workflow management. Skills for research, brainstorming, specifications, planning, and retrospectives. Stores artifacts in `.lore/` directories.
 
-### Phase 4: Implementation (`/implementation`)
-- Execute tasks one at a time
-- Validate against specification
-- Track progress and deviations
-- Output: Code + `.sdd/progress/[feature-name]-progress.md`
+### Notify Hook
 
-### Meta-Phase: Review (`/review`)
-- **Validate phase documents before progression** (can be run at any time)
-- Check specs for HOW vs WHAT separation
-- Verify plans have technical rationale
-- Confirm tasks map to spec acceptance criteria
-- Validate progress is being tracked and deviations documented
-- Presents findings and waits for explicit approval before proceeding
-- Output: Advisory findings and approval checkpoint
-
-## Key Principles
-
-### Agent Design Philosophy
-
-The research in this repository emphasizes:
-
-1. **Functional abstraction over job titles** - Define agents by computational functions (planner, critic, memory manager) rather than human roles (developer, tester)
-
-2. **Modular architectures** - Break monolithic systems into specialized, interacting components
-
-3. **Feedback-rich loops** - Enable self-reflection, self-correction, and iterative improvement
-
-4. **Epistemic delegation** - Delegate knowledge-intensive tasks to specialized components
-
-5. **Deviation detection** - Include dedicated error monitoring and quality assurance mechanisms
-
-### SDD Principles
-
-1. **Specs define success** - The specification is the source of truth, not assumptions
-2. **Document trade-offs** - Always explain WHY decisions were made, not just WHAT
-3. **Stay in phase** - Don't jump between phases; complete one before moving to next
-4. **Validate continuously** - Map implementation back to spec acceptance criteria
-5. **Track deviations** - Document when and why implementation differs from plan
-
-## Working with Research Materials
-
-### Agent Categories
-
-Located in `seeds/brainstorm/agents/`:
-- **Cognitive Planning Agents** - Planning and decision-making (MAP, Tree-of-Thoughts)
-- **Memory Management Agents** - Context retention and knowledge synthesis
-- **Self-Reflective Agents** - Self-critique and iterative improvement (Reflexion)
-- **Multi-Agent Collaboration** - Specialized teams with orchestration
-- **Software Development Agents** - Traditional SDLC agents (reference only)
-- **Neural-Symbolic Integration** - Hybrid neural-symbolic systems
-
-### Design Patterns
-
-Located in `seeds/brainstorm/patterns/`:
-- Assembly Line Pattern - Sequential specialized pipeline
-- Complementary Pair Pattern - Balanced dual perspectives
-- Self-Reflective Loop Pattern - Iterative refinement
-- Modular Cognitive Architecture - Specialized cognitive modules
-- Adversarial Debate Pattern - Truth-seeking through competition
-- Epistemic Delegation Pattern - Task delegation to specialists
-- Active Memory Management - Context curation and persistence
-- Multi-Agent Collaboration - Cooperative specialist teams
-
-## Common Commands
-
-### SDD Workflow Commands
-```bash
-# Start a new feature specification
-/spec-writing
-
-# Create technical plan from approved spec
-/plan-generation
-
-# Break down plan into tasks
-/task-breakdown
-
-# Begin implementation with tracking
-/implementation
-
-# Validate phase documents before progression (meta-phase)
-/review [spec|plan|tasks|progress]
-```
-
-### Utility Scripts
-```bash
-# Convert PDF research papers to markdown
-python seeds/scripts/convert_pdf.py <pdf_file> [output_file]
-```
-
-## Document Conventions
-
-### File Naming
-- Use kebab-case for all files: `feature-name.md`
-- Specs: `[feature-name].md`
-- Plans: `[feature-name]-plan.md`
-- Tasks: `[feature-name]-tasks.md`
-- Progress: `[feature-name]-progress.md`
-
-### Cross-References
-Documents should reference each other:
-- Plans reference their spec
-- Tasks reference their plan
-- Progress references tasks
-
-### Status Values
-**Specifications**: Draft | Under Review | Approved | Superseded
-**Plans**: Draft | Under Review | Approved | Updated
-**Tasks**: Draft | Ready for Implementation | In Progress | Complete
-
-## Development Workflow
-
-### Starting a New Feature
-
-1. Begin with specification phase:
-   ```
-   /spec-writing
-   ```
-
-2. Once spec approved, create technical plan:
-   ```
-   /plan-generation
-   ```
-   Claude will explore codebase and design architecture
-
-3. Break down into tasks:
-   ```
-   /task-breakdown
-   ```
-
-4. Execute with tracking:
-   ```
-   /implementation
-   ```
-
-### Working on Existing Features
-
-Jump into any phase as needed:
-- Update specs when requirements change
-- Revise plans when architecture needs adjustment
-- Refine tasks when scope changes
-- Continue implementation tracking
-
-### Using Parent/Child Specification Hierarchies
-
-For large projects with multiple related features, use parent/child hierarchies to organize work without loading all context at once:
-
-**Use parent/child hierarchy when**:
-- A feature naturally decomposes into 3+ related sub-features
-- Sub-features are managed by different people or completed in phases
-- Want to avoid context overload from loading all specs simultaneously
-
-**Directory structure** (mirrored across specs, plans, tasks, progress):
-```
-.sdd/specs/dashboard-controller.md          # Parent spec
-.sdd/specs/dashboard-controller/
-  ├── widgets-system.md                    # Child spec 1
-  ├── data-binding.md                      # Child spec 2
-  └── real-time-sync.md                    # Child spec 3
-```
-
-**Key points**:
-- Parent spec lists all child specifications
-- Each child spec references its parent (for context)
-- Plans, tasks, and progress files mirror the same directory structure
-- Can work on a single child feature without loading sibling specs
-- Reduces cognitive load for complex projects while maintaining traceability
-
-**Example workflow**:
-1. Create parent spec outlining system architecture
-2. Create child specs for each subsystem
-3. For each child, follow standard workflow: plan → tasks → implementation
-4. Progress documents track each child independently
-5. Parent progress document summarizes overall completion
-
-### Branching Strategy
-
-All work must be done on feature branches. Direct commits to `main` are blocked by a pre-commit hook.
-
-**Branch Naming Conventions**:
-
-1. **Design Phase Branches** (Spec, Plan, Breakdown):
-   - Branch name: `<project>-design`
-   - Example: `courier-mcp-design`
-   - Use for all SDD phases before implementation
-
-2. **Implementation Phase Branches** (Task Execution):
-   - Branch name: `<feature>-tasks`
-   - For simple features: `feature-name-tasks`
-   - For hierarchical features: `parent-feature/child-feature-tasks`
-   - Example: `courier-mcp-tasks`
-
-3. **General Maintenance Branches** (Cleanup, updates, non-project work):
-   - Branch name: `vibe-garden-update-YYYY-MM-DD`
-   - Example: `vibe-garden-update-2025-10-18`
-
-**Commit Policy**:
-- Do not commit to `main` - the pre-commit hook will block this
-- Use your feature branch as the working branch
-- You are free to commit as needed to your branch
-- When work is complete, create a pull request to merge back to `main`
-
-**Examples**:
-```bash
-# Design phase work
-git checkout -b courier-mcp-design
-# Create specs, plans, task breakdowns...
-git add . && git commit -m "Create courier-mcp specification"
-
-# Implementation phase
-git checkout -b courier-mcp-tasks
-git add . && git commit -m "Implement TASK-001: Project setup"
-git add . && git commit -m "Implement TASK-002: Dependencies"
-
-# General maintenance
-git checkout -b vibe-garden-update-2025-10-18
-git add CLAUDE.md && git commit -m "Update documentation"
-```
+Desktop and mobile notifications when Claude needs attention (questions, task completion).
 
 ## Package Metadata Guidelines
 
@@ -302,27 +54,3 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 - **Repository URLs**: Use paths under `rjroy/vibe-garden` (e.g., `https://github.com/rjroy/vibe-garden`)
 - **Do NOT** use Anthropic as author or include Anthropic URLs in code artifacts
 - **Commit messages**: Anthropic attribution in commit messages is acceptable
-
-## Anti-Patterns to Avoid
-
-- **Skipping phases** - Each phase builds on the previous
-- **Silent deviations** - Always document why implementation differs from spec/plan
-- **Implementation in spec** - Keep specs focused on WHAT, not HOW
-- **Monolithic agents** - Prefer specialized, modular components
-- **Job title analogies** - Use computational function abstractions instead
-
-## Research Integration
-
-When designing new agents or systems:
-
-1. Review agent taxonomy in `seeds/brainstorm/agents/README.md`
-2. Check applicable patterns in `seeds/brainstorm/patterns/README.md`
-3. Reference theoretical foundations in `seeds/notes/Emerging-Theory-for-Agents.md`
-4. Apply SDD methodology for structured development
-
-## Notes
-
-- This repository is primarily research and methodology focused
-- The Spiral Grove plugin is the main executable artifact
-- Research materials in `seeds/` are documentation and reference
-- Active development artifacts go in `.sdd/` directory
