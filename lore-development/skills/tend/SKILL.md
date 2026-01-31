@@ -23,6 +23,26 @@ Maintain hygiene across `.lore/` documents.
 5. Update frontmatter or status as needed
 6. Report findings and updates
 
+## Task Tracking
+
+Use `TaskCreate` to make the tending process visible and structured. Create tasks for each phase of work:
+
+```
+TaskCreate: "Scan .lore/ for documents without frontmatter"
+TaskCreate: "Identify documents with missing or stale status"
+TaskCreate: "Verify claimed statuses against evidence"
+TaskCreate: "Present findings and get user decisions"
+TaskCreate: "Apply confirmed updates"
+```
+
+Mark tasks `in_progress` before starting work, `completed` when done. This forces deliberate pacing through each phase.
+
+**Why task tracking matters here:**
+- Rushing through phases causes missed documents and skipped verification
+- Each pass requires different tools and checks; collapsing them loses thoroughness
+- Task boundaries force you to finish one thing before starting the next
+- A task marked complete is a claim that the work was done properly
+
 ## Status Values
 
 **Load `../../shared/frontmatter-schema.md`** for the canonical list of status values by document type.
@@ -63,13 +83,16 @@ Truth over optimism. A status of "unclear" is better than a false "complete".
 
 ## Progressive Discovery
 
-Like the excavate skill, tend works progressively:
+Like the excavate skill, tend works progressively. **Use TaskCreate for each pass** to maintain structure:
 
 1. **First pass**: Identify documents without status fields
+   - Create task, mark in_progress, complete when scan is done
 2. **Second pass**: Surface documents with status that looks stale
+   - Create task, mark in_progress, complete when stale candidates identified
 3. **Third pass**: Verify claimed statuses against evidence
+   - Create task, mark in_progress, complete when verification done
 
-Don't try to fix everything at once. Surface findings, get confirmation, then update.
+Don't try to fix everything at once. Surface findings, get confirmation, then update. Task tracking prevents collapsing phases and missing documents in the rush.
 
 ## Output
 
@@ -105,15 +128,21 @@ Report findings in categories:
 
 ## Acting on Findings
 
-After generating the report, handle each category:
+After generating the report, handle each category. **Create tasks for actionable work:**
 
 1. **Missing Status**: Add status automatically using best-guess default (usually `draft` or `open`). Include in "Updated" section.
+   - TaskCreate: "Add missing status to N documents"
 
 2. **Verified Accurate**: No action needed. Document is correct.
 
 3. **Potentially Stale / Needs Decision**: Present to user and wait for confirmation before updating. User responds with "update [filename] to [status]" or "leave as-is".
+   - TaskCreate: "Get user decisions on stale/unclear documents"
+   - Do NOT mark complete until user has responded
 
 4. After user decisions, make confirmed updates and report final state.
+   - TaskCreate: "Apply confirmed status updates"
+
+Use `TaskList` before moving between phases to confirm prior work is actually complete.
 
 ## Behavior
 
