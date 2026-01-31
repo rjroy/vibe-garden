@@ -116,9 +116,109 @@ It's not actionable advice. It's a mirror.
 - Direction: Hook-based active feedback is most compelling
 - Architecture: Cron for heavy preprocessing, hooks for fast runtime checks
 
+## Scope Reduction (Jan 31 - continued)
+
+After further exploration, reduced to two core systems:
+
+### 1. Temporal Anomalies
+
+Detect when current session deviates from your historical baseline:
+- Session duration vs. your average
+- Time of day vs. your typical patterns
+- Prompt count vs. your baseline
+
+**Architecture:**
+```
+~/.claude/mind-reader/
+├── baseline.json    # Updated by daily cron, read-only during sessions
+└── update.sh        # Cron job: reads history.jsonl, writes baseline
+```
+
+All concurrent sessions read the same `baseline.json`. No per-session cost for baseline computation.
+
+### 2. Sentiment/Frustration Detection
+
+**Heuristics rejected** for this user's patterns:
+- Does both short AND very long messages (length spike is noise)
+- Doesn't repeat prompts
+- Rapid-fire isn't the pattern (frustration is Claude spiraling, user waiting)
+- Unknown frustration keywords, doesn't swear at the AI
+
+**VADER chosen instead:**
+- Lightweight sentiment analysis (~1MB, no torch)
+- Runs synchronously in hook (fast enough)
+- Trained on general text, but phrases like "no, I said X" or "that's not what I meant" carry negative sentiment
+
+**Hook flow:**
+```python
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+analyzer = SentimentIntensityAnalyzer()
+
+def check_sentiment(prompt, session_state):
+    score = analyzer.polarity_scores(prompt)["compound"]
+
+    # Rolling window (last 5 prompts)
+    session_state["scores"].append(score)
+    session_state["scores"] = session_state["scores"][-5:]
+
+    rolling_avg = sum(session_state["scores"]) / len(session_state["scores"])
+
+    if rolling_avg < -0.2 and len(session_state["scores"]) >= 3:
+        return "Sentiment trending negative. Everything okay?"
+
+    return None
+```
+
+**Limitation identified:** The "Claude spiraling for 20 minutes" problem is a *dialogue* pattern, not a prompt pattern. `history.jsonl` only contains user prompts, not Claude's responses. Detecting Claude failures requires either:
+- Proxy signals (long gaps between user prompts = Claude talking)
+- Access to Claude's output (unclear if hooks expose this)
+
+For v1: detect user frustration signals, not Claude failure patterns.
+
+## BERT Clarification
+
+BERT/BERTopic is **not necessary** for the core hook functionality. It's an enhancement that adds:
+- Topic clustering ("you've been doing database debugging")
+- Semantic session classification
+- Topic evolution over time
+
+The two core systems (temporal + sentiment) work without it. BERT can remain an optional offline analysis via cron for users who want deeper insights.
+
+## Updated Architecture
+
+```
+~/.claude/mind-reader/
+├── baseline.json        # Daily cron: temporal baselines from history.jsonl
+├── session-state.json   # Per-session: rolling sentiment scores
+└── scripts/
+    ├── update-baseline.sh   # Cron job
+    └── hooks/
+        ├── temporal-check.py
+        └── sentiment-check.py
+```
+
+## Open Questions (Revised)
+
+1. ~~What thresholds feel useful vs. annoying?~~ → Test with real usage
+2. ~~Should nudges be suppressible?~~ → Yes, but details TBD
+3. ~~Minimum viable state file?~~ → baseline.json (temporal) + session-state.json (sentiment)
+4. ~~How does hook discover patterns without ML?~~ → Daily cron for baseline, VADER inline for sentiment
+5. **NEW:** Plugin structure - standalone `mind-reader/` plugin? Utility for other plugins? Part of existing?
+6. **NEW:** How to handle the "Claude spiraling" detection gap?
+
+## Decisions Made (Updated)
+
+- Audience: Public vibe-garden users (system owners)
+- Value: Ongoing feedback via hooks
+- Scope: Two systems only - temporal anomalies + sentiment
+- Sentiment: VADER (not heuristics, not LLM)
+- BERT: Optional enhancement, not core
+- Architecture: Daily cron for baseline, synchronous hooks for detection
+
 ## Next Steps
 
-- Sketch the actual plugin structure
-- Define minimum viable state.json schema
-- Design the nudge UX (format, frequency, suppression)
-- Prototype a single hook pattern to validate the approach
+- Write spec for mind-reader plugin
+- Define baseline.json schema
+- Define session-state.json schema
+- Prototype temporal hook
+- Prototype sentiment hook with VADER
