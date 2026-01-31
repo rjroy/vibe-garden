@@ -15,14 +15,15 @@ Define what to build and how to know it's done.
 
 ## Process
 
-1. Review any relevant `.lore/research/` or `.lore/brainstorm/` context
-2. Ask clarifying questions about scope and success
-3. Draft the specification
-4. **Probe for stubs**: For each major action identified, ask "Are we stubbing [action], or defining it now?" User can choose to define inline or mark as stub.
-5. **Probe for validation**: Ask "Are defaults sufficient for AI validation, or does this feature need custom checks?" Most features use defaults; some need specific verification.
-6. Confirm with user before saving
-7. Save to `.lore/specs/`
-8. **Offer fresh-eyes review** (see below)
+1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include any findings in the spec's Context section.
+2. Review any relevant `.lore/research/` or `.lore/brainstorm/` context
+3. Ask clarifying questions about scope and success
+4. Draft the specification
+5. **Probe for stubs**: For each major action identified, ask "Are we stubbing [action], or defining it now?" User can choose to define inline or mark as stub.
+6. **Probe for validation**: Ask "Are defaults sufficient for AI validation, or does this feature need custom checks?" Most features use defaults; some need specific verification.
+7. Confirm with user before saving
+8. Save to `.lore/specs/`
+9. **Offer fresh-eyes review** (see below)
 
 ## Output
 
@@ -30,10 +31,14 @@ Save to `.lore/specs/[feature-name].md`
 
 ### Document Structure
 
-```markdown
-# Spec: [Feature Name]
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for specs.
 
-**Status**: draft
+```markdown
+---
+[frontmatter per schema]
+---
+
+# Spec: [Feature Name]
 
 ## Overview
 One paragraph describing what this is.
@@ -73,6 +78,7 @@ Any boundaries or limitations.
 
 ## Context
 Links to related `.lore/` documents if relevant.
+Include findings from lore-researcher here.
 ```
 
 ## Stub Notation
