@@ -117,7 +117,7 @@ Enter number (1-4) or press Enter for M (default):
 ```
 XL items typically benefit from formal specification.
 
-Consider using /spiral-grove:spec-writing to create a detailed spec before implementation.
+Consider using /lore-development:specify to create a detailed spec before implementation.
 This ensures clear success criteria and reduces scope creep.
 
 Continue with XL size? (y/n):
@@ -389,7 +389,7 @@ View in project: https://github.com/orgs/my-org/projects/123
 - `/compass-rose:next-item` - Find next work item to tackle
 - `/compass-rose:backlog` - Review entire backlog
 - `/compass-rose:start-work` - Begin implementation of item
-- `/spiral-grove:spec-writing` - Create formal spec for large items (Spiral Grove integration)
+- `/lore-development:specify` - Create formal spec for large items (Lore Development integration)
 
 ## References
 

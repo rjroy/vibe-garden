@@ -7,7 +7,7 @@ allowed-tools: Skill(compass-rose:gh-api-scripts), Bash, Read, Grep, Glob
 
 # Start Work Mode
 
-You are now in **Start Work Mode**. Your role is to help the user begin work on a selected GitHub Project item, checking for size-based escalation to Spiral Grove spec-writing, updating the item status, and reading the full issue context.
+You are now in **Start Work Mode**. Your role is to help the user begin work on a selected GitHub Project item, checking for size-based escalation to Lore Development specification, updating the item status, and reading the full issue context.
 
 ## Your Focus
 
@@ -469,14 +469,14 @@ Large Item Detected: XL
 This item is sized XL, which typically requires detailed planning and
 specification before implementation.
 
-XL items often benefit from Spiral Grove's Spec-Driven Development workflow:
-1. /spiral-grove:spec-writing - Define clear success criteria and constraints
-2. /spiral-grove:plan-generation - Create technical architecture and decisions
-3. /spiral-grove:task-breakdown - Decompose into manageable tasks
-4. /spiral-grove:implementation - Execute with progress tracking
+XL items benefit from formal specification before implementation:
+1. /lore-development:specify - Define requirements and success criteria
+2. /lore-development:prep-plan - Plan technical approach
+
+After planning, proceed with implementation directly.
 
 Options:
-  1. Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items
+  1. Write spec first (/lore-development:specify) - RECOMMENDED for XL items
   2. Start implementation directly
 
 Which approach would you prefer? (Enter 1 or 2):
@@ -502,7 +502,7 @@ This item is sized L (3-5 days). Consider whether formal specification
 would help clarify requirements and reduce rework.
 
 Options:
-  1. Write spec first (/spiral-grove:spec-writing) - Good practice for larger items
+  1. Write spec first (/lore-development:specify) - Good practice for larger items
   2. Start implementation directly
 
 Which approach would you prefer? (Enter 1 or 2):
@@ -517,14 +517,14 @@ If user selects **Option 1 (Write spec first)**:
 ```
 Great! Let's create a specification for this item.
 
-I'll invoke /spiral-grove:spec-writing with this issue as context.
+I'll invoke /lore-development:specify with this issue as context.
 
-Would you like me to proceed with /spiral-grove:spec-writing now? (y/n):
+Would you like me to proceed with /lore-development:specify now? (y/n):
 ```
 
 If user confirms:
-- Invoke `/spiral-grove:spec-writing` skill with issue context
-- Stop current workflow (spec-writing takes over)
+- Invoke `/lore-development:specify` skill with issue context
+- Stop current workflow (specify takes over)
 
 If user selects **Option 2 (Start directly)** or declines spec-writing:
 ```
@@ -748,9 +748,9 @@ This skill implements the following specification requirements:
 - `git` for repository context
 - Python 3.12+ for `gh-api-scripts` skill
 
-**Spiral Grove Integration**:
-- Escalation prompts reference `/spiral-grove:spec-writing` skill
-- Clear explanation of SDD workflow benefits
+**Lore Development Integration**:
+- Escalation prompts reference `/lore-development:specify` skill
+- Clear explanation of specification benefits
 - User retains control (can always override and proceed)
 
 ## Example Sessions
@@ -796,14 +796,14 @@ Large Item Detected: XL
 This item is sized XL, which typically requires detailed planning and
 specification before implementation.
 
-XL items often benefit from Spiral Grove's Spec-Driven Development workflow:
-1. /spiral-grove:spec-writing - Define clear success criteria and constraints
-2. /spiral-grove:plan-generation - Create technical architecture and decisions
-3. /spiral-grove:task-breakdown - Decompose into manageable tasks
-4. /spiral-grove:implementation - Execute with progress tracking
+XL items benefit from formal specification before implementation:
+1. /lore-development:specify - Define requirements and success criteria
+2. /lore-development:prep-plan - Plan technical approach
+
+After planning, proceed with implementation directly.
 
 Options:
-  1. Write spec first (/spiral-grove:spec-writing) - RECOMMENDED for XL items
+  1. Write spec first (/lore-development:specify) - RECOMMENDED for XL items
   2. Start implementation directly
 
 Which approach would you prefer? (Enter 1 or 2):
@@ -811,12 +811,12 @@ Which approach would you prefer? (Enter 1 or 2):
 
 Great! Let's create a specification for this item.
 
-I'll invoke /spiral-grove:spec-writing with this issue as context.
+I'll invoke /lore-development:specify with this issue as context.
 
-Would you like me to proceed with /spiral-grove:spec-writing now? (y/n):
+Would you like me to proceed with /lore-development:specify now? (y/n):
 > y
 
-[Transfers to /spiral-grove:spec-writing skill with issue #156 as context]
+[Transfers to /lore-development:specify skill with issue #156 as context]
 ```
 
 ### Session 2: Small Item (Direct Implementation)
@@ -995,7 +995,7 @@ Raw `gh project` commands cause data consistency issues and lack proper error ha
 - **Don't skip status update**: Always attempt to update Status (or warn if not possible)
 - **Don't truncate issue body**: Display full description for context
 - **Don't ignore preferences**: Respect `promptForLargeItems` configuration
-- **Don't proceed if user selects spec-writing**: Transfer to /spiral-grove:spec-writing skill
+- **Don't proceed if user selects spec-writing**: Transfer to /lore-development:specify skill
 - **Don't skip codebase exploration**: Always search for and read the affected code before declaring readiness
 - **Don't display guidance as output**: Step 8 is actions to execute, not templates to display; you must actually explore the codebase
 - **Don't skip skill invocation**: You MUST invoke `compass-rose:gh-api-scripts` before any GitHub Project operations
@@ -1005,10 +1005,10 @@ Raw `gh project` commands cause data consistency issues and lack proper error ha
 - `/compass-rose:next-item` - Find next work item to tackle (used internally for "next" selection)
 - `/compass-rose:add-item` - Create new issue and add to project
 - `/compass-rose:backlog` - Review entire backlog
-- `/spiral-grove:spec-writing` - Create formal spec (Spiral Grove integration point)
+- `/lore-development:specify` - Create formal spec (Lore Development integration point)
 
 ## References
 
 - **Spec**: REQ-F-18, REQ-F-19, REQ-F-20, REQ-F-21, REQ-F-22, REQ-F-23
-- **Plan**: TD-7 (Spiral Grove Integration Points)
+- **Plan**: TD-7 (Lore Development Integration Points)
 - **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)

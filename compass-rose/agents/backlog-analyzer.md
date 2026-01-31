@@ -359,7 +359,7 @@ Analyze these 15 project items and recommend top 2-3 to work on next:
 **Observations**:
 - P0 items are generally well-defined (good crisis management)
 - Many P1 features lack explicit acceptance criteria (common pattern)
-- XL item (#72: "Implement notification system") should be broken down or escalated to Spiral Grove spec
+- XL item (#72: "Implement notification system") should be broken down or escalated to Lore Development spec
 
 ## Items Needing Clarification
 
