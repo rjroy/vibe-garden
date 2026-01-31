@@ -1,9 +1,0 @@
-{
-  "name": "spiral-grove",
-  "description": "A Spec Driven Development (SDD) plugin for Claude Code with workflow skills, validator agents, and documentation synthesis.",
-  "version": "2.2.0",
-  "author": {
-    "name": "Ronald Roy",
-    "email": "gsdwig@gmail.com"
-  }
-}

@@ -5,13 +5,6 @@
   },
   "plugins": [
     {
-      "name": "spiral-grove",
-      "source": "./spiral-grove",
-      "description": "A Spec Driven Development (SDD) set of Claude commands.",
-      "repository": "https://github.com/rjroy/vibe-garden.git",
-      "license": "MIT"
-    },
-    {
       "name": "compass-rose",
       "source": "./compass-rose",
       "description": "A Claude Code plugin for project management using GitHub Projects. Provides skills, commands, and agents for managing tasks, bugs, and feature ideas.",

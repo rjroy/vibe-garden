@@ -3,42 +3,41 @@
 <img src="logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
 ![Version](https://img.shields.io/badge/version-1.2.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-3-purple.svg)
-![Research](https://img.shields.io/badge/research-active-orange.svg) ![AI Agents](https://img.shields.io/badge/AI-agents-purple.svg) ![SDD](https://img.shields.io/badge/methodology-SDD-teal.svg)
+![Research](https://img.shields.io/badge/research-active-orange.svg) ![AI Agents](https://img.shields.io/badge/AI-agents-purple.svg)
 
 > A research and development ecosystem for AI agent design patterns, cognitive architectures, and production-ready Claude Code plugins.
 
-Vibe Garden combines emerging AI agent theories with practical implementations: **3 production Claude Code plugins** built using Spec-Driven Development (SDD) methodology, plus comprehensive research materials on agent architectures and design patterns.
+Vibe Garden combines emerging AI agent theories with practical implementations: **3 production Claude Code plugins** plus comprehensive research materials on agent architectures and design patterns.
 
 <br clear="right"/>
 
 ---
 
-## 🌱 What's Inside
+## What's Inside
 
-### 🔌 Production Claude Code Plugins
+### Production Claude Code Plugins
 
-**Spiral Grove** - Spec-Driven Development (SDD) workflow
-- Structured 4-phase development: Specification → Planning → Task Breakdown → Implementation
-- Parent/child hierarchies for complex projects
-- Built-in validation via `/review` command
-- Documentation synthesis for code-spec alignment
-- **Status**: v1.0.0 (production-ready ✅)
+**Compass Rose** - GitHub Projects Management
+- Skill-based project management integration
+- Issue tracking and backlog analysis
+- Work prioritization and recommendations
+- **Status**: Production-ready
 
 **Courier MCP** - Gmail Integration
 - Export Gmail messages as structured markdown files
 - Powerful search with full Gmail query syntax
 - Concurrent fetching with rate limit handling
 - OAuth 2.0 authentication
-- **Status**: v1.2.0 (100% complete, production-ready ✅)
+- **Status**: v1.2.0 (production-ready)
 
 **Wyrd-Gen MCP** - AI Image Generation
 - Text-to-image generation via Replicate API
 - Support for multiple AI models (Flux, Stable Diffusion, etc.)
 - Model parameter discovery
 - File collision prevention
-- **Status**: v1.1.0 (production-ready ✅)
+- **Status**: v1.1.0 (production-ready)
 
-### 📚 Research Materials
+### Research Materials
 
 - **30+ Agent Types** documented across 6 functional categories
 - **8 Major Design Patterns** for building robust AI agent systems
@@ -47,38 +46,17 @@ Vibe Garden combines emerging AI agent theories with practical implementations: 
 
 ---
 
-## 🎯 Quick Start
+## Quick Start
 
 ### Installing Plugins
 
-Install any of the three Claude Code plugins:
+Install any of the Claude Code plugins:
 
 ```bash
 # In Claude Code, install plugins from this repository:
-/plugin install spiral-grove@vibe-garden      # SDD workflow
-/plugin install courier-mcp@vibe-garden        # Gmail integration
-/plugin install wyrd-gen-mcp@vibe-garden       # Image generation
-```
-
-### Using Spiral Grove (SDD Workflow)
-
-Start a new feature with Spec-Driven Development:
-
-```bash
-# 1. Create specification (WHAT to build)
-/spec-writing
-
-# 2. Generate technical plan (HOW to build)
-/plan-generation
-
-# 3. Break down into tasks (STEPS to execute)
-/task-breakdown
-
-# 4. Implement with tracking
-/implementation
-
-# Meta-phase: Validate before progressing
-/review [spec|plan|tasks|progress]
+/plugin install compass-rose@vibe-garden        # Project management
+/plugin install courier-mcp@vibe-garden         # Gmail integration
+/plugin install wyrd-gen-mcp@vibe-garden        # Image generation
 ```
 
 ### Using Courier MCP (Gmail Export)
@@ -122,7 +100,7 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 ---
 
-## 📖 Agent Categories
+## Agent Categories
 
 | Category | Emoji | Focus Area | Implementation Readiness |
 |----------|-------|------------|-------------------------|
@@ -137,26 +115,22 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 ---
 
-## 🚀 Projects
+## Projects
 
-### Spiral Grove - SDD Plugin
+### Compass Rose - Project Management Plugin
 
-**Purpose**: Structured development methodology for Claude Code projects
+**Purpose**: GitHub Projects integration for Claude Code
 
-**Status**: ✅ Production Ready (100% complete)
-**Version**: v1.0.0
-**Location**: `spiral-grove/`
+**Status**: Production Ready
+**Location**: `compass-rose/`
 
 **Features**:
-- Four-phase workflow: Specification → Planning → Tasks → Implementation
-- Parent/child hierarchies for organizing complex projects
-- `/review [phase]` command for validation before progression
-- Documentation synthesis agent (in development)
-- Spec-code drift detection (planned)
+- Skill-based project management
+- Issue tracking and backlog analysis
+- Priority recommendations
+- Work item lifecycle management
 
-**Built Using SDD**: Yes (dogfooded - the plugin developed itself!)
-
-[Full documentation →](spiral-grove/README.md) | [SDD Methodology →](.sdd/README.md)
+[Full documentation →](compass-rose/README.md)
 
 ---
 
@@ -164,7 +138,7 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 **Purpose**: Export Gmail messages as structured markdown files
 
-**Status**: ✅ Production Ready (100% complete)
+**Status**: Production Ready (100% complete)
 **Version**: v1.2.0
 **Location**: `courier-mcp/`
 
@@ -183,8 +157,6 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 - Unit Tests: 59 passing
 - Acceptance Tests: 10/10 passing
 
-**Built Using SDD**: Yes - Full spec/plan/tasks/progress tracked in `.sdd/`
-
 [Full documentation →](courier-mcp/README.md) | [Setup guide →](courier-mcp/docs/SETUP.md)
 
 ---
@@ -193,7 +165,7 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 **Purpose**: AI-powered text-to-image generation via Replicate API
 
-**Status**: ✅ Production Ready (100% complete)
+**Status**: Production Ready (100% complete)
 **Version**: v1.1.0
 **Location**: `wyrd-gen-mcp/`
 
@@ -204,13 +176,11 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 - File collision prevention with auto-incrementing
 - Dual launch scripts (1Password CLI + direct .env)
 
-**Built Using SDD**: Partial - Spec and plan exist, needs task breakdown
-
 [MCP server spec →](.sdd/specs/wyrd-gen-mcp-server.md)
 
 ---
 
-## 🎨 Design Patterns
+## Design Patterns
 
 ### Structural Patterns
 - **Assembly Line** - Sequential specialized pipeline for repeatable workflows
@@ -230,7 +200,7 @@ cat seeds/notes/Emerging-Theory-for-Agents.md
 
 ---
 
-## 🔬 Research Highlights
+## Research Highlights
 
 ### Real-World Results
 
@@ -249,80 +219,43 @@ The research converges on a clear trend: **architectural modularity, feedback-ri
 
 ---
 
-## 🌊 Spec-Driven Development (SDD)
-
-Spiral Grove implements a rigorous four-phase methodology:
-
-### Phase 1: Specification
-Define **WHAT** to build
-- User stories and success criteria
-- Functional/non-functional requirements
-- Explicit constraints
-
-### Phase 2: Planning
-Design **HOW** to build it
-- Technical architecture
-- Decision rationale
-- Integration points
-
-### Phase 3: Task Breakdown
-Create **STEPS** to execute
-- Discrete, independent tasks
-- Dependencies and ordering
-- Acceptance criteria
-
-### Phase 4: Implementation
-Execute and **TRACK** progress
-- One task at a time
-- Continuous validation
-- Deviation documentation
-
-[Learn more about SDD →](.sdd/README.md)
-
----
-
-## 🗂️ Repository Structure
+## Repository Structure
 
 ```
 vibe-garden/
-├── spiral-grove/               # Spec-Driven Development plugin
-│   ├── .claude-plugin/         # Plugin metadata (v1.0.0)
-│   ├── commands/               # SDD workflow commands
-│   ├── agents/                 # Reusable agent definitions
-│   └── docs/                   # Format specs and guides
+├── compass-rose/              # GitHub Projects management plugin
+│   ├── .claude-plugin/        # Plugin metadata
+│   ├── skills/                # Skill implementations
+│   └── agents/                # Agent definitions
 │
-├── courier-mcp/                # Gmail integration MCP server
-│   ├── .claude-plugin/         # Plugin metadata (v1.2.0)
-│   ├── server/                 # Python MCP server implementation
-│   ├── docs/                   # User guides and API reference
-│   └── tests/                  # Test suite (95/95 passing)
+├── courier-mcp/               # Gmail integration MCP server
+│   ├── .claude-plugin/        # Plugin metadata (v1.2.0)
+│   ├── server/                # Python MCP server implementation
+│   ├── docs/                  # User guides and API reference
+│   └── tests/                 # Test suite (95/95 passing)
 │
-├── wyrd-gen-mcp/               # Image generation MCP server
-│   ├── .claude-plugin/         # Plugin metadata (v1.1.0)
+├── wyrd-gen-mcp/              # Image generation MCP server
+│   ├── .claude-plugin/        # Plugin metadata (v1.1.0)
 │   └── server/                # Python MCP server implementation
 │
-├── seeds/                      # Research and brainstorming
-│   ├── brainstorm/
-│   │   ├── agents/             # 30+ agent types documented
-│   │   └── patterns/           # 8 major design patterns
-│   ├── notes/                  # Academic research and theory
-│   └── scripts/                # Utility scripts (PDF conversion)
+├── lore-development/          # Project context and workflow plugin
+│   ├── .claude-plugin/        # Plugin metadata
+│   ├── skills/                # Workflow skills
+│   └── agents/                # Agent definitions
 │
-└── .sdd/                       # SDD artifacts (methodology in action)
-    ├── specs/                  # Feature specifications
-    │   ├── spiral-grove.md     # Main SDD plugin spec (approved)
-    │   ├── spiral-grove/       # Child features
-    │   │   └── documentation-synthesis.md
-    │   ├── courier-mcp.md      # Gmail MCP spec (approved)
-    │   └── wyrd-gen-mcp-server.md
-    ├── plans/                  # Technical architecture plans
-    ├── tasks/                  # Task breakdowns with dependencies
-    └── progress/               # Implementation tracking
+├── notify-hook/               # Desktop/mobile notification plugin
+│
+└── seeds/                     # Research and brainstorming
+    ├── brainstorm/
+    │   ├── agents/            # 30+ agent types documented
+    │   └── patterns/          # 8 major design patterns
+    ├── notes/                 # Academic research and theory
+    └── scripts/               # Utility scripts (PDF conversion)
 ```
 
 ---
 
-## 🧩 Core Principles
+## Core Principles
 
 ### Agent Design Philosophy
 
@@ -332,17 +265,9 @@ vibe-garden/
 4. **Epistemic Delegation** - Leverage specialists for knowledge-intensive tasks
 5. **Deviation Detection** - Dedicated error monitoring and quality assurance
 
-### SDD Methodology
-
-1. **Specs Define Success** - Specification is source of truth
-2. **Document Trade-offs** - Always explain WHY, not just WHAT
-3. **Stay in Phase** - Complete one phase before moving to next
-4. **Validate Continuously** - Map implementation to spec acceptance criteria
-5. **Track Deviations** - Document when/why implementation differs
-
 ---
 
-## 🚀 Use Cases
+## Use Cases
 
 ### For AI Researchers
 - Comprehensive taxonomy of agent types and patterns (30+ documented)
@@ -351,13 +276,12 @@ vibe-garden/
 - Working examples of multi-agent patterns in production code
 
 ### For Claude Code Users
-- **Spiral Grove**: Structured development with built-in validation
+- **Compass Rose**: Manage GitHub Projects from Claude Code
 - **Courier MCP**: Export and analyze Gmail conversations
 - **Wyrd-Gen MCP**: Generate images directly from Claude Code
 - All plugins integrate seamlessly with Claude's workflow
 
 ### For Developers
-- Structured development methodology (SDD) with real project examples
 - Reusable agent design patterns from academic research
 - Production-ready MCP server implementations
 - Full test suites and documentation templates
@@ -365,12 +289,11 @@ vibe-garden/
 ### For Teams
 - Shared vocabulary for agent architectures
 - Decision frameworks for agent selection
-- Documented rationale for technical choices (specs/plans in `.sdd/`)
-- Reproducible development workflow via SDD methodology
+- Reproducible development workflows
 
 ---
 
-## 📊 Pattern Selection Guide
+## Pattern Selection Guide
 
 ### By Project Type
 
@@ -393,7 +316,7 @@ vibe-garden/
 
 ---
 
-## 🛠️ Utilities
+## Utilities
 
 ### PDF Converter
 
@@ -407,17 +330,16 @@ Preserves layout and formatting for integration with Claude Code.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - [Agent Types Index](seeds/brainstorm/agents/README.md) - Complete agent taxonomy
 - [Design Patterns Guide](seeds/brainstorm/patterns/README.md) - All 8 patterns
 - [Emerging Theory](seeds/notes/Emerging-Theory-for-Agents.md) - Theoretical foundations
-- [SDD Workflow](.sdd/README.md) - Spec-Driven Development guide
 - [Claude Code Integration](CLAUDE.md) - Guidance for Claude Code instances
 
 ---
 
-## 🌟 Evolution & Future Directions
+## Evolution & Future Directions
 
 ### Trajectory
 
@@ -446,7 +368,7 @@ Self-improving agent societies  ← We are here (2024-2025)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a living research and development repository. Contributions welcome:
 
@@ -457,28 +379,21 @@ This is a living research and development repository. Contributions welcome:
 4. **Real-World Examples** - Share implementation experiences
 
 ### Plugin Contributions
-1. **Spiral Grove Enhancements** - Improve SDD workflow commands
-2. **Bug Fixes** - All plugins welcome improvements
-3. **New Plugins** - Add Claude Code plugins to the ecosystem
-4. **Documentation** - Enhance setup guides and tutorials
-
-### Development Process
-- Use SDD methodology for new features (see `.sdd/README.md`)
-- Follow branch naming conventions (see `CLAUDE.md`)
-- Include test coverage for code contributions
-- Document rationale in specs and plans
+1. **Bug Fixes** - All plugins welcome improvements
+2. **New Plugins** - Add Claude Code plugins to the ecosystem
+3. **Documentation** - Enhance setup guides and tutorials
 
 Please follow the established documentation format and include academic citations for research contributions.
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🔗 Resources
+## Resources
 
 ### Academic Papers
 
@@ -490,7 +405,7 @@ All patterns and agent types reference academic research from 2018-2025. See ind
 
 ---
 
-## 📮 Contact
+## Contact
 
 **Author:** Ronald Roy
 **Email:** gsdwig@gmail.com
@@ -502,6 +417,6 @@ All patterns and agent types reference academic research from 2018-2025. See ind
 
 **Built with 🧠 for the future of AI agent design**
 
-*Last Updated: 2025-10-20*
+*Last Updated: 2026-01-31*
 
 </div>
