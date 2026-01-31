@@ -1,18 +1,10 @@
-# Analysis artifacts
-analysis_chunks/
-
-# Input data (may contain sensitive prompts)
-history.jsonl
-
 # Python
 __pycache__/
 *.pyc
 .ruff_cache/
 .venv/
-
-# Model caches (sentence-transformers, torch)
-.cache/
-models/
+.pytest_cache/
+.coverage
 
 # Editor
 .vscode/

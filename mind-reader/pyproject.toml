@@ -1,14 +1,17 @@
 [project]
 name = "mind-reader"
-version = "0.1.0"
-description = "Analyze Claude Code usage history for insights"
+version = "1.0.0"
+description = "Active feedback based on session patterns and sentiment analysis"
 authors = [{ name = "Ronald Roy", email = "gsdwig@gmail.com" }]
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+sentiment = ["vaderSentiment>=3.3"]
+
 [dependency-groups]
-dev = ["pytest", "ruff"]
-ml = ["bertopic>=0.16", "sentence-transformers>=3.0"]
+dev = ["pytest", "pytest-cov", "ruff"]
+sentiment = ["vaderSentiment>=3.3"]
 
 [tool.ruff]
 line-length = 88
@@ -16,3 +19,4 @@ lint.select = ["E", "F", "UP", "I", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["scripts"]
