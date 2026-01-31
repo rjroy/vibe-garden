@@ -1,0 +1,15 @@
+{
+  "description": "Active feedback based on session patterns and sentiment",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

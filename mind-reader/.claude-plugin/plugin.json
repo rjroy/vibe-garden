@@ -1,0 +1,11 @@
+{
+  "name": "mind-reader",
+  "description": "Active feedback based on session patterns and sentiment analysis",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden",
+  "license": "MIT"
+}

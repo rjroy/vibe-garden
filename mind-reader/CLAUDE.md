@@ -1,60 +1,97 @@
 # mind-reader
 
-Analyzes Claude Code usage history to generate insights about work patterns, project focus, and interaction style.
+Active feedback plugin for Claude Code that provides gentle nudges based on session patterns and sentiment analysis.
 
-## Usage
+## Features
 
-1. Copy `~/.claude/history.jsonl` to this directory
-2. Install dependencies: `uv sync --group ml`
-3. Run `/analyze` or `/analyze path/to/history.jsonl`
+- **Temporal detection**: Alerts when sessions exceed your typical duration or prompt count
+- **Unusual hours**: Notices when you're working outside your normal hours
+- **Sentiment analysis**: Detects frustration patterns using VADER (optional)
+
+## Installation
+
+1. Install the plugin via Claude Code
+2. Run `/mind-reader:init` to set up directories and compute initial baseline
+3. Add the crontab entry to update baseline daily
 
 ## Structure
 
 ```
 mind-reader/
-├── history.jsonl          # Input: Claude Code history
-├── preprocess.py          # Splits JSONL into analysis chunks (fast, no deps)
-├── topic_model.py         # BERTopic topic modeling (requires ml group)
-├── analysis_chunks/       # Generated JSON files for each analysis track
-│   ├── temporal.json
-│   ├── projects.json
-│   ├── commands.json
-│   ├── sessions.json
-│   ├── complexity.json
-│   └── topics.json        # BERTopic discovered topics
-└── USAGE_REPORT.md        # Output: Generated insights report
+├── .claude-plugin/
+│   └── plugin.json          # Plugin metadata
+├── hooks/
+│   └── hooks.json            # UserPromptSubmit hook registration
+├── scripts/
+│   ├── hook.py               # Main hook entry point
+│   ├── baseline.py           # Baseline computation script
+│   └── lib/
+│       ├── settings.py       # Settings management
+│       ├── state.py          # Session state and baseline I/O
+│       ├── temporal.py       # Temporal detection logic
+│       └── sentiment.py      # VADER sentiment analysis
+├── skills/
+│   └── init/
+│       └── SKILL.md          # Initialization skill
+└── tests/
+    └── test_*.py             # Unit tests
 ```
 
-## Analysis Dimensions
+## Data Storage
 
-| Track | File | Questions Answered |
-|-------|------|-------------------|
-| Temporal | temporal.json | Peak hours, day-of-week, trends |
-| Projects | projects.json | Focus areas, project types, lifecycle |
-| Commands | commands.json | Slash commands, file refs, style |
-| Sessions | sessions.json | Length, depth, workflow patterns |
-| Complexity | complexity.json | Prompt length, verbosity triggers |
-| Topics | topics.json | BERTopic clusters, topic evolution over time |
+All data stored in `~/.claude/mind-reader/`:
 
-## Running Manually
+```
+~/.claude/mind-reader/
+├── baseline.json         # Computed by cron, read by hooks
+├── settings.json         # User-configurable thresholds
+└── sessions/
+    └── <session-id>.json # Per-session rolling state
+```
+
+## Configuration
+
+Edit `~/.claude/mind-reader/settings.json`:
+
+```json
+{
+  "enabled": true,
+  "temporal": {
+    "enabled": true,
+    "duration_threshold": "p95",
+    "prompt_threshold": "p95",
+    "check_hours": true
+  },
+  "sentiment": {
+    "enabled": true,
+    "window_size": 5,
+    "threshold": -0.2,
+    "min_prompts": 3,
+    "cooldown_prompts": 10
+  },
+  "quiet_until": null
+}
+```
+
+## Testing
 
 ```bash
-# Install ML dependencies (one-time)
-uv sync --group ml
+# Install dev dependencies
+uv sync --group dev
 
-# Preprocess (fast, basic statistics)
-python3 preprocess.py
+# Install sentiment analysis (optional)
+uv sync --group sentiment
 
-# Topic modeling (slower, requires ML deps)
-python3 topic_model.py
+# Run tests
+uv run pytest tests/ -v
 
-# Then use Claude to analyze chunks and generate report
+# With coverage
+uv run pytest tests/ --cov=scripts --cov-report=term-missing
 ```
 
 ## Dependencies
 
-The project uses dependency groups to keep the base install light:
-- **dev**: pytest, ruff (for development)
-- **ml**: bertopic, sentence-transformers (for topic modeling)
+- **Core**: Python 3.12+, stdlib only
+- **Sentiment** (optional): vaderSentiment (~1MB)
 
-Topic modeling pulls in torch and transformers, which are large (~1GB+). Only install if you want topic analysis.
+Without VADER, only temporal detection works.
