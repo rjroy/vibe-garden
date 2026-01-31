@@ -1,2 +1,0 @@
-- "Druid Arts" - A best practices plugin with guidelines for branch usage, testing, documentation, etc.
-- "Seed Teller" - A plugin to help build other plugins by providing templates and examples.
