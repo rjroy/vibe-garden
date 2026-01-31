@@ -95,7 +95,13 @@ Use kebab-case. Be descriptive (e.g., `chat-message-flow.md`, `view-class-hierar
 
 ### Document Structure
 
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for diagrams.
+
 ```markdown
+---
+[frontmatter per schema]
+---
+
 # Diagram: [Subject]
 
 ## Context

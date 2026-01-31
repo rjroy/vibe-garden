@@ -15,22 +15,24 @@ Load lore context, then enter plan mode.
 
 ## Process
 
-1. **Gather context** from `.lore/`:
+1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include any relevant findings in the plan's Context section.
+
+2. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/`
    - Research from `.lore/research/`
    - Brainstorms from `.lore/brainstorm/`
 
-2. **Enter plan mode** using the `EnterPlanMode` tool. This transitions to Claude Code's native planning workflow where:
+3. **Enter plan mode** using the `EnterPlanMode` tool. This transitions to Claude Code's native planning workflow where:
    - The codebase can be explored
    - Architecture can be designed
    - Trade-offs can be analyzed
    - The user approves or refines the plan
 
-3. **After plan approval**, save the approved plan to `.lore/plans/` using the document structure below.
+4. **After plan approval**, save the approved plan to `.lore/plans/` using the document structure below.
 
-4. **Offer fresh-eyes review** (see below).
+5. **Offer fresh-eyes review** (see below).
 
-5. **If user declines plan mode**: Offer to save any discussion notes to `.lore/brainstorm/` instead. Planning conversations have value even if formal plan mode isn't used.
+6. **If user declines plan mode**: Offer to save any discussion notes to `.lore/brainstorm/` instead. Planning conversations have value even if formal plan mode isn't used.
 
 ## Output
 
@@ -38,13 +40,18 @@ Save to `.lore/plans/[feature-or-chunk-name].md`
 
 ### Document Structure
 
-```markdown
-# Plan: [Feature/Chunk Name]
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for plans.
 
-**Status**: draft
+```markdown
+---
+[frontmatter per schema]
+---
+
+# Plan: [Feature/Chunk Name]
 
 ## Context
 Links to relevant `.lore/` documents.
+Include findings from lore-researcher here.
 
 ## Approach
 High-level approach and key decisions.

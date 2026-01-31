@@ -28,7 +28,13 @@ Save to `.lore/retros/[feature-name].md`
 
 ### Document Structure
 
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for retros.
+
 ```markdown
+---
+[frontmatter per schema]
+---
+
 # Retro: [Feature Name]
 
 ## Summary
@@ -50,6 +56,12 @@ Insights to carry forward:
 ## Artifacts
 Links to related `.lore/` documents.
 ```
+
+### Frontmatter Tips for Retros
+
+- **title**: Focus on the key lesson, not just the feature name (e.g., "N+1 query fix in brief generation" not just "Brief generation retro")
+- **tags**: Include problem types (bug, performance, refactor), technologies, and patterns
+- **modules**: Include codebase areas touched; omit if purely process/methodology focused
 
 ## Purpose
 

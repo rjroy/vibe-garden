@@ -118,7 +118,17 @@ If gaps found, return to Step 3 for missed features before declaring the session
 
 ### Feature Reference (`.lore/reference/[feature-name].md`)
 
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions.
+
 ```markdown
+---
+title: [Feature name]
+date: YYYY-MM-DD
+status: current
+tags: [relevant, keywords]
+modules: [affected-modules]
+---
+
 # Feature: [Name]
 
 ## What It Does

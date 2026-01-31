@@ -29,12 +29,14 @@ Use kebab-case for filenames. Include date if the research is time-sensitive (e.
 
 ### Document Structure
 
-Keep it simple:
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for research.
 
 ```markdown
-# Research: [Topic]
+---
+[frontmatter per schema]
+---
 
-**Status**: reference
+# Research: [Topic]
 
 ## Summary
 Brief overview of what was found.

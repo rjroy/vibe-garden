@@ -38,10 +38,14 @@ Use kebab-case. Include session date if ongoing (e.g., `auth-flow-ideas-2026-01-
 
 ### Document Structure
 
-```markdown
-# Brainstorm: [Topic]
+**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for brainstorms.
 
-**Status**: open
+```markdown
+---
+[frontmatter per schema]
+---
+
+# Brainstorm: [Topic]
 
 ## Context
 What prompted this exploration.

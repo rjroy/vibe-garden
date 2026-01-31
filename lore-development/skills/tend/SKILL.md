@@ -17,41 +17,17 @@ Maintain hygiene across `.lore/` documents.
 ## Process
 
 1. Scan all documents in `.lore/`
-2. Check each document for status field presence
-3. For documents with status, verify accuracy
-4. Update only the status field (nothing else)
-5. Report findings and updates
+2. Check each document for YAML frontmatter presence
+3. Check each document for status field presence
+4. For documents with status, verify accuracy
+5. Update frontmatter or status as needed
+6. Report findings and updates
 
-## Status Values by Document Type
+## Status Values
 
-Each document type has appropriate status values:
+**Load `../../shared/frontmatter-schema.md`** for the canonical list of status values by document type.
 
-### Specs (`.lore/specs/`)
-- `draft` - Still being written
-- `active` - Driving current work
-- `complete` - All requirements met
-- `abandoned` - Work stopped, not completing
-
-### Plans (`.lore/plans/`)
-- `draft` - Still being designed
-- `active` - Guiding current implementation
-- `complete` - All planned work done
-- `superseded` - Replaced by a newer plan
-
-### Brainstorms (`.lore/brainstorm/`)
-- `open` - Ideas still being explored
-- `incorporated` - Ideas moved into specs/plans
-- `parked` - Not pursuing now, might revisit
-
-### Research (`.lore/research/`)
-- `reference` - Useful ongoing reference
-- `stale` - Information likely outdated
-
-### Retros (`.lore/retros/`)
-Retros don't need status - they're historical records.
-
-### Excavations (`.lore/excavations/`)
-Excavation layers track their own completion state. Treat as `reference`.
+The schema defines valid status values for each document type (specs, plans, brainstorms, research, retros, diagrams). Use those values when adding or updating status fields.
 
 ## Verification Approach
 
@@ -102,9 +78,13 @@ Report findings in categories:
 ```markdown
 ## Tend Report
 
+### Missing Frontmatter
+- `.lore/retros/auth-fix.md` - no YAML frontmatter
+- `.lore/specs/old-feature.md` - no YAML frontmatter
+
 ### Missing Status
-- `.lore/specs/user-profiles.md` - no status field
-- `.lore/brainstorm/caching-ideas.md` - no status field
+- `.lore/specs/user-profiles.md` - has frontmatter, no status field
+- `.lore/brainstorm/caching-ideas.md` - has frontmatter, no status field
 
 ### Potentially Stale
 - `.lore/plans/auth-flow.md` - marked "active", last modified 30 days ago
@@ -115,6 +95,7 @@ Report findings in categories:
 - `.lore/brainstorm/early-ideas.md` - incorporated (found in auth-flow spec)
 
 ### Updated
+- `.lore/retros/auth-fix.md` - added frontmatter
 - `.lore/specs/user-profiles.md` - added status: draft
 - `.lore/plans/auth-flow.md` - changed active → complete
 
@@ -144,24 +125,53 @@ After generating the report, handle each category:
 
 **Be honest**: If you can't determine status, say so. "unclear" is a valid status.
 
-## Adding Status to Documents
+## Frontmatter Retrofitting
 
-When a document lacks a status field, add it at the top after any existing frontmatter:
+Documents should have YAML frontmatter for searchability. Reference `../../shared/frontmatter-schema.md` for field definitions.
+
+When a document lacks frontmatter entirely, offer to add it:
 
 ```markdown
-# Document Title
+---
+title: [Extract from document heading]
+date: [File creation or today's date]
+status: [appropriate value]
+tags: [infer from content]
+modules: [infer from content, if applicable]
+---
 
-**Status**: [appropriate value]
+# Document Title
 
 [rest of document]
 ```
 
-Or in YAML frontmatter if the document uses it:
+### Retrofit Process
+
+1. **Identify documents without frontmatter** - Look for files that don't start with `---`
+2. **Extract metadata from content**:
+   - Title: Use the first `# ` heading
+   - Date: Use file creation date or today
+   - Status: Use existing inline `**Status**:` or infer from document state
+   - Tags: Infer 2-4 keywords from content
+   - Modules: Identify codebase areas mentioned
+3. **Present proposed frontmatter** to user for confirmation
+4. **Add frontmatter** and remove redundant inline status if present
+
+### Why This Matters
+
+The `lore-researcher` agent searches frontmatter fields to find related prior work. Documents without frontmatter won't be surfaced, breaking the compound loop.
+
+## Adding Status to Documents
+
+When a document has frontmatter but lacks a status field, add it to the existing frontmatter:
 
 ```yaml
 ---
-status: draft
+title: Existing Title
+date: 2026-01-30
+status: draft  # Added
+tags: [existing, tags]
 ---
 ```
 
-Prefer the inline format (`**Status**:`) for consistency with other lore-development patterns.
+If a document uses inline status (`**Status**: draft`), migrate it to frontmatter for consistency.

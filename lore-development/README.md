@@ -33,11 +33,8 @@ All context lives in `.lore/`:
 ├── specs/          # Requirements
 ├── plans/          # Saved planning sessions
 ├── retros/         # Lessons learned
-├── excavations/    # Design archaeology findings
-│   ├── layer-1-survey.md
-│   ├── layer-2-features.md
-│   ├── layer-3-design.md
-│   └── sessions/
+├── reference/      # Excavated feature documentation
+├── excavations/    # Design archaeology session tracking
 ├── diagrams/       # Visual representations (Mermaid)
 └── lore-agents.md  # Agent registry (optional)
 ```
@@ -104,6 +101,44 @@ Backward: Code → Survey → Features → Design → Lore
 
 The output is the same (`.lore/specs/`, architecture docs), but the process is inverted.
 
+## The Compound Loop
+
+Knowledge compounds when past learnings inform new work. The plugin closes this loop automatically:
+
+```
+/specify or /prep-plan
+        │
+        ├─► lore-researcher agent searches .lore/ for related work
+        │
+        ▼
+   findings included in new spec/plan
+        │
+        ... work happens ...
+        │
+        ▼
+      /retro
+        │
+        └─► captures lessons → writes to .lore/retros/
+```
+
+The `lore-researcher` agent runs automatically at the start of `/specify` and `/prep-plan`, surfacing relevant retros, specs, and brainstorms before new work begins.
+
+## Frontmatter Schema
+
+All lore documents use YAML frontmatter for searchability. The schema is defined in `shared/frontmatter-schema.md`.
+
+```yaml
+---
+title: Descriptive title
+date: YYYY-MM-DD
+status: draft|approved|complete|etc
+tags: [relevant, keywords]
+modules: [affected-modules]
+---
+```
+
+Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents.
+
 ## Principles
 
 - **Light touch** - skills guide, they don't dictate
@@ -111,3 +146,4 @@ The output is the same (`.lore/specs/`, architecture docs), but the process is i
 - **Independent but connected** - each skill works alone but knows about the others
 - **Trust the LLM** - don't over-specify what modern AI already does well
 - **Human checkpoints** - excavation requires confirmation at each layer
+- **Compound knowledge** - past learnings automatically surface for new work
