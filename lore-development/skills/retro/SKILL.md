@@ -1,6 +1,6 @@
 ---
 name: retro
-description: This skill reviews completed work and records lessons learned. Use after completing a feature, when capturing insights before they fade, or for periodic reflection on progress. Triggers include "let's do a retro", "what did we learn", "review what happened", "capture lessons from".
+description: This skill reviews completed work and records lessons learned. Use after completing a feature, when capturing insights before they fade, for periodic reflection on progress, or to graduate lessons to higher scopes. Triggers include "let's do a retro", "what did we learn", "review what happened", "capture lessons from", "graduate lessons".
 ---
 
 # Retro
@@ -21,6 +21,7 @@ Review artifacts and record lessons learned.
 2. Reflect on what happened vs. what was expected
 3. Capture lessons learned
 4. Save to `.lore/retros/`
+5. Graduate lessons (see Lessons Graduation below)
 
 ## Output
 
@@ -62,6 +63,63 @@ Links to related `.lore/` documents.
 - **title**: Focus on the key lesson, not just the feature name (e.g., "N+1 query fix in brief generation" not just "Brief generation retro")
 - **tags**: Include problem types (bug, performance, refactor), technologies, and patterns
 - **modules**: Include codebase areas touched; omit if purely process/methodology focused
+
+## Lessons Graduation
+
+After saving the retro, graduate lessons to higher scopes.
+
+### Detection
+
+If `/retro` is invoked on an existing retro document (path to `.lore/retros/*.md`), skip the normal retro flow and run graduation only.
+
+### Flow
+
+1. Extract lessons from the "Lessons Learned" section
+2. If no lessons, skip graduation
+3. For each lesson, use AskUserQuestion:
+   - Prompt: `Review lesson: "[lesson text]"`
+   - Options:
+     - **Invalid** - Remove from retro
+     - **Valid (Recommended)** - Keep in retro only
+     - **Critical** - Add to project CLAUDE.md
+     - **Universal** - Add to ~/.claude/rules/lessons-learned.md
+4. Process classifications:
+   - Invalid: Remove lesson from retro document
+   - Valid: No action (already in retro)
+   - Critical: Append to project CLAUDE.md under "## Critical Lessons"
+   - Universal: Append to `~/.claude/rules/lessons-learned.md` under inferred category
+
+### File Operations
+
+**For Critical lessons** (project CLAUDE.md):
+- If "## Critical Lessons" section doesn't exist, create it at file bottom
+- Append lesson as bullet: `- [lesson text]`
+- Don't duplicate existing lessons
+
+**For Universal lessons** (`~/.claude/rules/lessons-learned.md`):
+- Create file if missing with header: `# Lessons Learned\n\nHard-won lessons that apply across all projects.`
+- Infer category from retro tags (see Category Inference)
+- Create category section if missing
+- Append lesson as bullet under category
+- Don't duplicate existing lessons
+
+### Category Inference
+
+Infer category from retro tags, not exact match:
+
+| Tags like | Category |
+|-----------|----------|
+| plugin, extension | Plugin Development |
+| git, commit, branch | Git Workflow |
+| test, testing, coverage | Testing |
+| process, methodology, workflow | Process |
+| performance, optimization | Performance |
+| (no clear match) | General |
+
+**Category hygiene**:
+- Review existing categories before creating new ones
+- Don't let any category sprawl (10+ items suggests splitting)
+- Err on fitting into existing categories over creating new ones
 
 ## Purpose
 
