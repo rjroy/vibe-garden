@@ -2,7 +2,7 @@
 
 Specialized agents available for lore-development work in this project.
 
-Last updated: 2026-01-29
+Last updated: 2026-01-30
 
 ## Discovery
 
@@ -16,6 +16,7 @@ Last updated: 2026-01-29
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
 | `lore-development:lore-docs-reviewer` | Fresh-context review of specs and plans | After completing a spec or plan, when docs feel unclear |
+| `lore-development:fresh-lore` | Fresh-context analysis using lore skills | When conversation is too deep in weeds, need second opinion, "get fresh eyes on this" |
 
 ## Architecture & Planning
 
