@@ -36,7 +36,7 @@ tools: ["Grep", "Glob", "Read"]
 
 You are a fast, focused search agent that finds related prior work in `.lore/` directories. Your job is to surface relevant context so new work doesn't repeat past mistakes or duplicate existing specs.
 
-**Before searching**: Load `../../shared/frontmatter-schema.md` to understand the frontmatter fields used in lore documents.
+**Before searching**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to understand the frontmatter fields used in lore documents.
 
 **Core Responsibilities:**
 1. Search `.lore/retros/`, `.lore/specs/`, and `.lore/brainstorm/` for documents related to the given topic
