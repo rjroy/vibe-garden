@@ -1,25 +1,38 @@
-# mind-reader
+# Mind Reader
 
-Active feedback plugin for Claude Code that provides gentle nudges based on session patterns and sentiment analysis.
+<img src="logo.webp" align="right" width="128" height="128" alt="Mind Reader Logo">
+
+A Claude Code plugin for active feedback based on session patterns and sentiment analysis.
+
+## Overview
+
+Mind Reader provides gentle nudges when sessions run long, you're working unusual hours, or frustration patterns emerge. It learns your typical usage patterns and alerts when something seems off.
 
 ## Features
 
 - **Temporal detection**: Alerts when sessions exceed your typical duration or prompt count
 - **Unusual hours**: Notices when you're working outside your normal hours
 - **Sentiment analysis**: Detects frustration patterns using VADER (optional)
+- **Configurable thresholds**: Tune sensitivity to match your preferences
 
 ## Installation
 
-1. Install the plugin via Claude Code
-2. Run `/mind-reader:init` to set up directories and compute initial baseline
-3. Add the crontab entry to update baseline daily
+```bash
+/plugin install mind-reader@vibe-garden
+```
+
+After installation, run the init skill to set up directories and compute your initial baseline:
+
+```bash
+/mind-reader:init
+```
 
 ## Structure
 
 ```
 mind-reader/
 ├── .claude-plugin/
-│   └── plugin.json          # Plugin metadata
+│   └── plugin.json           # Plugin metadata
 ├── hooks/
 │   └── hooks.json            # UserPromptSubmit hook registration
 ├── scripts/
@@ -73,6 +86,31 @@ Edit `~/.claude/mind-reader/settings.json`:
 }
 ```
 
+### Settings Reference
+
+**Temporal settings:**
+- `duration_threshold`: Percentile for session duration alerts (default: p95)
+- `prompt_threshold`: Percentile for prompt count alerts (default: p95)
+- `check_hours`: Whether to alert for unusual working hours
+
+**Sentiment settings:**
+- `window_size`: Number of recent prompts to analyze
+- `threshold`: VADER compound score threshold (negative = frustrated)
+- `min_prompts`: Minimum prompts before sentiment analysis kicks in
+- `cooldown_prompts`: Prompts to wait after an alert before alerting again
+
+## Baseline Updates
+
+The baseline is computed from your Claude Code history. For accurate detection, update it periodically:
+
+```bash
+# Manual update
+python ~/.claude/plugins/mind-reader/scripts/baseline.py
+
+# Or add to crontab for daily updates
+0 3 * * * python ~/.claude/plugins/mind-reader/scripts/baseline.py
+```
+
 ## Testing
 
 ```bash
@@ -94,4 +132,4 @@ uv run pytest tests/ --cov=scripts --cov-report=term-missing
 - **Core**: Python 3.12+, stdlib only
 - **Sentiment** (optional): vaderSentiment (~1MB)
 
-Without VADER, only temporal detection works.
+Without VADER installed, only temporal detection works. Sentiment analysis is disabled gracefully.

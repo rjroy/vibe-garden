@@ -1,37 +1,81 @@
-# claude-hook-scripts
+# Notify Hook
 
-A collection of utility scripts for Claude Code hooks to enhance your development workflow.
+<img src="logo.webp" align="right" width="128" height="128" alt="Notify Hook Logo">
+
+A Claude Code plugin for desktop and mobile notifications when Claude needs your attention.
 
 ## Overview
 
-This repository contains various scripts that can be triggered by Claude Code hooks to provide notifications, automation, and other utilities during your development process.
+Get notified when Claude Code asks a question or completes a long-running task. Supports desktop notifications (Linux/macOS) and mobile push via ntfy.sh.
 
-## Scripts
+## Features
 
-### notify.py
-Located at `scripts/notify.py` - A notification script that sends real-time alerts via ntfy.sh when Claude Code performs operations.
+- **Desktop notifications**: Native system notifications on Linux and macOS
+- **Mobile push**: Push notifications via ntfy.sh to your phone
+- **Smart triggers**: Notifies on questions and task completion
+- **Configurable**: Control which events trigger notifications
 
-**Documentation**: See [docs/notify.md](docs/notify.md) for detailed usage instructions.
+## Installation
 
-**Quick usage**:
 ```bash
-echo '{"message": "Task completed", "title": "Claude Code"}' | python3 scripts/notify.py
+/plugin install notify-hook@vibe-garden
 ```
 
-## Repository Structure
+## Configuration
+
+### ntfy.sh Setup (Mobile Notifications)
+
+1. Install the ntfy app on your phone ([Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy), [iOS](https://apps.apple.com/app/ntfy/id1625396347))
+2. Subscribe to a unique topic (e.g., `my-claude-notifications`)
+3. Set the `NTFY_TOPIC` environment variable:
+
+```bash
+export NTFY_TOPIC="my-claude-notifications"
+```
+
+### Desktop Notifications
+
+Desktop notifications work out of the box on:
+- **Linux**: Uses `notify-send` (install `libnotify-bin` if missing)
+- **macOS**: Uses native notification center
+
+## Structure
 
 ```
-claude-hook-scripts/
-├── scripts/           # Hook scripts
-│   └── notify.py     # Notification script
-├── docs/             # Documentation
-│   └── notify.md     # notify.py documentation
-└── README.md         # This file
+notify-hook/
+├── .claude-plugin/
+│   └── plugin.json       # Plugin metadata
+├── hooks/
+│   └── hooks.json        # Hook registrations
+├── scripts/
+│   └── notify.py         # Notification script
+└── docs/
+    └── notify.md         # Detailed documentation
 ```
 
-## Getting Started
+## How It Works
 
-1. Clone this repository
-2. Make scripts executable: `chmod +x scripts/*.py`
-3. Configure Claude Code hooks to use the scripts
-4. See individual script documentation for specific setup instructions
+The plugin registers hooks that trigger on:
+- `AskUserQuestion` tool calls (Claude is asking you something)
+- Task completion events
+
+When triggered, the notification script sends alerts through configured channels.
+
+## Troubleshooting
+
+**No desktop notifications on Linux:**
+```bash
+sudo apt install libnotify-bin  # Debian/Ubuntu
+sudo pacman -S libnotify        # Arch
+```
+
+**No mobile notifications:**
+- Verify `NTFY_TOPIC` is set: `echo $NTFY_TOPIC`
+- Check ntfy app is subscribed to the same topic
+- Test manually: `curl -d "Test" ntfy.sh/your-topic`
+
+## Dependencies
+
+- Python 3.12+
+- `notify-send` (Linux) or native notifications (macOS)
+- ntfy.sh account (optional, for mobile)
