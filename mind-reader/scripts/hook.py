@@ -138,13 +138,12 @@ def main():
                 nudge_message = sentiment_nudge.message
                 state.last_nudge_prompt = state.prompt_count
 
-        # Step 7: Emit nudge or empty response
-        output = {"systemMessage": nudge_message} if nudge_message else {}
-
-        print(json.dumps(output))
-
-        # Step 8: Save session state
+        # Step 7: Save session state (before output, so failures don't cause double output)
         write_session_state(state)
+
+        # Step 8: Emit nudge or empty response
+        output = {"systemMessage": nudge_message} if nudge_message else {}
+        print(json.dumps(output))
 
     except Exception as e:
         # Catch-all: log error but exit gracefully
