@@ -1,7 +1,7 @@
 ---
 title: Spec review drift from "what" to "how"
 date: 2026-01-31
-status: open
+status: resolved
 tags: [lore-development, spec-review, methodology, action-bias]
 modules: [lore-docs-reviewer, specify]
 ---

@@ -1,7 +1,7 @@
 ---
 title: Spec review what vs how separation
 date: 2026-02-01
-status: draft
+status: implemented
 tags: [lore-development, spec-review, methodology, progressive-discovery]
 modules: [spec-reviewer, specify]
 related: [.lore/brainstorm/spec-review-what-vs-how.md]
