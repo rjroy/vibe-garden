@@ -15,7 +15,7 @@ vibe-garden/
 │   ├── skills/                # Skill implementations
 │   └── agents/                # Agent definitions
 │
-├── lore-development/          # Project context and workflow plugin (v0.12.0)
+├── lore-development/          # Project context and workflow plugin (v0.13.0)
 │   ├── .claude-plugin/        # Plugin metadata
 │   ├── skills/                # Workflow skills (research, brainstorm, specify, etc.)
 │   ├── agents/                # Agent definitions
