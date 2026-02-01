@@ -199,35 +199,6 @@ def compute_typical_hours(entries: list[dict]) -> list[int]:
     return sorted(h for h, c in hour_counts.items() if c >= threshold)
 
 
-def compute_typical_days(entries: list[dict]) -> list[str]:
-    """
-    Compute typical days (at or above median prompt count).
-
-    Args:
-        entries: List of history entries
-
-    Returns:
-        List of typical day names.
-    """
-    day_counts: Counter[str] = Counter()
-
-    for entry in entries:
-        ts = entry.get("timestamp")
-        if ts is None:
-            continue
-        dt = datetime.fromtimestamp(ts / 1000)
-        day_counts[dt.strftime("%A")] += 1
-
-    if not day_counts:
-        return []
-
-    # Find median threshold
-    counts = sorted(day_counts.values())
-    median = counts[len(counts) // 2]
-
-    return [d for d, c in day_counts.items() if c >= median]
-
-
 # ============================================================================
 # V2 Baseline Computation: Time-Bucket Based
 # ============================================================================
@@ -529,14 +500,12 @@ def compute_baseline(
     prompt_percentiles = compute_percentiles([float(p) for p in prompt_counts])
 
     typical_hours = compute_typical_hours(entries)
-    typical_days = compute_typical_days(entries)
 
     baseline = {
         "computed_at": datetime.now().isoformat(),
         "session_duration_minutes": duration_percentiles,
         "prompts_per_session": prompt_percentiles,
         "typical_hours": typical_hours,
-        "typical_days": typical_days,
         "insufficient_data": insufficient_data,
     }
 
@@ -608,8 +577,8 @@ def main():
                 v2_info = f", {total_buckets} bucket stats"
 
             print(
-                f"Baseline updated: {len(baseline['typical_hours'])} typical hours, "
-                f"{len(baseline['typical_days'])} typical days{v2_info}",
+                f"Baseline updated: {len(baseline['typical_hours'])} typical hours"
+                f"{v2_info}",
                 file=sys.stderr,
             )
         else:

@@ -20,7 +20,6 @@ from scripts.baseline import (
     compute_hourly_counts,
     compute_percentiles,
     compute_session_metrics,
-    compute_typical_days,
     compute_typical_hours,
     group_by_session,
     parse_history,
@@ -246,40 +245,6 @@ class TestComputeTypicalHours:
         assert compute_typical_hours([]) == []
 
 
-class TestComputeTypicalDays:
-    """Test compute_typical_days function."""
-
-    def test_finds_typical_days(self):
-        """Test identifies days with most activity."""
-        entries = []
-        base = datetime(2026, 1, 26)  # A Monday
-
-        # Heavy activity on weekdays (Mon-Fri)
-        for day_offset in range(5):
-            dt = base + timedelta(days=day_offset)
-            for _ in range(20):
-                entries.append({"timestamp": int(dt.timestamp() * 1000)})
-
-        # Light activity on weekend (Sat-Sun)
-        for day_offset in [5, 6]:
-            dt = base + timedelta(days=day_offset)
-            for _ in range(2):
-                entries.append({"timestamp": int(dt.timestamp() * 1000)})
-
-        typical = compute_typical_days(entries)
-
-        # Weekdays should be typical (above median of 20)
-        assert "Monday" in typical
-        assert "Friday" in typical
-        # Weekend should not be typical (below median)
-        assert "Saturday" not in typical
-        assert "Sunday" not in typical
-
-    def test_empty_entries(self):
-        """Test empty entries returns empty list."""
-        assert compute_typical_days([]) == []
-
-
 class TestComputeBaseline:
     """Test compute_baseline function."""
 
@@ -291,7 +256,6 @@ class TestComputeBaseline:
         assert "session_duration_minutes" in baseline
         assert "prompts_per_session" in baseline
         assert "typical_hours" in baseline
-        assert "typical_days" in baseline
         assert baseline["insufficient_data"] is False
 
         # Check percentiles exist

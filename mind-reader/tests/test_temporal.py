@@ -31,7 +31,6 @@ def baseline():
         session_duration_minutes={"median": 30, "p75": 60, "p95": 120},
         prompts_per_session={"median": 5, "p75": 12, "p95": 30},
         typical_hours=[9, 10, 11, 14, 15, 16, 17],
-        typical_days=["Monday", "Tuesday", "Wednesday"],
         insufficient_data=False,
     )
 
@@ -100,7 +99,6 @@ class TestCheckDurationThreshold:
             session_duration_minutes={},
             prompts_per_session={},
             typical_hours=[],
-            typical_days=[],
             insufficient_data=True,
         )
         state = SessionState(
@@ -197,7 +195,6 @@ class TestCheckUnusualHour:
             session_duration_minutes={},
             prompts_per_session={},
             typical_hours=[],
-            typical_days=[],
             insufficient_data=False,
         )
         result = check_unusual_hour(baseline, settings, current_hour=3)
@@ -270,7 +267,6 @@ def baseline_v2():
         session_duration_minutes={"median": 30, "p75": 60, "p95": 120},
         prompts_per_session={"median": 5, "p75": 12, "p95": 30},
         typical_hours=[9, 10, 11, 14, 15, 16, 17],
-        typical_days=["Monday", "Tuesday", "Wednesday"],
         insufficient_data=False,
         boundaries_computed_at=datetime.now(),
         window_days=42,

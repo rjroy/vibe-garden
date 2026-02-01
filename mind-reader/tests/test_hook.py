@@ -162,13 +162,6 @@ class TestHookIntegration:
             "session_duration_minutes": {"median": 30, "p75": 60, "p95": 120},
             "prompts_per_session": {"median": 5, "p75": 10, "p95": 15},
             "typical_hours": list(range(24)),  # All hours typical
-            "typical_days": [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-            ],
             "insufficient_data": False,
         }
         (data_dir / "baseline.json").write_text(json.dumps(baseline))
@@ -290,7 +283,6 @@ class TestHookV2BucketIntegration:
             "session_duration_minutes": {"median": 30, "p75": 60, "p95": 120},
             "prompts_per_session": {"median": 5, "p75": 10, "p95": 15},
             "typical_hours": list(range(24)),
-            "typical_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "insufficient_data": False,
             "boundaries_computed_at": now.isoformat(),
             "window_days": 42,
@@ -328,7 +320,6 @@ class TestHookV2BucketIntegration:
             "session_duration_minutes": {"median": 30, "p75": 60, "p95": 120},
             "prompts_per_session": {"median": 5, "p75": 10, "p95": 15},
             "typical_hours": list(range(24)),
-            "typical_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "insufficient_data": False,
             "boundaries_computed_at": now.isoformat(),
             "window_days": 42,
@@ -370,7 +361,6 @@ class TestHookV2BucketIntegration:
             "session_duration_minutes": {"median": 30, "p75": 60, "p95": 120},
             "prompts_per_session": {"median": 5, "p75": 10, "p95": 15},
             "typical_hours": list(range(24)),
-            "typical_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "insufficient_data": False,
         }
         (data_dir / "baseline.json").write_text(json.dumps(baseline))

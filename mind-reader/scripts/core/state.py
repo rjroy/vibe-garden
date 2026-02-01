@@ -131,7 +131,6 @@ class Baseline:
     session_duration_minutes: dict = field(default_factory=dict)
     prompts_per_session: dict = field(default_factory=dict)
     typical_hours: list[int] = field(default_factory=list)
-    typical_days: list[str] = field(default_factory=list)
     insufficient_data: bool = False
 
     # V2 fields for time-bucket baselines
@@ -173,7 +172,6 @@ class Baseline:
             session_duration_minutes=data.get("session_duration_minutes", {}),
             prompts_per_session=data.get("prompts_per_session", {}),
             typical_hours=data.get("typical_hours", []),
-            typical_days=data.get("typical_days", []),
             insufficient_data=data.get("insufficient_data", False),
             boundaries_computed_at=boundaries_computed_at,
             window_days=data.get("window_days", 42),
