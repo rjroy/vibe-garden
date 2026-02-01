@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Handle import from different directories
 try:
-    from lib.state import (
+    from core.state import (
         acquire_baseline_lock,
         cleanup_old_sessions,
         release_baseline_lock,
@@ -22,7 +22,7 @@ try:
 except ImportError:
     script_dir = Path(__file__).parent
     sys.path.insert(0, str(script_dir))
-    from lib.state import (
+    from core.state import (
         acquire_baseline_lock,
         cleanup_old_sessions,
         release_baseline_lock,

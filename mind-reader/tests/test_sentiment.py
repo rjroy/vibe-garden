@@ -13,15 +13,15 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 # Reset module state before tests
-import lib.sentiment as sentiment_module
-from lib.sentiment import (
+import core.sentiment as sentiment_module
+from core.sentiment import (
     analyze_prompt,
     check_rolling_sentiment,
     is_vader_available,
     update_sentiment_window,
 )
-from lib.settings import Settings
-from lib.state import SessionState
+from core.settings import Settings
+from core.state import SessionState
 
 
 @pytest.fixture(autouse=True)

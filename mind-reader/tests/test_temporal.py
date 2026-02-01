@@ -11,9 +11,9 @@ import pytest
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from lib.settings import Settings
-from lib.state import Baseline, SessionState
-from lib.temporal import (
+from core.settings import Settings
+from core.state import Baseline, SessionState
+from core.temporal import (
     check_duration_threshold,
     check_prompt_threshold,
     check_unusual_hour,

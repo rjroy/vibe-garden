@@ -75,7 +75,7 @@ class TestHookIntegration:
     def test_no_session_id(self, tmp_path):
         """Test hook handles missing session_id."""
         stdout, stderr, exit_code = self.run_hook(
-            {"user_prompt": "test prompt"}, tmp_path
+            {"prompt": "test prompt"}, tmp_path
         )
 
         assert exit_code == 0
@@ -84,7 +84,7 @@ class TestHookIntegration:
     def test_creates_session_state(self, tmp_path):
         """Test hook creates session state file."""
         stdout, stderr, exit_code = self.run_hook(
-            {"user_prompt": "test prompt", "session_id": "test-123"}, tmp_path
+            {"prompt": "test prompt", "session_id": "test-123"}, tmp_path
         )
 
         assert exit_code == 0
@@ -103,12 +103,12 @@ class TestHookIntegration:
         """Test hook increments prompt count across calls."""
         # First call
         self.run_hook(
-            {"user_prompt": "prompt 1", "session_id": "test-session"}, tmp_path
+            {"prompt": "prompt 1", "session_id": "test-session"}, tmp_path
         )
 
         # Second call
         self.run_hook(
-            {"user_prompt": "prompt 2", "session_id": "test-session"}, tmp_path
+            {"prompt": "prompt 2", "session_id": "test-session"}, tmp_path
         )
 
         session_file = (
@@ -126,7 +126,7 @@ class TestHookIntegration:
         settings_file.write_text(json.dumps({"enabled": False}))
 
         stdout, stderr, exit_code = self.run_hook(
-            {"user_prompt": "test", "session_id": "test-123"}, tmp_path
+            {"prompt": "test", "session_id": "test-123"}, tmp_path
         )
 
         assert exit_code == 0
@@ -143,7 +143,7 @@ class TestHookIntegration:
         settings_file.write_text(json.dumps({"quiet_until": future.isoformat()}))
 
         stdout, stderr, exit_code = self.run_hook(
-            {"user_prompt": "test", "session_id": "test-123"}, tmp_path
+            {"prompt": "test", "session_id": "test-123"}, tmp_path
         )
 
         assert exit_code == 0
@@ -186,7 +186,7 @@ class TestHookIntegration:
         )
 
         stdout, stderr, exit_code = self.run_hook(
-            {"user_prompt": "test", "session_id": "test-session"}, tmp_path
+            {"prompt": "test", "session_id": "test-session"}, tmp_path
         )
 
         assert exit_code == 0
@@ -237,7 +237,7 @@ class TestHookErrorHandling:
         with (
             mock.patch("pathlib.Path.home", return_value=tmp_path),
             mock.patch(
-                "lib.settings.load_settings",
+                "core.settings.load_settings",
                 side_effect=Exception("Forced error"),
             ),
         ):
@@ -253,7 +253,7 @@ class TestHookErrorHandling:
                 mock.patch(
                     "sys.stdin",
                     io.StringIO(
-                        json.dumps({"user_prompt": "test", "session_id": "test"})
+                        json.dumps({"prompt": "test", "session_id": "test"})
                     ),
                 ),
                 mock.patch("sys.stdout", stdout_capture),

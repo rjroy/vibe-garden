@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Handle import from different directories
 try:
-    from lib import (
+    from core import (
         SessionState,
         analyze_prompt,
         check_duration_threshold,
@@ -29,7 +29,7 @@ try:
 except ImportError:
     script_dir = Path(__file__).parent
     sys.path.insert(0, str(script_dir))
-    from lib import (
+    from core import (
         SessionState,
         analyze_prompt,
         check_duration_threshold,
@@ -49,7 +49,7 @@ def main():
     Main entry point for the mind-reader hook.
 
     Pipeline:
-    1. Read hook input from stdin (user_prompt, session_id)
+    1. Read hook input from stdin (prompt, session_id)
     2. Check if enabled and not quiet
     3. Load baseline and session state
     4. Update session state (prompt_count, sentiment)
@@ -69,7 +69,7 @@ def main():
             print("{}")
             sys.exit(0)
 
-        user_prompt = hook_input.get("user_prompt", "")
+        prompt = hook_input.get("prompt", "")
         session_id = hook_input.get("session_id", "")
 
         if not session_id:
@@ -105,7 +105,7 @@ def main():
         state.prompt_count += 1
 
         # Analyze sentiment (if VADER available)
-        sentiment_score = analyze_prompt(user_prompt)
+        sentiment_score = analyze_prompt(prompt)
         if sentiment_score is not None:
             window_size = settings.sentiment.window_size
             update_sentiment_window(state, sentiment_score, window_size)
@@ -138,13 +138,12 @@ def main():
                 nudge_message = sentiment_nudge.message
                 state.last_nudge_prompt = state.prompt_count
 
-        # Step 7: Emit nudge or empty response
-        output = {"systemMessage": nudge_message} if nudge_message else {}
-
-        print(json.dumps(output))
-
-        # Step 8: Save session state
+        # Step 7: Save session state (before output, so failures don't cause double output)
         write_session_state(state)
+
+        # Step 8: Emit nudge or empty response
+        output = {"systemMessage": nudge_message} if nudge_message else {}
+        print(json.dumps(output))
 
     except Exception as e:
         # Catch-all: log error but exit gracefully
