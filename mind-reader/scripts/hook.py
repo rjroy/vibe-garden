@@ -49,7 +49,7 @@ def main():
     Main entry point for the mind-reader hook.
 
     Pipeline:
-    1. Read hook input from stdin (user_prompt, session_id)
+    1. Read hook input from stdin (prompt, session_id)
     2. Check if enabled and not quiet
     3. Load baseline and session state
     4. Update session state (prompt_count, sentiment)
@@ -69,7 +69,7 @@ def main():
             print("{}")
             sys.exit(0)
 
-        user_prompt = hook_input.get("user_prompt", "")
+        prompt = hook_input.get("prompt", "")
         session_id = hook_input.get("session_id", "")
 
         if not session_id:
@@ -105,7 +105,7 @@ def main():
         state.prompt_count += 1
 
         # Analyze sentiment (if VADER available)
-        sentiment_score = analyze_prompt(user_prompt)
+        sentiment_score = analyze_prompt(prompt)
         if sentiment_score is not None:
             window_size = settings.sentiment.window_size
             update_sentiment_window(state, sentiment_score, window_size)
