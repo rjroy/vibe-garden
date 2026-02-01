@@ -40,6 +40,10 @@ class TemporalSettings:
     prompt_threshold: str = "p95"
     check_hours: bool = True
 
+    # V2 bucket-based thresholds
+    bucket_rarity_threshold: float = 0.1  # Nudge if session_rate below this
+    bucket_duration_threshold: str = "p90"  # Percentile to use for duration check
+
 
 @dataclass
 class SentimentSettings:
@@ -59,6 +63,8 @@ DEFAULT_SETTINGS = {
         "duration_threshold": "p95",
         "prompt_threshold": "p95",
         "check_hours": True,
+        "bucket_rarity_threshold": 0.1,
+        "bucket_duration_threshold": "p90",
     },
     "sentiment": {
         "enabled": True,
@@ -98,6 +104,12 @@ class Settings:
             duration_threshold=merged["temporal"].get("duration_threshold", "p95"),
             prompt_threshold=merged["temporal"].get("prompt_threshold", "p95"),
             check_hours=merged["temporal"].get("check_hours", True),
+            bucket_rarity_threshold=merged["temporal"].get(
+                "bucket_rarity_threshold", 0.1
+            ),
+            bucket_duration_threshold=merged["temporal"].get(
+                "bucket_duration_threshold", "p90"
+            ),
         )
 
         sentiment = SentimentSettings(

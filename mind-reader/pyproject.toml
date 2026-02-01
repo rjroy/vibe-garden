@@ -8,6 +8,7 @@ dependencies = []
 
 [project.optional-dependencies]
 sentiment = ["vaderSentiment>=3.3"]
+boundaries = ["scipy>=1.11"]
 
 [dependency-groups]
 dev = ["pytest", "pytest-cov", "ruff"]
