@@ -1,5 +1,7 @@
 # Compass Rose
 
+<img src="logo.webp" align="right" width="128" height="128" alt="Compass Rose Logo">
+
 A Claude Code plugin for project management using GitHub Projects.
 
 ## Overview

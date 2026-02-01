@@ -1,8 +1,8 @@
 # Vibe Garden
 
-<img src="logo.png" align="right" width="128" height="128" alt="Vibe Garden Logo">
+<img src="logo.webp" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-3-purple.svg)
+![Version](https://img.shields.io/badge/version-1.3.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-4-purple.svg)
 
 > A collection of Claude Code plugins for project management, development workflows, and notifications.
 
@@ -84,21 +84,27 @@ Get notified when Claude Code asks a question or completes a long-running task.
 
 ---
 
-## Utilities
+### Mind Reader - Active Feedback
 
-### Mind Reader - Usage Analysis
+**Purpose**: Gentle nudges based on session patterns and sentiment analysis
 
+**Version**: 1.0.0
 **Location**: `mind-reader/`
 
-Analyzes Claude Code usage history to generate insights about work patterns, project focus, and interaction style.
+Get proactive feedback when sessions run long, you're working unusual hours, or frustration patterns emerge.
 
 **Features**:
-- Temporal analysis (peak hours, trends)
-- Project focus tracking
-- Command usage patterns
-- BERTopic topic modeling
+- Temporal detection (session duration, prompt count)
+- Unusual hours awareness
+- Sentiment analysis (optional, via VADER)
+- Configurable thresholds
 
-[Documentation →](mind-reader/CLAUDE.md)
+```bash
+# Install in Claude Code
+/plugin install mind-reader@vibe-garden
+```
+
+[Documentation →](mind-reader/README.md)
 
 ---
 
@@ -122,9 +128,12 @@ vibe-garden/
 │   ├── hooks/                 # Hook implementations
 │   └── scripts/               # Notification scripts
 │
-└── mind-reader/               # Usage analysis utility
-    ├── preprocess.py          # History preprocessing
-    └── topic_model.py         # BERTopic analysis
+└── mind-reader/               # Active feedback plugin
+    ├── .claude-plugin/        # Plugin metadata (v1.0.0)
+    ├── hooks/                 # UserPromptSubmit hook
+    ├── scripts/               # Hook and baseline scripts
+    ├── skills/                # Init skill
+    └── tests/                 # Unit tests
 ```
 
 ---
@@ -137,6 +146,7 @@ Install plugins from this repository in Claude Code:
 /plugin install compass-rose@vibe-garden        # Project management
 /plugin install lore-development@vibe-garden    # Development workflows
 /plugin install notify-hook@vibe-garden         # Notifications
+/plugin install mind-reader@vibe-garden         # Active feedback
 ```
 
 ---

@@ -30,7 +30,8 @@ vibe-garden/
     ├── .claude-plugin/        # Plugin metadata
     ├── hooks/                 # UserPromptSubmit hook
     ├── skills/                # Init skill
-    └── scripts/               # Hook and baseline scripts
+    ├── scripts/               # Hook and baseline scripts
+    └── tests/                 # Unit tests
 ```
 
 ## Plugins
