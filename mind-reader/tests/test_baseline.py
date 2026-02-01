@@ -14,12 +14,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from scripts.baseline import (
     compute_baseline,
+    compute_baseline_v2,
+    compute_bucket_percentiles,
+    compute_bucket_stats,
+    compute_hourly_counts,
     compute_percentiles,
     compute_session_metrics,
-    compute_typical_days,
     compute_typical_hours,
     group_by_session,
     parse_history,
+    should_recompute_boundaries,
 )
 
 
@@ -241,40 +245,6 @@ class TestComputeTypicalHours:
         assert compute_typical_hours([]) == []
 
 
-class TestComputeTypicalDays:
-    """Test compute_typical_days function."""
-
-    def test_finds_typical_days(self):
-        """Test identifies days with most activity."""
-        entries = []
-        base = datetime(2026, 1, 26)  # A Monday
-
-        # Heavy activity on weekdays (Mon-Fri)
-        for day_offset in range(5):
-            dt = base + timedelta(days=day_offset)
-            for _ in range(20):
-                entries.append({"timestamp": int(dt.timestamp() * 1000)})
-
-        # Light activity on weekend (Sat-Sun)
-        for day_offset in [5, 6]:
-            dt = base + timedelta(days=day_offset)
-            for _ in range(2):
-                entries.append({"timestamp": int(dt.timestamp() * 1000)})
-
-        typical = compute_typical_days(entries)
-
-        # Weekdays should be typical (above median of 20)
-        assert "Monday" in typical
-        assert "Friday" in typical
-        # Weekend should not be typical (below median)
-        assert "Saturday" not in typical
-        assert "Sunday" not in typical
-
-    def test_empty_entries(self):
-        """Test empty entries returns empty list."""
-        assert compute_typical_days([]) == []
-
-
 class TestComputeBaseline:
     """Test compute_baseline function."""
 
@@ -286,7 +256,6 @@ class TestComputeBaseline:
         assert "session_duration_minutes" in baseline
         assert "prompts_per_session" in baseline
         assert "typical_hours" in baseline
-        assert "typical_days" in baseline
         assert baseline["insufficient_data"] is False
 
         # Check percentiles exist
@@ -314,3 +283,219 @@ class TestComputeBaseline:
 
         baseline = compute_baseline(history_file)
         assert baseline["insufficient_data"] is True
+
+    def test_includes_v2_data(self, sample_history):
+        """Test baseline includes v2 bucket data."""
+        baseline = compute_baseline(sample_history)
+
+        # V2 fields should be present
+        assert "window_days" in baseline
+        assert "days" in baseline
+        assert "global_stats" in baseline
+
+        # Days should have all 7 days
+        assert len(baseline["days"]) == 7
+        assert "monday" in baseline["days"]
+        assert "sunday" in baseline["days"]
+
+        # Each day should have boundaries and buckets
+        for _day_name, day_data in baseline["days"].items():
+            assert "boundaries" in day_data
+            assert "buckets" in day_data
+            assert len(day_data["boundaries"]) == 4
+
+
+# ============================================================================
+# V2 Baseline Tests
+# ============================================================================
+
+
+class TestComputeHourlyCounts:
+    """Test compute_hourly_counts function."""
+
+    def test_counts_by_day(self):
+        """Test counts prompts per hour for specific day."""
+        # Create entries on Monday at different hours
+        monday = datetime(2026, 1, 26, 10, 0)  # A Monday
+        entries = [
+            {"timestamp": int(monday.replace(hour=9).timestamp() * 1000)},
+            {"timestamp": int(monday.replace(hour=9).timestamp() * 1000)},
+            {"timestamp": int(monday.replace(hour=10).timestamp() * 1000)},
+            {"timestamp": int(monday.replace(hour=14).timestamp() * 1000)},
+        ]
+
+        counts = compute_hourly_counts(entries, "Monday")
+
+        assert counts[9] == 2
+        assert counts[10] == 1
+        assert counts[14] == 1
+        assert sum(counts) == 4
+
+    def test_filters_to_day(self):
+        """Test only counts entries for specified day."""
+        monday = datetime(2026, 1, 26, 10, 0)  # Monday
+        tuesday = datetime(2026, 1, 27, 10, 0)  # Tuesday
+
+        entries = [
+            {"timestamp": int(monday.timestamp() * 1000)},
+            {"timestamp": int(tuesday.timestamp() * 1000)},
+        ]
+
+        monday_counts = compute_hourly_counts(entries, "Monday")
+        tuesday_counts = compute_hourly_counts(entries, "Tuesday")
+
+        assert sum(monday_counts) == 1
+        assert sum(tuesday_counts) == 1
+
+    def test_case_insensitive_day(self):
+        """Test day name is case insensitive."""
+        monday = datetime(2026, 1, 26, 10, 0)
+        entries = [{"timestamp": int(monday.timestamp() * 1000)}]
+
+        assert compute_hourly_counts(entries, "monday") == compute_hourly_counts(
+            entries, "MONDAY"
+        )
+
+
+class TestComputeBucketPercentiles:
+    """Test compute_bucket_percentiles function."""
+
+    def test_empty_returns_zeros(self):
+        """Test empty list returns zeros."""
+        result = compute_bucket_percentiles([])
+        assert result == {"p50": 0, "p75": 0, "p90": 0}
+
+    def test_single_value(self):
+        """Test single value."""
+        result = compute_bucket_percentiles([30.0])
+        assert result["p50"] == 30.0
+        assert result["p75"] == 30.0
+        assert result["p90"] == 30.0
+
+    def test_percentiles(self):
+        """Test percentile computation."""
+        values = [float(i) for i in range(1, 101)]  # 1-100
+        result = compute_bucket_percentiles(values)
+
+        assert 49 <= result["p50"] <= 51
+        assert 74 <= result["p75"] <= 76
+        assert 89 <= result["p90"] <= 91
+
+
+class TestComputeBucketStats:
+    """Test compute_bucket_stats function."""
+
+    def test_computes_session_rate(self):
+        """Test session rate calculation."""
+        monday = datetime(2026, 1, 26, 10, 0)  # Monday, morning
+        sessions = {
+            "s1": [
+                {"timestamp": int(monday.timestamp() * 1000)},
+                {"timestamp": int((monday + timedelta(minutes=30)).timestamp() * 1000)},
+            ],
+            "s2": [
+                {"timestamp": int(monday.replace(hour=11).timestamp() * 1000)},
+            ],
+        }
+
+        boundaries = [6, 12, 18, 22]
+        window_days = 42  # 6 weeks = ~6 Mondays
+
+        stats = compute_bucket_stats(sessions, "Monday", boundaries, window_days)
+
+        # Both sessions in early_morning bucket (6-12)
+        early_morning = stats["early_morning"]
+        assert early_morning["session_count"] == 2
+        # 2 sessions / 6 day instances = 0.333
+        assert 0.3 <= early_morning["session_rate"] <= 0.4
+
+    def test_zero_sessions_bucket(self):
+        """Test bucket with zero sessions."""
+        sessions = {}  # No sessions
+        boundaries = [6, 12, 18, 22]
+
+        stats = compute_bucket_stats(sessions, "Monday", boundaries, 42)
+
+        for _bucket_name, bucket_stats in stats.items():
+            assert bucket_stats["session_count"] == 0
+            assert bucket_stats["session_rate"] == 0.0
+
+
+class TestShouldRecomputeBoundaries:
+    """Test should_recompute_boundaries function."""
+
+    def test_none_baseline_returns_true(self):
+        """Test None baseline triggers recompute."""
+        assert should_recompute_boundaries(None) is True
+
+    def test_missing_field_returns_true(self):
+        """Test missing boundaries_computed_at triggers recompute."""
+        baseline = {"computed_at": datetime.now().isoformat()}
+        assert should_recompute_boundaries(baseline) is True
+
+    def test_recent_boundaries_returns_false(self):
+        """Test recent boundaries don't trigger recompute."""
+        baseline = {
+            "boundaries_computed_at": datetime.now().isoformat(),
+        }
+        assert should_recompute_boundaries(baseline) is False
+
+    def test_stale_boundaries_returns_true(self):
+        """Test stale boundaries (>7 days) trigger recompute."""
+        old = datetime.now() - timedelta(days=10)
+        baseline = {
+            "boundaries_computed_at": old.isoformat(),
+        }
+        assert should_recompute_boundaries(baseline) is True
+
+
+class TestComputeBaselineV2:
+    """Test compute_baseline_v2 function."""
+
+    def test_computes_all_days(self, sample_history):
+        """Test computes stats for all 7 days."""
+        result = compute_baseline_v2(sample_history)
+
+        assert "days" in result
+        assert len(result["days"]) == 7
+
+        day_names = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+        for day in day_names:
+            assert day in result["days"]
+
+    def test_includes_global_stats(self, sample_history):
+        """Test includes global statistics."""
+        result = compute_baseline_v2(sample_history)
+
+        assert "global_stats" in result
+        assert "session_count" in result["global_stats"]
+        assert "duration" in result["global_stats"]
+
+    def test_respects_window_days(self, tmp_path):
+        """Test only includes entries within window."""
+        history_file = tmp_path / "history.jsonl"
+
+        now = datetime.now()
+        old = now - timedelta(days=100)  # Outside default 42-day window
+
+        entries = [
+            {"sessionId": "recent", "timestamp": int(now.timestamp() * 1000)},
+            {"sessionId": "old", "timestamp": int(old.timestamp() * 1000)},
+        ]
+
+        with open(history_file, "w") as f:
+            for entry in entries:
+                f.write(json.dumps(entry) + "\n")
+
+        result = compute_baseline_v2(history_file, window_days=42)
+
+        # Should only count 1 session (the recent one)
+        assert result["global_stats"]["session_count"] == 1

@@ -83,7 +83,6 @@ class TestBaseline:
             "session_duration_minutes": {"median": 41, "p75": 90, "p95": 180},
             "prompts_per_session": {"median": 5, "p75": 12, "p95": 30},
             "typical_hours": [9, 10, 17, 18, 19],
-            "typical_days": ["Monday", "Tuesday"],
             "insufficient_data": False,
         }
         baseline = Baseline.from_dict(d)
@@ -98,7 +97,6 @@ class TestBaseline:
             "session_duration_minutes": {},
             "prompts_per_session": {},
             "typical_hours": [],
-            "typical_days": [],
         }
         baseline = Baseline.from_dict(d)
         assert baseline.is_stale() is False
@@ -111,7 +109,6 @@ class TestBaseline:
             "session_duration_minutes": {},
             "prompts_per_session": {},
             "typical_hours": [],
-            "typical_days": [],
         }
         baseline = Baseline.from_dict(d)
         assert baseline.is_stale() is True
@@ -181,7 +178,6 @@ class TestBaselineReadWrite:
                 "session_duration_minutes": {"median": 30, "p75": 60, "p95": 120},
                 "prompts_per_session": {"median": 5, "p75": 10, "p95": 20},
                 "typical_hours": [9, 10, 11],
-                "typical_days": ["Monday"],
                 "insufficient_data": False,
             }
 

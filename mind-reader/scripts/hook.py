@@ -16,6 +16,8 @@ try:
     from core import (
         SessionState,
         analyze_prompt,
+        check_bucket_duration,
+        check_bucket_rarity,
         check_duration_threshold,
         check_prompt_threshold,
         check_rolling_sentiment,
@@ -32,6 +34,8 @@ except ImportError:
     from core import (
         SessionState,
         analyze_prompt,
+        check_bucket_duration,
+        check_bucket_rarity,
         check_duration_threshold,
         check_prompt_threshold,
         check_rolling_sentiment,
@@ -114,22 +118,48 @@ def main():
 
         # Step 5: Run temporal checks (only if baseline exists and not stale)
         if baseline is not None and not baseline.is_stale():
-            # Check duration
-            duration_nudge = check_duration_threshold(state, baseline, settings)
-            if duration_nudge:
-                nudge_message = duration_nudge.message
+            # Use v2 bucket-based checks if available, fallback to v1
+            if baseline.has_v2_data():
+                # V2: Two-stage hurdle model
 
-            # Check prompt count (only if duration didn't nudge)
-            if nudge_message is None:
-                prompt_nudge = check_prompt_threshold(state, baseline, settings)
-                if prompt_nudge:
-                    nudge_message = prompt_nudge.message
+                # Stage 1: Check bucket rarity (only on first prompt)
+                if state.prompt_count == 1:
+                    rarity_nudge = check_bucket_rarity(baseline, settings)
+                    if rarity_nudge:
+                        nudge_message = rarity_nudge.message
 
-            # Check unusual hour (only on first prompt of session)
-            if nudge_message is None and state.prompt_count == 1:
-                hour_nudge = check_unusual_hour(baseline, settings)
-                if hour_nudge:
-                    nudge_message = hour_nudge.message
+                # Stage 2: Check bucket duration
+                if nudge_message is None:
+                    bucket_duration_nudge = check_bucket_duration(
+                        state, baseline, settings
+                    )
+                    if bucket_duration_nudge:
+                        nudge_message = bucket_duration_nudge.message
+
+                # Fallback to prompt count check if no bucket nudge
+                if nudge_message is None:
+                    prompt_nudge = check_prompt_threshold(state, baseline, settings)
+                    if prompt_nudge:
+                        nudge_message = prompt_nudge.message
+            else:
+                # V1: Legacy checks
+
+                # Check duration
+                duration_nudge = check_duration_threshold(state, baseline, settings)
+                if duration_nudge:
+                    nudge_message = duration_nudge.message
+
+                # Check prompt count (only if duration didn't nudge)
+                if nudge_message is None:
+                    prompt_nudge = check_prompt_threshold(state, baseline, settings)
+                    if prompt_nudge:
+                        nudge_message = prompt_nudge.message
+
+                # Check unusual hour (only on first prompt of session)
+                if nudge_message is None and state.prompt_count == 1:
+                    hour_nudge = check_unusual_hour(baseline, settings)
+                    if hour_nudge:
+                        nudge_message = hour_nudge.message
 
         # Step 6: Run sentiment checks (only if no temporal nudge)
         if nudge_message is None:
@@ -138,7 +168,7 @@ def main():
                 nudge_message = sentiment_nudge.message
                 state.last_nudge_prompt = state.prompt_count
 
-        # Step 7: Save session state (before output, so failures don't cause double output)
+        # Step 7: Save session state (before output to avoid double output on failure)
         write_session_state(state)
 
         # Step 8: Emit nudge or empty response

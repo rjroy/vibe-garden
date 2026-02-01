@@ -8,23 +8,37 @@ Run via cron daily (recommended: 0 3 * * *).
 import json
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Handle import from different directories
 try:
+    from core.boundaries import (
+        DEFAULT_BOUNDARIES,
+        discover_boundaries,
+        get_all_bucket_names,
+        get_bucket_name,
+    )
     from core.state import (
         acquire_baseline_lock,
         cleanup_old_sessions,
+        read_baseline,
         release_baseline_lock,
         write_baseline,
     )
 except ImportError:
     script_dir = Path(__file__).parent
     sys.path.insert(0, str(script_dir))
+    from core.boundaries import (
+        DEFAULT_BOUNDARIES,
+        discover_boundaries,
+        get_all_bucket_names,
+        get_bucket_name,
+    )
     from core.state import (
         acquire_baseline_lock,
         cleanup_old_sessions,
+        read_baseline,
         release_baseline_lock,
         write_baseline,
     )
@@ -185,41 +199,283 @@ def compute_typical_hours(entries: list[dict]) -> list[int]:
     return sorted(h for h, c in hour_counts.items() if c >= threshold)
 
 
-def compute_typical_days(entries: list[dict]) -> list[str]:
+# ============================================================================
+# V2 Baseline Computation: Time-Bucket Based
+# ============================================================================
+
+
+def compute_hourly_counts(entries: list[dict], day_name: str) -> list[int]:
     """
-    Compute typical days (at or above median prompt count).
+    Compute prompt counts per hour for a specific day of week.
 
     Args:
         entries: List of history entries
+        day_name: Day name (e.g., "Monday", "tuesday" - case insensitive)
 
     Returns:
-        List of typical day names.
+        List of 24 integers representing prompts per hour (index 0-23).
     """
-    day_counts: Counter[str] = Counter()
+    day_name_lower = day_name.lower()
+    counts = [0] * 24
 
     for entry in entries:
         ts = entry.get("timestamp")
         if ts is None:
             continue
         dt = datetime.fromtimestamp(ts / 1000)
-        day_counts[dt.strftime("%A")] += 1
+        if dt.strftime("%A").lower() == day_name_lower:
+            counts[dt.hour] += 1
 
-    if not day_counts:
-        return []
-
-    # Find median threshold
-    counts = sorted(day_counts.values())
-    median = counts[len(counts) // 2]
-
-    return [d for d, c in day_counts.items() if c >= median]
+    return counts
 
 
-def compute_baseline(history_path: Path) -> dict:
+def compute_bucket_percentiles(durations: list[float]) -> dict[str, float]:
     """
-    Compute full baseline from history file.
+    Compute p50, p75, p90 percentiles for bucket duration.
+
+    Args:
+        durations: List of session durations in minutes
+
+    Returns:
+        Dict with p50, p75, p90 keys.
+    """
+    if not durations:
+        return {"p50": 0, "p75": 0, "p90": 0}
+
+    sorted_values = sorted(durations)
+    n = len(sorted_values)
+
+    def percentile(p: float) -> float:
+        idx = int(p * (n - 1))
+        return sorted_values[idx]
+
+    return {
+        "p50": percentile(0.5),
+        "p75": percentile(0.75),
+        "p90": percentile(0.90),
+    }
+
+
+def compute_bucket_stats(
+    sessions: dict[str, list[dict]],
+    day_name: str,
+    boundaries: list[int],
+    window_days: int,
+) -> dict[str, dict]:
+    """
+    Compute statistics for each bucket on a given day.
+
+    Args:
+        sessions: Dict mapping session_id to list of entries
+        day_name: Day name (e.g., "Monday")
+        boundaries: List of 4 boundary hours
+        window_days: Number of days in the analysis window
+
+    Returns:
+        Dict mapping bucket_name to stats dict.
+    """
+    day_name_lower = day_name.lower()
+
+    # Count how many instances of this day are in the window
+    # (window_days / 7, rounded to account for partial weeks)
+    day_instances = max(1, window_days // 7)
+
+    # Group sessions by bucket based on their start time
+    bucket_sessions: dict[str, list[tuple[str, list[dict]]]] = {
+        name: [] for name in get_all_bucket_names()
+    }
+
+    for session_id, entries in sessions.items():
+        if not entries:
+            continue
+
+        # Get session start time
+        timestamps = [e.get("timestamp") for e in entries if e.get("timestamp")]
+        if not timestamps:
+            continue
+
+        start_ts = min(timestamps)
+        start_dt = datetime.fromtimestamp(start_ts / 1000)
+
+        # Check if session started on this day
+        if start_dt.strftime("%A").lower() != day_name_lower:
+            continue
+
+        # Determine which bucket this session belongs to
+        bucket = get_bucket_name(start_dt.hour, boundaries)
+        bucket_sessions[bucket].append((session_id, entries))
+
+    # Compute stats for each bucket
+    result = {}
+    for bucket_name in get_all_bucket_names():
+        sessions_in_bucket = bucket_sessions[bucket_name]
+        session_count = len(sessions_in_bucket)
+        session_rate = session_count / day_instances
+
+        # Compute durations for sessions in this bucket
+        durations = []
+        for _session_id, entries in sessions_in_bucket:
+            timestamps = [e.get("timestamp") for e in entries if e.get("timestamp")]
+            if len(timestamps) >= 2:
+                duration_ms = max(timestamps) - min(timestamps)
+                durations.append(duration_ms / 1000 / 60)
+            else:
+                durations.append(0.0)
+
+        duration_percentiles = compute_bucket_percentiles(durations)
+
+        result[bucket_name] = {
+            "session_count": session_count,
+            "session_rate": round(session_rate, 3),
+            "duration": duration_percentiles,
+        }
+
+    return result
+
+
+def should_recompute_boundaries(baseline: dict | None) -> bool:
+    """
+    Check if boundaries should be recomputed.
+
+    Boundaries are recomputed weekly (every 7 days) to avoid
+    unnecessary computation while still adapting to pattern changes.
+
+    Args:
+        baseline: Existing baseline dict, or None
+
+    Returns:
+        True if boundaries should be recomputed.
+    """
+    if baseline is None:
+        return True
+
+    boundaries_computed_at = baseline.get("boundaries_computed_at")
+    if boundaries_computed_at is None:
+        return True
+
+    try:
+        computed_dt = datetime.fromisoformat(boundaries_computed_at)
+        age = datetime.now() - computed_dt
+        return age > timedelta(days=7)
+    except (ValueError, TypeError):
+        return True
+
+
+def compute_baseline_v2(
+    history_path: Path,
+    window_days: int = 42,
+    existing_baseline: dict | None = None,
+) -> dict:
+    """
+    Compute v2 baseline with time-bucket statistics.
+
+    This computes per-day, per-bucket statistics including:
+    - Session rate (sessions per day instance)
+    - Duration percentiles (p50, p75, p90)
 
     Args:
         history_path: Path to history.jsonl
+        window_days: Number of days to include in analysis (default 42 = 6 weeks)
+        existing_baseline: Existing baseline for boundary reuse
+
+    Returns:
+        Dict with v2 baseline fields (to be merged with v1 baseline).
+    """
+    entries = parse_history(history_path)
+
+    # Filter to window
+    cutoff = datetime.now() - timedelta(days=window_days)
+    cutoff_ms = int(cutoff.timestamp() * 1000)
+    entries = [e for e in entries if e.get("timestamp", 0) >= cutoff_ms]
+
+    sessions = group_by_session(entries)
+
+    # Determine boundaries
+    recompute = should_recompute_boundaries(existing_baseline)
+    boundaries_computed_at = datetime.now().isoformat() if recompute else None
+
+    if recompute:
+        # Compute boundaries from all entries (aggregate across all days)
+        all_hourly = [0] * 24
+        for entry in entries:
+            ts = entry.get("timestamp")
+            if ts:
+                dt = datetime.fromtimestamp(ts / 1000)
+                all_hourly[dt.hour] += 1
+        boundaries = discover_boundaries(all_hourly)
+    else:
+        # Reuse existing boundaries
+        boundaries = DEFAULT_BOUNDARIES
+        if existing_baseline and "days" in existing_baseline:
+            # Get boundaries from first day that has them
+            for day_data in existing_baseline["days"].values():
+                if "boundaries" in day_data:
+                    boundaries = day_data["boundaries"]
+                    break
+        boundaries_computed_at = existing_baseline.get("boundaries_computed_at")
+
+    # Compute per-day stats
+    day_names = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+
+    days = {}
+    for day_name in day_names:
+        bucket_stats = compute_bucket_stats(
+            sessions, day_name, boundaries, window_days
+        )
+        days[day_name] = {
+            "boundaries": boundaries,
+            "buckets": bucket_stats,
+        }
+
+    # Compute global stats (across all days/buckets)
+    all_durations = []
+    total_sessions = 0
+    for _session_id, session_entries in sessions.items():
+        timestamps = [e.get("timestamp") for e in session_entries if e.get("timestamp")]
+        if len(timestamps) >= 2:
+            duration_ms = max(timestamps) - min(timestamps)
+            all_durations.append(duration_ms / 1000 / 60)
+        else:
+            all_durations.append(0.0)
+        total_sessions += 1
+
+    global_stats = {
+        "session_count": total_sessions,
+        "duration": compute_bucket_percentiles(all_durations),
+    }
+
+    result = {
+        "window_days": window_days,
+        "days": days,
+        "global_stats": global_stats,
+    }
+
+    if boundaries_computed_at:
+        result["boundaries_computed_at"] = boundaries_computed_at
+
+    return result
+
+
+def compute_baseline(
+    history_path: Path,
+    existing_baseline: dict | None = None,
+) -> dict:
+    """
+    Compute full baseline from history file.
+
+    Includes both v1 (legacy) and v2 (time-bucket) statistics.
+
+    Args:
+        history_path: Path to history.jsonl
+        existing_baseline: Existing baseline for boundary reuse
 
     Returns:
         Baseline dict ready for JSON serialization.
@@ -238,22 +494,26 @@ def compute_baseline(history_path: Path) -> dict:
             file=sys.stderr,
         )
 
-    # Compute metrics
+    # Compute v1 metrics (legacy, for backward compatibility)
     durations, prompt_counts = compute_session_metrics(sessions)
     duration_percentiles = compute_percentiles(durations)
     prompt_percentiles = compute_percentiles([float(p) for p in prompt_counts])
 
     typical_hours = compute_typical_hours(entries)
-    typical_days = compute_typical_days(entries)
 
-    return {
+    baseline = {
         "computed_at": datetime.now().isoformat(),
         "session_duration_minutes": duration_percentiles,
         "prompts_per_session": prompt_percentiles,
         "typical_hours": typical_hours,
-        "typical_days": typical_days,
         "insufficient_data": insufficient_data,
     }
+
+    # Compute v2 metrics (time-bucket based)
+    v2_data = compute_baseline_v2(history_path, existing_baseline=existing_baseline)
+    baseline.update(v2_data)
+
+    return baseline
 
 
 def main():
@@ -263,10 +523,11 @@ def main():
     Pipeline:
     1. Check if history.jsonl exists
     2. Acquire lock (skip if already locked)
-    3. Compute baseline
-    4. Write baseline.json
-    5. Cleanup old session files
-    6. Release lock
+    3. Read existing baseline (for boundary reuse)
+    4. Compute baseline
+    5. Write baseline.json
+    6. Cleanup old session files
+    7. Release lock
     """
     history_path = get_history_path()
 
@@ -281,13 +542,43 @@ def main():
         sys.exit(0)
 
     try:
+        # Read existing baseline for boundary reuse
+        existing = read_baseline()
+        existing_dict = None
+        if existing is not None:
+            # Convert to dict for compute_baseline_v2
+            existing_dict = {
+                "boundaries_computed_at": (
+                    existing.boundaries_computed_at.isoformat()
+                    if existing.boundaries_computed_at
+                    else None
+                ),
+                "days": (
+                    {
+                        name: day.to_dict()
+                        for name, day in existing.days.items()
+                    }
+                    if existing.days
+                    else None
+                ),
+            }
+
         # Compute and write baseline
-        baseline = compute_baseline(history_path)
+        baseline = compute_baseline(history_path, existing_baseline=existing_dict)
 
         if write_baseline(baseline):
+            # Report v2 stats if available
+            v2_info = ""
+            if "days" in baseline:
+                total_buckets = sum(
+                    len(day.get("buckets", {}))
+                    for day in baseline["days"].values()
+                )
+                v2_info = f", {total_buckets} bucket stats"
+
             print(
-                f"Baseline updated: {len(baseline['typical_hours'])} typical hours, "
-                f"{len(baseline['typical_days'])} typical days",
+                f"Baseline updated: {len(baseline['typical_hours'])} typical hours"
+                f"{v2_info}",
                 file=sys.stderr,
             )
         else:

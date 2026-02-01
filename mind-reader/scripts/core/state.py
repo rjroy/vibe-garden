@@ -73,6 +73,57 @@ class SessionState:
 
 
 @dataclass
+class BucketStats:
+    """Statistics for a single time bucket."""
+
+    session_count: int
+    session_rate: float  # session_count / window_days
+    duration: dict[str, float]  # p50, p75, p90
+
+    @classmethod
+    def from_dict(cls, data: dict) -> BucketStats:
+        """Deserialize from dictionary."""
+        return cls(
+            session_count=data.get("session_count", 0),
+            session_rate=data.get("session_rate", 0.0),
+            duration=data.get("duration", {"p50": 0, "p75": 0, "p90": 0}),
+        )
+
+    def to_dict(self) -> dict:
+        """Serialize to dictionary."""
+        return {
+            "session_count": self.session_count,
+            "session_rate": self.session_rate,
+            "duration": self.duration,
+        }
+
+
+@dataclass
+class DayBaseline:
+    """Baseline statistics for a single day of the week."""
+
+    boundaries: list[int]  # Hour boundaries, e.g., [6, 12, 18, 22]
+    buckets: dict[str, BucketStats]  # bucket_name -> stats
+
+    @classmethod
+    def from_dict(cls, data: dict) -> DayBaseline:
+        """Deserialize from dictionary."""
+        boundaries = data.get("boundaries", [6, 12, 18, 22])
+        buckets_data = data.get("buckets", {})
+        buckets = {
+            name: BucketStats.from_dict(stats) for name, stats in buckets_data.items()
+        }
+        return cls(boundaries=boundaries, buckets=buckets)
+
+    def to_dict(self) -> dict:
+        """Serialize to dictionary."""
+        return {
+            "boundaries": self.boundaries,
+            "buckets": {name: stats.to_dict() for name, stats in self.buckets.items()},
+        }
+
+
+@dataclass
 class Baseline:
     """Historical baseline statistics."""
 
@@ -80,8 +131,13 @@ class Baseline:
     session_duration_minutes: dict = field(default_factory=dict)
     prompts_per_session: dict = field(default_factory=dict)
     typical_hours: list[int] = field(default_factory=list)
-    typical_days: list[str] = field(default_factory=list)
     insufficient_data: bool = False
+
+    # V2 fields for time-bucket baselines
+    boundaries_computed_at: datetime | None = None
+    window_days: int = 42
+    days: dict[str, DayBaseline] | None = None
+    global_stats: dict | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> Baseline:
@@ -93,19 +149,44 @@ class Baseline:
             except (ValueError, TypeError):
                 pass
 
+        # Parse boundaries_computed_at if present
+        boundaries_computed_at = None
+        if "boundaries_computed_at" in data:
+            try:
+                boundaries_computed_at = datetime.fromisoformat(
+                    data["boundaries_computed_at"]
+                )
+            except (ValueError, TypeError):
+                pass
+
+        # Parse days if present
+        days = None
+        if "days" in data and data["days"]:
+            days = {
+                day_name: DayBaseline.from_dict(day_data)
+                for day_name, day_data in data["days"].items()
+            }
+
         return cls(
             computed_at=computed_at,
             session_duration_minutes=data.get("session_duration_minutes", {}),
             prompts_per_session=data.get("prompts_per_session", {}),
             typical_hours=data.get("typical_hours", []),
-            typical_days=data.get("typical_days", []),
             insufficient_data=data.get("insufficient_data", False),
+            boundaries_computed_at=boundaries_computed_at,
+            window_days=data.get("window_days", 42),
+            days=days,
+            global_stats=data.get("global_stats"),
         )
 
     def is_stale(self, max_age_days: int = 14) -> bool:
         """Check if baseline is too old."""
         age = datetime.now() - self.computed_at
         return age > timedelta(days=max_age_days)
+
+    def has_v2_data(self) -> bool:
+        """Check if baseline has v2 time-bucket data."""
+        return self.days is not None and len(self.days) > 0
 
 
 def is_baseline_locked() -> bool:
