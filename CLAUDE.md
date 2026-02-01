@@ -15,7 +15,7 @@ vibe-garden/
 │   ├── skills/                # Skill implementations
 │   └── agents/                # Agent definitions
 │
-├── lore-development/          # Project context and workflow plugin (v0.12.0)
+├── lore-development/          # Project context and workflow plugin (v0.13.0)
 │   ├── .claude-plugin/        # Plugin metadata
 │   ├── skills/                # Workflow skills (research, brainstorm, specify, etc.)
 │   ├── agents/                # Agent definitions
@@ -65,3 +65,4 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 ## Critical Lessons
 
 - Marketplace registration for vibe-garden is just an entry in `.claude-plugin/marketplace.json` at repo root
+- Plans live outside lore-development: Native PlanMode generates plans that this system can't review. Don't pretend otherwise in skill documentation.

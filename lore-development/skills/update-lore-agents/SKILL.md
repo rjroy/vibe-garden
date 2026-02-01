@@ -49,7 +49,7 @@ Focus on agents with analysis/review capabilities (tools like Read, Grep, Glob, 
 | Agent | Category | Standard Description |
 |-------|----------|---------------------|
 | `lore-development:surface-surveyor` | Discovery | Entry point discovery for progressive feature excavation |
-| `lore-development:lore-docs-reviewer` | Documentation Review | Fresh-context review of specs and plans to catch clarity issues |
+| `lore-development:spec-reviewer` | Documentation Review | Fresh-context review of specs to catch clarity issues |
 
 ### Step 2: Present Findings
 
@@ -97,7 +97,7 @@ Last updated: [date]
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
-| lore-docs-reviewer | Fresh-context review of specs and plans | After completing a spec or plan, when docs feel unclear |
+| spec-reviewer | Fresh-context review of specs | After completing a spec, when docs feel unclear |
 
 ## Security
 
