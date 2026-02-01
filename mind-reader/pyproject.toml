@@ -1,6 +1,6 @@
 [project]
 name = "mind-reader"
-version = "1.1.0"
+version = "1.1.1"
 description = "Active feedback based on session patterns and sentiment analysis"
 authors = [{ name = "Ronald Roy", email = "gsdwig@gmail.com" }]
 requires-python = ">=3.12"

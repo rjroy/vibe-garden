@@ -1,7 +1,7 @@
 {
   "name": "mind-reader",
   "description": "Active feedback based on session patterns and sentiment analysis",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"

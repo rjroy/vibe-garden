@@ -47,7 +47,16 @@ Create the baseline update script at `~/.claude/mind-reader/update-baseline.sh`:
 # Update mind-reader baseline from Claude Code history
 # Run via cron: 0 3 * * * ~/.claude/mind-reader/update-baseline.sh
 
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/mind-reader}"
+PLUGIN_CACHE="$HOME/.claude/plugins/cache/vibe-garden/mind-reader"
+
+# Find latest version (sort -V handles semantic versioning)
+if [ -d "$PLUGIN_CACHE" ]; then
+    LATEST_VERSION=$(ls "$PLUGIN_CACHE" | sort -V | tail -1)
+    PLUGIN_ROOT="$PLUGIN_CACHE/$LATEST_VERSION"
+else
+    echo "Error: Plugin cache not found at $PLUGIN_CACHE" >&2
+    exit 1
+fi
 
 # Use plugin's venv Python if available, otherwise system python3
 if [ -x "$PLUGIN_ROOT/.venv/bin/python3" ]; then
