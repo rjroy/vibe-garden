@@ -25,7 +25,7 @@ mind-reader/
 ├── scripts/
 │   ├── hook.py               # Main hook entry point
 │   ├── baseline.py           # Baseline computation script
-│   └── lib/
+│   └── core/
 │       ├── settings.py       # Settings management
 │       ├── state.py          # Session state and baseline I/O
 │       ├── temporal.py       # Temporal detection logic

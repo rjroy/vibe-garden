@@ -12,7 +12,7 @@ from unittest import mock
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from lib.settings import (
+from core.settings import (
     Settings,
     _deep_merge,
     load_settings,

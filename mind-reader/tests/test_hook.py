@@ -237,7 +237,7 @@ class TestHookErrorHandling:
         with (
             mock.patch("pathlib.Path.home", return_value=tmp_path),
             mock.patch(
-                "lib.settings.load_settings",
+                "core.settings.load_settings",
                 side_effect=Exception("Forced error"),
             ),
         ):

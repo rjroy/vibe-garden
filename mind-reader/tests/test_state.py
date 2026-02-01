@@ -11,7 +11,7 @@ from unittest import mock
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from lib.state import (
+from core.state import (
     Baseline,
     SessionState,
     acquire_baseline_lock,

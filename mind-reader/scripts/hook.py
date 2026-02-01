@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Handle import from different directories
 try:
-    from lib import (
+    from core import (
         SessionState,
         analyze_prompt,
         check_duration_threshold,
@@ -29,7 +29,7 @@ try:
 except ImportError:
     script_dir = Path(__file__).parent
     sys.path.insert(0, str(script_dir))
-    from lib import (
+    from core import (
         SessionState,
         analyze_prompt,
         check_duration_threshold,
