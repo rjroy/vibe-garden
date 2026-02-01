@@ -121,15 +121,9 @@ If you're writing something that would appear in code, stop. That's plan territo
 
 ## After Saving: Fresh-Eyes Review
 
-After the spec is saved, offer a review:
+After the spec is saved, run a fresh-eyes review. Specs written in conversation accumulate assumptions. A reviewer with fresh context reads only what's on the page, catching what the author can't see.
 
-> "Spec saved. Would you like a fresh-eyes review? This catches clarity issues and gaps that are easy to miss when you're close to the work."
-
-If yes: Invoke the `spec-reviewer` agent on the saved spec using the Task tool. Present the findings and offer to address critical issues before moving on.
-
-If no: Proceed. The user can always run the review later.
-
-**Why this matters**: Specs written in conversation accumulate assumptions. A reviewer with fresh context reads only what's on the page, catching what the author can't see.
+Invoke the `spec-reviewer` agent on the saved spec using the Task tool. Present the findings and offer to address critical issues before moving on.
 
 ## Specialized Agents
 
