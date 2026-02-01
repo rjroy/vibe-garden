@@ -2,9 +2,11 @@
 
 <img src="logo.webp" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-4-purple.svg)
+![Version](https://img.shields.io/badge/version-2026.02-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-4-purple.svg)
 
 > A collection of Claude Code plugins for project management, development workflows, and notifications.
+>
+> *Repository releases use [CalVer](https://calver.org/) (YYYY.MM). Individual plugins maintain independent semver. Releases are cut quarterly or when significant changes land.*
 
 <br clear="right"/>
 
@@ -177,6 +179,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 <div align="center">
 
-*Last Updated: 2026-01-31*
+*Last Updated: 2026-02-01*
 
 </div>
