@@ -99,13 +99,33 @@ When a feature connects to undefined areas, mark them as stubs:
 
 Don't over-specify. Capture the essence. Trust that implementation will fill gaps appropriately.
 
+## What vs How
+
+A spec answers two questions:
+1. **What** are we building?
+2. **How** will we verify it's done?
+
+It does NOT answer "How do we build it?" That belongs in the plan.
+
+**Two types of "how":**
+- "How to verify" (belongs in spec): "User can authenticate and access protected resources"
+- "How to build" (belongs in plan): "Use JWT tokens with RS256 algorithm, store refresh tokens in httpOnly cookies"
+
+**Anti-patterns** (you've crossed into plan territory):
+- Specifying algorithms or data structures
+- Naming files, directories, or modules
+- Describing implementation steps or code patterns
+- Defining internal APIs or interfaces
+
+If you're writing something that would appear in code, stop. That's plan territory.
+
 ## After Saving: Fresh-Eyes Review
 
 After the spec is saved, offer a review:
 
 > "Spec saved. Would you like a fresh-eyes review? This catches clarity issues and gaps that are easy to miss when you're close to the work."
 
-If yes: Invoke the `lore-docs-reviewer` agent on the saved spec using the Task tool. Present the findings and offer to address critical issues before moving on.
+If yes: Invoke the `spec-reviewer` agent on the saved spec using the Task tool. Present the findings and offer to address critical issues before moving on.
 
 If no: Proceed. The user can always run the review later.
 
