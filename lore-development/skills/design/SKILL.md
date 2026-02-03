@@ -140,7 +140,7 @@ If you're documenting options without picking one, that's research. Design requi
 
 After the design is saved, run a fresh-eyes review. Designs written in conversation accumulate assumptions. A reviewer with fresh context reads only what's on the page, catching what the author can't see.
 
-Invoke the `spec-reviewer` agent on the saved design using the Task tool. The agent works for both specs and designs - it checks for clarity, gaps, and ambiguity. Present the findings and offer to address critical issues before moving on.
+Invoke the `design-reviewer` agent on the saved design using the Task tool. The agent evaluates designs through four lenses: decision quality, trade-off clarity, interface implementability, and edge case coverage. Present the findings and offer to address critical issues before moving on.
 
 ## Specialized Agents
 
