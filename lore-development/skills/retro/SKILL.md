@@ -29,7 +29,7 @@ Save to `.lore/retros/[feature-name].md`
 
 ### Document Structure
 
-**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for retros.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for retros.
 
 ```markdown
 ---
