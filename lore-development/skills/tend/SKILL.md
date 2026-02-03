@@ -45,7 +45,7 @@ Mark tasks `in_progress` before starting work, `completed` when done. This force
 
 ## Status Values
 
-**Load `../../shared/frontmatter-schema.md`** for the canonical list of status values by document type.
+**Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`** for the canonical list of status values by document type.
 
 The schema defines valid status values for each document type (specs, plans, brainstorms, research, retros, diagrams). Use those values when adding or updating status fields.
 
@@ -156,7 +156,7 @@ Use `TaskList` before moving between phases to confirm prior work is actually co
 
 ## Frontmatter Retrofitting
 
-Documents should have YAML frontmatter for searchability. Reference `../../shared/frontmatter-schema.md` for field definitions.
+Documents should have YAML frontmatter for searchability. Reference `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for field definitions.
 
 When a document lacks frontmatter entirely, offer to add it:
 

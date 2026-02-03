@@ -29,7 +29,7 @@ Use kebab-case for filenames. Include date if the research is time-sensitive (e.
 
 ### Document Structure
 
-**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions and status values for research.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for research.
 
 ```markdown
 ---

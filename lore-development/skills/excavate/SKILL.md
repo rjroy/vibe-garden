@@ -118,7 +118,7 @@ If gaps found, return to Step 3 for missed features before declaring the session
 
 ### Feature Reference (`.lore/reference/[feature-name].md`)
 
-**Before writing**: Load `../../shared/frontmatter-schema.md` to get frontmatter field definitions.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions.
 
 ```markdown
 ---
