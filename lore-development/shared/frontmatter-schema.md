@@ -34,6 +34,7 @@ related: [string]    # Paths to related lore documents (optional)
 |------|-----------|---------------------|
 | brainstorm | `.lore/brainstorm/` | `open`, `resolved`, `parked` |
 | spec | `.lore/specs/` | `draft`, `approved`, `implemented`, `superseded` |
+| design | `.lore/design/` | `draft`, `approved`, `implemented`, `superseded` |
 | retro | `.lore/retros/` | `complete` |
 | research | `.lore/research/` | `active`, `archived` |
 | diagram | `.lore/diagrams/` | `current`, `outdated` |
@@ -76,6 +77,19 @@ date: 2026-01-30
 status: open
 tags: [methodology, feedback-loop, knowledge-management]
 modules: [lore-development]
+---
+```
+
+### Design
+
+```yaml
+---
+title: Deduplication algorithm for history sync
+date: 2026-02-03
+status: draft
+tags: [algorithm, deduplication, sync, data-structures]
+modules: [history-service, stream-processor]
+related: [.lore/specs/history-sync.md]
 ---
 ```
 
