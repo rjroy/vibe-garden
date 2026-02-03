@@ -23,7 +23,23 @@ Load lore context, then enter plan mode.
 
 3. **Present context summary** to the user before entering plan mode. This ensures the planning session starts with shared understanding.
 
-4. **Enter plan mode** using the `EnterPlanMode` tool.
+4. **Provide plan structure guidance**: Before entering plan mode, present the mandatory structure that the plan must follow:
+
+   **Spec Reference Section** (required)
+   - Include the path to the relevant spec file
+   - First implementation task must be "Read the spec file at [path]"
+
+   **Implementation Approach Section** (required)
+   - Each major implementation phase should be delegated to a sub-agent with fresh context
+   - Sub-agents receive: the relevant spec section + their specific task
+   - This prevents context drift during implementation
+
+   **Validation Section** (required)
+   - Final task: Launch a fresh-context sub-agent to validate implementation against spec
+   - Validation agent reads the spec, reviews the implementation, and flags any gaps
+   - This catches drift before declaring work complete
+
+5. **Enter plan mode** using the `EnterPlanMode` tool.
 
 Once plan mode is entered, this skill's work is complete. Plan mode handles the rest: exploration, design, trade-off analysis, and user approval.
 
