@@ -62,6 +62,11 @@ Don't trust claimed status. Verify using these techniques:
 - Check if implementation appears done (code exists, tests pass)
 - Look for retro documents referencing this plan
 
+**For "implemented" designs**:
+- Check if a plan exists that references this design
+- Check if that plan's status is executed
+- If no plan exists, the design likely isn't implemented yet
+
 **For "incorporated" brainstorms**:
 - Use Grep to search for the brainstorm filename or key terms in `.lore/specs/`
 - If no references found, status should be `parked` or `open`
