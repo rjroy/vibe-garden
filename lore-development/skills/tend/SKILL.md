@@ -75,6 +75,12 @@ Don't trust claimed status. Verify using these techniques:
 - Check last modified date (via Bash `ls -l` or file metadata)
 - Documents marked "active" but not modified in 30+ days are likely stale or abandoned
 
+**For req-prefix collisions** (specs only):
+- For each spec, determine its prefix (explicit `req-prefix` field, or auto-generated from filename)
+- Auto-generation: first 2 segments of kebab-case filename, uppercase, max 12 chars
+- Flag any specs that would share the same prefix
+- Suggest adding explicit `req-prefix` to one or both to disambiguate
+
 ## Honest Status
 
 Status can be descriptive and honest. When simple values don't capture reality, use phrases:
@@ -129,6 +135,10 @@ Report findings in categories:
 
 ### Needs Decision
 - `.lore/brainstorm/caching-ideas.md` - no spec references it. Mark as parked?
+
+### Prefix Collisions
+- `.lore/specs/auth-flow.md` and `.lore/specs/auth-feature.md` both resolve to AUTH-F*
+  - Suggestion: Add `req-prefix: AUTHFLOW` to auth-flow.md
 ```
 
 ## Acting on Findings
