@@ -28,6 +28,29 @@ related: [string]    # Paths to related lore documents (optional)
 | modules | No | Include when document relates to specific codebase areas |
 | related | No | Cross-references to other lore documents |
 
+## Spec-Specific Fields
+
+Specs support an additional optional field:
+
+```yaml
+---
+req-prefix: AUTH    # Short prefix for requirement IDs (optional)
+---
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| req-prefix | No | Override auto-generated prefix. Use 3-12 uppercase chars. |
+
+If omitted, prefix is auto-generated from the spec filename (first 2 segments, uppercase, max 12 chars).
+
+Examples:
+- `auth-flow.md` → `AUTH-FLOW`
+- `user-authentication-oauth2.md` → `USER-AUTH`
+- With `req-prefix: AUTH` → `AUTH`
+
+Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
+
 ## Status Values by Document Type
 
 | Type | Directory | Valid Status Values |
@@ -65,6 +88,7 @@ status: draft
 tags: [auth, security, login]
 modules: [auth-service, user-model]
 related: [.lore/research/oauth-patterns.md]
+req-prefix: AUTH           # Optional: overrides auto-generated prefix
 ---
 ```
 

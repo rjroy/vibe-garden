@@ -33,6 +33,8 @@ Save to `.lore/specs/[feature-name].md`
 
 **Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for specs.
 
+**Requirement prefix**: Each spec has a unique prefix for its requirement IDs. See "Requirement ID Prefix" section below.
+
 ```markdown
 ---
 [frontmatter per schema]
@@ -48,8 +50,8 @@ How users arrive at this feature:
 - [Entry description] (from [source])
 
 ## Requirements
-- REQ-1: [requirement]
-- REQ-2: [requirement]
+- REQ-{PREFIX}-1: [requirement]
+- REQ-{PREFIX}-2: [requirement]
 
 ## Exit Points
 | Exit | Triggers When | Target |
@@ -80,6 +82,35 @@ Any boundaries or limitations.
 Links to related `.lore/` documents if relevant.
 Include findings from lore-researcher here.
 ```
+
+## Requirement ID Prefix
+
+Requirements use namespaced IDs to avoid collisions across specs: `REQ-{PREFIX}-N`
+
+**Auto-generation (default):**
+- Derived from spec filename
+- Take first 2 segments of kebab-case name, uppercase
+- Max 12 characters
+- Examples:
+  - `auth-flow.md` → `REQ-AUTH-FLOW-1`
+  - `user-authentication-oauth2.md` → `REQ-USER-AUTH-1`
+  - `checkout.md` → `REQ-CHECKOUT-1`
+
+**Manual override:**
+Add `req-prefix` to frontmatter when you want explicit control:
+```yaml
+---
+req-prefix: AUTH
+---
+```
+Then: `REQ-AUTH-1`, `REQ-AUTH-2`, etc.
+
+Use manual override when:
+- Auto-generated prefix is awkward or unclear
+- You want shorter IDs for frequently-referenced specs
+- Coordinating prefixes across a large project
+
+**Collision detection:** The `/tend` skill warns if two specs would generate the same prefix.
 
 ## Stub Notation
 
