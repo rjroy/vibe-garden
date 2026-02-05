@@ -25,7 +25,7 @@ Gather context from outside the project scope.
 
 Save findings to `.lore/research/[topic].md`
 
-Use kebab-case for filenames. Include date if the research is time-sensitive (e.g., `react-19-changes-2026-01.md`).
+Use kebab-case for filenames. Use the `date:` frontmatter field for time-sensitive research.
 
 ### Document Structure
 

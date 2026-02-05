@@ -34,7 +34,7 @@ If the user provides a sketch, diagram, or image:
 
 Save to `.lore/brainstorm/[topic].md`
 
-Use kebab-case. Include session date if ongoing (e.g., `auth-flow-ideas-2026-01-28.md`).
+Use kebab-case. Track session dates in frontmatter, not filenames.
 
 ### Document Structure
 
