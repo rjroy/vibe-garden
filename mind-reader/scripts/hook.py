@@ -116,8 +116,14 @@ def main():
 
         nudge_message = None
 
-        # Step 5: Run temporal checks (only if baseline exists and not stale)
-        if baseline is not None and not baseline.is_stale():
+        # Step 5: Run sentiment checks FIRST (frustration is the root cause)
+        sentiment_nudge = check_rolling_sentiment(state, settings)
+        if sentiment_nudge:
+            nudge_message = sentiment_nudge.message
+            state.last_nudge_prompt = state.prompt_count
+
+        # Step 6: Run temporal checks (only if sentiment didn't fire and baseline exists)
+        if nudge_message is None and baseline is not None and not baseline.is_stale():
             # Use v2 bucket-based checks if available, fallback to v1
             if baseline.has_v2_data():
                 # V2: Two-stage hurdle model
@@ -160,13 +166,6 @@ def main():
                     hour_nudge = check_unusual_hour(baseline, settings)
                     if hour_nudge:
                         nudge_message = hour_nudge.message
-
-        # Step 6: Run sentiment checks (only if no temporal nudge)
-        if nudge_message is None:
-            sentiment_nudge = check_rolling_sentiment(state, settings)
-            if sentiment_nudge:
-                nudge_message = sentiment_nudge.message
-                state.last_nudge_prompt = state.prompt_count
 
         # Step 7: Save session state (before output to avoid double output on failure)
         write_session_state(state)
