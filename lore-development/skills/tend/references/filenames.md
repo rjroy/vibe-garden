@@ -19,11 +19,7 @@ All `.lore/` filenames should follow kebab-case:
 | `spaces in name.md` | Spaces in filename | `auth flow.md` → `auth-flow.md` |
 | `UPPERCASE.md` | Shouting | `README.md` is fine; `AUTH-FLOW.md` is not |
 
-**Date prefixes** (when used):
-- Format: `YYYY-MM-DD-` prefix
-- Example: `2026-01-30-session-notes.md`
-- Use for: Meeting notes, time-sensitive documents
-- Don't use for: Specs, plans, features (use `date:` in frontmatter instead)
+**Dates belong in frontmatter**, not filenames. Use the `date:` field for temporal metadata. Filenames should describe content, not when it was created.
 
 ### Tag-Informed Naming
 
