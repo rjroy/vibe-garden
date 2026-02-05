@@ -1,6 +1,13 @@
-# Spec: Bounded Specification Model for /specify
+---
+title: Bounded Specification Model for /specify
+date: 2026-01-29
+status: implemented
+tags: [specification, layers, stubs, progressive-discovery]
+modules: [lore-development]
+related: [.lore/brainstorm/bounded-specification-2026-01-29.md, .lore/plans/bounded-specifications.md]
+---
 
-**Status**: complete
+# Spec: Bounded Specification Model for /specify
 
 ## Overview
 

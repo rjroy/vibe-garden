@@ -1,8 +1,12 @@
+---
+title: Document Lifecycle and Lore Hygiene
+date: 2026-01-29
+status: resolved
+tags: [lifecycle, hygiene, status-tracking, tend]
+modules: [lore-development]
+---
+
 # Brainstorm: Document Lifecycle and Lore Hygiene
-
-**Status**: incorporated (implemented via tend skill)
-
-Date: 2026-01-29
 
 ## Context
 

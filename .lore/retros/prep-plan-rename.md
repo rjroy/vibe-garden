@@ -1,3 +1,11 @@
+---
+title: Rename /plan to /prep-plan
+date: 2026-01-29
+status: complete
+tags: [naming, workflow, plan-mode, skill-design]
+modules: [lore-development]
+---
+
 # Retro: Rename /plan to /prep-plan
 
 ## Summary

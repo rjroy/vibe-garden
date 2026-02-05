@@ -1,6 +1,13 @@
-# Spec: lore-researcher Agent
+---
+title: lore-researcher Agent
+date: 2026-01-30
+status: implemented
+tags: [agent-design, compound-loop, knowledge-retrieval, search]
+modules: [lore-development]
+related: [.lore/brainstorm/compound-loop-lore-development.md]
+---
 
-**Status**: implemented
+# Spec: lore-researcher Agent
 
 ## Overview
 

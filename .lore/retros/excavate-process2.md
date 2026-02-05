@@ -1,3 +1,11 @@
+---
+title: Excavation Process (Full Codebase)
+date: 2026-01-28
+status: complete
+tags: [excavate, progressive-discovery, verification, memory-loop]
+modules: [lore-development]
+---
+
 # Retro: Excavation Process
 
 ## Summary

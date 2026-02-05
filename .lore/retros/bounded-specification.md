@@ -1,3 +1,12 @@
+---
+title: Bounded Specification Model
+date: 2026-01-29
+status: complete
+tags: [specification, layers, stubs, plan-mode]
+modules: [lore-development]
+related: [.lore/brainstorm/bounded-specification-2026-01-29.md, .lore/specs/bounded-specification.md, .lore/plans/bounded-specifications.md]
+---
+
 # Retro: Bounded Specification Model
 
 ## Summary

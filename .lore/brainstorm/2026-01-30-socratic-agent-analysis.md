@@ -1,7 +1,14 @@
+---
+title: Socratic Agent Analysis
+date: 2026-01-30
+status: resolved
+tags: [agent-design, socratic, fresh-context, adversarial, poke-holes]
+modules: [lore-development]
+related: [.lore/specs/fresh-lore-agent.md, .lore/specs/poke-holes-skill.md]
+---
+
 # Socratic Agent Analysis
 
-**Date**: 2026-01-30
-**Status**: Specs Complete
 **Context**: Reviewed a shared Socrates agent spec; extracted two tools (fresh-lore agent, poke-holes skill) now ready for implementation
 
 ---

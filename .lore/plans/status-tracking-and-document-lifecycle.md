@@ -1,6 +1,13 @@
-# Plan: Status Tracking and Document Lifecycle for lore-development
+---
+title: Status Tracking and Document Lifecycle for lore-development
+date: 2026-01-29
+status: executed
+tags: [status-tracking, lifecycle, tend, breakdown, execute]
+modules: [lore-development]
+related: [.lore/brainstorm/document-lifecycle-and-lore-hygiene.md, .lore/brainstorm/execute-skill-and-status-tracking.md, .lore/retros/remove-breakdown-execute.md]
+---
 
-**Status**: approved
+# Plan: Status Tracking and Document Lifecycle for lore-development
 
 ## Context
 

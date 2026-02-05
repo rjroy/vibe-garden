@@ -1,3 +1,12 @@
+---
+title: Bounded Specification with Explicit Stubs
+date: 2026-01-29
+status: resolved
+tags: [specification, layers, stubs, progressive-discovery]
+modules: [lore-development]
+related: [.lore/specs/bounded-specification.md]
+---
+
 # Brainstorm: Bounded Specification with Explicit Stubs
 
 ## Context

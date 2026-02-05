@@ -1,6 +1,13 @@
-# Spec: fresh-lore Agent
+---
+title: fresh-lore Agent
+date: 2026-01-30
+status: implemented
+tags: [agent-design, fresh-context, review, analysis]
+modules: [lore-development]
+related: [.lore/brainstorm/2026-01-30-socratic-agent-analysis.md]
+---
 
-**Status**: implemented
+# Spec: fresh-lore Agent
 
 ## Overview
 

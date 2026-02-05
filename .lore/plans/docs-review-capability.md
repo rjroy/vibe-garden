@@ -1,6 +1,13 @@
-# Plan: Docs Review Capability
+---
+title: Docs Review Capability
+date: 2026-01-29
+status: executed
+tags: [fresh-context, review, documentation, agents]
+modules: [lore-development]
+related: [.lore/brainstorm/docs-review-capability.md]
+---
 
-**Status**: complete (merged in PR #68)
+# Plan: Docs Review Capability
 
 ## Context
 

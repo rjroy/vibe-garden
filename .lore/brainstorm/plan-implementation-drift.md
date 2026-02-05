@@ -1,6 +1,9 @@
 ---
-status: active
-created: 2026-02-02
+title: Plan-Implementation Drift
+date: 2026-02-02
+status: open
+tags: [workflow, plan-mode, spec-drift, validation, context-management]
+modules: [lore-development]
 ---
 
 # Plan-Implementation Drift

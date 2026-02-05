@@ -1,7 +1,7 @@
 ---
 title: Lessons Graduation for /retro
 date: 2026-01-31
-status: draft
+status: implemented
 tags: [methodology, retro, knowledge-management, lessons-learned, graduation, lore-development]
 modules: [lore-development]
 related: [.lore/brainstorm/lessons-graduation-2026-01-31.md, .lore/retros/plugin-version-management.md]

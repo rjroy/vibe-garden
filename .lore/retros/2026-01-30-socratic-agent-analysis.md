@@ -1,6 +1,13 @@
-# Retro: Socratic Agent Analysis
+---
+title: Socratic Agent Analysis
+date: 2026-01-30
+status: complete
+tags: [agent-design, socratic, fresh-context, adversarial, spec-process]
+modules: [lore-development]
+related: [.lore/brainstorm/2026-01-30-socratic-agent-analysis.md, .lore/specs/fresh-lore-agent.md, .lore/specs/poke-holes-skill.md]
+---
 
-**Date**: 2026-01-30
+# Retro: Socratic Agent Analysis
 
 ## Summary
 

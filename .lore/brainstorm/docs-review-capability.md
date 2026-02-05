@@ -1,6 +1,13 @@
-# Brainstorm: Documentation Review via Fresh Context
+---
+title: Documentation Review via Fresh Context
+date: 2026-01-29
+status: resolved
+tags: [fresh-context, review, documentation, agents]
+modules: [lore-development]
+related: [.lore/plans/docs-review-capability.md]
+---
 
-**Status**: incorporated (led to plan, then lore-docs-reviewer agent in PR #68)
+# Brainstorm: Documentation Review via Fresh Context
 
 ## Context
 

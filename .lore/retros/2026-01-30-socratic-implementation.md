@@ -1,6 +1,13 @@
-# Retro: Socratic Agent Implementation
+---
+title: Socratic Agent Implementation
+date: 2026-01-30
+status: complete
+tags: [implementation, agent-design, fresh-context, spec-driven-development]
+modules: [lore-development]
+related: [.lore/specs/fresh-lore-agent.md, .lore/specs/poke-holes-skill.md, .lore/retros/2026-01-30-socratic-agent-analysis.md]
+---
 
-**Date**: 2026-01-30
+# Retro: Socratic Agent Implementation
 
 ## Summary
 

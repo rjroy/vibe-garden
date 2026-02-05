@@ -1,7 +1,7 @@
 ---
 title: Time-bucket baselines for mind-reader
 date: 2026-02-01
-status: draft
+status: implemented
 tags: [mind-reader, baselines, temporal-patterns, session-tracking]
 modules: [mind-reader]
 related:

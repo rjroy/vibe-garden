@@ -1,6 +1,12 @@
-# Brainstorm: AI Validation Criteria
+---
+title: AI Validation Criteria
+date: 2026-01-30
+status: resolved
+tags: [validation, testing, methodology, ai-workflow]
+modules: [lore-development]
+---
 
-**Status**: complete
+# Brainstorm: AI Validation Criteria
 
 ## Context
 

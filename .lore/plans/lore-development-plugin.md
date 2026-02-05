@@ -1,6 +1,12 @@
-# Plan: Lore Development Plugin
+---
+title: Lore Development Plugin
+date: 2026-01-28
+status: executed
+tags: [plugin, lore-development, context-management]
+modules: [lore-development]
+---
 
-**Status**: complete (plugin exists and is in active use)
+# Plan: Lore Development Plugin
 
 ## Context
 

@@ -1,3 +1,11 @@
+---
+title: Excavate Output Naming
+date: 2026-01-28
+status: complete
+tags: [excavate, naming, artifact-structure, reference-docs]
+modules: [lore-development]
+---
+
 # Retro: Excavate Output Naming
 
 ## Summary

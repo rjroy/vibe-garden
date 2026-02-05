@@ -1,3 +1,11 @@
+---
+title: Excavate Process
+date: 2026-01-28
+status: complete
+tags: [excavate, progressive-discovery, memory-loop, documentation]
+modules: [lore-development]
+---
+
 # Retro: Excavate Process
 
 ## Summary

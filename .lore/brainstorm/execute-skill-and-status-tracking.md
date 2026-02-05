@@ -1,8 +1,13 @@
+---
+title: Execute Skill and Status Tracking
+date: 2026-01-29
+status: parked
+tags: [execution, status-tracking, workflow, breakdown]
+modules: [lore-development]
+related: [.lore/retros/remove-breakdown-execute.md]
+---
+
 # Brainstorm: Execute Skill and Status Tracking
-
-**Status**: incorporated (implemented via execute skill and breakdown status tracking)
-
-Date: 2026-01-29
 
 ## Problem
 

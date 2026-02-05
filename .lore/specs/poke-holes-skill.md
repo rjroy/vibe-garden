@@ -1,6 +1,13 @@
-# Spec: poke-holes Skill
+---
+title: poke-holes Skill
+date: 2026-01-30
+status: implemented
+tags: [skill, adversarial, first-principles, bias-awareness]
+modules: [lore-development]
+related: [.lore/brainstorm/2026-01-30-socratic-agent-analysis.md]
+---
 
-**Status**: complete
+# Spec: poke-holes Skill
 
 ## Overview
 

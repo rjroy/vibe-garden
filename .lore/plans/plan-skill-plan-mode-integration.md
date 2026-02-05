@@ -1,6 +1,12 @@
-# Plan: Integrate Plan Skill with Claude Code Plan Mode
+---
+title: Integrate Plan Skill with Claude Code Plan Mode
+date: 2026-01-29
+status: executed
+tags: [plan-mode, integration, workflow]
+modules: [lore-development]
+---
 
-**Status**: complete (implemented 2026-01-29)
+# Plan: Integrate Plan Skill with Claude Code Plan Mode
 
 ## Context
 

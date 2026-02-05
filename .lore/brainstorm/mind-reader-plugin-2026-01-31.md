@@ -1,7 +1,7 @@
 ---
 title: Promoting mind-reader to a plugin
 date: 2026-01-31
-status: open
+status: resolved
 tags: [plugin-design, usage-analysis, hooks, cron, ml-dependencies]
 modules: [mind-reader]
 ---

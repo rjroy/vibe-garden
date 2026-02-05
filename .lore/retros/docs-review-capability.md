@@ -1,3 +1,12 @@
+---
+title: Docs Review Capability
+date: 2026-01-29
+status: complete
+tags: [fresh-context, review, documentation, agents]
+modules: [lore-development]
+related: [.lore/brainstorm/docs-review-capability.md, .lore/plans/docs-review-capability.md]
+---
+
 # Retro: Docs Review Capability
 
 ## Summary

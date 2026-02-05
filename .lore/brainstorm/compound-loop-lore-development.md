@@ -1,6 +1,13 @@
-# Brainstorm: Compound Loop for Lore-Development
+---
+title: Compound Loop for Lore-Development
+date: 2026-01-30
+status: resolved
+tags: [methodology, compound-loop, knowledge-management, feedback-loop]
+modules: [lore-development]
+related: [.lore/specs/lore-researcher-agent.md]
+---
 
-**Status**: open
+# Brainstorm: Compound Loop for Lore-Development
 
 ## Context
 

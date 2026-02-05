@@ -1,3 +1,12 @@
+---
+title: Remove breakdown and execute skills
+date: 2026-01-29
+status: complete
+tags: [deletion, skill-design, native-capability, philosophy]
+modules: [lore-development]
+related: [.lore/brainstorm/execute-skill-and-status-tracking.md, .lore/plans/status-tracking-and-document-lifecycle.md]
+---
+
 # Retro: Remove breakdown and execute skills
 
 ## Summary
