@@ -1,6 +1,6 @@
 ---
-name: plan
-description: This skill builds implementation plans as persistent, reviewable lore artifacts. Use when ready to plan how to build something. Triggers include "plan this", "make a plan", "how should we build this", "plan the implementation", "plan".
+name: prep-plan
+description: This skill builds implementation plans as persistent, reviewable lore artifacts. Use when ready to plan how to build something. Triggers include "prep plan", "prep-plan", "prepare a plan", "plan this", "make a plan", "how should we build this", "plan the implementation".
 ---
 
 # Plan

@@ -25,7 +25,7 @@ Design is overhead when the implementation is obvious:
 
 ## The 100 Forks Test
 
-If you ran `/plan` 100 times with current context:
+If you ran `/prep-plan` 100 times with current context:
 - **Forks diverge**: AI invents different solutions. You need more context. Design provides it.
 - **Forks converge**: AI finds the obvious solution. Spec is enough. Skip design.
 
