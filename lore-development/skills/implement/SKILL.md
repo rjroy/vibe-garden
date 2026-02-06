@@ -89,11 +89,13 @@ If resuming from notes, read the progress tracker. Skip completed phases. Load t
 
 **Select agents.** Consult `.lore/lore-agents.md` if it exists. Match agents to roles:
 
-- **Implementation**: An agent with code editing capabilities (general-purpose agents work)
-- **Testing**: An agent that can run tests and report findings
-- **Review**: A code review agent with fresh context
+| Role | Registry Category | Fallback `subagent_type` |
+|------|-------------------|--------------------------|
+| **Implementation** | Implementation | `general-purpose` |
+| **Testing** | Testing | `general-purpose` (instruct it to run tests and report pass/fail) |
+| **Review** | Code Quality | `pr-review-toolkit:code-reviewer` (if available, else `general-purpose`) |
 
-If no agent registry exists, use reasonable defaults from available agents. Agent choice is project-specific and not prescribed by this skill.
+Use the registry when available. When the registry is missing or doesn't cover a role, use the fallback type.
 
 Create or open the notes file at `.lore/notes/<artifact-name>.md`.
 
