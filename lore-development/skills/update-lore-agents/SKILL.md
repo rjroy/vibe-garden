@@ -33,6 +33,7 @@ Check the Task tool description for available agents. The Task tool lists all su
 
 Scan this list and categorize agents by their function:
 
+- **Implementation**: Code writing, phase execution, general-purpose task completion
 - **Discovery**: Codebase exploration, entry point finding, structure scanning
 - **Documentation Review**: Fresh-context review of specs and plans
 - **Security**: Auth review, vulnerability analysis, secrets handling
@@ -89,6 +90,14 @@ Specialized agents available for lore-development work in this project.
 
 Last updated: [date]
 
+## Implementation
+
+| Agent | Purpose | When to Use |
+|-------|---------|-------------|
+| [agent-name] | [description] | [context for this project] |
+
+> `/implement` maps its three roles to registry categories: Implementation for code writing, Testing for test execution, Code Quality for review. When a category has no agents, `/implement` falls back to built-in defaults.
+
 ## Discovery
 
 | Agent | Purpose | When to Use |
@@ -142,8 +151,10 @@ Omit empty categories. Only include agents the user selected as relevant.
 ## Context
 
 This registry is consumed by other lore-development skills:
+- `implement` - implementation, testing, and review agents for phase execution
 - `specify` - domain experts for requirements
-- `plan` - architecture and security reviewers, plan-reviewer for spec coverage
+- `design` - security, performance, and architecture experts for trade-off analysis
+- `prep-plan` - architecture and security reviewers, plan-reviewer for spec coverage
 - `excavate` - discovery agents beyond surface-surveyor
 - `brainstorm`, `research`, `retro`, `ddp` - various domain experts
 
