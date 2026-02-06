@@ -471,7 +471,7 @@ specification before implementation.
 
 XL items benefit from formal specification before implementation:
 1. /lore-development:specify - Define requirements and success criteria
-2. /lore-development:prep-plan - Plan technical approach
+2. /lore-development:plan - Plan technical approach
 
 After planning, proceed with implementation directly.
 
@@ -798,7 +798,7 @@ specification before implementation.
 
 XL items benefit from formal specification before implementation:
 1. /lore-development:specify - Define requirements and success criteria
-2. /lore-development:prep-plan - Plan technical approach
+2. /lore-development:plan - Plan technical approach
 
 After planning, proceed with implementation directly.
 

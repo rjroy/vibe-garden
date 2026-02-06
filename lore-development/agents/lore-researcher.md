@@ -1,6 +1,6 @@
 ---
 name: lore-researcher
-description: Use this agent when you need to search .lore/ for related prior work before starting new specifications or plans. This agent surfaces lessons learned, existing specs, and relevant brainstorms so past knowledge informs new work. Invoked automatically by /specify and /prep-plan, or manually when exploring what context exists.
+description: Use this agent when you need to search .lore/ for related prior work before starting new specifications or plans. This agent surfaces lessons learned, existing specs, and relevant brainstorms so past knowledge informs new work. Invoked automatically by /specify and /plan, or manually when exploring what context exists.
 
 <example>
 Context: User is about to specify a new authentication feature.

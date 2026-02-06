@@ -421,7 +421,7 @@ specification before implementation.
 
 XL items benefit from formal specification before implementation:
 1. /lore-development:specify - Define requirements and success criteria
-2. /lore-development:prep-plan - Plan technical approach
+2. /lore-development:plan - Plan technical approach
 
 After planning, proceed with implementation directly.
 
@@ -669,7 +669,7 @@ Enter choice (1/2/3):
 #    -> Transfers to /lore-development:specify
 
 # 4. Follow Lore Development workflow:
-#    /lore-development:specify -> /lore-development:prep-plan -> implementation
+#    /lore-development:specify -> /lore-development:plan -> implementation
 ```
 
 ## Troubleshooting
