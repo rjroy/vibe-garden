@@ -17,7 +17,7 @@ Orchestrate implementation through agent delegation. Record what happens for fut
 
 - The work is trivial (one file, obvious change, just do it)
 - Still exploring options (use `/design` or `/brainstorm` instead)
-- Need a plan first (use `/plan` instead)
+- Need a plan first (use `/prep-plan` instead)
 
 ## Input
 
