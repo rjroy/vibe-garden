@@ -62,9 +62,37 @@ Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 | research | `.lore/research/` | `active`, `archived` |
 | diagram | `.lore/diagrams/` | `current`, `outdated` |
 | plan | `.lore/plans/` | `draft`, `approved`, `executed` |
+| notes | `.lore/notes/` | `active`, `complete` |
 | reference | `.lore/reference/` | `current`, `outdated` |
 
+## Notes-Specific Fields
+
+Notes support an additional required field:
+
+```yaml
+---
+source: .lore/plans/auth-flow.md    # Path to the source artifact (required)
+---
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| source | Yes | Path to the spec, design, or plan being implemented. Enables retro to diff plan vs reality. |
+
 ## Examples
+
+### Notes (Implementation)
+
+```yaml
+---
+title: Implementation notes: auth-flow
+date: 2026-02-05
+status: active
+tags: [implementation, notes]
+source: .lore/plans/auth-flow.md
+modules: [auth-service]
+---
+```
 
 ### Retro
 
