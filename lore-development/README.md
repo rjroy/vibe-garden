@@ -15,7 +15,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:research` | Gather context from outside the project |
 | `/lore-development:brainstorm` | Explore ideas, record "what if" thinking |
 | `/lore-development:specify` | Define requirements and success criteria |
-| `/lore-development:prep-plan` | Load context, enter plan mode, save output |
+| `/lore-development:plan` | Build implementation plans as reviewable lore artifacts |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
@@ -31,7 +31,7 @@ All context lives in `.lore/`:
 ├── research/       # External findings
 ├── brainstorm/     # Recorded explorations
 ├── specs/          # Requirements
-├── plans/          # Saved planning sessions
+├── plans/          # Implementation plans (reviewed, persistent)
 ├── retros/         # Lessons learned
 ├── reference/      # Excavated feature documentation
 ├── excavations/    # Design archaeology session tracking
@@ -68,7 +68,7 @@ Skills can run independently. Use what you need:
 /lore-development:specify
 
 # Planning implementation (with lore context)
-/lore-development:prep-plan
+/lore-development:plan
 
 # Checking document health
 /lore-development:tend
@@ -89,7 +89,7 @@ Skills can run independently. Use what you need:
 ## Two Modes of Operation
 
 ### Forward Mode (Building New)
-Use `research → brainstorm → specify → prep-plan → retro` when building something new. This creates lore as you work.
+Use `research → brainstorm → specify → plan → retro` when building something new. This creates lore as you work.
 
 ### Backward Mode (Excavating Existing)
 Use `excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented.
@@ -106,7 +106,7 @@ The output is the same (`.lore/specs/`, architecture docs), but the process is i
 Knowledge compounds when past learnings inform new work. The plugin closes this loop automatically:
 
 ```
-/specify or /prep-plan
+/specify or /plan
         │
         ├─► lore-researcher agent searches .lore/ for related work
         │
@@ -121,7 +121,7 @@ Knowledge compounds when past learnings inform new work. The plugin closes this 
         └─► captures lessons → writes to .lore/retros/
 ```
 
-The `lore-researcher` agent runs automatically at the start of `/specify` and `/prep-plan`, surfacing relevant retros, specs, and brainstorms before new work begins.
+The `lore-researcher` agent runs automatically at the start of `/specify` and `/plan`, surfacing relevant retros, specs, and brainstorms before new work begins.
 
 ## Frontmatter Schema
 

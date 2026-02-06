@@ -65,4 +65,4 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 ## Critical Lessons
 
 - Marketplace registration for vibe-garden is just an entry in `.claude-plugin/marketplace.json` at repo root
-- Plans live outside lore-development: Native PlanMode generates plans that this system can't review. Don't pretend otherwise in skill documentation.
+- Plans are first-class lore artifacts: `/plan` generates, persists, and reviews plans like `/specify` does for specs. Plans live in `.lore/plans/` and compound through the lore-researcher loop.

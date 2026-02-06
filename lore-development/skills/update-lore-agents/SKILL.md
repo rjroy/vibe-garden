@@ -50,6 +50,8 @@ Focus on agents with analysis/review capabilities (tools like Read, Grep, Glob, 
 |-------|----------|---------------------|
 | `lore-development:surface-surveyor` | Discovery | Entry point discovery for progressive feature excavation |
 | `lore-development:spec-reviewer` | Documentation Review | Fresh-context review of specs to catch clarity issues |
+| `lore-development:design-reviewer` | Documentation Review | Fresh-context review of designs to catch weak decisions |
+| `lore-development:plan-reviewer` | Documentation Review | Fresh-context review of plans to catch spec coverage gaps |
 
 ### Step 2: Present Findings
 
@@ -141,8 +143,7 @@ Omit empty categories. Only include agents the user selected as relevant.
 
 This registry is consumed by other lore-development skills:
 - `specify` - domain experts for requirements
-- `plan` - architecture and security reviewers
-- `prep-plan` - architecture and sizing validation
+- `plan` - architecture and security reviewers, plan-reviewer for spec coverage
 - `excavate` - discovery agents beyond surface-surveyor
 - `brainstorm`, `research`, `retro`, `ddp` - various domain experts
 
