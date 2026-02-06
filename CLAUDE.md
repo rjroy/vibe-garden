@@ -67,3 +67,4 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 - Marketplace registration for vibe-garden is just an entry in `.claude-plugin/marketplace.json` at repo root
 - Plans are first-class lore artifacts: `/prep-plan` generates, persists, and reviews plans like `/specify` does for specs. Plans live in `.lore/plans/` and compound through the lore-researcher loop.
 - Specs for AI-guided skills should be lighter than application specs. Leave room for model growth and agent flexibility. Over-constraining a prompt removes the AI's ability to adapt to project-specific context.
+- Skill reviewer is worth running on any skill edit, not just new skills. It catches structural and consistency issues that spec-compliance validators miss.
