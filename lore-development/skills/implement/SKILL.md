@@ -7,6 +7,8 @@ description: This skill orchestrates implementation by delegating code, testing,
 
 Orchestrate implementation through agent delegation. Record what happens for future retros.
 
+**You are the orchestrator.** Your two jobs are dispatching work to sub-agents via the Task tool and recording what happens. You do not write code, run tests, or review code directly (no Bash, Write, or Edit tool usage for these actions). Every implementation, testing, and review action goes through a Task tool invocation. No exceptions. There is no case where the orchestrator does the work directly.
+
 ## When to Use
 
 - Ready to build from a spec, design, or plan
@@ -15,7 +17,7 @@ Orchestrate implementation through agent delegation. Record what happens for fut
 
 ## When to Skip
 
-- The work is trivial (one file, obvious change, just do it)
+- The work is trivial (one file, obvious change). Skip this skill and implement directly.
 - Still exploring options (use `/design` or `/brainstorm` instead)
 - Need a plan first (use `/prep-plan` instead)
 
@@ -95,7 +97,7 @@ If resuming from notes, read the progress tracker. Skip completed phases. Load t
 | **Testing** | Testing | `general-purpose` (instruct it to run tests and report pass/fail) |
 | **Review** | Code Quality | `pr-review-toolkit:code-reviewer` (if available, else `general-purpose`) |
 
-Use the registry when available. When the registry is missing or doesn't cover a role, use the fallback type.
+Use the registry when available. When the registry is missing or doesn't cover a role, use the fallback type. `general-purpose` is always a valid fallback. Domain experts (security, performance, architecture) in the registry can be dispatched when a phase touches their area, but the three core roles are mandatory for every phase.
 
 Create or open the notes file at `.lore/notes/<artifact-name>.md`.
 
@@ -103,19 +105,19 @@ Create or open the notes file at `.lore/notes/<artifact-name>.md`.
 
 For each phase:
 
-**a. Dispatch implementation.** Send the phase description to an implementation agent via the Task tool. Include: what to build, relevant file paths, and context from prior phases or failures if applicable. Feed one phase at a time. The implementation agent does not see the full plan.
+**a. Dispatch implementation.** Use the Task tool to spawn an implementation agent (using the `subagent_type` selected in Initialize). Include in the prompt: what to build, relevant file paths, and context from prior phases or failures if applicable. Feed one phase at a time. The implementation agent does not see the full plan.
 
-**b. Dispatch testing.** Send the implemented code to a testing agent. Expect back: pass/fail and notable findings (not raw logs).
+**b. Dispatch testing.** Use the Task tool to spawn a testing agent. Include in the prompt: which files were created or changed, what behavior to verify, and how to run the project's test suite. Expect back: pass/fail and notable findings (not raw logs).
 
-**c. Dispatch review.** Send the implemented code to a review agent. Expect back: non-conformances only.
+**c. Dispatch review.** Use the Task tool to spawn a review agent. Include in the prompt: which files to review and the relevant requirements from the source artifact. Expect back: non-conformances only.
 
-**d. Handle failures.** If testing or review reports issues, send the findings back to the implementation agent for correction. Re-run only the failing step (test or review), not the entire cycle.
+**d. Handle failures.** If testing or review reports issues, use the Task tool to send the findings back to an implementation agent for correction. Re-dispatch only the failing step (test or review) via Task tool, not the entire cycle.
 
 **e. Record.** After the phase completes (all three pass), update the notes file: mark the phase complete in the progress tracker, add a log entry for anything worth preserving.
 
 ### 3. Validate
 
-After all phases complete, dispatch a review agent with the full source artifact (spec, design, or plan). The directive: validate the implementation against the source, flag any requirements not met or behavior that diverges from what was specified. This is a holistic check, not a code quality review.
+After all phases complete, use the Task tool to spawn a review agent with the full source artifact (spec, design, or plan). The directive: validate the implementation against the source, flag any requirements not met or behavior that diverges from what was specified. This is a holistic check, not a code quality review.
 
 Record validation findings in the notes log. If validation surfaces issues, route them back through the implementation/test/review cycle for the affected phase.
 
@@ -154,8 +156,4 @@ Do not ask for confirmation between phases. The orchestrator runs until complete
 
 ## Context
 
-Check `.lore/retros/` for lessons from prior implementations. Check `.lore/research/` and `.lore/brainstorm/` for context that might inform implementation decisions. The lore-researcher invocation in Initialize handles this automatically.
-
-## Specialized Agents
-
-If `.lore/lore-agents.md` exists, consult it for specialized agents beyond the core three (implementation, testing, review). Domain experts (security, performance, architecture) can be dispatched when a phase touches their area. Use judgment; not every phase needs every expert.
+The lore-researcher invocation in Initialize surfaces relevant prior work automatically.
