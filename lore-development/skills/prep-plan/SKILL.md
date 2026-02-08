@@ -1,6 +1,6 @@
 ---
 name: prep-plan
-description: This skill builds implementation plans as persistent, reviewable lore artifacts. Use when ready to plan how to build something. Triggers include "prep plan", "prep-plan", "prepare a plan", "plan this", "make a plan", "how should we build this", "plan the implementation".
+description: This skill builds implementation plans as persistent, reviewable lore artifacts. Use when ready to plan how to build something, break work into ordered steps, or decide what to delegate to sub-agents. Triggers include "prep plan", "prep-plan", "prepare a plan", "plan this", "make a plan", "break this into steps", "plan the implementation", "what order should we build this". Not for exploring technical approaches (use /design) or defining requirements (use /specify).
 ---
 
 # Plan
@@ -13,14 +13,9 @@ Build an implementation plan and save it as a lore artifact.
 - Need to think through implementation approach, ordering, and delegation
 - Want a reviewable plan that persists across sessions
 
-## When to Skip
-
-- The work is simple enough that implementation is obvious (just build it)
-- You need to explore options first (use `/design` instead)
-
 ## Process
 
-1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include findings in the Context section.
+1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include findings in the Codebase Context section.
 
 2. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/` (if they exist)
@@ -34,7 +29,7 @@ Build an implementation plan and save it as a lore artifact.
 5. **Draft the plan** collaboratively with the user:
    - Map requirements to concrete implementation steps (from spec if one exists, from conversation if not)
    - Order steps by dependency (what must exist before what)
-   - Identify which steps benefit from fresh-context sub-agents
+   - Identify which steps need specialized expertise (security, frontend, performance, etc.)
    - Include the validation approach
 
 6. **Confirm with user** before saving.
@@ -47,7 +42,7 @@ Build an implementation plan and save it as a lore artifact.
 
 Save to `.lore/plans/[feature-name].md`
 
-Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `auth-flow.md`, plan is `auth-flow.md`).
+Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `auth-flow.md`, plan is `auth-flow.md`). When no spec exists, derive the filename from the feature or goal description.
 
 ### Document Structure
 
@@ -87,7 +82,7 @@ What the exploration found:
 
 **Files**: [files affected]
 **Addresses**: REQ-XX-N
-**Delegation**: [inline / fresh-context sub-agent]
+**Expertise**: [none needed / specific domain -- e.g., "security review", "frontend accessibility"]
 
 [What to do, concretely. Not pseudocode -- describe the change.]
 
@@ -97,18 +92,15 @@ What the exploration found:
 
 ### Step N: Validate Against Spec
 
-**Delegation**: fresh-context sub-agent (required)
-
 Launch a sub-agent that reads the spec at [path], reviews the implementation, and flags any requirements not met. This step is not optional.
 
 ## Delegation Guide
 
-Steps that benefit from fresh-context sub-agents:
-- [Step X]: [why -- e.g., "large scope, context will be noisy by this point"]
-- [Step Y]: [why]
+Steps requiring specialized expertise:
+- [Step X]: [what expertise -- e.g., "security review of auth flow"]
+- [Step Y]: [what expertise -- e.g., "performance audit of hot path"]
 
-Steps safe to run inline:
-- [Step A]: [why -- e.g., "small, depends on Step A-1's output"]
+Consult `.lore/lore-agents.md` (if it exists) for available domain-specific agents.
 
 ## Open Questions
 
@@ -140,7 +132,7 @@ What the exploration found:
 ### Step 1: [Description]
 
 **Files**: [files affected]
-**Delegation**: [inline / fresh-context sub-agent]
+**Expertise**: [none needed / specific domain -- e.g., "security review", "frontend accessibility"]
 
 [What to do, concretely. Not pseudocode -- describe the change.]
 
@@ -150,17 +142,15 @@ What the exploration found:
 
 ### Step N: Validate Against Goal
 
-**Delegation**: fresh-context sub-agent (required)
-
 Launch a sub-agent that reads the Goal section above, reviews the implementation, and flags anything that doesn't match. This step is not optional.
 
 ## Delegation Guide
 
-Steps that benefit from fresh-context sub-agents:
-- [Step X]: [why]
+Steps requiring specialized expertise:
+- [Step X]: [what expertise -- e.g., "security review of auth flow"]
+- [Step Y]: [what expertise -- e.g., "performance audit of hot path"]
 
-Steps safe to run inline:
-- [Step A]: [why]
+Consult `.lore/lore-agents.md` (if it exists) for available domain-specific agents.
 
 ## Open Questions
 
@@ -192,10 +182,6 @@ When in doubt, a spec helps. But don't make it a gate.
 After the plan is saved, run a fresh-eyes review. Plans drafted in conversation inherit assumptions from the discussion. A reviewer with fresh context reads only the plan and spec (if one exists), catching gaps the author can't see.
 
 Invoke the `plan-reviewer` agent on the saved plan using the Task tool. The agent evaluates plans through four lenses: spec coverage (or goal alignment), step feasibility, scope discipline, and implementability. Present the findings and offer to address critical issues before implementation begins.
-
-## Specialized Agents
-
-If `.lore/lore-agents.md` exists, consult it for specialized agents that can help with domain-specific concerns. Security, performance, or architecture experts can identify implementation risks you might miss. Invoke relevant agents via Task tool and incorporate their insights.
 
 ## Linking to Specs
 
