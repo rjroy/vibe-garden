@@ -29,7 +29,7 @@ Invoked as `/implement <path>` where `<path>` is a lore artifact:
 |------------|-------------|----------|
 | Spec | `.lore/specs/*.md` | Determine phases from requirements, implement directly |
 | Design | `.lore/design/*.md` | Determine phases from the design, implement directly |
-| Plan | `.lore/plans/*.md` | Follow the plan's steps as phases |
+| Plan | `.lore/plans/*.md` | Follow the plan's steps as phases (but see Task File Detection below) |
 | Notes | `.lore/notes/*.md` | Resume from progress tracker in the notes file |
 
 Read the input artifact. Identify its type from the path. If the artifact references other lore documents (a plan referencing a spec, notes referencing a plan), load those too.
@@ -87,7 +87,14 @@ modules: [from source artifact if available]
 
 Read the input artifact. If it is a plan, the phases are its implementation steps. If it is a spec or design, break it into implementable phases (aim for independently testable chunks).
 
-If resuming from notes, read the progress tracker. Skip completed phases. Load the source artifact referenced in the notes frontmatter (`source:` field). If the source reference is missing, ask the user for the path.
+**Task file detection.** When the input is a plan, check whether `.lore/tasks/<plan-name>/` exists (where `<plan-name>` matches the plan's filename without extension). If the directory exists and contains task files:
+
+- **Staleness check**: Compare the plan's modification timestamp against the oldest task file's timestamp. The oldest task is the right comparison point because all tasks are generated in one `/plan-breakdown` run, so the oldest represents when the decomposition happened. If the plan is newer than the oldest task, warn the user via AskUserQuestion with three options: re-run `/plan-breakdown`, use existing tasks, or abort.
+- **Phase list**: Read task files sorted by their `sequence` frontmatter field. These become the phases. Each phase corresponds to one task file.
+
+If no task directory exists, derive phases from the plan's steps as usual.
+
+If resuming from notes, read the progress tracker. Skip completed phases. When the source is a plan with task files, also read task file statuses. Tasks marked `complete` or `skipped` are not re-run, regardless of what the notes progress tracker shows. Task file status is authoritative for task-based phases. Load the source artifact referenced in the notes frontmatter (`source:` field). If the source reference is missing, ask the user for the path.
 
 **Select agents.** Consult `.lore/lore-agents.md` if it exists. Match agents to roles:
 
@@ -105,6 +112,8 @@ Create or open the notes file at `.lore/notes/<artifact-name>.md`.
 
 For each phase:
 
+**When phases come from task files:** The implementation agent prompt includes the task's What, Validation, Why, and Files sections. It does not receive the full plan, other task files, or the task's sequence number. After a task passes the implement/test/review cycle, update the task file's frontmatter `status` to `complete`. If the implementation agent reports the work is already done, surface this to the user via AskUserQuestion (the task file says `pending`, so "already done" is unexpected and needs confirmation). If the user confirms skipping, or explicitly requests it for any other reason, mark the task `skipped`. The orchestrator does not skip tasks without user confirmation.
+
 **a. Dispatch implementation.** Use the Task tool to spawn an implementation agent (using the `subagent_type` selected in Initialize). Include in the prompt: what to build, relevant file paths, and context from prior phases or failures if applicable. Feed one phase at a time. The implementation agent does not see the full plan.
 
 **b. Dispatch testing.** Use the Task tool to spawn a testing agent. Include in the prompt: which files were created or changed, what behavior to verify, and how to run the project's test suite. Expect back: pass/fail and notable findings (not raw logs).
@@ -113,7 +122,7 @@ For each phase:
 
 **d. Handle failures.** If testing or review reports issues, use the Task tool to send the findings back to an implementation agent for correction. Re-dispatch only the failing step (test or review) via Task tool, not the entire cycle.
 
-**e. Record.** After the phase completes (all three pass), update the notes file: mark the phase complete in the progress tracker, add a log entry for anything worth preserving.
+**e. Record.** After the phase completes (all three pass), update the notes file: mark the phase complete in the progress tracker, add a log entry for anything worth preserving. For skipped tasks, mark the progress tracker entry as `- [x] Phase N: [description] (skipped)` and log the reason (user-requested or already complete). Skipped tasks still get a log entry so the notes are a complete record.
 
 ### 3. Validate
 

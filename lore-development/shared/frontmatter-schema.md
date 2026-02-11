@@ -63,6 +63,7 @@ Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 | diagram | `.lore/diagrams/` | `current`, `outdated` |
 | plan | `.lore/plans/` | `draft`, `approved`, `executed` |
 | notes | `.lore/notes/` | `active`, `complete` |
+| task | `.lore/tasks/` | `pending`, `complete`, `skipped` |
 | reference | `.lore/reference/` | `current`, `outdated` |
 
 ## Notes-Specific Fields
@@ -79,6 +80,22 @@ source: .lore/plans/auth-flow.md    # Path to the source artifact (required)
 |-------|----------|-------|
 | source | Yes | Path to the spec, design, or plan being implemented. Enables retro to diff plan vs reality. |
 
+## Task-Specific Fields
+
+Tasks support additional required fields:
+
+```yaml
+---
+source: .lore/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
+sequence: 1                          # Integer ordering within the task set (required)
+---
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| source | Yes | Path to the plan this task was decomposed from. Enables implement to find the parent plan. |
+| sequence | Yes | Integer ordering within the task set. Determines execution order in implement. |
+
 ## Examples
 
 ### Notes (Implementation)
@@ -90,6 +107,20 @@ date: 2026-02-05
 status: active
 tags: [implementation, notes]
 source: .lore/plans/auth-flow.md
+modules: [auth-service]
+---
+```
+
+### Task
+
+```yaml
+---
+title: Add auth middleware
+date: 2026-02-10
+status: pending
+tags: [task]
+source: .lore/plans/auth-flow.md
+sequence: 1
 modules: [auth-service]
 ---
 ```
