@@ -22,7 +22,7 @@ Decompose a plan into individual task files, each scoped to one logical change w
 
 Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/plans/*.md`).
 
-Read the plan. If the plan references a spec (in its Spec Reference section or frontmatter `related` field), load the spec too. The spec provides requirement IDs needed for the Why section of each task. If the plan has a Goal section instead of a spec reference, the goal text serves the same purpose.
+Read the plan. If the plan references a spec (in its Spec Reference section or frontmatter `related` field), load the spec too. Record the spec's file path; it will be used in both the task frontmatter (`related` field) and the Why section of each task. The spec provides requirement IDs needed for the Why section. If the plan has a Goal section instead of a spec reference, the goal text serves the same purpose and the plan's own path is used in the Why section instead.
 
 **Search for related prior work**: Invoke the `lore-researcher` agent with the plan's topic description. Surface retros from related prior implementations, relevant brainstorms, and research. Use findings to inform decomposition decisions. Retros that mention over-decomposition or missed splits are directly relevant to how aggressively to split plan steps.
 
@@ -65,6 +65,7 @@ date: YYYY-MM-DD
 status: pending
 tags: [task]
 source: .lore/plans/[plan-name].md
+related: [.lore/specs/[spec-name].md]   # omit if plan has no spec
 sequence: N
 modules: [affected-modules]
 ---
@@ -91,14 +92,14 @@ explaining what's missing.]
 
 ## Why
 
-[Requirement ID and excerpt so the implementation agent understands the
-justification without opening another file.
+[Requirement ID, source file path, and excerpt so the implementation agent
+understands the justification and can find the original context.
 
-With spec: REQ-AUTH-3: "All API endpoints require authentication except /health
-and /login"
+With spec: From `.lore/specs/auth-flow.md`, REQ-AUTH-3: "All API endpoints
+require authentication except /health and /login"
 
-Without spec (goal-based plan): Goal: "Ensure all API access is authenticated"
-followed by the relevant excerpt.
+Without spec (goal-based plan): From `.lore/plans/auth-flow.md`, Goal: "Ensure
+all API access is authenticated" followed by the relevant excerpt.
 
 If a plan step has no traceable requirement or goal, flag the task for user
 review.]
