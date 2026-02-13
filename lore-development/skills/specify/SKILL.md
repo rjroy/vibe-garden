@@ -15,7 +15,7 @@ Define what to build and how to know it's done.
 
 ## Process
 
-1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include any findings in the spec's Context section.
+1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include any findings in the spec's Context section.
 2. Review any relevant `.lore/research/` or `.lore/brainstorm/` context
 3. Ask clarifying questions about scope and success
 4. Draft the specification

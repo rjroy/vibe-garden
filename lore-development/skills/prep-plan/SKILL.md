@@ -15,7 +15,7 @@ Build an implementation plan and save it as a lore artifact.
 
 ## Process
 
-1. **Search for related prior work**: Invoke the `lore-researcher` agent with the topic/feature description. Include findings in the Codebase Context section.
+1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include findings in the Codebase Context section.
 
 2. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/` (if they exist)

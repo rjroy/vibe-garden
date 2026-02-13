@@ -24,7 +24,7 @@ Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/pl
 
 Read the plan. If the plan references a spec (in its Spec Reference section or frontmatter `related` field), load the spec too. Record the spec's file path; it will be used in both the task frontmatter (`related` field) and the Why section of each task. The spec provides requirement IDs needed for the Why section. If the plan has a Goal section instead of a spec reference, the goal text serves the same purpose and the plan's own path is used in the Why section instead.
 
-**Search for related prior work**: Invoke the `lore-researcher` agent with the plan's topic description. Surface retros from related prior implementations, relevant brainstorms, and research. Use findings to inform decomposition decisions. Retros that mention over-decomposition or missed splits are directly relevant to how aggressively to split plan steps.
+**Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the plan's topic description. **Do not run in background.** Wait for the result before continuing. Surface retros from related prior implementations, relevant brainstorms, and research. Use findings to inform decomposition decisions. Retros that mention over-decomposition or missed splits are directly relevant to how aggressively to split plan steps.
 
 ## Rejection Gate
 

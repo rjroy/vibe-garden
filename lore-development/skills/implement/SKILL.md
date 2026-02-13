@@ -83,7 +83,7 @@ modules: [from source artifact if available]
 
 ### 1. Initialize
 
-**Search for related prior work**: Invoke the `lore-researcher` agent with the artifact description. Surface retros from related prior implementations, relevant research, and brainstorms. Include findings as context for phase execution.
+**Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the artifact description. **Do not run in background.** Wait for the result before continuing. Surface retros from related prior implementations, relevant research, and brainstorms. Include findings as context for phase execution.
 
 Read the input artifact. If it is a plan, the phases are its implementation steps. If it is a spec or design, break it into implementable phases (aim for independently testable chunks).
 
