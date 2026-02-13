@@ -31,7 +31,7 @@ If you ran `/prep-plan` 100 times with current context:
 
 ## Process
 
-1. **Search for related prior work**: Invoke the `lore-researcher` agent with the technical problem description. Include findings in the Context section.
+1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the technical problem description. **Do not run in background.** Wait for the result before continuing. Include findings in the Context section.
 2. Review any relevant `.lore/research/`, `.lore/brainstorm/`, or `.lore/specs/` context
 3. Clarify the technical problem - what exactly needs deciding?
 4. Explore approaches - at least 2-3 options with trade-offs
