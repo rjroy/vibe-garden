@@ -15,28 +15,38 @@ Build an implementation plan and save it as a lore artifact.
 
 ## Process
 
-1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include findings in the Codebase Context section.
+1. **Context check**: Before starting, scan the recent conversation history. If `/specify`, `/design`, or `/brainstorm` was invoked in the last 10-20 messages, warn the user:
 
-2. **Gather context** from `.lore/`:
+   > "I notice we just finished [spec/design/brainstorm] work in this session. Plans written in hot context inherit unstated assumptions - what feels obvious now won't be obvious reading the plan cold. The curse of knowledge means I'll skip details because 'we just talked about this.'
+   >
+   > Recommendation: Start a fresh session, then run `/prep-plan` and reference the spec/design file. The plan will be stronger.
+   >
+   > Continue anyway?"
+
+   If the user chooses to continue, proceed. If they decline, stop here.
+
+2. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include findings in the Codebase Context section.
+
+3. **Gather context** from `.lore/`:
    - Relevant specs from `.lore/specs/` (if they exist)
    - Design documents from `.lore/design/` (if they exist)
    - Related research or brainstorms
 
-3. **Explore the codebase**: Use the Task tool with an Explore subagent to understand the current state of code relevant to this plan. What exists? What patterns are in use? Where will changes land?
+4. **Explore the codebase**: Use the Task tool with an Explore subagent to understand the current state of code relevant to this plan. What exists? What patterns are in use? Where will changes land?
 
-4. **Present context summary** to the user. Confirm scope is understood before drafting.
+5. **Present context summary** to the user. Confirm scope is understood before drafting.
 
-5. **Draft the plan** collaboratively with the user:
+6. **Draft the plan** collaboratively with the user:
    - Map requirements to concrete implementation steps (from spec if one exists, from conversation if not)
    - Order steps by dependency (what must exist before what)
    - Identify which steps need specialized expertise (security, frontend, performance, etc.)
    - Include the validation approach
 
-6. **Confirm with user** before saving.
+7. **Confirm with user** before saving.
 
-7. **Save to `.lore/plans/`**
+8. **Save to `.lore/plans/`**
 
-8. **Offer fresh-eyes review** (see below)
+9. **Offer fresh-eyes review** (see below)
 
 ## Output
 
