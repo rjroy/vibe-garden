@@ -12,19 +12,5 @@
     "playground@claude-plugins-official": true,
     "lore-development@vibe-garden": true,
     "compass-rose@vibe-garden": true
-  },
-  "extraKnownModules": {
-    "wyrd-gateway": {
-      "source": {
-        "source": "github",
-        "url": "rjroy/wyrd-gateway"
-      }
-    },
-     "vibe-garden": {
-      "source": {
-        "source": "github",
-        "url": "rjroy/vibe-garden"
-      }
-    }
   }
 }
