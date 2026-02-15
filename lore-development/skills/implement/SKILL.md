@@ -134,6 +134,14 @@ Record validation findings in the notes log. If validation surfaces issues, rout
 
 When all phases and validation pass, update the notes file status to `complete`. Summarize the implementation at the top of the log: what was built, how many phases, any divergences.
 
+Suggest running the simplify skill on the notes file:
+
+```
+Implementation complete. Run `/simplify .lore/notes/<artifact-name>.md` to clean up the code for clarity.
+```
+
+Replace `<artifact-name>` with the actual notes filename (matching the source artifact's filename).
+
 ## Notes Guidance
 
 The notes file is the orchestrator's primary output alongside the code itself. Update it after every completed phase (not just at session end) so it is always resumable.
