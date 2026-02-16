@@ -34,6 +34,20 @@ Reject the plan if it has fewer than 2 concrete steps, or if steps are high-leve
 
 After rejection, the user can refine the plan and re-invoke `/plan-breakdown`.
 
+## Surface Gaps
+
+After the plan passes the Rejection Gate, review it for semantic clarity problems that would force assumptions during decomposition. The Rejection Gate checks structure (file references, actionable verbs). This step checks meaning.
+
+Look for:
+- **Ambiguous scope**: A step is structurally concrete but could describe two different amounts of work. "Add validation to the auth middleware" has file references and an actionable verb, but doesn't say which validations, which means the task boundary depends on an assumption.
+- **Unclear requirement ownership**: Multiple plan steps partially address the same spec requirement, or a requirement isn't clearly covered by any step. Decomposition needs to assign each task a Why, and split ownership creates tasks where neither fully satisfies the requirement.
+- **Validation gaps**: Steps where success criteria can't be derived from the plan or spec. Better to surface these as a batch now than to flag them one at a time in generated task files.
+- **Contradictions with current code**: The lore-researcher results or codebase state conflicts with what the plan assumes (e.g., the plan says "create file X" but X already exists, or "modify function Y" but Y was refactored since the plan was written).
+
+If gaps exist, list them and ask the user to resolve them before decomposing. Decomposition decisions (what to split, how to order, what validation to assign) depend on the answers. Making those decisions first and flagging problems after produces tasks built on guesses.
+
+If the plan is clear, say so and proceed to decomposition.
+
 ## Decomposition
 
 Walk through the plan's implementation steps in order. The goal is to produce task files that each represent one logical change, something that could be described as one thing in a commit message.
