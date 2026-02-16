@@ -34,19 +34,29 @@ Build an implementation plan and save it as a lore artifact.
 
 4. **Explore the codebase**: Use the Task tool with an Explore subagent to understand the current state of code relevant to this plan. What exists? What patterns are in use? Where will changes land?
 
-5. **Present context summary** to the user. Confirm scope is understood before drafting.
+5. **Surface gaps**: Before presenting anything, review the collected context for clarity problems. Look for:
+   - Ambiguous requirements (could mean more than one thing)
+   - Contradictions between spec, design, and current code
+   - Unstated assumptions you'd need to fill to write concrete steps
+   - Missing information (error handling, edge cases, integration points not addressed)
 
-6. **Draft the plan** collaboratively with the user:
+   If gaps exist, list them and ask the user to resolve them before continuing. Do not fill gaps with plausible defaults. A plan built on assumptions the user didn't approve will fail during implementation or review.
+
+   If the context is clear enough to plan against, say so and proceed.
+
+6. **Present context summary** to the user. Confirm scope is understood before drafting.
+
+7. **Draft the plan** collaboratively with the user:
    - Map requirements to concrete implementation steps (from spec if one exists, from conversation if not)
    - Order steps by dependency (what must exist before what)
    - Identify which steps need specialized expertise (security, frontend, performance, etc.)
    - Include the validation approach
 
-7. **Confirm with user** before saving.
+8. **Confirm with user** before saving.
 
-8. **Save to `.lore/plans/`**
+9. **Save to `.lore/plans/`**
 
-9. **Offer fresh-eyes review** (see below)
+10. **Offer fresh-eyes review** (see below)
 
 ## Output
 
