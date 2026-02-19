@@ -17,13 +17,22 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:specify` | Define requirements and success criteria |
 | `/lore-development:design` | Make technical decisions when the "how" is the problem |
 | `/lore-development:prep-plan` | Build implementation plans as reviewable lore artifacts |
+| `/lore-development:plan-breakdown` | Decompose a plan into task files for `/implement` |
 | `/lore-development:implement` | Orchestrate implementation from a plan via sub-agents |
+| `/lore-development:simplify` | Orchestrate code cleanup with tests and review |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:poke-holes` | Challenge ideas adversarially |
 | `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
+| `/lore-development:define-validation` | Define AI validation criteria for work in progress |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
+| `/lore-development:update-stubs` | Scan specs for stubs and generate an outstanding stub index |
 | `/lore-development:update-lore-agents` | Build/update the project's agent registry |
+| `/lore-development:review-ideas` | Process captured ideas into structured issues |
+
+## Idea Capture
+
+The plugin includes a hook that captures ideas without invoking the AI. Start any prompt with `idea:` and the text is appended to `.lore/ideas.md`. Use `/review-ideas` to process accumulated ideas into structured issues.
 
 ## Artifact Storage
 
@@ -36,15 +45,30 @@ All context lives in `.lore/`:
 ├── specs/          # Requirements
 ├── plans/          # Implementation plans (reviewed, persistent)
 ├── retros/         # Lessons learned
+├── stubs/          # Outstanding stub index from specs
 ├── reference/      # Excavated feature documentation
 ├── excavations/    # Design archaeology session tracking
 ├── diagrams/       # Visual representations (Mermaid)
+├── ideas.md        # Captured ideas (via hook)
 └── lore-agents.md  # Agent registry (optional)
 ```
 
+## Agents
+
+The plugin ships with agents that skills invoke automatically:
+
+| Agent | Purpose |
+|-------|---------|
+| `lore-researcher` | Search `.lore/` for related prior work before new specs or plans |
+| `design-reviewer` | Review design documents for weak decisions and gaps |
+| `plan-reviewer` | Review plans for infeasible steps and scope creep |
+| `spec-reviewer` | Review specs for clarity issues and ambiguities |
+| `fresh-lore` | Fresh-context analysis when the current session is too deep in the weeds |
+| `surface-surveyor` | Quick codebase reconnaissance to find entry points |
+
 ## Agent Registry
 
-Skills can leverage specialized agents for domain-specific concerns (security, performance, architecture, etc.). Instead of hardcoding agent names into every skill, the plugin uses a project-level registry.
+Beyond the built-in agents, skills can leverage project-specific agents for domain concerns (security, performance, architecture, etc.). Instead of hardcoding agent names into every skill, the plugin uses a project-level registry.
 
 **How it works**:
 1. Run `/lore-development:update-lore-agents` to scan available agents
