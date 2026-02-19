@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
 class TestIdeaHook:
-    """Tests for the /idea capture hook."""
+    """Tests for the idea: capture hook."""
 
     def run_hook(
         self, input_data: dict | str, tmp_path: Path, mock_date: str = "2026-02-18"
@@ -58,9 +58,9 @@ class TestIdeaHook:
     # --- Prefix matching ---
 
     def test_idea_with_text_matches(self, tmp_path):
-        """'/idea some text' triggers capture."""
+        """'idea: some text' triggers capture."""
         stdout, _, exit_code = self.run_hook(
-            {"prompt": "/idea fix the sidebar", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: fix the sidebar", "cwd": str(tmp_path)}, tmp_path
         )
         assert exit_code == 0
         output = json.loads(stdout.strip())
@@ -68,25 +68,25 @@ class TestIdeaHook:
         assert "2026-02-18.md" in output["reason"]
 
     def test_ideas_does_not_match(self, tmp_path):
-        """'/ideas' (no space) does not trigger capture."""
+        """'ideas:' (wrong prefix) does not trigger capture."""
         stdout, _, exit_code = self.run_hook(
-            {"prompt": "/ideas something", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "ideas: something", "cwd": str(tmp_path)}, tmp_path
         )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
 
-    def test_idea_no_space_does_not_match(self, tmp_path):
-        """'/idea' without trailing space does not trigger."""
+    def test_idea_no_colon_does_not_match(self, tmp_path):
+        """'idea' without colon-space does not trigger."""
         stdout, _, exit_code = self.run_hook(
-            {"prompt": "/idea", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea", "cwd": str(tmp_path)}, tmp_path
         )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
 
     def test_idea_empty_text_does_not_match(self, tmp_path):
-        """'/idea   ' (only whitespace after prefix) does not trigger."""
+        """'idea:    ' (only whitespace after prefix) does not trigger."""
         stdout, _, exit_code = self.run_hook(
-            {"prompt": "/idea   ", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea:    ", "cwd": str(tmp_path)}, tmp_path
         )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
@@ -104,7 +104,7 @@ class TestIdeaHook:
     def test_creates_new_daily_file_with_header(self, tmp_path):
         """New file gets date header and bullet."""
         self.run_hook(
-            {"prompt": "/idea fix the sidebar", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: fix the sidebar", "cwd": str(tmp_path)}, tmp_path
         )
         daily_file = tmp_path / ".lore" / "ideas" / "2026-02-18.md"
         assert daily_file.exists()
@@ -119,7 +119,7 @@ class TestIdeaHook:
         daily_file.write_text("# 2026-02-18\n\n- first idea\n")
 
         self.run_hook(
-            {"prompt": "/idea second idea", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: second idea", "cwd": str(tmp_path)}, tmp_path
         )
         content = daily_file.read_text()
         assert content == "# 2026-02-18\n\n- first idea\n- second idea\n"
@@ -133,7 +133,7 @@ class TestIdeaHook:
         assert not ideas_dir.exists()
 
         self.run_hook(
-            {"prompt": "/idea test", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: test", "cwd": str(tmp_path)}, tmp_path
         )
         assert ideas_dir.exists()
 
@@ -142,7 +142,7 @@ class TestIdeaHook:
     def test_no_frontmatter_in_created_file(self, tmp_path):
         """Created files start with #, not ---."""
         self.run_hook(
-            {"prompt": "/idea test", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: test", "cwd": str(tmp_path)}, tmp_path
         )
         daily_file = tmp_path / ".lore" / "ideas" / "2026-02-18.md"
         content = daily_file.read_text()
@@ -154,7 +154,7 @@ class TestIdeaHook:
     def test_block_decision_on_match(self, tmp_path):
         """Matching prompt returns block decision JSON."""
         stdout, _, _ = self.run_hook(
-            {"prompt": "/idea some text", "cwd": str(tmp_path)}, tmp_path
+            {"prompt": "idea: some text", "cwd": str(tmp_path)}, tmp_path
         )
         output = json.loads(stdout.strip())
         assert output == {
@@ -180,7 +180,7 @@ class TestIdeaHook:
     def test_missing_cwd(self, tmp_path):
         """Missing cwd produces {} and exits 0."""
         stdout, stderr, exit_code = self.run_hook(
-            {"prompt": "/idea test"}, tmp_path
+            {"prompt": "idea: test"}, tmp_path
         )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
@@ -188,7 +188,7 @@ class TestIdeaHook:
     def test_empty_cwd(self, tmp_path):
         """Empty cwd produces {} and exits 0."""
         stdout, _, exit_code = self.run_hook(
-            {"prompt": "/idea test", "cwd": ""}, tmp_path
+            {"prompt": "idea: test", "cwd": ""}, tmp_path
         )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
@@ -197,7 +197,7 @@ class TestIdeaHook:
         """Filesystem errors produce {} and exit 0."""
         with mock.patch("idea_hook.Path.mkdir", side_effect=PermissionError("denied")):
             stdout, stderr, exit_code = self.run_hook(
-                {"prompt": "/idea test", "cwd": str(tmp_path)}, tmp_path
+                {"prompt": "idea: test", "cwd": str(tmp_path)}, tmp_path
             )
         assert exit_code == 0
         assert json.loads(stdout.strip()) == {}
@@ -207,7 +207,7 @@ class TestIdeaHook:
 
     def test_idea_with_special_characters(self, tmp_path):
         """Ideas with special characters are preserved."""
-        prompt = "/idea fix `code` with **bold** and [links](url)"
+        prompt = "idea: fix `code` with **bold** and [links](url)"
         self.run_hook(
             {"prompt": prompt, "cwd": str(tmp_path)},
             tmp_path,
@@ -219,12 +219,12 @@ class TestIdeaHook:
     def test_different_dates_create_different_files(self, tmp_path):
         """Different dates create separate files."""
         self.run_hook(
-            {"prompt": "/idea day one", "cwd": str(tmp_path)},
+            {"prompt": "idea: day one", "cwd": str(tmp_path)},
             tmp_path,
             mock_date="2026-02-17",
         )
         self.run_hook(
-            {"prompt": "/idea day two", "cwd": str(tmp_path)},
+            {"prompt": "idea: day two", "cwd": str(tmp_path)},
             tmp_path,
             mock_date="2026-02-18",
         )

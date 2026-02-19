@@ -1,15 +1,15 @@
 ---
 name: review-ideas
-description: Reviews captured ideas from /idea and refines them into structured issues through conversation. Use when you have accumulated ideas and want to process them. Triggers include "review ideas", "process ideas", "check my ideas", "what ideas do I have".
+description: Reviews captured ideas from "idea:" prompts and refines them into structured issues through conversation. Use when you have accumulated ideas and want to process them. Triggers include "review ideas", "process ideas", "check my ideas", "what ideas do I have".
 ---
 
 # Review Ideas
 
-Refine raw ideas captured by `/idea` into structured issues or discard them.
+Refine raw ideas captured by `idea:` into structured issues or discard them.
 
 ## When to Use
 
-- After accumulating ideas via `/idea` during sessions
+- After accumulating ideas via `idea:` during sessions
 - When ready to process the idea backlog
 - Periodically, to keep `.lore/ideas/` from growing stale
 

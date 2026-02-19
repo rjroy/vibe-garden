@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Hook script for /idea capture in lore-development plugin.
-Intercepts prompts starting with "/idea " and appends to daily ideas file.
+Hook script for idea capture in lore-development plugin.
+Intercepts prompts starting with "idea: " and appends to daily ideas file.
 Outputs block decision JSON or empty {} to stdout.
 Always exits 0 to avoid blocking Claude Code.
+
+Note: Uses "idea: " prefix instead of "/idea " because Claude Code intercepts
+slash-prefixed input and only allows known commands through. A plain prefix
+bypasses this restriction while keeping the hook functional.
 """
 
 import json
@@ -11,7 +15,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-PREFIX = "/idea "
+PREFIX = "idea: "
 
 
 def main():
