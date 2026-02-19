@@ -1,6 +1,6 @@
 [project]
 name = "lore-development"
-version = "1.7.3"
+version = "1.8.0"
 description = "A lightweight plugin for building and organizing project context"
 authors = [{ name = "Ronald Roy", email = "gsdwig@gmail.com" }]
 requires-python = ">=3.12"
