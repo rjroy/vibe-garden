@@ -1,0 +1,18 @@
+[project]
+name = "lore-development"
+version = "1.7.3"
+description = "A lightweight plugin for building and organizing project context"
+authors = [{ name = "Ronald Roy", email = "gsdwig@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "UP", "I", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts"]

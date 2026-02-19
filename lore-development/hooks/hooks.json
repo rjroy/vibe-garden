@@ -1,0 +1,16 @@
+{
+  "description": "Capture ideas without invoking the AI",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/idea_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}
