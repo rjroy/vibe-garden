@@ -87,8 +87,12 @@ Standard structure:
 ├── diagrams/      # Visual documentation
 ├── reference/     # Excavated features
 ├── excavations/   # Excavation index
+├── issues/        # Tracked issues (lore documents with frontmatter)
+├── ideas/         # Raw idea capture (NOT lore documents, see note)
 └── _archive/      # Completed/superseded work
 ```
+
+**Note on `.lore/ideas/`**: This directory holds raw captures from the `/idea` hook. Files are plain markdown with a date header and bullet list, no frontmatter. They are queues, not lore documents. Tend should not flag ideas files for missing frontmatter, and lore-researcher should not search them.
 
 Non-standard directories aren't wrong, but should be intentional.
 

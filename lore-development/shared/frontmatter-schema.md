@@ -65,6 +65,7 @@ Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 | notes | `.lore/notes/` | `active`, `complete` |
 | task | `.lore/tasks/` | `pending`, `complete`, `skipped` |
 | reference | `.lore/reference/` | `current`, `outdated` |
+| issue | `.lore/issues/` | `open`, `resolved`, `wontfix` |
 
 ## Notes-Specific Fields
 
@@ -208,6 +209,18 @@ date: 2026-01-30
 status: current
 tags: [auth, login, session]
 modules: [auth-service, user-model]
+---
+```
+
+### Issue
+
+```yaml
+---
+title: Session dialog overflow on narrow viewports
+date: 2026-02-18
+status: open
+tags: [ui, layout, responsive]
+modules: [session-dialog]
 ---
 ```
 
