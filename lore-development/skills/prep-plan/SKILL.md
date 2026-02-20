@@ -13,6 +13,12 @@ Build an implementation plan and save it as a lore artifact.
 - Need to think through implementation approach, ordering, and delegation
 - Want a reviewable plan that persists across sessions
 
+## Critical: Do Not Enter Plan Mode
+
+**Do NOT use the `EnterPlanMode` tool.** This skill produces a plan document as its final deliverable, not a precursor to code changes. Claude Code's built-in plan mode assumes "plan then implement," but here the plan is the output. Implementation is a separate step invoked via `/implement`.
+
+This skill is a document-authoring workflow, like `/specify`. It gathers context, drafts a document collaboratively, saves it, and runs a review. No code is written.
+
 ## Process
 
 1. **Context check**: Before starting, scan the recent conversation history. If `/specify`, `/design`, or `/brainstorm` was invoked in the last 10-20 messages, warn the user:
