@@ -29,6 +29,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:update-stubs` | Scan specs for stubs and generate an outstanding stub index |
 | `/lore-development:update-lore-agents` | Build/update the project's agent registry |
 | `/lore-development:review-ideas` | Process captured ideas into structured issues |
+| `/lore-development:file-issue` | File a structured issue directly from an observation |
 
 ## Idea Capture
 
@@ -49,6 +50,7 @@ All context lives in `.lore/`:
 ├── reference/      # Excavated feature documentation
 ├── excavations/    # Design archaeology session tracking
 ├── diagrams/       # Visual representations (Mermaid)
+├── issues/         # Structured issues (from /review-ideas or /file-issue)
 ├── ideas.md        # Captured ideas (via hook)
 └── lore-agents.md  # Agent registry (optional)
 ```
