@@ -63,7 +63,7 @@ Identify documents that could move to archive:
 | No modifications in 90+ days + status: parked | Abandoned ideas |
 | Explicit archive tag | User marked for archival |
 
-Archive location: `.lore/_archive/` (underscore prefix sorts to top/bottom)
+Archive location: `.lore/_archive/` by default, or the value of `archive_directory` in `.lore/lore-config.md` if configured. Some projects use domain-specific names (e.g., `_abandoned/`) that serve the same purpose.
 
 **Don't auto-archive.** Present candidates and let user decide.
 
@@ -75,7 +75,9 @@ Find directories that exist but serve no clear purpose:
 - Directories with only one file (should file move up?)
 - Directories not matching standard `.lore/` structure
 
-Standard structure:
+### Standard and Custom Directories
+
+**Default standard structure** (from frontmatter schema):
 ```
 .lore/
 ├── brainstorm/    # Ideas and exploration
@@ -92,9 +94,11 @@ Standard structure:
 └── _archive/      # Completed/superseded work
 ```
 
+**Project-specific directories**: If `.lore/lore-config.md` exists, directories listed in `custom_directories` are treated as standard alongside the defaults above. They won't be flagged as orphans. The config's `archive_directory` value (if set) replaces `_archive/` in this list.
+
 **Note on `.lore/ideas/`**: This directory holds raw captures from the `/idea` hook. Files are plain markdown with a date header and bullet list, no frontmatter. They are queues, not lore documents. Tend should not flag ideas files for missing frontmatter, and lore-researcher should not search them.
 
-Non-standard directories aren't wrong, but should be intentional.
+Non-standard directories aren't wrong, but should be intentional. When the user confirms a flagged directory as intentional, record it for the config suggestion step so it's recognized on the next run.
 
 ## Output Report
 

@@ -8,6 +8,8 @@ Verify and update document status fields across `.lore/`.
 
 The schema defines valid status values for each document type (specs, plans, brainstorms, research, retros, diagrams). Use those values when adding or updating status fields.
 
+**Project-specific types**: If `.lore/lore-config.md` exists, its `custom_directories` field defines additional directory types and their valid status values. Documents in those directories use the config's status list instead of the schema defaults. Documents in directories that appear in neither the schema nor the config should be flagged as "unknown type" for user decision (and feed into the config suggestion step).
+
 ## Verification Approach
 
 Don't trust claimed status. Verify using these techniques:

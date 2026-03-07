@@ -21,6 +21,10 @@ All `.lore/` filenames should follow kebab-case:
 
 **Dates belong in frontmatter**, not filenames. Use the `date:` field for temporal metadata. Filenames should describe content, not when it was created.
 
+**Filename exemptions**: If `.lore/lore-config.md` exists and defines `filename_exemptions`, check each filename against those regex patterns before applying convention rules. Files matching any exemption pattern skip case-style, date-in-filename, and tag-alignment checks entirely. This covers machine-generated filenames (e.g., `commission-Worker-20260305-210147.md`) that use timestamps as unique identifiers.
+
+When a filename is flagged but the user says it's intentional (typically because it's machine-generated), record the pattern for the config suggestion step rather than asking again next run.
+
 ### Tag-Informed Naming
 
 Filenames should reflect primary tags:
