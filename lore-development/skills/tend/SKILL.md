@@ -7,6 +7,12 @@ description: This skill performs periodic hygiene on the .lore/ directory throug
 
 Maintain hygiene across `.lore/` documents through four sequential modes.
 
+## Config Loading
+
+Before any mode, check for `.lore/lore-config.md`. If it exists, read it and use its frontmatter to inform all subsequent checks. See `references/lore-config.md` for the config format and how each mode uses it.
+
+If no config exists, use defaults from `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Non-standard patterns will be flagged as findings (not errors) and feed into the config suggestion step at the end.
+
 ## Modes
 
 | Mode | Purpose | Produces |
@@ -47,6 +53,7 @@ Load the appropriate reference file for detailed guidance:
 
 | Mode | Reference |
 |------|-----------|
+| config | `references/lore-config.md` |
 | status | `references/status.md` |
 | tags | `references/tags.md` |
 | filenames | `references/filenames.md` |
@@ -70,6 +77,14 @@ When running `/tend` without arguments, execute modes in order with pauses:
 User can stop after any mode. The pause allows them to absorb findings before proceeding.
 
 **Re-scan between modes**: After filenames or directories mode makes changes, paths may have changed. Re-scan `.lore/` before the next mode to pick up new state.
+
+## Config Suggestion
+
+After completing all requested modes (or when the user stops), check whether any findings were dismissed as intentional during this run. If so, offer to write or update `.lore/lore-config.md` so those patterns aren't flagged next time.
+
+See `references/lore-config.md` for what gets suggested and when to skip.
+
+This step only fires when there's something to suggest. If the project's config already covers everything, or nothing non-standard was found, skip silently.
 
 ## Task Tracking
 
