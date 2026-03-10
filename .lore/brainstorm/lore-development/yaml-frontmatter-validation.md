@@ -103,9 +103,19 @@ Invoke a YAML linter via Bash (if available). `python3 -c "import yaml; yaml.saf
 Pros: Definitive answer on parseability. No heuristic guessing.
 Cons: Depends on tool availability. Different systems have different tools. The tend skill is a markdown prompt, not a script, so calling out to bash adds complexity.
 
-**My lean: Approach 1 (heuristics) with Approach 2 (Claude judgment) as fallback.** The reference file describes specific patterns to check. When a check flags something ambiguous, Claude applies judgment rather than auto-fixing. This keeps the behavior predictable while leveraging Claude's understanding for edge cases.
+**My original lean: Approach 1 (heuristics) with Approach 2 (Claude judgment) as fallback.** This was wrong. Revisited during audience review (2026-03-09) with three counter-arguments that invert the ranking:
 
-Approach 3 (bash linter) is worth noting as an optional enhancement: if the project has `python3` with `pyyaml` or `yq` available, tend could use it as a definitive parse check. But the skill shouldn't depend on it.
+**Counter-argument 1: Token cost.** Reading every file and having Claude analyze each frontmatter block is N tool calls plus N judgment calls. A single `python3` invocation across all `.lore/` files is one Bash call. The cost difference isn't marginal, it's orders of magnitude.
+
+**Counter-argument 2: Circular review.** Claude Code generates this frontmatter. Asking the same model to review its own output is asking the student to grade their own test. If the generator produces broken YAML, it may have the same blind spots when reviewing. A parser doesn't care who wrote it. It either parses or it doesn't. Objective truth beats self-review.
+
+**Counter-argument 3: Right tool for each job.** The detection step needs objectivity and cheapness (parser). The fix step needs context and intelligence (Claude). Splitting find-vs-fix across tools means each does what it's good at: Python tells tend "these files have broken frontmatter, here's the parse error." Claude reads only those specific files, understands the error, and proposes fixes.
+
+**Revised lean: Approach 3 (Python linter) as the primary detection mechanism.** Approach 1 (heuristics) becomes unnecessary because the parser gives a definitive answer. Approach 2 (Claude judgment) remains, but only for the fix step after broken files are identified.
+
+**Correction (2026-03-09):** PyYAML is NOT in Python's standard library. It's a third-party package (`pip install pyyaml`). Commonly pre-installed on Linux (package managers depend on it) but not guaranteed. The validation script should be bundled with the plugin and handle the import gracefully.
+
+**Extended scope (2026-03-09):** Schema validation (required fields, valid status values, field types) is also deterministic and belongs in the script, not in Claude. The same arguments apply: cheaper, objective, and Claude shouldn't grade its own test. The script should validate both parseability and schema conformance in a single pass.
 
 ### Auto-fix vs. report: what's safe?
 
