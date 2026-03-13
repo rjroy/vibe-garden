@@ -43,6 +43,79 @@ from frontmatter_schema import (
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
+# -- config loading (REQ-FMVAL-7) --------------------------------------------
+
+def _parse_frontmatter_data(filepath):
+    """Parse YAML frontmatter from a file and return the data dict.
+
+    Returns None if the file is missing, unreadable, has no valid frontmatter,
+    or the YAML is unparseable. Failures are silently ignored per spec.
+    """
+    try:
+        content = Path(filepath).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+    lines = content.split("\n")
+    if not lines or lines[0].rstrip("\r") != "---":
+        return None
+
+    close_idx = None
+    for i in range(1, len(lines)):
+        if lines[i].rstrip("\r") == "---":
+            close_idx = i
+            break
+    if close_idx is None:
+        return None
+
+    fm_text = "\n".join(lines[1:close_idx])
+    try:
+        data = yaml.safe_load(fm_text)
+    except yaml.YAMLError:
+        return None
+
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def load_custom_status_values(directory):
+    """Read lore-config.md from directory and return custom status values.
+
+    Returns a dict mapping directory name to list of valid status strings
+    extracted from the config's custom_directories field. Returns an empty
+    dict if the config is missing, unparseable, or lacks custom_directories.
+    """
+    config_path = Path(directory) / "lore-config.md"
+    data = _parse_frontmatter_data(str(config_path))
+    if data is None:
+        return {}
+
+    custom_dirs = data.get("custom_directories")
+    if not isinstance(custom_dirs, dict):
+        return {}
+
+    result = {}
+    for dirname, statuses in custom_dirs.items():
+        if isinstance(statuses, list) and all(isinstance(s, str) for s in statuses):
+            result[str(dirname)] = statuses
+    return result
+
+
+def merge_status_values(custom_values):
+    """Merge custom status values with schema defaults.
+
+    Schema defaults take precedence: if a directory appears in both the schema
+    and the config, the schema values are used. Custom entries only add
+    directories the schema doesn't cover.
+    """
+    merged = dict(STATUS_VALUES)
+    for dirname, statuses in custom_values.items():
+        if dirname not in merged:
+            merged[dirname] = statuses
+    return merged
+
+
 # -- helpers ------------------------------------------------------------------
 
 def _relative_path(filepath, root):
@@ -109,11 +182,16 @@ def _resolve_doc_type(filepath, root=None):
 
 # -- validation pipeline ------------------------------------------------------
 
-def validate_file(filepath, root):
+def validate_file(filepath, root, status_values=None):
     """Run the full validation pipeline on a single file.
+
+    status_values overrides the schema's STATUS_VALUES when provided (used
+    after merging lore-config.md custom directories with schema defaults).
 
     Returns a list of finding dicts.
     """
+    if status_values is None:
+        status_values = STATUS_VALUES
     rel = _relative_path(filepath, root)
     findings = []
 
@@ -281,8 +359,8 @@ def validate_file(filepath, root):
 
     # Step 6: Status values
     if "status" in data and isinstance(data["status"], str):
-        if doc_type and doc_type in STATUS_VALUES:
-            valid = STATUS_VALUES[doc_type]
+        if doc_type and doc_type in status_values:
+            valid = status_values[doc_type]
             if data["status"] not in valid:
                 valid_str = ", ".join(valid)
                 findings.append(
@@ -302,19 +380,29 @@ def validate_file(filepath, root):
 def scan_directory(directory):
     """Scan a directory tree for .md files and validate each one.
 
+    Loads lore-config.md from the target directory (if present) and merges
+    any custom_directories with schema defaults before validating.
+
     Returns a list of all finding dicts.
     """
     root = Path(directory)
     if not root.exists() or not root.is_dir():
         return []
 
+    # REQ-FMVAL-7: merge custom status values from config
+    custom_values = load_custom_status_values(str(root))
+    merged_status = merge_status_values(custom_values)
+
     all_findings = []
     for dirpath, _dirnames, filenames in os.walk(root):
         for fname in sorted(filenames):
             if not fname.endswith(".md"):
                 continue
+            # Skip the config file itself; it's not a lore document.
+            if fname == "lore-config.md" and Path(dirpath) == root:
+                continue
             fpath = Path(dirpath) / fname
-            file_findings = validate_file(str(fpath), str(root))
+            file_findings = validate_file(str(fpath), str(root), status_values=merged_status)
             all_findings.extend(file_findings)
 
     return all_findings

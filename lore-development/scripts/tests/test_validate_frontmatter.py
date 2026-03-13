@@ -29,9 +29,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from validate_frontmatter import (
     _resolve_doc_type,
+    load_custom_status_values,
+    merge_status_values,
     scan_directory,
     validate_file,
 )
+from frontmatter_schema import STATUS_VALUES
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 SCRIPT = str(Path(__file__).resolve().parent.parent / "validate_frontmatter.py")
@@ -512,6 +515,219 @@ class TestMultipleErrors(unittest.TestCase):
         error_types = {f["error_type"] for f in findings}
         self.assertIn("missing_field", error_types)
         self.assertIn("invalid_type", error_types)
+
+
+# -- Step 3: lore-config.md support (REQ-FMVAL-7) ----------------------------
+
+LORE_CONFIG_WITH_CUSTOM = """\
+---
+custom_directories:
+  commissions: [pending, active, completed, abandoned]
+  meetings: [open, closed, deferred]
+---
+
+# Project Lore Configuration
+"""
+
+LORE_CONFIG_NO_CUSTOM = """\
+---
+archive_directory: _abandoned
+---
+
+# Project Lore Configuration
+"""
+
+LORE_CONFIG_UNPARSEABLE = """\
+---
+custom_directories:
+  bad indentation
+    - this: won't parse
+---
+"""
+
+LORE_CONFIG_EMPTY_FM = """\
+---
+---
+
+# Empty frontmatter
+"""
+
+
+class TestLoadCustomStatusValues(unittest.TestCase):
+    """Unit tests for load_custom_status_values."""
+
+    def test_loads_custom_directories(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "lore-config.md").write_text(
+                LORE_CONFIG_WITH_CUSTOM, encoding="utf-8"
+            )
+            result = load_custom_status_values(tmpdir)
+            self.assertEqual(result["commissions"], ["pending", "active", "completed", "abandoned"])
+            self.assertEqual(result["meetings"], ["open", "closed", "deferred"])
+
+    def test_missing_config_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = load_custom_status_values(tmpdir)
+            self.assertEqual(result, {})
+
+    def test_config_without_custom_directories(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "lore-config.md").write_text(
+                LORE_CONFIG_NO_CUSTOM, encoding="utf-8"
+            )
+            result = load_custom_status_values(tmpdir)
+            self.assertEqual(result, {})
+
+    def test_unparseable_config_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "lore-config.md").write_text(
+                LORE_CONFIG_UNPARSEABLE, encoding="utf-8"
+            )
+            result = load_custom_status_values(tmpdir)
+            self.assertEqual(result, {})
+
+    def test_empty_frontmatter_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "lore-config.md").write_text(
+                LORE_CONFIG_EMPTY_FM, encoding="utf-8"
+            )
+            result = load_custom_status_values(tmpdir)
+            self.assertEqual(result, {})
+
+
+class TestMergeStatusValues(unittest.TestCase):
+    """Unit tests for merge_status_values."""
+
+    def test_custom_adds_new_directories(self):
+        custom = {"commissions": ["pending", "active"]}
+        merged = merge_status_values(custom)
+        self.assertIn("commissions", merged)
+        self.assertEqual(merged["commissions"], ["pending", "active"])
+
+    def test_schema_wins_on_conflict(self):
+        """If a directory exists in both schema and config, schema values are used."""
+        schema_specs = STATUS_VALUES["specs"]
+        custom = {"specs": ["totally", "different"]}
+        merged = merge_status_values(custom)
+        self.assertEqual(merged["specs"], schema_specs)
+
+    def test_schema_values_preserved(self):
+        custom = {"commissions": ["pending"]}
+        merged = merge_status_values(custom)
+        for key, values in STATUS_VALUES.items():
+            self.assertEqual(merged[key], values)
+
+    def test_empty_custom_returns_schema(self):
+        merged = merge_status_values({})
+        self.assertEqual(merged, STATUS_VALUES)
+
+
+class TestConfigIntegration(unittest.TestCase):
+    """Integration tests: config + validation pipeline."""
+
+    def test_custom_directory_valid_status(self):
+        """Files in custom directories are validated against custom status values."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "lore-config.md": LORE_CONFIG_WITH_CUSTOM,
+                "commissions/task.md": (
+                    "---\n"
+                    "title: Test commission\n"
+                    "date: 2026-03-10\n"
+                    "status: active\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [], f"Unexpected findings: {findings}")
+
+    def test_custom_directory_invalid_status(self):
+        """Invalid status for a custom directory is flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "lore-config.md": LORE_CONFIG_WITH_CUSTOM,
+                "commissions/task.md": (
+                    "---\n"
+                    "title: Test commission\n"
+                    "date: 2026-03-10\n"
+                    "status: bogus\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
+            self.assertEqual(len(status_errs), 1)
+            self.assertIn("bogus", status_errs[0]["message"])
+
+    def test_standard_directories_use_schema(self):
+        """Standard directories use schema values even when config exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "lore-config.md": LORE_CONFIG_WITH_CUSTOM,
+                "specs/doc.md": (
+                    "---\n"
+                    "title: Test spec\n"
+                    "date: 2026-03-10\n"
+                    "status: draft\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [], f"Unexpected findings: {findings}")
+
+    def test_unknown_directory_skips_status_validation(self):
+        """Files in dirs not in schema or config skip status validation."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "lore-config.md": LORE_CONFIG_WITH_CUSTOM,
+                "random-dir/doc.md": (
+                    "---\n"
+                    "title: Unknown dir doc\n"
+                    "date: 2026-03-10\n"
+                    "status: literally-anything\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
+            self.assertEqual(status_errs, [])
+
+    def test_missing_config_falls_back_to_schema(self):
+        """Without config, schema-only validation still works."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "specs/doc.md": (
+                    "---\n"
+                    "title: Test spec\n"
+                    "date: 2026-03-10\n"
+                    "status: draft\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [])
+
+    def test_config_without_custom_directories_field(self):
+        """Config that lacks custom_directories is handled gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "lore-config.md": LORE_CONFIG_NO_CUSTOM,
+                "specs/doc.md": (
+                    "---\n"
+                    "title: Test spec\n"
+                    "date: 2026-03-10\n"
+                    "status: draft\n"
+                    "tags: [test]\n"
+                    "---\n"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":
