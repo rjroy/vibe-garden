@@ -10,6 +10,34 @@ The schema defines valid status values for each document type (specs, plans, bra
 
 **Project-specific types**: If `.lore/lore-config.md` exists, its `custom_directories` field defines additional directory types and their valid status values. Documents in those directories use the config's status list instead of the schema defaults. Documents in directories that appear in neither the schema nor the config should be flagged as "unknown type" for user decision (and feed into the config suggestion step).
 
+## Frontmatter Validation Pre-check
+
+Before any manual verification, run the bundled validation script:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_frontmatter.py .lore/
+```
+
+Capture stdout (JSON lines) and the exit code. Parse each JSON line into a structured finding.
+
+**Exit code handling**:
+
+- `0`: No validation errors. Proceed to three-pass verification.
+- `1`: Errors found. Parse findings into report categories (see "Malformed Frontmatter" and "Invalid Frontmatter" under Output Report). Proceed with three-pass verification on passing files only.
+- `2`: PyYAML not installed. Log a note in the status report: "Frontmatter validation skipped: PyYAML not installed." Proceed to three-pass verification without the pre-check.
+
+**Mapping script findings to report categories**:
+
+| Script `error_type` | Report category |
+|----------------------|-----------------|
+| `parse_error` | Malformed Frontmatter |
+| `structural_error` | Malformed Frontmatter |
+| `missing_field` | Invalid Frontmatter |
+| `invalid_type` | Invalid Frontmatter |
+| `invalid_status` | Invalid Frontmatter |
+
+Files that appear in "Malformed Frontmatter" are excluded from the subsequent three-pass verification. Their YAML doesn't parse, so field-level checks and status verification can't run against them. Note the count in the report: "N files excluded from status verification due to malformed frontmatter."
+
 ## Verification Approach
 
 Don't trust claimed status. Verify using these techniques:
@@ -64,6 +92,8 @@ Status mode works progressively. **Use TaskCreate for each pass** to maintain st
 3. **Third pass**: Verify claimed statuses against evidence
    - Create task, mark in_progress, complete when verification done
 
+Skip files listed under "Malformed Frontmatter" during all three passes. Those files can't be verified at field level.
+
 Don't try to fix everything at once. Surface findings, get confirmation, then update. Task tracking prevents collapsing phases and missing documents in the rush.
 
 ## Output Report
@@ -76,6 +106,15 @@ Report findings in categories:
 ### Missing Frontmatter
 - `.lore/retros/auth-fix.md` - no YAML frontmatter
 - `.lore/specs/old-feature.md` - no YAML frontmatter
+
+### Malformed Frontmatter
+- `.lore/specs/broken.md` - YAML parse error: mapping values are not allowed here (line 3)
+- `.lore/retros/old.md` - structural: missing closing delimiter
+
+### Invalid Frontmatter
+- `.lore/specs/auth.md` - missing required field: tags
+- `.lore/plans/migration.md` - invalid status "wip" (valid: draft, approved, executed)
+- `.lore/brainstorm/ideas.md` - field type: tags should be a list, got string
 
 ### Missing Status
 - `.lore/specs/user-profiles.md` - has frontmatter, no status field
@@ -106,17 +145,33 @@ Report findings in categories:
 
 After generating the report, handle each category. **Create tasks for actionable work:**
 
-1. **Missing Status**: Add status automatically using best-guess default (usually `draft` or `open`). Include in "Updated" section.
+1. **Malformed Frontmatter**: Read only the files the script flagged. Read the raw frontmatter text for each and propose corrected YAML. For structural errors (missing delimiters, tabs in indentation), the fix is usually mechanical. For parse errors, examine the raw text and propose valid YAML that preserves the author's intent.
+   - TaskCreate: "Repair malformed frontmatter in N documents"
+
+2. **Invalid Frontmatter**: Propose the correct field value from the schema. Handle sub-types:
+   - `missing_field`: Add the field with a sensible default (e.g., `status: draft`, `tags: []`).
+   - `invalid_type`: Coerce to the correct type (e.g., convert `tags: "foo, bar"` to `tags: [foo, bar]`).
+   - `invalid_status`: Check whether the value looks like an intentional honest-status phrase (e.g., "partially complete", "blocked", "incorporated incorrectly"). If it does, present it as "flagged by script, may be intentional" rather than a definitive error. The user decides whether to change it.
+   - TaskCreate: "Repair invalid frontmatter in N documents"
+
+3. **Missing Status**: Add status automatically using best-guess default (usually `draft` or `open`). Include in "Updated" section.
    - TaskCreate: "Add missing status to N documents"
 
-2. **Verified Accurate**: No action needed. Document is correct.
+4. **Verified Accurate**: No action needed. Document is correct.
 
-3. **Potentially Stale / Needs Decision**: Present to user and wait for confirmation before updating. User responds with "update [filename] to [status]" or "leave as-is".
+5. **Potentially Stale / Needs Decision**: Present to user and wait for confirmation before updating. User responds with "update [filename] to [status]" or "leave as-is".
    - TaskCreate: "Get user decisions on stale/unclear documents"
    - Do NOT mark complete until user has responded
 
-4. After user decisions, make confirmed updates and report final state.
+6. After user decisions, make confirmed updates and report final state.
    - TaskCreate: "Apply confirmed status updates"
+
+**Repair confirmation flow**: Present all proposed fixes from steps 1 and 2 together before applying any. Follow tend's dry-run, confirm, apply pattern:
+
+1. Present each proposed fix with the file path, current value, and proposed value.
+2. Wait for user confirmation: accept all, accept some (by number or name), or reject.
+3. Apply only confirmed fixes.
+4. Report what was changed in the "Updated" section.
 
 Use `TaskList` before moving between phases to confirm prior work is actually complete.
 
