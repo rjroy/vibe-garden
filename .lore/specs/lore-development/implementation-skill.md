@@ -1,7 +1,7 @@
 ---
 title: Implementation skill (orchestrator model)
 date: 2026-02-05
-status: draft
+status: implemented
 tags: [implementation, orchestrator, agents, testing, code-review, notes, skill-design]
 modules: [lore-development]
 related:

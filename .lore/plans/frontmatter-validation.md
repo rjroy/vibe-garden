@@ -1,7 +1,7 @@
 ---
 title: Implementation plan for frontmatter validation
 date: 2026-03-10
-status: draft
+status: executed
 tags: [tend, yaml, validation, frontmatter, scripts, python]
 modules: [lore-development, tend-skill]
 related:

@@ -1,7 +1,7 @@
 ---
 title: Tend discovery modes - expanding beyond status hygiene
 date: 2026-02-04
-status: open
+status: resolved
 tags: [tend, discovery, organization, skill-architecture]
 modules: [lore-development, tend-skill]
 related: [.lore/retros/tend-discovery-expansion.md]

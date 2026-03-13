@@ -1,7 +1,7 @@
 ---
 title: Plan breakdown skill
 date: 2026-02-10
-status: draft
+status: implemented
 tags: [skill-design, implementation, scope-constraint, task-decomposition, orchestration]
 modules: [lore-development]
 related:

@@ -1,7 +1,7 @@
 ---
 title: "Frontmatter validation script for tend status mode"
 date: 2026-03-09
-status: draft
+status: implemented
 tags: [tend, yaml, validation, frontmatter, scripts]
 modules: [lore-development, tend-skill]
 req-prefix: FMVAL

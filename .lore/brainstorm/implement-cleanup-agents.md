@@ -1,7 +1,7 @@
 ---
 title: Code cleanup agents in implement workflow
 date: 2026-02-14
-status: open
+status: resolved
 tags: [implement, code-quality, agents, workflow, simplification]
 modules: [lore-development]
 related: [.lore/../../lore-development/skills/implement/SKILL.md]

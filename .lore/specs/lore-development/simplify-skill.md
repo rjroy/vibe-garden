@@ -1,7 +1,7 @@
 ---
 title: Simplify skill for post-implementation cleanup
 date: 2026-02-15
-status: draft
+status: implemented
 tags: [lore-development, simplify, cleanup, code-quality, orchestration]
 modules: [lore-development]
 related: [.lore/brainstorm/implement-cleanup-agents.md, .lore/specs/lore-development/implementation-skill.md]

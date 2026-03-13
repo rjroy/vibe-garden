@@ -1,7 +1,7 @@
 ---
 title: Idea Capture and Local Issue Tracking
 date: 2026-02-18
-status: open
+status: resolved
 tags: [idea-capture, issue-tracking, workflow, compass-rose, lightweight]
 modules: [lore-development, compass-rose]
 related: [.lore/brainstorm/lore-development/document-lifecycle-and-lore-hygiene.md]

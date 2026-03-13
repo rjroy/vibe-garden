@@ -1,7 +1,7 @@
 ---
 title: YAML frontmatter validation and repair in tend
 date: 2026-03-10
-status: open
+status: resolved
 tags: [tend, yaml, validation, frontmatter, reliability]
 modules: [lore-development, tend-skill]
 related:

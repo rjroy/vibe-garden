@@ -1,7 +1,7 @@
 ---
 title: Execute Skill and Status Tracking
 date: 2026-01-29
-status: parked
+status: declined
 tags: [execution, status-tracking, workflow, breakdown]
 modules: [lore-development]
 related: [.lore/retros/lore-development/remove-breakdown-execute.md]
