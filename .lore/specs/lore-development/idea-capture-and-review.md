@@ -1,7 +1,7 @@
 ---
 title: Idea Capture Hook and Review Skill
 date: 2026-02-18
-status: approved
+status: implemented
 tags: [idea-capture, issue-tracking, hook, workflow, lightweight]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-development/idea-capture-and-review.md, .lore/brainstorm/lore-development/document-lifecycle-and-lore-hygiene.md]
