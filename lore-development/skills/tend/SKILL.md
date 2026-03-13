@@ -1,6 +1,6 @@
 ---
 name: tend
-description: This skill performs periodic hygiene on the .lore/ directory through four modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). Use when documents have accumulated, status fields are stale, or organization needs attention. Triggers include "tend the lore", "check document status", "lore hygiene", "what's stale", "review lore health", "tag audit", "organize lore".
+description: "This skill performs periodic hygiene on the .lore/ directory through four modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). Use when documents have accumulated, status fields are stale, or organization needs attention. Triggers include \"tend the lore\", \"check document status\", \"lore hygiene\", \"what's stale\", \"review lore health\", \"tag audit\", \"organize lore\"."
 ---
 
 # Tend
