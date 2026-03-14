@@ -103,7 +103,7 @@ sequence: 1                          # Integer ordering within the task set (req
 
 ```yaml
 ---
-title: Implementation notes: auth-flow
+title: "Implementation notes: auth-flow"
 date: 2026-02-05
 status: active
 tags: [implementation, notes]
