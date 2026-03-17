@@ -7,7 +7,9 @@ worker: Guild Master
 workerDisplayTitle: "Guild Master"
 agenda: "Discussion on a `vision` skill for lore development."
 deferred_until: ""
-linked_artifacts: []
+linked_artifacts:
+  - specs/lore-development/vision-document.md
+  - research/lore-development/vision-statements-as-ai-decision-filters.md
 meeting_log:
   - timestamp: 2026-03-17T03:55:11.573Z
     event: opened
