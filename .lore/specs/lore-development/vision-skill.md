@@ -1,7 +1,7 @@
 ---
 title: vision Skill
 date: 2026-03-16
-status: draft
+status: approved
 tags: [skill, vision, decision-filter, interactive, bootstrapping]
 modules: [lore-development]
 related:
