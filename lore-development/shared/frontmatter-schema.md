@@ -66,6 +66,7 @@ Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 | task | `.lore/tasks/` | `pending`, `complete`, `skipped` |
 | reference | `.lore/reference/` | `current`, `outdated` |
 | issue | `.lore/issues/` | `open`, `resolved`, `wontfix` |
+| vision | `.lore/vision.md` | `draft`, `approved` |
 
 ## Notes-Specific Fields
 
@@ -96,6 +97,10 @@ sequence: 1                          # Integer ordering within the task set (req
 |-------|----------|-------|
 | source | Yes | Path to the plan this task was decomposed from. Enables implement to find the parent plan. |
 | sequence | Yes | Integer ordering within the task set. Determines execution order in implement. |
+
+## Vision-Specific Notes
+
+The vision document lives at `.lore/vision.md` (one per project, at the `.lore/` root). It uses the common fields only. The `modules` field is intentionally omitted because the vision applies to the entire project, not to specific modules. The `status` field uses `draft` and `approved`. A vision becomes `approved` when the user edits the frontmatter directly or tells the skill to mark it approved. The skill does not approve on the user's behalf.
 
 ## Examples
 
@@ -221,6 +226,17 @@ date: 2026-02-18
 status: open
 tags: [ui, layout, responsive]
 modules: [session-dialog]
+---
+```
+
+### Vision
+
+```yaml
+---
+title: Vibe Garden Vision
+date: 2026-03-16
+status: draft
+tags: [vision]
 ---
 ```
 
