@@ -51,22 +51,26 @@ Examples:
 
 Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 
-## Status Values by Document Type
+## Status Values Which Are Always Valid
+- `open`, `draft`, `archived`, `approved`, `resolved`
 
-| Type | Directory | Valid Status Values |
+Not all universal statuses are meaningful for every type, but any type may use them.
+
+## Additional Status Values by Document Type
+
+| Type | Directory | Additional Status Values |
 |------|-----------|---------------------|
-| brainstorm | `.lore/brainstorm/` | `open`, `resolved`, `parked` |
-| spec | `.lore/specs/` | `draft`, `approved`, `implemented`, `superseded` |
-| design | `.lore/design/` | `draft`, `approved`, `implemented`, `superseded` |
+| brainstorm | `.lore/brainstorm/` | `parked` |
+| spec | `.lore/specs/` | `implemented`, `superseded` |
+| design | `.lore/design/` | `implemented`, `superseded` |
 | retro | `.lore/retros/` | `complete` |
-| research | `.lore/research/` | `active`, `archived` |
+| research | `.lore/research/` | `active` |
 | diagram | `.lore/diagrams/` | `current`, `outdated` |
-| plan | `.lore/plans/` | `draft`, `approved`, `executed` |
-| notes | `.lore/notes/` | `active`, `complete` |
+| plan | `.lore/plans/` | `executed` |
+| notes | `.lore/notes/` | `in_progress`, `complete` |
 | task | `.lore/tasks/` | `pending`, `complete`, `skipped` |
 | reference | `.lore/reference/` | `current`, `outdated` |
-| issue | `.lore/issues/` | `open`, `resolved`, `wontfix` |
-| vision | `.lore/vision.md` | `draft`, `approved` |
+| issue | `.lore/issues/` | `wontfix` |
 
 ## Notes-Specific Fields
 
@@ -110,7 +114,7 @@ The vision document lives at `.lore/vision.md` (one per project, at the `.lore/`
 ---
 title: "Implementation notes: auth-flow"
 date: 2026-02-05
-status: active
+status: in_progress
 tags: [implementation, notes]
 source: .lore/plans/auth-flow.md
 modules: [auth-service]
