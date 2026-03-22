@@ -46,7 +46,7 @@ Use this template structure for the notes file:
 ---
 title: Simplification notes: [identifier]
 date: YYYY-MM-DD
-status: active | complete
+status: in_progress | complete
 tags: [simplify, cleanup, code-quality]
 modules: [from file paths if identifiable]
 ---

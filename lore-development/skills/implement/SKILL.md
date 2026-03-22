@@ -48,7 +48,7 @@ Use kebab-case. Match the source artifact's filename (e.g., if the plan is `auth
 ---
 title: Implementation notes: [artifact name]
 date: YYYY-MM-DD
-status: active | complete
+status: in_progress | complete
 tags: [implementation, notes]
 source: [path to spec/design/plan]
 modules: [from source artifact if available]
