@@ -186,6 +186,21 @@ related: [.lore/specs/history-sync.md]
 ---
 ```
 
+### Plan
+
+```yaml
+---
+title: "Implementation plan: auth-flow"
+date: 2026-02-05
+status: draft
+tags: [plan, auth]
+modules: [auth-service]
+related: [.lore/specs/auth-flow.md]
+---
+```
+
+New plans should always start as `draft`. They move to `approved` when the user accepts them, and `executed` after implementation completes.
+
 ### Research
 
 ```yaml
