@@ -1,5 +1,5 @@
 ---
-title: Implementation notes: simplify-skill
+title: "Implementation notes: simplify-skill"
 date: 2026-02-15
 status: complete
 tags: [implementation, notes, simplify, cleanup, orchestration]
