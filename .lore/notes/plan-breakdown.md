@@ -1,5 +1,5 @@
 ---
-title: Implementation notes: plan-breakdown
+title: "Implementation notes: plan-breakdown"
 date: 2026-02-10
 status: complete
 tags: [implementation, notes]
