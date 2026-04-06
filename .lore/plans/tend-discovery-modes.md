@@ -1,3 +1,7 @@
+---
+status: executed
+---
+
 # Plan: Tend Skill Mode-Based Architecture
 
 ## Summary
