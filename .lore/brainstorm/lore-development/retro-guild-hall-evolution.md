@@ -1,7 +1,7 @@
 ---
 title: Retro skill evolution for Guild Hall workflows
 date: 2026-03-12
-status: open
+status: resolved
 tags: [retro, guild-hall, multi-agent, lessons-learned, knowledge-management, commissions]
 modules: [lore-development]
 related:

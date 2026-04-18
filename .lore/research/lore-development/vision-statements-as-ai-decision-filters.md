@@ -1,7 +1,7 @@
 ---
 title: Vision Statements as AI Decision Filters
 date: 2026-03-16
-status: active
+status: complete
 tags: [vision, self-evolution, decision-filter, brainstorming, constitutional-ai]
 modules: [guild-hall]
 related:
