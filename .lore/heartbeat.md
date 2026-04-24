@@ -26,8 +26,3 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
-- 13:48 commission-Octavia-20260424-134303 result: Spec written to `.lore/specs/lore-redesign.md`. Covers all four concerns in one light-touch refactor spec with 48 requirements (prefix REDESIGN):
-
-(1) **Directory structure** — the three-directory mod...
-
-- 13:48 commission-Octavia-20260424-134303 completed

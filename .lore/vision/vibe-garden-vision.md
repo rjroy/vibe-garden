@@ -1,7 +1,7 @@
 ---
 title: Vibe Garden Vision
 date: 2026-03-30
-status: draft
+status: approved
 tags: [vision, project-direction]
 ---
 
