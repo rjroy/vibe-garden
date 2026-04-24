@@ -2,6 +2,16 @@
 
 Single source of truth for frontmatter fields across all `.lore/` document types.
 
+## The three-directory model
+
+`.lore/` is organized into three top-level directories. Every lore document lives under exactly one of them:
+
+- **`.lore/build/`** — work scaffolding. Session-bound material: brainstorms, specs, designs, plans, tasks, notes, research, retros, issues, ideas, validation, stubs, excavation indices, session diagrams.
+- **`.lore/reference/`** — solidified, system-oriented documentation. What the code cannot say. Excavated feature docs, vision, current-state diagrams.
+- **`.lore/learned/`** — operational imperatives, mistakes-only, worker-oriented. Written by `/learn`.
+
+Status values are scoped to the directory tree the document lives in (see "Status Values" below).
+
 ## Common Fields
 
 All lore documents should include these fields:
@@ -51,26 +61,44 @@ Examples:
 
 Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 
-## Status Values Which Are Always Valid
-- `open`, `draft`, `archived`, `approved`, `resolved`
+## Status Values
 
-Not all universal statuses are meaningful for every type, but any type may use them.
+Status values are organized into three sets, one per top-level directory.
 
-## Additional Status Values by Document Type
+### Build documents
 
-| Type | Directory | Additional Status Values |
+Build artifacts retain meaningful per-type lifecycles. The directory key is `build/<type>`.
+
+| Type | Directory | Valid Status Values |
 |------|-----------|---------------------|
-| brainstorm | `.lore/brainstorm/` | `parked` |
-| spec | `.lore/specs/` | `implemented`, `superseded` |
-| design | `.lore/design/` | `implemented`, `superseded` |
-| retro | `.lore/retros/` | `complete` |
-| research | `.lore/research/` | `active` |
-| diagram | `.lore/diagrams/` | `current`, `outdated` |
-| plan | `.lore/plans/` | `executed` |
-| notes | `.lore/notes/` | `in_progress`, `complete` |
-| task | `.lore/tasks/` | `pending`, `complete`, `skipped` |
-| reference | `.lore/reference/` | `current`, `outdated` |
-| issue | `.lore/issues/` | `wontfix` |
+| brainstorm | `.lore/build/brainstorm/` | `open`, `parked`, `resolved`, `archived` |
+| spec | `.lore/build/specs/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
+| design | `.lore/build/design/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
+| plan | `.lore/build/plans/` | `draft`, `approved`, `executed`, `archived` |
+| task | `.lore/build/tasks/` | `pending`, `complete`, `skipped` |
+| notes | `.lore/build/notes/` | `in_progress`, `complete`, `archived` |
+| research | `.lore/build/research/` | `active`, `archived` |
+| retro | `.lore/build/retros/` | `open`, `archived` |
+| issue | `.lore/build/issues/` | `open`, `resolved`, `wontfix`, `archived` |
+| diagram (build) | `.lore/build/diagrams/` | `current`, `outdated`, `archived` |
+
+`/retro`'s reshape collapses the old `complete` status: retros are free-form notes, not analyzed artifacts, so "complete" has no distinct meaning. A retro is `open` while it can still be amended and `archived` once the work it tracks is fully past.
+
+### Reference documents
+
+All reference documents share one status set:
+
+| Directory | Valid Status Values |
+|-----------|---------------------|
+| `.lore/reference/` (and any subdirectory, including `.lore/reference/diagrams/`) | `current`, `outdated`, `archived` |
+
+### Learned documents
+
+Learned entries share one minimal status set. Lifecycle beyond this is owned by `.lore/build/issues/design-learned-structure.md`.
+
+| Directory | Valid Status Values |
+|-----------|---------------------|
+| `.lore/learned/` | `active`, `superseded` |
 
 ## Notes-Specific Fields
 
@@ -78,7 +106,7 @@ Notes support an additional required field:
 
 ```yaml
 ---
-source: .lore/plans/auth-flow.md    # Path to the source artifact (required)
+source: .lore/build/plans/auth-flow.md    # Path to the source artifact (required)
 ---
 ```
 
@@ -92,8 +120,8 @@ Tasks support additional required fields:
 
 ```yaml
 ---
-source: .lore/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
-sequence: 1                          # Integer ordering within the task set (required)
+source: .lore/build/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
+sequence: 1                                # Integer ordering within the task set (required)
 ---
 ```
 
@@ -104,7 +132,7 @@ sequence: 1                          # Integer ordering within the task set (req
 
 ## Vision-Specific Notes
 
-The vision document lives at `.lore/vision.md` (one per project, at the `.lore/` root). It uses the common fields only. The `modules` field is intentionally omitted because the vision applies to the entire project, not to specific modules. The `status` field uses `draft` and `approved`. A vision becomes `approved` when the user edits the frontmatter directly or tells the skill to mark it approved. The skill does not approve on the user's behalf.
+The vision document lives at `.lore/reference/vision.md` (one per project, under `reference/`). It uses the common fields only; `modules` is intentionally omitted because the vision applies to the entire project, not specific modules. As a reference document, its status is one of `current`, `outdated`, or `archived`. A vision becomes `current` when the user edits the frontmatter directly or tells the skill to mark it so. The skill does not approve on the user's behalf.
 
 ## Examples
 
@@ -116,7 +144,7 @@ title: "Implementation notes: auth-flow"
 date: 2026-02-05
 status: in_progress
 tags: [implementation, notes]
-source: .lore/plans/auth-flow.md
+source: .lore/build/plans/auth-flow.md
 modules: [auth-service]
 ---
 ```
@@ -129,7 +157,7 @@ title: Add auth middleware
 date: 2026-02-10
 status: pending
 tags: [task]
-source: .lore/plans/auth-flow.md
+source: .lore/build/plans/auth-flow.md
 sequence: 1
 modules: [auth-service]
 ---
@@ -141,7 +169,7 @@ modules: [auth-service]
 ---
 title: N+1 query in brief generation
 date: 2026-01-30
-status: complete
+status: open
 tags: [performance, database, eager-loading]
 modules: [brief-system, email-processing]
 ---
@@ -156,7 +184,7 @@ date: 2026-01-28
 status: draft
 tags: [auth, security, login]
 modules: [auth-service, user-model]
-related: [.lore/research/oauth-patterns.md]
+related: [.lore/build/research/oauth-patterns.md]
 req-prefix: AUTH           # Optional: overrides auto-generated prefix
 ---
 ```
@@ -182,7 +210,7 @@ date: 2026-02-03
 status: draft
 tags: [algorithm, deduplication, sync, data-structures]
 modules: [history-service, stream-processor]
-related: [.lore/specs/history-sync.md]
+related: [.lore/build/specs/history-sync.md]
 ---
 ```
 
@@ -195,7 +223,7 @@ date: 2026-02-05
 status: draft
 tags: [plan, auth]
 modules: [auth-service]
-related: [.lore/specs/auth-flow.md]
+related: [.lore/build/specs/auth-flow.md]
 ---
 ```
 
@@ -212,7 +240,7 @@ tags: [oauth, authentication, cli, security]
 ---
 ```
 
-### Diagram
+### Diagram (build, session-bound)
 
 ```yaml
 ---
@@ -254,8 +282,20 @@ modules: [session-dialog]
 ---
 title: Vibe Garden Vision
 date: 2026-03-16
-status: draft
+status: current
 tags: [vision]
+---
+```
+
+### Learned entry
+
+```yaml
+---
+title: Don't ship the same path string in two places
+date: 2026-04-24
+status: active
+tags: [refactor, hardcoded-paths]
+modules: [lore-development]
 ---
 ```
 

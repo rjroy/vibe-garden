@@ -6,7 +6,11 @@ Verify and update document status fields across `.lore/`.
 
 **Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`** for the canonical list of status values by document type.
 
-The schema defines valid status values for each document type (specs, plans, brainstorms, research, retros, diagrams). Use those values when adding or updating status fields.
+The schema partitions valid status values into three sets, keyed by zone:
+
+- **Build set** (per-type, under `.lore/build/<type>/`): each build subdirectory has its own lifecycle (e.g., specs use `draft / approved / implemented / superseded / archived`; plans use `draft / approved / executed / archived`; brainstorms use `open / parked / resolved / archived`). Use the schema for the exact list per type.
+- **Reference set** (under `.lore/reference/`): `current / outdated / archived`. Solidified knowledge that callers cite.
+- **Learned set** (under `.lore/learned/`): `active / superseded`. Mistakes-only entries; supersession is the only lifecycle that applies.
 
 **Project-specific types**: If `.lore/lore-config.md` exists, its `custom_directories` field defines additional directory types and their valid status values. Documents in those directories use the config's status list instead of the schema defaults. Documents in directories that appear in neither the schema nor the config should be flagged as "unknown type" for user decision (and feed into the config suggestion step).
 
@@ -42,27 +46,30 @@ Files that appear in "Malformed Frontmatter" are excluded from the subsequent th
 
 Don't trust claimed status. Verify using these techniques:
 
-**For "complete" specs**:
-- Use Glob to find a plan with the same name in `.lore/plans/`
-- Check if that plan's status is also complete
-- If no plan exists, the spec likely isn't complete
+**For "implemented" specs**:
+- Use Glob to find a plan with the same name in `.lore/build/plans/`
+- Check if that plan's status is `executed`
+- If no plan exists or it isn't executed, the spec likely isn't implemented
 
-**For "complete" plans**:
+**For "executed" plans**:
 - Check if implementation appears done (code exists, tests pass)
 - Look for retro documents referencing this plan
 
 **For "implemented" designs**:
 - Check if a plan exists that references this design
-- Check if that plan's status is executed
+- Check if that plan's status is `executed`
 - If no plan exists, the design likely isn't implemented yet
 
-**For "incorporated" brainstorms**:
-- Use Grep to search for the brainstorm filename or key terms in `.lore/specs/`
+**For "resolved" brainstorms**:
+- Use Grep to search for the brainstorm filename or key terms in `.lore/build/specs/`
 - If no references found, status should be `parked` or `open`
 
-**For "active" anything**:
-- Check last modified date (via Bash `ls -l` or file metadata)
-- Documents marked "active" but not modified in 30+ days are likely stale or abandoned
+**For "active" research or learned entries**:
+- Research: check last modified date; documents marked `active` but not modified in 30+ days are likely stale and should be `archived`
+- Learned: an `active` entry is current advice; flag for `superseded` only when a follow-up entry exists that replaces it
+
+**For "current" reference docs**:
+- Reference is solidified knowledge. `current` should match what callers can actually rely on. If the underlying system has changed, the entry is `outdated` and needs refresh or archive
 
 **For req-prefix collisions** (specs only):
 - For each spec, determine its prefix (explicit `req-prefix` field, or auto-generated from filename)
@@ -104,40 +111,41 @@ Report findings in categories:
 ## Status Report
 
 ### Missing Frontmatter
-- `.lore/retros/auth-fix.md` - no YAML frontmatter
-- `.lore/specs/old-feature.md` - no YAML frontmatter
+- `.lore/build/retros/auth-fix.md` - no YAML frontmatter
+- `.lore/build/specs/old-feature.md` - no YAML frontmatter
 
 ### Malformed Frontmatter
-- `.lore/specs/broken.md` - YAML parse error: mapping values are not allowed here (line 3)
-- `.lore/retros/old.md` - structural: missing closing delimiter
+- `.lore/build/specs/broken.md` - YAML parse error: mapping values are not allowed here (line 3)
+- `.lore/build/retros/old.md` - structural: missing closing delimiter
 
 ### Invalid Frontmatter
-- `.lore/specs/auth.md` - missing required field: tags
-- `.lore/plans/migration.md` - invalid status "wip" (valid: draft, approved, executed)
-- `.lore/brainstorm/ideas.md` - field type: tags should be a list, got string
+- `.lore/build/specs/auth.md` - missing required field: tags
+- `.lore/build/plans/migration.md` - invalid status "wip" (valid: draft, approved, executed, archived)
+- `.lore/build/brainstorm/ideas.md` - field type: tags should be a list, got string
 
 ### Missing Status
-- `.lore/specs/user-profiles.md` - has frontmatter, no status field
-- `.lore/brainstorm/caching-ideas.md` - has frontmatter, no status field
+- `.lore/build/specs/user-profiles.md` - has frontmatter, no status field
+- `.lore/build/brainstorm/caching-ideas.md` - has frontmatter, no status field
 
 ### Potentially Stale
-- `.lore/plans/auth-flow.md` - marked "active", last modified 30 days ago
-- `.lore/specs/notifications.md` - marked "active", no plan exists
+- `.lore/build/plans/auth-flow.md` - marked "draft", last modified 30 days ago
+- `.lore/build/specs/notifications.md` - marked "approved", no plan exists
+- `.lore/reference/api-conventions.md` - marked "current", underlying system changed
 
 ### Verified Accurate
-- `.lore/specs/auth-flow.md` - complete (plan complete, work done)
-- `.lore/brainstorm/early-ideas.md` - incorporated (found in auth-flow spec)
+- `.lore/build/specs/auth-flow.md` - implemented (plan executed, work done)
+- `.lore/build/brainstorm/early-ideas.md` - resolved (found in auth-flow spec)
 
 ### Updated
-- `.lore/retros/auth-fix.md` - added frontmatter
-- `.lore/specs/user-profiles.md` - added status: draft
-- `.lore/plans/auth-flow.md` - changed active → complete
+- `.lore/build/retros/auth-fix.md` - added frontmatter
+- `.lore/build/specs/user-profiles.md` - added status: draft
+- `.lore/build/plans/auth-flow.md` - changed draft -> executed
 
 ### Needs Decision
-- `.lore/brainstorm/caching-ideas.md` - no spec references it. Mark as parked?
+- `.lore/build/brainstorm/caching-ideas.md` - no spec references it. Mark as parked?
 
 ### Prefix Collisions
-- `.lore/specs/auth-flow.md` and `.lore/specs/auth-feature.md` both resolve to AUTH-F*
+- `.lore/build/specs/auth-flow.md` and `.lore/build/specs/auth-feature.md` both resolve to AUTH-F*
   - Suggestion: Add `req-prefix: AUTHFLOW` to auth-flow.md
 ```
 

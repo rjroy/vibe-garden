@@ -5,7 +5,7 @@ status: draft
 tags: [testing, fixtures]
 modules: [lore-development]
 related:
-  - .lore/plans/example.md
+  - .lore/build/plans/example.md
 ---
 
 # Valid Spec

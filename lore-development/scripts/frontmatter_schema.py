@@ -4,6 +4,18 @@ Machine-readable encoding of the lore document frontmatter schema.
 Source of truth: lore-development/shared/frontmatter-schema.md
 
 Each constant references the schema section it encodes.
+
+Directory keying convention
+---------------------------
+The schema is organized around three top-level directories under `.lore/`:
+`build/`, `reference/`, and `learned/`. Status sets are scoped to that tree.
+
+Directory keys in this module follow that layout:
+
+- Build documents are keyed `build/<type>` (e.g. `build/specs`, `build/notes`).
+- Reference documents are keyed `reference` (one set covers the whole tree
+  including subdirectories like `reference/diagrams/`).
+- Learned documents are keyed `learned`.
 """
 
 # Schema section: "Required vs Optional" table
@@ -12,7 +24,7 @@ REQUIRED_FIELDS = ["title", "date", "status", "tags"]
 # Schema section: "Required vs Optional" table (optional rows)
 OPTIONAL_FIELDS = ["modules", "related"]
 
-# Schema section: "Common Fields" code block + "Spec-Specific Fields"
+# Schema section: "Common Fields" code block + spec/notes/task-specific fields
 # Maps field name to expected type string.
 FIELD_TYPES = {
     "title": "string",
@@ -26,25 +38,29 @@ FIELD_TYPES = {
     "sequence": "integer",
 }
 
-# Schema section: "Status Values by Document Type" table
-# Maps directory name (the segment after .lore/) to valid status strings.
+# Schema section: "Status Values" tables (Build / Reference / Learned)
+# Maps directory key (see module docstring) to valid status strings.
 STATUS_VALUES = {
-    "brainstorm": ["open", "resolved", "parked"],
-    "specs": ["draft", "approved", "implemented", "superseded"],
-    "design": ["draft", "approved", "implemented", "superseded"],
-    "retros": ["complete"],
-    "research": ["active", "archived"],
-    "diagrams": ["current", "outdated"],
-    "plans": ["draft", "approved", "executed"],
-    "notes": ["active", "complete"],
-    "tasks": ["pending", "complete", "skipped"],
-    "reference": ["current", "outdated"],
-    "issues": ["open", "resolved", "wontfix"],
+    # Build documents — per-type lifecycles
+    "build/brainstorm": ["open", "parked", "resolved", "archived"],
+    "build/specs": ["draft", "approved", "implemented", "superseded", "archived"],
+    "build/design": ["draft", "approved", "implemented", "superseded", "archived"],
+    "build/plans": ["draft", "approved", "executed", "archived"],
+    "build/tasks": ["pending", "complete", "skipped"],
+    "build/notes": ["in_progress", "complete", "archived"],
+    "build/research": ["active", "archived"],
+    "build/retros": ["open", "archived"],
+    "build/issues": ["open", "resolved", "wontfix", "archived"],
+    "build/diagrams": ["current", "outdated", "archived"],
+    # Reference documents — one shared status set, including reference/diagrams/
+    "reference": ["current", "outdated", "archived"],
+    # Learned documents — minimal set; lifecycle deferred per design-learned-structure.md
+    "learned": ["active", "superseded"],
 }
 
 # Schema sections: "Notes-Specific Fields" and "Task-Specific Fields"
-# Maps directory name to additional required fields beyond REQUIRED_FIELDS.
+# Maps directory key to additional required fields beyond REQUIRED_FIELDS.
 TYPE_SPECIFIC_REQUIRED = {
-    "notes": ["source"],
-    "tasks": ["source", "sequence"],
+    "build/notes": ["source"],
+    "build/tasks": ["source", "sequence"],
 }
