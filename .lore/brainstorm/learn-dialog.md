@@ -1,7 +1,7 @@
 ---
 title: "Learn dialog: user-invoked lesson recording"
 date: 2026-04-24
-status: open
+status: resolved
 tags: [capture-skills, lessons-learned, learn, anti-hallucination, dialog]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-directory-redesign.md, .lore/brainstorm/principles-for-capture-skills.md, .lore/issues/design-extraction-skill.md, .lore/issues/roadmap-lore-redesign.md]
