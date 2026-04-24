@@ -1,7 +1,7 @@
 ---
 title: "Distill: the named operation for promoting build findings into reference"
 date: 2026-04-23
-status: open
+status: resolved
 tags: [distill, excavate, reference, capture-skills, directory-structure]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-directory-redesign.md, .lore/brainstorm/principles-for-capture-skills.md, .lore/issues/roadmap-lore-redesign.md]
