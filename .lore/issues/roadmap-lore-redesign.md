@@ -13,7 +13,7 @@ Sequenced path from the current `.lore/` tree to the three-directory model (`bui
 
 ## Steps
 
-1. **Brainstorm the distill function.** Names the operation for taking findings from `build/` artifacts and filing their data (not the files) into `reference/`. "Distill" is the working word; candidates include *crystallize* and *inscribe*. Needs a brainstorm session to define: what triggers distillation, what units move (sections? paragraphs? full concepts?), how reference documents grow over time, whether distillation is a skill or an implicit part of other skills.
+1. **Brainstorm the distill function.** *(Done 2026-04-23 — see `.lore/brainstorm/distill-function.md`.)* Key outcome: distill is not a new skill. `/excavate` is renamed to `/distill` with two seed modes (`/distill code`, `/distill build`), a shared code-verifying core, and a tightened shape rule for reference (contains only what the code cannot say). This reshapes step 4 (rename + tune-down) and step 5 (implement only `/learn` as a new skill; `/distill` is a refactor).
 
 2. **Brainstorm the learn dialog.** The mistake-extraction skill. Looks at recent `build/` artifacts (or specific ones named by the user) and proposes updates to `learned/`. Must be a dialog, never automatic. Scope: trigger model, relevance ranking, presentation format, write mechanics, dedup. See `.lore/issues/design-extraction-skill.md` for the undesigned pieces.
 
@@ -21,7 +21,7 @@ Sequenced path from the current `.lore/` tree to the three-directory model (`bui
 
 4. **Refactor existing skills to the new hierarchy.** Every skill that writes to `.lore/` needs path updates: `/brainstorm` writes to `build/brainstorm/`, `/specify` to `build/specs/`, etc. Frontmatter schema consolidates (per-directory status values collapse). `/tend` learns the new hierarchy and gains the migration mode. `/lore-researcher` searches the new paths. Vision moves into `reference/`. This step is plugin-wide and probably wants its own spec and plan.
 
-5. **Implement the two new skills.** `/distill` and `/learn`. Both live in the refactored plugin. Both consume the brainstorm outputs from steps 1 and 2.
+5. **Implement `/learn` and land the `/distill` refactor.** `/learn` is a new skill built from the step-2 brainstorm. `/distill` is the renamed-and-reshaped `/excavate`, per the step-1 brainstorm outcome; its refactor details belong in step 4's plugin-wide spec.
 
 ## Ordering notes
 
