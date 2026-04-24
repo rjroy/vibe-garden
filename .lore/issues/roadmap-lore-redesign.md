@@ -1,7 +1,7 @@
 ---
 title: "Roadmap: lore directory redesign and capture-skill rework"
 date: 2026-04-23
-status: open
+status: approved
 tags: [roadmap, directory-structure, capture-skills, retros, extraction]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-directory-redesign.md, .lore/brainstorm/principles-for-capture-skills.md, .lore/issues/design-extraction-skill.md, .lore/issues/design-learned-structure.md]
