@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: lore-development three-directory redesign"
 date: 2026-04-24
-status: draft
+status: approved
 tags: [plan, lore-development, directory-structure, capture-skills, refactor]
 modules: [lore-development]
 related:
