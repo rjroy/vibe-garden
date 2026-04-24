@@ -1,7 +1,7 @@
 ---
 title: "Principles for capture skills: retro, extraction, reflection"
 date: 2026-04-23
-status: open
+status: resolved
 tags: [methodology, retros, lessons-learned, anti-hallucination, design-principles]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-directory-redesign.md]
