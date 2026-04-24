@@ -1,7 +1,7 @@
 ---
 title: "Lore-development plugin redesign: three-directory model, capture-skill rework"
 date: 2026-04-24
-status: draft
+status: approved
 tags: [lore-development, directory-structure, capture-skills, retros, distill, learn, refactor]
 modules: [lore-development]
 related:
