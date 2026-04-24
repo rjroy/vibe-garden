@@ -1,7 +1,7 @@
 ---
 title: "Lore directory redesign: build, reference, learned"
 date: 2026-04-23
-status: open
+status: resolved
 tags: [progressive-discovery, retros, directory-structure, methodology, lessons-learned]
 modules: [lore-development]
 ---
