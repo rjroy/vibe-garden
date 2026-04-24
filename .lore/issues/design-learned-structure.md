@@ -1,7 +1,7 @@
 ---
 title: Design the internal structure of `.lore/learned/`
 date: 2026-04-23
-status: open
+status: resolved
 tags: [design-needed, learned, directory-structure, capture-skills]
 modules: [lore-development]
 related: [.lore/brainstorm/lore-directory-redesign.md, .lore/brainstorm/principles-for-capture-skills.md]
