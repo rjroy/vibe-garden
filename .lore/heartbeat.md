@@ -26,3 +26,9 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
+- 16:55 commission-Dalton-20260424-164303 result: Phase 0 complete: schema foundation + directory canon.
+
+**Files touched:**
+- `lore-development/shared/frontmatter-schema.md` — rewrote per three-status-set model. Documents the `.lore/build/` / `.lore...
+
+- 16:55 commission-Dalton-20260424-164303 completed
