@@ -1,6 +1,6 @@
 ---
 name: vision
-description: This skill defines a project's vision and writes it to `.lore/vision.md`. Use when defining project direction, creating a vision document, bootstrapping vision from existing code, or revisiting project identity. Triggers include "define the project vision", "what should this project become", "create a vision document", "set the project direction", "what are our principles".
+description: This skill defines a project's vision and writes it to `.lore/reference/vision.md`. Use when defining project direction, creating a vision document, bootstrapping vision from existing code, or revisiting project identity. Triggers include "define the project vision", "what should this project become", "create a vision document", "set the project direction", "what are our principles".
 ---
 
 # Vision
@@ -18,7 +18,7 @@ Define what the project is trying to become. The vision document serves as a dec
 
 ### Step 1: Check for Existing Vision
 
-Check whether `.lore/vision.md` already exists.
+Check whether `.lore/reference/vision.md` already exists.
 
 - **If it exists with `status: approved`**: Ask the user whether they want to revise it or just review it. If revising, load the document and go to Step 5 (Refinement). If reviewing, present the current vision and stop.
 - **If it exists with `status: draft`**: Load the draft and go to Step 5 (Refinement) to continue where things left off.
@@ -83,7 +83,7 @@ After refining each section, check whether the user wants to continue refining o
 
 ### Step 6: Save or Defer
 
-**Save**: Write the vision document to `.lore/vision.md` using the document format below. Set `status: draft`. The user approves by editing the frontmatter directly or telling you to mark it approved. Do not approve on the user's behalf.
+**Save**: Write the vision document to `.lore/reference/vision.md` using the document format below. Set `status: draft`. The user approves by editing the frontmatter directly or telling you to mark it approved. Do not approve on the user's behalf.
 
 **Defer**: If the user wants to think more, summarize what was discussed so the conversation can be resumed later. Do not write a file.
 
@@ -91,7 +91,7 @@ After refining each section, check whether the user wants to continue refining o
 
 ## Output
 
-Save to `.lore/vision.md`
+Save to `.lore/reference/vision.md`
 
 ### Document Format
 
@@ -171,11 +171,11 @@ Before saving, verify each principle against these criteria:
 
 ## Context
 
-Check `.lore/brainstorm/` and `.lore/research/` for prior thinking about project direction that might inform the vision.
+Check `.lore/work/brainstorm/` and `.lore/work/research/` for prior thinking about project direction that might inform the vision.
 
 ## Downstream Integration
 
-Once `.lore/vision.md` exists, other lore-development workflow skills may reference it as context. The vision is available, not mandatory. Skills that define scope or prioritize work can check for a vision and use it to inform decisions, but they function normally without one.
+Once `.lore/reference/vision.md` exists, other lore-development workflow skills may reference it as context. The vision is available, not mandatory. Skills that define scope or prioritize work can check for a vision and use it to inform decisions, but they function normally without one.
 
 ## Specialized Agents
 

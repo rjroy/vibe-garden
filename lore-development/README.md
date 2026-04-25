@@ -8,6 +8,8 @@ A lightweight plugin for building and organizing project context.
 
 Modern LLMs have strong native planning and implementation capabilities. This plugin doesn't teach process - it helps build findable, organized context (the "lore" of your project) that informs better work.
 
+Skills write into a three-directory `.lore/` tree (`work/`, `reference/`, `learned/`) — see **Artifact Storage** below for the full layout.
+
 ## Skills
 
 | Skill | Purpose |
@@ -20,9 +22,10 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:plan-breakdown` | Decompose a plan into task files for `/implement` |
 | `/lore-development:implement` | Orchestrate implementation from a plan via sub-agents |
 | `/lore-development:simplify` | Orchestrate code cleanup with tests and review |
-| `/lore-development:retro` | Review work, capture lessons learned |
+| `/lore-development:retro` | Capture what happened in a session as free-form notes |
+| `/lore-development:learn` | Record a mistake worth not repeating; user-invoked dialog writing to `.lore/learned/` |
 | `/lore-development:poke-holes` | Challenge ideas adversarially |
-| `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
+| `/lore-development:distill` | Promote what the code cannot say into reference docs (two seed modes: `code`, `work`) |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
 | `/lore-development:define-validation` | Define AI validation criteria for work in progress |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
@@ -33,27 +36,45 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 
 ## Idea Capture
 
-The plugin includes a hook that captures ideas without invoking the AI. Start any prompt with `idea:` and the text is appended to `.lore/ideas.md`. Use `/review-ideas` to process accumulated ideas into structured issues.
+The plugin includes a hook that captures ideas without invoking the AI. Start any prompt with `idea:` and the text is appended to a daily file under `.lore/work/ideas/` (one file per date, e.g. `2026-04-24.md`). Use `/review-ideas` to process accumulated ideas into structured issues.
 
 ## Artifact Storage
 
-All context lives in `.lore/`:
+Context lives in `.lore/` under three top-level directories. Each directory has a different purpose, audience, and lifetime. The only file at the `.lore/` root is `lore-agents.md`, a cross-plugin agent registry surface (see below).
 
 ```
 .lore/
-├── research/       # External findings
-├── brainstorm/     # Recorded explorations
-├── specs/          # Requirements
-├── plans/          # Implementation plans (reviewed, persistent)
-├── retros/         # Lessons learned
-├── stubs/          # Outstanding stub index from specs
-├── reference/      # Excavated feature documentation
-├── excavations/    # Design archaeology session tracking
-├── diagrams/       # Visual representations (Mermaid)
-├── issues/         # Structured issues (from /review-ideas or /file-issue)
-├── ideas.md        # Captured ideas (via hook)
-└── lore-agents.md  # Agent registry (optional)
+├── work/          # Work scaffolding — session-bound, written during a flow
+│   ├── ideas/          # Captured ideas (via hook, one file per date)
+│   ├── brainstorm/     # Recorded explorations
+│   ├── specs/          # Requirements
+│   ├── design/         # Technical decisions
+│   ├── plans/          # Implementation plans
+│   ├── tasks/          # Task files (from /plan-breakdown)
+│   ├── notes/          # Session notes (e.g. /implement progress)
+│   ├── research/       # External findings
+│   ├── retros/         # Free-form retrospective notes
+│   ├── issues/         # Structured issues
+│   ├── validation/     # Validation criteria
+│   ├── stubs/          # Outstanding stub index from specs
+│   ├── diagrams/       # Visual representations (Mermaid) — promote to reference/diagrams/ when stable
+│   └── excavations/    # /distill session tracking
+│
+├── reference/      # Solidified, system-oriented — what the code cannot say
+│   ├── vision.md       # Project vision (if defined)
+│   ├── <feature>.md    # Distilled feature documentation
+│   └── diagrams/       # Promoted, stable diagrams
+│
+├── learned/        # Mistakes worth not repeating — worker-oriented, born on first /learn
+│
+└── lore-agents.md  # Agent registry (optional, cross-plugin surface)
 ```
+
+**Why three directories?** `work/` holds the work-in-progress: messy, conversational, tied to a specific session. `reference/` holds what survived: invariants, vision, distilled documentation that informs future work. `learned/` is narrowly scoped to mistakes — not lessons, not insights, not "what went well." Each has a different decay rate and a different reader.
+
+### Migrating from the old layout
+
+Pre-redesign projects had a flat `.lore/` with directories like `specs/`, `plans/`, `retros/` at the top level. Run `/lore-development:tend migrate` to move an existing tree into the three-directory model. The migrate mode rewrites internal links in frontmatter and prose, leaves guild-hall–owned paths alone, and is idempotent on re-run.
 
 ## Agents
 
@@ -100,23 +121,25 @@ When `/design` or `/specify` completes, you have written artifacts in `.lore/`. 
 
 Start a new session. Run `/prep-plan` pointing at the artifacts from the explore phase. The planner synthesizes from the documents, not from conversational memory. This is intentional: if the written artifacts aren't clear enough for a fresh context to produce a good plan, they need revision before implementation.
 
-### Build (fresh session)
+### Implement (fresh session)
 
 Start a new session. Run `/implement` pointing at the plan. The implement skill delegates to sub-agents who get their own fresh context. The orchestrator shouldn't carry exploration history when it needs full attention on dispatching, testing, and reviewing.
 
-### Learn (same session)
+### Capture (same session)
 
-Run `/retro` at the end of any session where something worth capturing happened. The retro benefits from the messy context: what went wrong, what the LLM got confused by, which assumptions broke. A fresh context would lose exactly the things worth capturing.
+Run `/retro` at the end of any session where something worth capturing happened. Retro produces a free-form notes file with common frontmatter — no template, no demanded sections, no "lessons learned" header. The retro benefits from the messy context: what went wrong, what the LLM got confused by, which assumptions broke. A fresh context would lose exactly the things worth capturing.
 
-Retros aren't only for build. An explore session that surfaced a surprising constraint, or a plan session that revealed a spec gap, are both worth a `/retro` before closing out.
+Retros aren't only for implement sessions. An explore session that surfaced a surprising constraint, or a plan session that revealed a spec gap, are both worth a `/retro` before closing out.
+
+If a specific mistake is worth not repeating, run `/learn` to record it. `/learn` is a user-invoked dialog that writes to `.lore/learned/`. It does not auto-trigger from `/retro` or any other skill, and it does not propose candidates from notes — the user names the mistake. See the skill itself for the framing.
 
 ### Why break context
 
 Rolling context helps when work is exploratory. It hurts when work is procedural and artifact-driven. Breaking context before `/prep-plan` also serves as a forcing function: if the specs and designs can't stand on their own without the conversation that produced them, they aren't ready.
 
-### Excavating existing code
+### Distilling existing code
 
-Use `/excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented. The output is the same (`.lore/specs/`, architecture docs), but the process starts from code instead of intent.
+Use `/distill code` when inheriting or joining an existing codebase, or `/distill work` when a spec, plan, or brainstorm holds invariants worth promoting. Both seeds run the same loop: read the seed, verify against current code, present reconciled candidates, let the user gate each one. Output goes to `.lore/reference/` and only contains what the code cannot tell a reader. Null output is a valid outcome.
 
 ## The Compound Loop
 
@@ -135,7 +158,7 @@ Knowledge compounds when past learnings inform new work. The plugin closes this 
         ▼
       /retro
         │
-        └─► captures lessons → writes to .lore/retros/
+        └─► captures notes → writes to .lore/work/retros/
 ```
 
 The `lore-researcher` agent runs automatically at the start of `/specify` and `/prep-plan`, surfacing relevant retros, specs, and brainstorms before new work begins.
@@ -154,7 +177,7 @@ modules: [affected-modules]
 ---
 ```
 
-Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents.
+Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents, and `/tend migrate` to move a flat-layout `.lore/` into the three-directory model.
 
 ## Principles
 
@@ -162,5 +185,5 @@ Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` t
 - **Context over process** - build lore, not bureaucracy
 - **Independent but connected** - each skill works alone but knows about the others
 - **Trust the LLM** - don't over-specify what modern AI already does well
-- **Human checkpoints** - excavation requires confirmation at each layer
+- **Human checkpoints** - distillation gates each promotion candidate by user decision
 - **Compound knowledge** - past learnings automatically surface for new work

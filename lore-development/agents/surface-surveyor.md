@@ -9,14 +9,14 @@ model: Sonnet
 
 ## Role
 
-You are an entry point finder for progressive design discovery. Your role is to quickly identify where users/systems interact with a codebase - the starting points for feature excavation. You do NOT try to understand everything; you find the doors in.
+You are an entry point finder for progressive design discovery. Your role is to quickly identify where users/systems interact with a codebase - the starting points for distillation. You do NOT try to understand everything; you find the doors in.
 
 ## Invocation Context
 
 This agent is invoked by:
-- `/lore-development:excavate` skill (first run, to find starting points)
+- `/lore-development:distill` skill (in `code` mode, to find starting points when the feature area isn't already mapped)
 
-**Purpose**: Find entry points so humans can choose which feature to excavate first. Speed over comprehensiveness.
+**Purpose**: Find entry points so humans can choose which feature to distill first. Speed over comprehensiveness.
 
 **Input** (optional):
 ```json
@@ -343,13 +343,13 @@ export { Product } from './models/product';
 - [ ] `src/services/payment.ts` - Integration point with external system
 - [ ] `src/legacy/` - Dormant code, unclear if needed
 
-### Questions for Layer 2
+### Questions for Distill
 
 1. How do Orders relate to Users? (data model unclear)
 2. What triggers the notification system? (event patterns found)
 3. Is the legacy/ folder still in use? (no recent activity)
 
-## Suggested Focus Areas for Layer 2
+## Suggested Focus Areas for Distill
 
 Based on this survey, recommend investigating:
 
@@ -359,7 +359,7 @@ Based on this survey, recommend investigating:
 
 ---
 
-*Ready for human review. Proceed to Layer 2 (Feature Extraction) after confirmation.*
+*Ready for human review. Proceed to `/lore-development:distill code` after confirmation.*
 ```
 
 ## Error Handling

@@ -31,9 +31,9 @@ Given a path to a spec (or a topic that resolves to one), compare what the spec 
 
 1. **Read the spec** and extract its requirements, success criteria, and linked artifacts
 2. **Find implementation artifacts** that reference this spec:
-   - Search `.lore/plans/` for plans referencing this spec (check `related:` and body text)
-   - Search `.lore/notes/` for notes whose `source:` field points to a plan for this spec
-   - Search `.lore/retros/` for retros referencing this spec or its plan
+   - Search `.lore/work/plans/` for plans referencing this spec (check `related:` and body text)
+   - Search `.lore/work/notes/` for notes whose `source:` field points to a plan for this spec
+   - Search `.lore/work/retros/` for retros referencing this spec or its plan
    - Search `.lore/commissions/` for commissions whose prompt references this spec or plan
    - If `.lore/lore-config.md` exists, check custom directories too
 3. **Extract what happened** from those artifacts:
@@ -69,9 +69,9 @@ Things that are NOT divergences:
 ## Divergence Report: [Spec Name]
 
 ### Artifacts Reviewed
-- Plan: `.lore/plans/feature-x.md`
-- Notes: `.lore/notes/feature-x.md`
-- Retro: `.lore/retros/feature-x.md`
+- Plan: `.lore/work/plans/feature-x.md`
+- Notes: `.lore/work/notes/feature-x.md`
+- Retro: `.lore/work/retros/feature-x.md`
 - Commissions: [N] commission artifacts
 
 ### Requirements Drift
@@ -89,7 +89,7 @@ Things that are NOT divergences:
 ### Stubs Resolved
 | Stub | Now Points To |
 |------|---------------|
-| [STUB: user-auth] | `.lore/specs/auth-flow.md` |
+| [STUB: user-auth] | `.lore/work/specs/auth-flow.md` |
 
 ### Success Criteria Status
 | Criterion | Status | Notes |
@@ -127,7 +127,7 @@ Find specs that may have drifted without checking a specific one.
 
 ### Process
 
-1. **List all specs** in `.lore/specs/` with status `implemented` or `approved`
+1. **List all specs** in `.lore/work/specs/` with status `implemented` or `approved`
 2. **For each spec**, check whether implementation artifacts exist:
    - Plans that reference it
    - Notes with divergence sections that aren't empty
@@ -148,19 +148,19 @@ Find specs that may have drifted without checking a specific one.
 ### High Likelihood
 | Spec | Signal | Artifacts |
 |------|--------|-----------|
-| specs/feature-x.md | Notes divergence section non-empty | notes, retro |
-| specs/auth-flow.md | Retro mentions dropped requirement | retro |
+| work/specs/feature-x.md | Notes divergence section non-empty | notes, retro |
+| work/specs/auth-flow.md | Retro mentions dropped requirement | retro |
 
 ### Medium Likelihood
 | Spec | Signal | Artifacts |
 |------|--------|-----------|
-| specs/views.md | 6 commissions (heavy iteration) | commissions |
-| specs/workers.md | Implemented, no retro | plan, notes |
+| work/specs/views.md | 6 commissions (heavy iteration) | commissions |
+| work/specs/workers.md | Implemented, no retro | plan, notes |
 
 ### No Drift Detected
 | Spec | Status |
 |------|--------|
-| specs/checkout.md | Notes divergence empty, retro clean |
+| work/specs/checkout.md | Notes divergence empty, retro clean |
 ```
 
 User picks which specs to reconcile. Run Mode 1 on each selected spec.
@@ -181,7 +181,7 @@ For work done without a spec. Generates one retroactively from what was built.
    - Entry/exit points from what actually exists
    - Success criteria from what was actually tested
 4. **Present draft** to user for review
-5. **Save to `.lore/specs/`** after confirmation
+5. **Save to `.lore/work/specs/`** after confirmation
 6. Set status to `implemented` (it already is)
 7. Add revision history noting this was generated retroactively
 
@@ -206,4 +206,4 @@ For commissions and meetings (custom directories), search by:
 - `/back-propagate` updates specs backward (after building)
 - `/retro` captures lessons; back-propagate uses those lessons to fix the spec
 - `/tend status` flags stale specs; back-propagate resolves them
-- `/excavate` documents existing code; back-propagate documents existing lore artifacts
+- `/distill` promotes invariants the code can't say into reference; back-propagate updates work artifacts (specs) from what was actually built

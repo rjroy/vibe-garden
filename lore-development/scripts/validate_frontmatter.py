@@ -139,45 +139,58 @@ def _finding(filepath, error_type, message, field=None):
 
 
 def _resolve_doc_type(filepath, root=None):
-    """Determine document type from the .lore/ subdirectory path.
+    """Determine document type key from the .lore/ subdirectory path.
 
-    Returns the first path segment after '.lore/' (e.g. 'specs' for
-    '.lore/specs/auth.md'), or None if the file is directly inside .lore/.
+    Maps a path under `.lore/` to the directory key used by the schema:
 
-    When root is provided and its basename is a known .lore directory pattern
-    (e.g. the scan root IS .lore/), the first segment of the relative path
-    is used as the doc type.
+    - `.lore/work/<type>/...` → `work/<type>` (e.g. `work/specs`).
+    - `.lore/reference/...` → `reference` (covers any subdirectory).
+    - `.lore/learned/...` → `learned`.
+    - Anything else (custom directories, legacy paths) returns the first
+      segment after `.lore/` so config-driven custom directories still resolve.
+    - Files directly under `.lore/` (no subdirectory) return None.
     """
-    parts = Path(filepath).parts
+    segments = _segments_below_lore(filepath, root)
+    if segments is None or len(segments) < 2:
+        return None
+    return _doc_type_from_segments(segments)
 
-    # Try finding .lore in the path directly
+
+def _segments_below_lore(filepath, root):
+    """Return path segments below the .lore/ root, or None if not under one."""
+    parts = Path(filepath).parts
     try:
         lore_idx = parts.index(".lore")
-        remaining = parts[lore_idx + 1 :]
-        if len(remaining) >= 2:
-            return remaining[0]
-        return None
+        return list(parts[lore_idx + 1:])
     except ValueError:
         pass
 
-    # If root is provided and ends with .lore (or similar), the relative path's
-    # first segment is the doc type.
-    if root is not None:
-        root_path = Path(root).resolve()
-        file_path = Path(filepath).resolve()
-        try:
-            rel = file_path.relative_to(root_path)
-        except ValueError:
-            return None
-        # Check if any ancestor of root is .lore, or root itself ends with .lore
-        root_parts = root_path.parts
-        if ".lore" in root_parts:
-            # root is inside .lore; all of rel's segments are below .lore
-            rel_parts = rel.parts
-            if len(rel_parts) >= 2:
-                return rel_parts[0]
-            return None
+    if root is None:
+        return None
+
+    root_path = Path(root).resolve()
+    file_path = Path(filepath).resolve()
+    try:
+        rel = file_path.relative_to(root_path)
+    except ValueError:
+        return None
+
+    if ".lore" in root_path.parts:
+        return list(rel.parts)
     return None
+
+
+def _doc_type_from_segments(segments):
+    """Resolve the directory key for a path's segments below .lore/."""
+    head = segments[0]
+    if head == "work" and len(segments) >= 3:
+        return f"work/{segments[1]}"
+    if head in ("reference", "learned"):
+        return head
+    # Custom or legacy directories — return the first segment so
+    # config-supplied custom_directories entries (commissions, meetings, ...)
+    # continue to resolve.
+    return head
 
 
 # -- validation pipeline ------------------------------------------------------

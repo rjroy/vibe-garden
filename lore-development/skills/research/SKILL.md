@@ -19,11 +19,11 @@ Gather context from outside the project scope.
 1. Clarify what the user wants to research if unclear
 2. Use web search, fetch docs, or read external resources
 3. Synthesize findings into a research document
-4. Save to `.lore/research/`
+4. Save to `.lore/work/research/`
 
 ## Output
 
-Save findings to `.lore/research/[topic].md`
+Save findings to `.lore/work/research/[topic].md`
 
 Use kebab-case for filenames. Use the `date:` frontmatter field for time-sensitive research.
 
@@ -54,7 +54,7 @@ Any additional context or observations.
 
 ## Context
 
-Check `.lore/brainstorm/` for related ideas that prompted this research.
+Check `.lore/work/brainstorm/` for related ideas that prompted this research.
 
 ## Specialized Agents
 

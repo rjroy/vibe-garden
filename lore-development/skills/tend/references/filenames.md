@@ -35,7 +35,7 @@ Filenames should reflect primary tags:
 
 Example:
 ```
-File: .lore/specs/feature-x.md
+File: .lore/work/specs/feature-x.md
 Tags: [authentication, oauth, security]
 Title: "OAuth 2.0 Authentication Flow"
 

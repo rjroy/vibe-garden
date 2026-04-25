@@ -1,11 +1,12 @@
 ---
 name: tend
-description: "This skill performs periodic hygiene on the .lore/ directory through four modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). Use when documents have accumulated, status fields are stale, or organization needs attention. Triggers include \"tend the lore\", \"check document status\", \"lore hygiene\", \"what's stale\", \"review lore health\", \"tag audit\", \"organize lore\"."
+description: "This skill performs periodic hygiene on the .lore/ directory through four sequential modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). A separate migrate mode (`/tend migrate`) moves projects from the legacy single-level layout to the work/reference/learned three-directory model. Use when documents have accumulated, status fields are stale, organization needs attention, or a project still uses the pre-redesign layout. Triggers include \"tend the lore\", \"check document status\", \"lore hygiene\", \"what's stale\", \"review lore health\", \"tag audit\", \"organize lore\", \"migrate lore layout\"."
 ---
 
 # Tend
 
 Maintain hygiene across `.lore/` documents through four sequential modes.
+A separate `migrate` mode handles one-shot moves from the legacy layout.
 
 ## Config Loading
 
@@ -21,19 +22,35 @@ If no config exists, use defaults from `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter
 | `tags` | Unify variants, find connections, identify clusters | Semantics: tags are consistent and meaningful |
 | `filenames` | Check conventions, suggest renames based on content | Findability: names match content |
 | `directories` | Suggest subdivision, archive candidates, detect orphans | Navigation: structure serves scale |
+| `migrate` | Move legacy `.lore/` layout to `work/reference/learned` model | Layout: project on the canonical three-directory tree |
 
 **Dependency chain**: status → tags → filenames → directories
 
 Each mode builds on prior work. Status must be accurate before tag analysis is meaningful. Tags inform filename suggestions. Tag clusters inform directory suggestions.
 
+**Migrate is separate.** It is not part of the sequential chain and is not run by `/tend` without arguments. Invoke explicitly with `/tend migrate` when a project still uses the pre-redesign layout. See `references/migrate.md`.
+
+## Distill-Before-Archive (soft prompt)
+
+When the `directories` mode surfaces a spec with `status: implemented` as an archive candidate, prompt the user before archiving:
+
+> "Distill this spec before archiving? (yes / no / skip)"
+
+- **yes**: pause the archive flow for this file and suggest `/distill work <path-to-spec>`. After the user runs distill (or declines mid-distill), return to the archive confirmation.
+- **no**: proceed with archiving as proposed.
+- **skip**: leave the file in place; remove it from this run's archive batch.
+
+This is a soft prompt, not enforcement. The user retains agency to archive without distilling. The prompt exists because once an implemented spec is archived without distillation, the reference-promotion opportunity is silently lost when hygiene runs. See `references/status.md` for the archive logic and `lore-development/skills/distill/SKILL.md` for the distill flow.
+
 ## Invocation
 
 ```
-/tend                    # Run all modes sequentially (pause between each)
+/tend                    # Run all sequential modes (pause between each)
 /tend status             # Run only status mode
 /tend tags               # Run only tags mode
 /tend filenames          # Run only filenames mode
 /tend directories        # Run only directories mode
+/tend migrate            # Run only migrate mode (one-shot, separate from chain)
 ```
 
 ## Common Pattern
@@ -58,6 +75,7 @@ Load the appropriate reference file for detailed guidance:
 | tags | `references/tags.md` |
 | filenames | `references/filenames.md` |
 | directories | `references/directories.md` |
+| migrate | `references/migrate.md` |
 
 Each reference defines: checks to perform, output report format, how to apply changes.
 

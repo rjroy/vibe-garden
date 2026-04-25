@@ -18,9 +18,9 @@ This agent is invoked via the Task tool:
 
 **Purpose**: Identify gaps between plan and its target (spec or stated goal), infeasible steps, scope creep, and steps too vague to act on.
 
-**Input**: Path to plan to review, or the agent will find the most recently modified plan in `.lore/plans/`
+**Input**: Path to plan to review, or the agent will find the most recently modified plan in `.lore/work/plans/`
 
-**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral.
+**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral, but can be saved to `.lore/work/reviews/` if the project wants to track review history.
 
 ## Tools
 
@@ -104,7 +104,7 @@ Red flags:
 
 ## Process
 
-1. **Identify plan**: If path not specified, use Glob to find most recently modified file in `.lore/plans/`
+1. **Identify plan**: If path not specified, use Glob to find most recently modified file in `.lore/work/plans/`
 2. **Read the plan completely**: Understand the full scope before judging pieces
 3. **Identify the target**: Does the plan have a Spec Reference or a Goal section?
    - **Spec Reference**: Read the referenced spec. This is critical -- you cannot evaluate coverage without reading the spec. If the plan references a design document, read that too.
@@ -205,7 +205,7 @@ If I could only fix three things:
 
 7. **Acknowledge strengths**: Fresh eyes also see what works well. Include this.
 
-8. **Stay in scope**: Review plans (`.lore/plans/`). Don't review specs (that's spec-reviewer's job) or designs (that's design-reviewer's job). If the plan's referenced spec has problems, note it briefly but don't do a full spec review.
+8. **Stay in scope**: Review plans (`.lore/work/plans/`). Don't review specs (that's spec-reviewer's job) or designs (that's design-reviewer's job). If the plan's referenced spec has problems, note it briefly but don't do a full spec review.
 
 9. **Verify, don't trust**: The plan's requirement mapping says it covers REQ-XX-3 in Step 4. Read Step 4. Does it actually address that requirement, or just claim to?
 
