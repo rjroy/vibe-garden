@@ -1,6 +1,6 @@
 ---
 name: learn
-description: User-invoked dialog for recording a lesson the user has already noticed. The skill never asserts that something is a lesson, never scans build artifacts on its own, and never fires from another skill. Use when the user wants to capture a mistake worth not repeating. Triggers include "learn", "/learn", "record a lesson", "capture a learning", "I want to write down a lesson".
+description: User-invoked dialog for recording institutional or tribal knowledge — a rule, example snippet, configuration trick, command sequence, or pattern the user wants to keep. The skill never asserts that something is worth capturing, never scans build artifacts on its own, and never fires from another skill. Use when the user wants to write down something worth not losing. Triggers include "learn", "/learn", "record a lesson", "capture a learning", "I want to write down a lesson".
 artifact_path: .lore/learned
 ---
 
@@ -38,7 +38,7 @@ Ask the user one question to set the path:
 Both paths are valid.
 
 - **Specific material** — the user has a concrete source. The lesson will be grounded in that source.
-- **Felt pattern** — the user has noticed a recurring failure across sessions. There may be no single source.
+- **Felt pattern** — the user has noticed something recurring across sessions: a failure they keep hitting, a workaround they keep applying, a snippet they keep rewriting, a config they keep looking up. There may be no single source.
 
 If the user answers "nothing" or backs out at the opening, close the session without writing a file.
 
@@ -48,27 +48,25 @@ After the opening, the skill asks; the user articulates. The skill does not volu
 
 Useful questions to keep the dialog moving:
 
-- "What broke, or what would have broken if you kept going?"
-- "What would you tell yourself before doing this again?"
-- "If a teammate started down this path, what would you stop them and say?"
-- "What does following this rule prevent?"
+- "What's worth recording about this?"
+- "What would you tell yourself or a teammate before doing this?"
+- "What did you figure out that took longer than it should have?"
+- "What would have helped if you'd known it earlier?"
+- "Is there a snippet, command, or example that captures it better than prose?"
 
-The mistakes-only gate (see below) is asked as a question, not enforced as a block. If the user can't name a failure mode, that itself is signal — but the user still decides whether to record.
+The questions are open. They don't presume the entry is shaped like a rule. If the knowledge is example code, the draft is example code. If it's a configuration trick or a command sequence, the draft is the trick or the sequence. The user names the form.
 
 At any step, "nothing" or "never mind" closes the session without a file.
 
-## Asymmetric Shape Gate
+## Specificity Over Shape
 
-A `/learn` entry is malformed unless it takes one of these shapes:
+A `/learn` entry has no required shape. It can be a rule ("don't do X because Y"), a code snippet that took hours to get right, a configuration the docs got wrong, a command sequence that has to run in a specific order, a pattern worth repeating, a piece of tribal knowledge about how the system actually behaves. Institutional knowledge doesn't fit one template, and forcing one filters out most of what's worth keeping.
 
-- "Don't do X because Y happened (or would happen)."
-- "If you find yourself doing X, stop — here's why."
+What an entry needs is specificity — it must be grounded in something the user actually hit or actually figured out, not advice that could appear in any blog post. "Write good tests" is noise. "`bun test` infinite-loops with `mock.module()` over more than N modules — pass the dependency in instead, here's the shape" is signal. The first survives only as a slogan; the second survives because someone hit the wall and now the wall is mapped.
 
-Entries shaped like "Do X because it worked" are malformed. Success is overdetermined; success-shaped lessons read like best-practice tips that don't survive the next project. See `.lore/build/brainstorm/principles-for-capture-skills.md` principle 2.
+The test: would this entry still help a teammate sitting where the user was sitting? If yes, write it. If it reads like advice that could appear anywhere, reshape it toward the specific situation, snippet, or knowledge that prompted it, or close the session.
 
-Enforce this at the artifact level. The opening question does not pre-filter material. The shape check happens when the draft is in front of the user — if the draft reads "do X because it worked," reshape it toward the failure it prevents, or close the session without writing.
-
-The test: would the entry still make sense if the project had failed differently? If yes, it's noise. If it only makes sense because a specific thing broke, it's signal.
+Specificity is checked at the artifact level. The opening question does not pre-filter material. The check happens when the draft is in front of the user.
 
 ## On-Request Fetch
 
@@ -109,11 +107,13 @@ Forbid the vocabulary of analysis in the body: `lesson`, `insight`, `we learned`
 
 ## File Layout
 
-Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case, derived from the articulated mistake.
+Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case, derived from the entry's title.
 
 - `dont-mock-the-database.md`
 - `if-you-find-yourself-rewriting-the-config-stop.md`
 - `git-stash-doesnt-reset-node-modules.md`
+- `json-dumps-default-str-for-dates.md`
+- `staging-deploy-port-forward-sequence.md`
 
 Do not pre-create `.lore/learned/`. The directory is materialized by the first `/learn` write. If the directory does not exist when the user accepts the draft, create it then.
 
@@ -136,7 +136,7 @@ modules: [affected-modules]
 ```
 
 - `status: active` for new entries. `superseded` only when a later entry replaces this one (see Dedup).
-- `title` should read as the rule itself when possible: "Don't ship the same path string in two places", not "Path duplication retro".
+- `title` should read as the knowledge itself: "Don't ship the same path string in two places", or "Use `json.dumps(default=str)` for dataclasses with dates", or "Staging deploy needs `--force` after the port-forward step". Not "Path duplication retro" or "JSON serialization notes".
 - `tags` and `modules` follow the standard kebab-case conventions.
 
 ## Examples
@@ -192,6 +192,42 @@ two days of refactor when the spec lands.
 
 User: Looks right.
 
+### Snippet path
+
+User: `/learn`
+Skill: *(opening question)*
+User: Specific. I just spent an hour figuring out how to serialize a dataclass with date fields through `json.dumps`. The default serializer chokes on `date`, but `default=str` handles it.
+Skill: *(dedup against `.lore/learned/`)* No related entries. Drafting:
+
+````
+---
+title: Use json.dumps(default=str) for dataclasses with date fields
+date: 2026-04-25
+status: active
+tags: [serialization, json, dataclasses]
+modules: []
+---
+
+```python
+import json
+from dataclasses import asdict, dataclass
+from datetime import date
+
+@dataclass
+class Event:
+    name: str
+    when: date
+
+json.dumps(asdict(Event("launch", date(2026, 4, 25))), default=str)
+# '{"name": "launch", "when": "2026-04-25"}'
+```
+
+`default=str` falls through for any non-serializable value, so it also covers
+`datetime`, `Decimal`, `UUID`, and `Path` without per-type encoders.
+````
+
+User: Looks right.
+
 ### Nothing-to-record path
 
 User: `/learn`
@@ -203,7 +239,7 @@ Skill: Closing without writing. *(no file is created)*
 
 Before writing, the skill verifies:
 
-- The entry's shape passes the asymmetric gate ("don't X because Y" or "if you find yourself X, stop"). If not, reshape with the user or close the session.
+- The entry is grounded in something specific — a real situation, snippet, command, or piece of knowledge the user actually has — not generic best-practice advice. If it reads like it could appear in any blog post, reshape with the user or close the session.
 - Dedup ran against `.lore/learned/` (or was skipped because the directory doesn't exist yet).
 - The body does not contain `lesson`, `insight`, `we learned`, or `takeaway`.
 - The body has no forced section scaffold and no length-padding.
