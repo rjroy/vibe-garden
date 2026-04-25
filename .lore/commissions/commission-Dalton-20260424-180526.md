@@ -29,6 +29,22 @@ activity_timeline:
     reason: "Dispatched to worker"
     from: "pending"
     to: "dispatched"
+  - timestamp: 2026-04-25T01:26:22.525Z
+    event: status_cancelled
+    reason: "Commission cancelled by user"
+  - timestamp: 2026-04-25T01:26:22.527Z
+    event: status_failed
+    reason: "Session error: Claude Code process aborted by user"
+  - timestamp: 2026-04-25T04:31:56.484Z
+    event: status_pending
+    reason: "Redispatched for retry"
+    from: "failed"
+    to: "pending"
+  - timestamp: 2026-04-25T04:31:56.485Z
+    event: status_dispatched
+    reason: "Dispatched to worker"
+    from: "pending"
+    to: "dispatched"
 current_progress: ""
 projectName: vibe-garden
 ---
