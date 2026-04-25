@@ -26,36 +26,10 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
-- 21:42 commission-Dalton-20260424-180556 result: Phase 4 complete. /excavate → /distill rename and reshape landed.
+- 22:39 commission-Dalton-20260424-222441 result: ## Phase 6 — Plugin docs + full audit + dry-run dogfood
 
-- 21:42 commission-Dalton-20260424-180556 completed
-- 21:46 commission-Thorne-20260424-180617 result: Phase 4 review complete. The rewritten `distill/SKILL.md` is brainstorm-faithful, structurally sound, and free of spec-replacement ambition. Migration is mostly complete. One fix-now finding around th...
-- 21:46 commission-Thorne-20260424-180617 completed
-- 21:49 commission-Dalton-20260424-180627 result: All four findings from Thorne's Phase 4 review addressed.
+### Files touched (lore-development scope only)
 
-- 21:49 commission-Dalton-20260424-180627 completed
-- 22:29 commission-Dalton-20260424-222341 result: ## Phase 5 — `/learn` (new) + `/retro` reshape (coupled)
+- `lore-development/README.md` — replaced flat `.lore/` tree with three-directory model (`buil...
 
-Both skills shipped in this commission. No split needed.
-
-### Files touched
-
-- `lore-development/skills/learn/SKILL.md` — new file, full promp...
-- 22:29 commission-Dalton-20260424-222341 completed
-- 22:33 commission-Thorne-20260424-222404 result: ## Phase 5 review — `/learn` (new) + `/retro` reshape
-
-**Verdict: clean. No blockers, no fix-now items.** Two nits below.
-
-Both SKILL.md files comply with their requirements. The anti-checks the spec ...
-- 22:33 commission-Thorne-20260424-222404 completed
-- 22:34 commission-Dalton-20260424-222413 result: ## Phase 5 review-fix — verdict carry-forward + N1 fixed
-
-Thorne's review reported **clean: no blockers, no fix-now items**. Two nits surfaced; one fixed, one carried as a documented post-deployment w...
-- 22:34 commission-Dalton-20260424-222413 completed
-## Per-finding resolution
-
-### Fix-now
-
-**1. `lore-development/skills/tend/references/directories.md` — soft distill-before-archive prompt mi...
-## Files touched
-- **Renamed** (git mv, history preserved): `lore-development/skills/excavate/SKILL.md` → `lore-development/skills/di...
+- 22:39 commission-Dalton-20260424-222441 completed
