@@ -171,7 +171,7 @@ Before saving, verify each principle against these criteria:
 
 ## Context
 
-Check `.lore/build/brainstorm/` and `.lore/build/research/` for prior thinking about project direction that might inform the vision.
+Check `.lore/work/brainstorm/` and `.lore/work/research/` for prior thinking about project direction that might inform the vision.
 
 ## Downstream Integration
 

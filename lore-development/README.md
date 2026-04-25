@@ -8,7 +8,7 @@ A lightweight plugin for building and organizing project context.
 
 Modern LLMs have strong native planning and implementation capabilities. This plugin doesn't teach process - it helps build findable, organized context (the "lore" of your project) that informs better work.
 
-Skills write into a three-directory `.lore/` tree (`build/`, `reference/`, `learned/`) — see **Artifact Storage** below for the full layout.
+Skills write into a three-directory `.lore/` tree (`work/`, `reference/`, `learned/`) — see **Artifact Storage** below for the full layout.
 
 ## Skills
 
@@ -25,7 +25,7 @@ Skills write into a three-directory `.lore/` tree (`build/`, `reference/`, `lear
 | `/lore-development:retro` | Capture what happened in a session as free-form notes |
 | `/lore-development:learn` | Record a mistake worth not repeating; user-invoked dialog writing to `.lore/learned/` |
 | `/lore-development:poke-holes` | Challenge ideas adversarially |
-| `/lore-development:distill` | Promote what the code cannot say into reference docs (two seed modes: `code`, `build`) |
+| `/lore-development:distill` | Promote what the code cannot say into reference docs (two seed modes: `code`, `work`) |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
 | `/lore-development:define-validation` | Define AI validation criteria for work in progress |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
@@ -36,7 +36,7 @@ Skills write into a three-directory `.lore/` tree (`build/`, `reference/`, `lear
 
 ## Idea Capture
 
-The plugin includes a hook that captures ideas without invoking the AI. Start any prompt with `idea:` and the text is appended to a daily file under `.lore/build/ideas/` (one file per date, e.g. `2026-04-24.md`). Use `/review-ideas` to process accumulated ideas into structured issues.
+The plugin includes a hook that captures ideas without invoking the AI. Start any prompt with `idea:` and the text is appended to a daily file under `.lore/work/ideas/` (one file per date, e.g. `2026-04-24.md`). Use `/review-ideas` to process accumulated ideas into structured issues.
 
 ## Artifact Storage
 
@@ -44,7 +44,7 @@ Context lives in `.lore/` under three top-level directories. Each directory has 
 
 ```
 .lore/
-├── build/          # Work scaffolding — session-bound, written during a flow
+├── work/          # Work scaffolding — session-bound, written during a flow
 │   ├── ideas/          # Captured ideas (via hook, one file per date)
 │   ├── brainstorm/     # Recorded explorations
 │   ├── specs/          # Requirements
@@ -70,7 +70,7 @@ Context lives in `.lore/` under three top-level directories. Each directory has 
 └── lore-agents.md  # Agent registry (optional, cross-plugin surface)
 ```
 
-**Why three directories?** `build/` holds the work-in-progress: messy, conversational, tied to a specific session. `reference/` holds what survived: invariants, vision, distilled documentation that informs future work. `learned/` is narrowly scoped to mistakes — not lessons, not insights, not "what went well." Each has a different decay rate and a different reader.
+**Why three directories?** `work/` holds the work-in-progress: messy, conversational, tied to a specific session. `reference/` holds what survived: invariants, vision, distilled documentation that informs future work. `learned/` is narrowly scoped to mistakes — not lessons, not insights, not "what went well." Each has a different decay rate and a different reader.
 
 ### Migrating from the old layout
 
@@ -139,7 +139,7 @@ Rolling context helps when work is exploratory. It hurts when work is procedural
 
 ### Distilling existing code
 
-Use `/distill code` when inheriting or joining an existing codebase, or `/distill build` when a spec, plan, or brainstorm holds invariants worth promoting. Both seeds run the same loop: read the seed, verify against current code, present reconciled candidates, let the user gate each one. Output goes to `.lore/reference/` and only contains what the code cannot tell a reader. Null output is a valid outcome.
+Use `/distill code` when inheriting or joining an existing codebase, or `/distill work` when a spec, plan, or brainstorm holds invariants worth promoting. Both seeds run the same loop: read the seed, verify against current code, present reconciled candidates, let the user gate each one. Output goes to `.lore/reference/` and only contains what the code cannot tell a reader. Null output is a valid outcome.
 
 ## The Compound Loop
 
@@ -158,7 +158,7 @@ Knowledge compounds when past learnings inform new work. The plugin closes this 
         ▼
       /retro
         │
-        └─► captures notes → writes to .lore/build/retros/
+        └─► captures notes → writes to .lore/work/retros/
 ```
 
 The `lore-researcher` agent runs automatically at the start of `/specify` and `/prep-plan`, surfacing relevant retros, specs, and brainstorms before new work begins.

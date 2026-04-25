@@ -8,7 +8,7 @@ Verify and update document status fields across `.lore/`.
 
 The schema partitions valid status values into three sets, keyed by zone:
 
-- **Build set** (per-type, under `.lore/build/<type>/`): each build subdirectory has its own lifecycle (e.g., specs use `draft / approved / implemented / superseded / archived`; plans use `draft / approved / executed / archived`; brainstorms use `open / parked / resolved / archived`). Use the schema for the exact list per type.
+- **Work set** (per-type, under `.lore/work/<type>/`): each work subdirectory has its own lifecycle (e.g., specs use `draft / approved / implemented / superseded / archived`; plans use `draft / approved / executed / archived`; brainstorms use `open / parked / resolved / archived`). Use the schema for the exact list per type.
 - **Reference set** (under `.lore/reference/`): `current / outdated / archived`. Solidified knowledge that callers cite.
 - **Learned set** (under `.lore/learned/`): `active / superseded`. Mistakes-only entries; supersession is the only lifecycle that applies.
 
@@ -47,10 +47,10 @@ Files that appear in "Malformed Frontmatter" are excluded from the subsequent th
 Don't trust claimed status. Verify using these techniques:
 
 **For "implemented" specs**:
-- Use Glob to find a plan with the same name in `.lore/build/plans/`
+- Use Glob to find a plan with the same name in `.lore/work/plans/`
 - Check if that plan's status is `executed`
 - If no plan exists or it isn't executed, the spec likely isn't implemented
-- **Archive coupling (soft prompt)**: when an `implemented` spec is later surfaced as an archive candidate by `directories` mode, prompt "Distill this spec before archiving?" before archiving. The prompt is soft — the user can answer no and archive directly. See the "Distill-Before-Archive" section of `tend/SKILL.md`. Without this prompt, the reference-promotion opportunity captured in `/distill build <spec>` is silently lost when the spec is archived.
+- **Archive coupling (soft prompt)**: when an `implemented` spec is later surfaced as an archive candidate by `directories` mode, prompt "Distill this spec before archiving?" before archiving. The prompt is soft — the user can answer no and archive directly. See the "Distill-Before-Archive" section of `tend/SKILL.md`. Without this prompt, the reference-promotion opportunity captured in `/distill work <spec>` is silently lost when the spec is archived.
 
 **For "executed" plans**:
 - Check if implementation appears done (code exists, tests pass)
@@ -62,7 +62,7 @@ Don't trust claimed status. Verify using these techniques:
 - If no plan exists, the design likely isn't implemented yet
 
 **For "resolved" brainstorms**:
-- Use Grep to search for the brainstorm filename or key terms in `.lore/build/specs/`
+- Use Grep to search for the brainstorm filename or key terms in `.lore/work/specs/`
 - If no references found, status should be `parked` or `open`
 
 **For "active" research or learned entries**:
@@ -112,41 +112,41 @@ Report findings in categories:
 ## Status Report
 
 ### Missing Frontmatter
-- `.lore/build/retros/auth-fix.md` - no YAML frontmatter
-- `.lore/build/specs/old-feature.md` - no YAML frontmatter
+- `.lore/work/retros/auth-fix.md` - no YAML frontmatter
+- `.lore/work/specs/old-feature.md` - no YAML frontmatter
 
 ### Malformed Frontmatter
-- `.lore/build/specs/broken.md` - YAML parse error: mapping values are not allowed here (line 3)
-- `.lore/build/retros/old.md` - structural: missing closing delimiter
+- `.lore/work/specs/broken.md` - YAML parse error: mapping values are not allowed here (line 3)
+- `.lore/work/retros/old.md` - structural: missing closing delimiter
 
 ### Invalid Frontmatter
-- `.lore/build/specs/auth.md` - missing required field: tags
-- `.lore/build/plans/migration.md` - invalid status "wip" (valid: draft, approved, executed, archived)
-- `.lore/build/brainstorm/ideas.md` - field type: tags should be a list, got string
+- `.lore/work/specs/auth.md` - missing required field: tags
+- `.lore/work/plans/migration.md` - invalid status "wip" (valid: draft, approved, executed, archived)
+- `.lore/work/brainstorm/ideas.md` - field type: tags should be a list, got string
 
 ### Missing Status
-- `.lore/build/specs/user-profiles.md` - has frontmatter, no status field
-- `.lore/build/brainstorm/caching-ideas.md` - has frontmatter, no status field
+- `.lore/work/specs/user-profiles.md` - has frontmatter, no status field
+- `.lore/work/brainstorm/caching-ideas.md` - has frontmatter, no status field
 
 ### Potentially Stale
-- `.lore/build/plans/auth-flow.md` - marked "draft", last modified 30 days ago
-- `.lore/build/specs/notifications.md` - marked "approved", no plan exists
+- `.lore/work/plans/auth-flow.md` - marked "draft", last modified 30 days ago
+- `.lore/work/specs/notifications.md` - marked "approved", no plan exists
 - `.lore/reference/api-conventions.md` - marked "current", underlying system changed
 
 ### Verified Accurate
-- `.lore/build/specs/auth-flow.md` - implemented (plan executed, work done)
-- `.lore/build/brainstorm/early-ideas.md` - resolved (found in auth-flow spec)
+- `.lore/work/specs/auth-flow.md` - implemented (plan executed, work done)
+- `.lore/work/brainstorm/early-ideas.md` - resolved (found in auth-flow spec)
 
 ### Updated
-- `.lore/build/retros/auth-fix.md` - added frontmatter
-- `.lore/build/specs/user-profiles.md` - added status: draft
-- `.lore/build/plans/auth-flow.md` - changed draft -> executed
+- `.lore/work/retros/auth-fix.md` - added frontmatter
+- `.lore/work/specs/user-profiles.md` - added status: draft
+- `.lore/work/plans/auth-flow.md` - changed draft -> executed
 
 ### Needs Decision
-- `.lore/build/brainstorm/caching-ideas.md` - no spec references it. Mark as parked?
+- `.lore/work/brainstorm/caching-ideas.md` - no spec references it. Mark as parked?
 
 ### Prefix Collisions
-- `.lore/build/specs/auth-flow.md` and `.lore/build/specs/auth-feature.md` both resolve to AUTH-F*
+- `.lore/work/specs/auth-flow.md` and `.lore/work/specs/auth-feature.md` both resolve to AUTH-F*
   - Suggestion: Add `req-prefix: AUTHFLOW` to auth-flow.md
 ```
 

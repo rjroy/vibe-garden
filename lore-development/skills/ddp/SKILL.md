@@ -1,7 +1,7 @@
 ---
 name: ddp
 description: This skill visualizes flows, relationships, and architectures using Mermaid diagrams when text descriptions fail to communicate. Use when needing to see how data flows, map class relationships, visualize control flow, or explain architecture. Triggers include "draw this", "visualize how", "diagram the flow", "show me the architecture", "I can't hold this in my head".
-artifact_path: .lore/build/diagrams
+artifact_path: .lore/work/diagrams
 ---
 
 # DDP: Draw the Damn Picture
@@ -93,10 +93,10 @@ Add context around the diagram:
 
 Before saving, ask which directory fits the diagram's purpose:
 
-- **Build** (`.lore/build/diagrams/`): Captures a current project decision, planning artifact, or in-flight architecture under active design. Decays as the project evolves. **Default.**
+- **Work** (`.lore/work/diagrams/`): Captures a current project decision, planning artifact, or in-flight architecture under active design. Decays as the project evolves. **Default.**
 - **Reference** (`.lore/reference/diagrams/`): Documents stable architecture, library shapes, or lasting patterns that will be consulted later. Outlives any single feature cycle.
 
-If unsure, default to build. A reference diagram should answer "this is how it is" not "this is what we're doing." Reference diagrams can be promoted from build later.
+If unsure, default to work. A reference diagram should answer "this is how it is" not "this is what we're doing." Reference diagrams can be promoted from work later.
 
 Save to the chosen directory as `[subject].md`. Use kebab-case. Be descriptive (e.g., `chat-message-flow.md`, `view-class-hierarchy.md`).
 
@@ -153,8 +153,8 @@ For Mermaid syntax patterns and diagram examples, consult:
 
 ## Context
 
-Check `.lore/build/specs/` for feature documentation that might need visualization.
-Check `.lore/build/brainstorm/` for ideas that might benefit from a picture.
+Check `.lore/work/specs/` for feature documentation that might need visualization.
+Check `.lore/work/brainstorm/` for ideas that might benefit from a picture.
 
 ## Specialized Agents
 

@@ -4,7 +4,7 @@ Migration tool for the lore-development three-directory redesign.
 
 Moves files from the legacy `.lore/` layout (one of 14 top-level directories
 plus `.lore/vision.md`) into the three-directory model
-(`.lore/build/`, `.lore/reference/`, `.lore/learned/`) and rewrites internal
+(`.lore/work/`, `.lore/reference/`, `.lore/learned/`) and rewrites internal
 path references in `related:` / `source:` frontmatter fields and in-body
 markdown links.
 
@@ -29,23 +29,23 @@ from typing import Iterable
 # ---------------------------------------------------------------------------
 
 # Legacy top-level directory name -> new path under .lore/.
-# Diagrams default to build/diagrams/ per REQ-REDESIGN-21; users promote
+# Diagrams default to work/diagrams/ per REQ-REDESIGN-21; users promote
 # individual files to reference/diagrams/ manually after migration.
 LEGACY_DIRS: dict[str, str] = {
-    "brainstorm": "build/brainstorm",
-    "specs": "build/specs",
-    "design": "build/design",
-    "plans": "build/plans",
-    "tasks": "build/tasks",
-    "notes": "build/notes",
-    "research": "build/research",
-    "retros": "build/retros",
-    "issues": "build/issues",
-    "ideas": "build/ideas",
-    "validation": "build/validation",
-    "stubs": "build/stubs",
-    "excavations": "build/excavations",
-    "diagrams": "build/diagrams",
+    "brainstorm": "work/brainstorm",
+    "specs": "work/specs",
+    "design": "work/design",
+    "plans": "work/plans",
+    "tasks": "work/tasks",
+    "notes": "work/notes",
+    "research": "work/research",
+    "retros": "work/retros",
+    "issues": "work/issues",
+    "ideas": "work/ideas",
+    "validation": "work/validation",
+    "stubs": "work/stubs",
+    "excavations": "work/excavations",
+    "diagrams": "work/diagrams",
 }
 
 # Legacy .lore/-rooted file name -> new path under .lore/.
@@ -600,7 +600,7 @@ def _build_argparser() -> argparse.ArgumentParser:
         prog="tend_migrate",
         description=(
             "Migrate a project's .lore/ tree from the legacy 14-directory "
-            "layout to the build/reference/learned model. Dry-run by default."
+            "layout to the work/reference/learned model. Dry-run by default."
         ),
     )
     p.add_argument(

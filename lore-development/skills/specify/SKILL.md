@@ -16,18 +16,18 @@ Define what to build and how to know it's done.
 ## Process
 
 1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include any findings in the spec's Context section.
-2. Review any relevant `.lore/build/research/` or `.lore/build/brainstorm/` context
+2. Review any relevant `.lore/work/research/` or `.lore/work/brainstorm/` context
 3. Ask clarifying questions about scope and success
 4. Draft the specification
 5. **Probe for stubs**: For each major action identified, ask "Are we stubbing [action], or defining it now?" User can choose to define inline or mark as stub.
 6. **Probe for validation**: Ask "Are defaults sufficient for AI validation, or does this feature need custom checks?" Most features use defaults; some need specific verification.
 7. Confirm with user before saving
-8. Save to `.lore/build/specs/`
+8. Save to `.lore/work/specs/`
 9. **Offer fresh-eyes review** (see below)
 
 ## Output
 
-Save to `.lore/build/specs/[feature-name].md`
+Save to `.lore/work/specs/[feature-name].md`
 
 ### Document Structure
 
@@ -122,7 +122,7 @@ When a feature connects to undefined areas, mark them as stubs:
 
 **Examples**:
 - `[STUB: user-authentication]` - Links to undefined auth feature
-- `[Spec: checkout-flow]` - Links to existing `.lore/build/specs/checkout-flow.md`
+- `[Spec: checkout-flow]` - Links to existing `.lore/work/specs/checkout-flow.md`
 
 **When to stub**: Mark something as a stub when it's needed by this feature but defining it would expand scope beyond the current layer. The stub becomes a documented "known unknown" that can be specified later.
 

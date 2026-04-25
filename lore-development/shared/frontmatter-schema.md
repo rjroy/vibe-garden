@@ -6,7 +6,7 @@ Single source of truth for frontmatter fields across all `.lore/` document types
 
 `.lore/` is organized into three top-level directories. Every lore document lives under exactly one of them:
 
-- **`.lore/build/`** — work scaffolding. Session-bound material: brainstorms, specs, designs, plans, tasks, notes, research, retros, issues, ideas, validation, stubs, excavation indices, session diagrams.
+- **`.lore/work/`** — work scaffolding. Session-bound material: brainstorms, specs, designs, plans, tasks, notes, research, retros, issues, ideas, validation, stubs, excavation indices, session diagrams.
 - **`.lore/reference/`** — solidified, system-oriented documentation. What the code cannot say. Distilled feature docs, vision, current-state diagrams.
 - **`.lore/learned/`** — operational imperatives, mistakes-only, worker-oriented. Written by `/learn`.
 
@@ -65,26 +65,26 @@ Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 
 Status values are organized into three sets, one per top-level directory.
 
-### Build documents
+### Work documents
 
-Build artifacts retain meaningful per-type lifecycles. The directory key is `build/<type>`.
+Work artifacts retain meaningful per-type lifecycles. The directory key is `work/<type>`.
 
 | Type | Directory | Valid Status Values |
 |------|-----------|---------------------|
-| brainstorm | `.lore/build/brainstorm/` | `open`, `parked`, `resolved`, `archived` |
-| spec | `.lore/build/specs/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
-| design | `.lore/build/design/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
-| plan | `.lore/build/plans/` | `draft`, `approved`, `executed`, `archived` |
-| task | `.lore/build/tasks/` | `pending`, `complete`, `skipped` |
-| notes | `.lore/build/notes/` | `in_progress`, `complete`, `archived` |
-| research | `.lore/build/research/` | `active`, `archived` |
-| retro | `.lore/build/retros/` | `open`, `archived` |
-| issue | `.lore/build/issues/` | `open`, `resolved`, `wontfix`, `archived` |
-| diagram (build) | `.lore/build/diagrams/` | `current`, `outdated`, `archived` |
+| brainstorm | `.lore/work/brainstorm/` | `open`, `parked`, `resolved`, `archived` |
+| spec | `.lore/work/specs/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
+| design | `.lore/work/design/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
+| plan | `.lore/work/plans/` | `draft`, `approved`, `executed`, `archived` |
+| task | `.lore/work/tasks/` | `pending`, `complete`, `skipped` |
+| notes | `.lore/work/notes/` | `in_progress`, `complete`, `archived` |
+| research | `.lore/work/research/` | `active`, `archived` |
+| retro | `.lore/work/retros/` | `open`, `archived` |
+| issue | `.lore/work/issues/` | `open`, `resolved`, `wontfix`, `archived` |
+| diagram (work) | `.lore/work/diagrams/` | `current`, `outdated`, `archived` |
 
 `/retro`'s reshape collapses the old `complete` status: retros are free-form notes, not analyzed artifacts, so "complete" has no distinct meaning. A retro is `open` while it can still be amended and `archived` once the work it tracks is fully past.
 
-Diagrams are the one build type whose lifecycle is visual currency rather than a work-cycle state. REQ-REDESIGN-9 does not enumerate diagram statuses, and REQ-REDESIGN-5 splits diagrams by purpose (session-bound vs current-state) rather than by lifecycle. Both `build/diagrams/` and `reference/diagrams/` therefore share the same `current / outdated / archived` set: a diagram is `current` while it accurately depicts what it claims to depict, `outdated` once it does not, and `archived` once it is no longer worth maintaining. The split happens at the directory level (which subtree a diagram belongs to), not at the status level.
+Diagrams are the one work type whose lifecycle is visual currency rather than a work-cycle state. REQ-REDESIGN-9 does not enumerate diagram statuses, and REQ-REDESIGN-5 splits diagrams by purpose (session-bound vs current-state) rather than by lifecycle. Both `work/diagrams/` and `reference/diagrams/` therefore share the same `current / outdated / archived` set: a diagram is `current` while it accurately depicts what it claims to depict, `outdated` once it does not, and `archived` once it is no longer worth maintaining. The split happens at the directory level (which subtree a diagram belongs to), not at the status level.
 
 ### Reference documents
 
@@ -96,7 +96,7 @@ All reference documents share one status set:
 
 ### Learned documents
 
-Learned entries share one minimal status set. Lifecycle beyond this is owned by `.lore/build/issues/design-learned-structure.md`.
+Learned entries share one minimal status set. Lifecycle beyond this is owned by `.lore/work/issues/design-learned-structure.md`.
 
 | Directory | Valid Status Values |
 |-----------|---------------------|
@@ -108,7 +108,7 @@ Notes support an additional required field:
 
 ```yaml
 ---
-source: .lore/build/plans/auth-flow.md    # Path to the source artifact (required)
+source: .lore/work/plans/auth-flow.md    # Path to the source artifact (required)
 ---
 ```
 
@@ -122,7 +122,7 @@ Tasks support additional required fields:
 
 ```yaml
 ---
-source: .lore/build/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
+source: .lore/work/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
 sequence: 1                                # Integer ordering within the task set (required)
 ---
 ```
@@ -146,7 +146,7 @@ title: "Implementation notes: auth-flow"
 date: 2026-02-05
 status: in_progress
 tags: [implementation, notes]
-source: .lore/build/plans/auth-flow.md
+source: .lore/work/plans/auth-flow.md
 modules: [auth-service]
 ---
 ```
@@ -159,7 +159,7 @@ title: Add auth middleware
 date: 2026-02-10
 status: pending
 tags: [task]
-source: .lore/build/plans/auth-flow.md
+source: .lore/work/plans/auth-flow.md
 sequence: 1
 modules: [auth-service]
 ---
@@ -186,7 +186,7 @@ date: 2026-01-28
 status: draft
 tags: [auth, security, login]
 modules: [auth-service, user-model]
-related: [.lore/build/research/oauth-patterns.md]
+related: [.lore/work/research/oauth-patterns.md]
 req-prefix: AUTH           # Optional: overrides auto-generated prefix
 ---
 ```
@@ -212,7 +212,7 @@ date: 2026-02-03
 status: draft
 tags: [algorithm, deduplication, sync, data-structures]
 modules: [history-service, stream-processor]
-related: [.lore/build/specs/history-sync.md]
+related: [.lore/work/specs/history-sync.md]
 ---
 ```
 
@@ -225,7 +225,7 @@ date: 2026-02-05
 status: draft
 tags: [plan, auth]
 modules: [auth-service]
-related: [.lore/build/specs/auth-flow.md]
+related: [.lore/work/specs/auth-flow.md]
 ---
 ```
 
@@ -242,7 +242,7 @@ tags: [oauth, authentication, cli, security]
 ---
 ```
 
-### Diagram (build, session-bound)
+### Diagram (work, session-bound)
 
 ```yaml
 ---

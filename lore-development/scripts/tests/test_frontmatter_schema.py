@@ -22,19 +22,19 @@ from frontmatter_schema import (
 )
 
 # Directory keys listed in the schema's "Status Values" tables.
-# Keying convention: build/<type> for build documents, single-name keys for
+# Keying convention: work/<type> for work documents, single-name keys for
 # reference and learned (each covers its whole subtree).
 SCHEMA_DOCUMENT_TYPES = [
-    "build/brainstorm",
-    "build/specs",
-    "build/design",
-    "build/plans",
-    "build/tasks",
-    "build/notes",
-    "build/research",
-    "build/retros",
-    "build/issues",
-    "build/diagrams",
+    "work/brainstorm",
+    "work/specs",
+    "work/design",
+    "work/plans",
+    "work/tasks",
+    "work/notes",
+    "work/research",
+    "work/retros",
+    "work/issues",
+    "work/diagrams",
     "reference",
     "learned",
 ]
@@ -112,14 +112,14 @@ class TestStatusValues(unittest.TestCase):
 class TestTypeSpecificRequired(unittest.TestCase):
     def test_notes_has_source(self):
         """Notes require 'source' per the Notes-Specific Fields section."""
-        self.assertIn("build/notes", TYPE_SPECIFIC_REQUIRED)
-        self.assertIn("source", TYPE_SPECIFIC_REQUIRED["build/notes"])
+        self.assertIn("work/notes", TYPE_SPECIFIC_REQUIRED)
+        self.assertIn("source", TYPE_SPECIFIC_REQUIRED["work/notes"])
 
     def test_tasks_has_source_and_sequence(self):
         """Tasks require 'source' and 'sequence' per the Task-Specific Fields section."""
-        self.assertIn("build/tasks", TYPE_SPECIFIC_REQUIRED)
-        self.assertIn("source", TYPE_SPECIFIC_REQUIRED["build/tasks"])
-        self.assertIn("sequence", TYPE_SPECIFIC_REQUIRED["build/tasks"])
+        self.assertIn("work/tasks", TYPE_SPECIFIC_REQUIRED)
+        self.assertIn("source", TYPE_SPECIFIC_REQUIRED["work/tasks"])
+        self.assertIn("sequence", TYPE_SPECIFIC_REQUIRED["work/tasks"])
 
 
 if __name__ == "__main__":

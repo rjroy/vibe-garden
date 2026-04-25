@@ -1,7 +1,7 @@
 # Migrate Mode Reference
 
 One-shot migration from the legacy `.lore/` layout to the three-directory model
-(`build/`, `reference/`, `learned/`). Backed by
+(`work/`, `reference/`, `learned/`). Backed by
 `${CLAUDE_PLUGIN_ROOT}/scripts/tend_migrate.py`.
 
 ## Purpose
@@ -52,11 +52,11 @@ Files move to the new home defined by REQ-REDESIGN-6 in
 
 | Old location               | New location                  |
 |----------------------------|-------------------------------|
-| `.lore/<subject>/...`      | `.lore/build/<subject>/...`   |
+| `.lore/<subject>/...`      | `.lore/work/<subject>/...`   |
 | `.lore/vision.md`          | `.lore/reference/vision.md`   |
-| `.lore/diagrams/*`         | `.lore/build/diagrams/*` (default; promote individuals to `reference/diagrams/` after migrate) |
+| `.lore/diagrams/*`         | `.lore/work/diagrams/*` (default; promote individuals to `reference/diagrams/` after migrate) |
 
-`build/`, `reference/`, and the necessary subdirectories are created on
+`work/`, `reference/`, and the necessary subdirectories are created on
 demand. `.lore/learned/` is **not** pre-created; it is born on first `/learn`
 invocation (REQ-REDESIGN-4).
 
@@ -123,7 +123,7 @@ safe and reports "no legacy structure detected."
 
 1. Run `/tend migrate` (or `python ${CLAUDE_PLUGIN_ROOT}/scripts/tend_migrate.py`).
 2. Read the printed plan. Pay attention to:
-   - Files moved into `build/diagrams/`. If any belong in
+   - Files moved into `work/diagrams/`. If any belong in
      `reference/diagrams/`, promote them manually after the migration.
    - Rewrites that touch a `migration-doc` (their bodies should be untouched —
      verify the line list reflects this).

@@ -1,7 +1,7 @@
 ---
 name: retro
 description: This skill reviews completed work and records what happened as free-form notes with structured frontmatter. The capture is observation only, not interpretation. Use after completing a feature, when capturing context before it fades, or for periodic reflection. Triggers include "let's do a retro", "/retro", "review what happened", "capture what happened", "write up the session".
-artifact_path: .lore/build/retros
+artifact_path: .lore/work/retros
 ---
 
 # Retro
@@ -21,7 +21,7 @@ A retro is worth running on any session that left signal worth preserving — su
 The retro describes what happened. It does not interpret. The forbidden moves:
 
 - No analysis vocabulary in the body. The words `lesson`, `insight`, `we learned`, and `takeaway` do not appear in retro output.
-- No template demanding N items. Named sections with implied counts cause the model to manufacture content that doesn't exist. See `.lore/build/brainstorm/principles-for-capture-skills.md` principle 1.
+- No template demanding N items. Named sections with implied counts cause the model to manufacture content that doesn't exist. See `.lore/work/brainstorm/principles-for-capture-skills.md` principle 1.
 - No success-extraction. "What went well" framing trains the model to invent best-practice tips that don't survive the next project. Success is overdetermined.
 - No promotion of items to higher scopes from inside the retro. If the user notices something worth recording as a rule, that is a separate step (`/learn`).
 
@@ -29,18 +29,18 @@ The shape is structured frontmatter plus free-form body. Length follows what act
 
 ## Process
 
-1. Read the relevant build artifacts:
-   - Spec in `.lore/build/specs/` (if applicable)
-   - Plan in `.lore/build/plans/` (if applicable)
-   - Implementation notes in `.lore/build/notes/` (if applicable)
+1. Read the relevant work artifacts:
+   - Spec in `.lore/work/specs/` (if applicable)
+   - Plan in `.lore/work/plans/` (if applicable)
+   - Implementation notes in `.lore/work/notes/` (if applicable)
 2. Write the retro as observation. What was the work? What happened in the doing of it? What surprised, broke, drifted, or unfolded differently than the plan said?
-3. Save to `.lore/build/retros/[descriptive-name].md`.
+3. Save to `.lore/work/retros/[descriptive-name].md`.
 
 The body is free-form prose. Use whatever structure the actual session calls for — chronological, by component, by surprise — or none. If a heading helps the reader follow, use it. If not, plain paragraphs are fine.
 
 ## Output
 
-Save to `.lore/build/retros/[descriptive-name].md`.
+Save to `.lore/work/retros/[descriptive-name].md`.
 
 ### Frontmatter
 
@@ -53,7 +53,7 @@ date: YYYY-MM-DD
 status: open
 tags: [problem-types, technologies, patterns]
 modules: [affected-modules]
-related: [.lore/build/specs/<name>.md, .lore/build/plans/<name>.md]
+related: [.lore/work/specs/<name>.md, .lore/work/plans/<name>.md]
 ---
 
 [Body — free-form notes describing what happened.]

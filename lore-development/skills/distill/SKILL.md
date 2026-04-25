@@ -1,6 +1,6 @@
 ---
 name: distill
-description: This skill promotes findings into reference documentation by reading a seed (code or build artifacts), verifying claims against current code, and presenting reconciled candidates for the user to gate. Use when reference docs need to be created or refreshed for a feature area, or when a build artifact (spec, plan, brainstorm) holds invariants worth promoting. Triggers include "distill this", "/distill", "/distill code", "/distill build", "promote to reference", "what should be in reference for X", "refresh the reference docs", "this spec has invariants worth keeping".
+description: This skill promotes findings into reference documentation by reading a seed (code or work artifacts), verifying claims against current code, and presenting reconciled candidates for the user to gate. Use when reference docs need to be created or refreshed for a feature area, or when a work artifact (spec, plan, brainstorm) holds invariants worth promoting. Triggers include "distill this", "/distill", "/distill code", "/distill work", "promote to reference", "what should be in reference for X", "refresh the reference docs", "this spec has invariants worth keeping".
 artifact_path: .lore/reference
 ---
 
@@ -15,7 +15,7 @@ Distill runs the same core operation regardless of where the seed comes from. On
 | Mode | Seed | Use when |
 |------|------|----------|
 | `/distill code` | A feature area of the codebase | Reference is missing or thin for an area; you want to walk the code and pull out what survives the shape rule |
-| `/distill build` | A build artifact (spec, plan, brainstorm, retro, research note) | A build artifact captured invariants worth promoting; reference should reflect what the artifact still gets right |
+| `/distill work` | A work artifact (spec, plan, brainstorm, retro, research note) | A work artifact captured invariants worth promoting; reference should reflect what the artifact still gets right |
 
 Both modes verify against current code before writing anything. The mode only seeds the session.
 
@@ -26,10 +26,10 @@ Both modes verify against current code before writing anything. The mode only se
 /distill code                                           # Code-seeded; pick a feature area
 /distill code feature=auth                              # Code-seeded; named feature
 /distill code entry=/api/admin                          # Code-seeded; from an entry point
-/distill build                                          # Build-seeded; pick from build/
-/distill build .lore/build/specs/<name>.md              # Build-seeded from a specific file
-/distill build .lore/build/plans/<name>.md
-/distill build .lore/build/brainstorm/<name>.md
+/distill work                                          # Work-seeded; pick from work/
+/distill work .lore/work/specs/<name>.md              # Build-seeded from a specific file
+/distill work .lore/work/plans/<name>.md
+/distill work .lore/work/brainstorm/<name>.md
 ```
 
 ## Shape Rule (binding)
@@ -52,13 +52,13 @@ This is what does the work in this skill. Apply it to every candidate before pro
 - Restatements of what a well-named identifier already says
 - Layered summaries that mirror the code's structure
 
-If a candidate paragraph could be reconstructed by reading the code, it does not belong in reference. The full rule lives in `.lore/build/brainstorm/distill-function.md` ("The shape rule for reference"). Cite that brainstorm if a candidate is in dispute.
+If a candidate paragraph could be reconstructed by reading the code, it does not belong in reference. The full rule lives in `.lore/work/brainstorm/distill-function.md` ("The shape rule for reference"). Cite that brainstorm if a candidate is in dispute.
 
 ## Null Output Is Valid
 
 A distill session may produce zero reference changes. That is a successful outcome when the seed's claims are all already discoverable from code, or when nothing survives the shape rule.
 
-This skill does not demand candidates. There is no template that asks for N items. If a session ends with no writes, that is the right answer for that session. (Forcing N candidates produces N hallucinations — see `.lore/build/brainstorm/principles-for-capture-skills.md` principle 1.)
+This skill does not demand candidates. There is no template that asks for N items. If a session ends with no writes, that is the right answer for that session. (Forcing N candidates produces N hallucinations — see `.lore/work/brainstorm/principles-for-capture-skills.md` principle 1.)
 
 ## Core Operation
 
@@ -66,7 +66,7 @@ Both modes follow the same loop:
 
 1. **Read the seed.**
    - `code` mode: read the feature area. Use `surface-surveyor` for entry points if the area isn't already mapped. Walk into the files that handle the entry points.
-   - `build` mode: read the named build artifact. Treat its claims as candidates, not as truth.
+   - `work` mode: read the named work artifact. Treat its claims as candidates, not as truth.
 
 2. **Verify against current code.** Identify mismatches between what the seed implies or asserts and what the code actually does. Grep for cited paths, route patterns, function names. The code is the source of truth.
 
@@ -75,16 +75,16 @@ Both modes follow the same loop:
 4. **Present reconciled candidates.** For each surviving candidate, present:
    - The proposed reference content (terse — a sentence, a paragraph, a small section)
    - The proposed placement (new file, or which existing file gets the update)
-   - Any mismatch the seed had with the code, surfaced explicitly when in `build` mode
+   - Any mismatch the seed had with the code, surfaced explicitly when in `work` mode
    - The user's options: promote as-is, edit-and-promote, skip
 
 5. **User gates each candidate.** The user decides reference-worthiness, wording, and placement. The skill does not auto-write. Without the gate, hallucinations relocate rather than resolve.
 
-6. **Update the index.** After writes (or after a session ending in zero writes), update `.lore/build/excavations/index.md` so future sessions know what was covered and what remains.
+6. **Update the index.** After writes (or after a session ending in zero writes), update `.lore/work/excavations/index.md` so future sessions know what was covered and what remains.
 
 ## Build-Seed Mismatches Are Not Silently Corrected
 
-When `/distill build` finds the seed disagrees with the code, surface the mismatch to the user. Do not silently rewrite the candidate to match the code.
+When `/distill work` finds the seed disagrees with the code, surface the mismatch to the user. Do not silently rewrite the candidate to match the code.
 
 A mismatch is a signal. It can mean:
 - The seed was right when written; the code drifted.
@@ -139,7 +139,7 @@ The body is shaped by what survives the shape rule, not by a section template. A
 
 ## Excavation Index
 
-Track session state in `.lore/build/excavations/index.md`. The index is build scaffolding — it records progress so distill can resume — not reference itself.
+Track session state in `.lore/work/excavations/index.md`. The index is build scaffolding — it records progress so distill can resume — not reference itself.
 
 Layout:
 
@@ -174,18 +174,18 @@ For `/distill code`, the surveyor and walking pattern is straightforward, but it
 - Ask the user to clarify boundaries when the code alone doesn't tell you where one feature ends and another begins. Get the user-facing names early; internal names are not always the right ones to put in reference.
 - Then drop the layered summary instinct. Most of what a walk turns up is code-recoverable. Keep only the marginalia: the why, the invariants, the cross-cutting rules.
 
-## When `/distill build` Reads an Artifact
+## When `/distill work` Reads an Artifact
 
 Specs are the highest-yield seed: they describe intent; code describes mechanism; the gap between them is where invariants live. Plans are next — they sometimes record surprises that didn't make it back to the spec. Brainstorms and research are tertiary; if their claims weren't already captured in the spec, that itself is signal worth promoting.
 
-For `/distill build`:
+For `/distill work`:
 
 - Confirm the seed file with the user before scanning. Do not pre-scan or volunteer candidates.
 - Read the seed's claims. For each one, identify the corresponding code surface and verify.
 - A claim that the code already says clearly: drop. Reference would just restate.
 - A claim that the code does not say but is true of current behavior: candidate.
 - A claim that the code contradicts: mismatch — surface to the user, do not silently rewrite.
-- A claim about intent that was never implemented: not a reference candidate (this belongs in a build artifact, not in reference).
+- A claim about intent that was never implemented: not a reference candidate (this belongs in a work artifact, not in reference).
 
 ## Specialized Agents
 
@@ -193,7 +193,7 @@ If `.lore/lore-agents.md` exists, consult it for project-specific agents (securi
 
 ## Tend Coupling
 
-`/tend`'s `directories` mode surfaces a soft prompt before archiving any spec with `status: implemented`: "Distill this spec before archiving?" The user can answer yes (run `/distill build` on the spec, then archive) or no (archive directly). Distill is an opportunity, not a gate. See `lore-development/skills/tend/references/status.md` and the `/tend` skill for the full flow.
+`/tend`'s `directories` mode surfaces a soft prompt before archiving any spec with `status: implemented`: "Distill this spec before archiving?" The user can answer yes (run `/distill work` on the spec, then archive) or no (archive directly). Distill is an opportunity, not a gate. See `lore-development/skills/tend/references/status.md` and the `/tend` skill for the full flow.
 
 ## Verification Pass
 

@@ -18,9 +18,9 @@ This agent is invoked via the Task tool:
 
 **Purpose**: Identify what's confusing, incomplete, or inconsistent from a fresh perspective.
 
-**Input**: Path to document to review, or the agent will find the most recently modified spec in `.lore/build/specs/`
+**Input**: Path to document to review, or the agent will find the most recently modified spec in `.lore/work/specs/`
 
-**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral, but can be saved to `.lore/build/reviews/` if the project wants to track review history.
+**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral, but can be saved to `.lore/work/reviews/` if the project wants to track review history.
 
 ## Tools
 
@@ -38,7 +38,7 @@ Review through four lenses, spending roughly equal attention on each:
 
 **Before flagging undefined terms:** Check if the term is defined elsewhere in the project:
 - Look for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.md` if the project keeps one)
-- Search other specs in `.lore/build/specs/` for the term
+- Search other specs in `.lore/work/specs/` for the term
 - Check if it's established domain terminology for this project
 
 A term defined elsewhere in the system is not a clarity gap. Only flag terms that are genuinely undefined across the project.
@@ -91,7 +91,7 @@ Questions to answer:
 
 ## Process
 
-1. **Identify document**: If path not specified, use Glob to find most recently modified file in `.lore/build/specs/`
+1. **Identify document**: If path not specified, use Glob to find most recently modified file in `.lore/work/specs/`
 2. **Gather project context**: Check for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.md`) and scan related specs for established terminology
 3. **Read completely**: Read the entire document before forming judgments
 4. **Apply lenses**: Work through each lens systematically, using Grep to verify terms are actually undefined before flagging
@@ -169,9 +169,9 @@ If I could only fix three things:
 
 7. **Acknowledge strengths**: Fresh eyes also see what works well. Include this.
 
-8. **Stay in scope**: Review specs (`.lore/build/specs/`). Plans have their own reviewer (`plan-reviewer`). Brainstorms and excavations are working notes not meant for external consumption.
+8. **Stay in scope**: Review specs (`.lore/work/specs/`). Plans have their own reviewer (`plan-reviewer`). Brainstorms and excavations are working notes not meant for external consumption.
 
-9. **What vs How**: A spec answers "what are we building and how will we verify it's done?" It does NOT answer "how does it work internally?" If you find yourself wanting algorithms, data structures, interfaces, or technical approaches, that's a signal the feature needs a **design document** (`.lore/build/design/`), not a longer spec. Recommend creating one instead of flagging the spec as incomplete.
+9. **What vs How**: A spec answers "what are we building and how will we verify it's done?" It does NOT answer "how does it work internally?" If you find yourself wanting algorithms, data structures, interfaces, or technical approaches, that's a signal the feature needs a **design document** (`.lore/work/design/`), not a longer spec. Recommend creating one instead of flagging the spec as incomplete.
 
 10. **Recommend design when appropriate**: If the spec describes something technically complex (algorithms, system boundaries, performance-sensitive logic) and you can't evaluate it without knowing the approach, say: "This feature may benefit from a design document to capture the technical approach before implementation." Don't ask the spec to contain design details.
 

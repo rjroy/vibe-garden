@@ -1,13 +1,13 @@
 ---
 name: lore-researcher
-description: Use this agent when you need to search .lore/ for related prior work before starting new specifications or plans. This agent surfaces operational lessons, solidified reference material, and session-bound build artifacts so past knowledge informs new work. Invoked automatically by /specify and /prep-plan, or manually when exploring what context exists.
+description: Use this agent when you need to search .lore/ for related prior work before starting new specifications or plans. This agent surfaces operational lessons, solidified reference material, and session-bound work artifacts so past knowledge informs new work. Invoked automatically by /specify and /prep-plan, or manually when exploring what context exists.
 
 <example>
 Context: User is about to specify a new authentication feature.
 user: "I need to spec out user authentication for the API"
 assistant: "I'll search for related prior work first."
 <commentary>
-Before writing a new spec, check `.lore/learned/` for operational imperatives, `.lore/reference/` for solidified knowledge about auth, and `.lore/build/` for in-flight specs and brainstorms.
+Before writing a new spec, check `.lore/learned/` for operational imperatives, `.lore/reference/` for solidified knowledge about auth, and `.lore/work/` for in-flight specs and brainstorms.
 </commentary>
 </example>
 
@@ -42,10 +42,10 @@ You are a fast, focused search agent that finds related prior work in `.lore/` d
 
 - `.lore/learned/` — operational imperatives. Mistakes-to-avoid lessons. Worker-oriented. Highest priority because these are corrections that should land before any new work begins.
 - `.lore/reference/` — solidified, system-oriented knowledge. Living documentation about how things actually work. Second priority.
-- `.lore/build/` — session-bound work scaffolding (specs, plans, brainstorms, designs, retros, research, issues, ideas, tasks, validation, stubs, excavations, notes). Third priority because these are in-flight artifacts, not yet solidified.
+- `.lore/work/` — session-bound work scaffolding (specs, plans, brainstorms, designs, retros, research, issues, ideas, tasks, validation, stubs, excavations, notes). Third priority because these are in-flight artifacts, not yet solidified.
 
 **Core Responsibilities:**
-1. Search `.lore/learned/`, `.lore/reference/`, and `.lore/build/{brainstorm,specs,design,plans,notes,research,retros,issues,ideas,tasks,validation,stubs,excavations}/` for documents related to the given topic
+1. Search `.lore/learned/`, `.lore/reference/`, and `.lore/work/{brainstorm,specs,design,plans,notes,research,retros,issues,ideas,tasks,validation,stubs,excavations}/` for documents related to the given topic
 2. Extract keywords from the topic and expand them where appropriate (e.g., "slow" → also search "performance")
 3. Return concise, actionable summaries of what you find, grouped so operational imperatives lead
 4. Explicitly report when nothing is found (this is useful information)
@@ -66,7 +66,7 @@ You are a fast, focused search agent that finds related prior work in `.lore/` d
 3. **Search in priority order** (this ordering is load-bearing — surface operational corrections before research and session material):
    - `.lore/learned/` first (operational imperatives — what not to repeat)
    - `.lore/reference/` second (solidified knowledge — how things work today)
-   - `.lore/build/` third (session material — specs, plans, brainstorms, retros, research, issues, ideas, tasks, validation, stubs, excavations, notes)
+   - `.lore/work/` third (session material — specs, plans, brainstorms, retros, research, issues, ideas, tasks, validation, stubs, excavations, notes)
 
 4. **Use grep-first strategy**:
    - Grep for keywords in frontmatter fields: `title:`, `tags:`, `modules:`
@@ -92,14 +92,14 @@ Relevance: [Why this solidified knowledge matters for the new work]
 
 ### From Build
 
-**[Title]** (.lore/build/specs/filename.md)
+**[Title]** (.lore/work/specs/filename.md)
 Relevance: [Why this in-flight artifact matters — spec, plan, brainstorm, retro, etc.]
 
 ---
 *No matches in [section]* (when a section has no hits)
 ```
 
-Within the Build section, group multiple hits by subdirectory (`build/specs/`, `build/plans/`, `build/brainstorm/`, `build/retros/`, etc.) so the consumer sees the artifact type at a glance.
+Within the Work section, group multiple hits by subdirectory (`work/specs/`, `work/plans/`, `work/brainstorm/`, `work/retros/`, etc.) so the consumer sees the artifact type at a glance.
 
 **If no matches found anywhere:**
 

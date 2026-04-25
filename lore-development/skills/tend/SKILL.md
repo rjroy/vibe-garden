@@ -1,6 +1,6 @@
 ---
 name: tend
-description: "This skill performs periodic hygiene on the .lore/ directory through four sequential modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). A separate migrate mode (`/tend migrate`) moves projects from the legacy single-level layout to the build/reference/learned three-directory model. Use when documents have accumulated, status fields are stale, organization needs attention, or a project still uses the pre-redesign layout. Triggers include \"tend the lore\", \"check document status\", \"lore hygiene\", \"what's stale\", \"review lore health\", \"tag audit\", \"organize lore\", \"migrate lore layout\"."
+description: "This skill performs periodic hygiene on the .lore/ directory through four sequential modes: status (verify/update document status), tags (unify tags, find connections), filenames (convention consistency, rename suggestions), directories (structure optimization). A separate migrate mode (`/tend migrate`) moves projects from the legacy single-level layout to the work/reference/learned three-directory model. Use when documents have accumulated, status fields are stale, organization needs attention, or a project still uses the pre-redesign layout. Triggers include \"tend the lore\", \"check document status\", \"lore hygiene\", \"what's stale\", \"review lore health\", \"tag audit\", \"organize lore\", \"migrate lore layout\"."
 ---
 
 # Tend
@@ -22,7 +22,7 @@ If no config exists, use defaults from `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter
 | `tags` | Unify variants, find connections, identify clusters | Semantics: tags are consistent and meaningful |
 | `filenames` | Check conventions, suggest renames based on content | Findability: names match content |
 | `directories` | Suggest subdivision, archive candidates, detect orphans | Navigation: structure serves scale |
-| `migrate` | Move legacy `.lore/` layout to `build/reference/learned` model | Layout: project on the canonical three-directory tree |
+| `migrate` | Move legacy `.lore/` layout to `work/reference/learned` model | Layout: project on the canonical three-directory tree |
 
 **Dependency chain**: status → tags → filenames → directories
 
@@ -36,7 +36,7 @@ When the `directories` mode surfaces a spec with `status: implemented` as an arc
 
 > "Distill this spec before archiving? (yes / no / skip)"
 
-- **yes**: pause the archive flow for this file and suggest `/distill build <path-to-spec>`. After the user runs distill (or declines mid-distill), return to the archive confirmation.
+- **yes**: pause the archive flow for this file and suggest `/distill work <path-to-spec>`. After the user runs distill (or declines mid-distill), return to the archive confirmation.
 - **no**: proceed with archiving as proposed.
 - **skip**: leave the file in place; remove it from this run's archive batch.
 

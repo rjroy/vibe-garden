@@ -1,7 +1,7 @@
 ---
 name: update-stubs
 description: Scans specs for stubs and generates outstanding stub index. Use when reviewing spec coverage, before starting new specification work, or after completing a specification. Triggers include "update stubs", "check stubs", "stub index", "outstanding stubs".
-artifact_path: .lore/build/stubs
+artifact_path: .lore/work/stubs
 ---
 
 # Update Stubs
@@ -19,7 +19,7 @@ Scan all specifications for stubs and generate an index of unresolved ones.
 
 ### Step 1: Scan for Stubs
 
-Scan all `.md` files in `.lore/build/specs/` recursively. Extract all `[STUB: name]` patterns using regex.
+Scan all `.md` files in `.lore/work/specs/` recursively. Extract all `[STUB: name]` patterns using regex.
 
 Pattern to match: `\[STUB:\s*([^\]]+)\]`
 
@@ -41,9 +41,9 @@ Invalid names are flagged as errors.
 
 For each valid stub, check if it's resolved:
 
-A stub is resolved if `.lore/build/specs/[stub-name].md` exists (exact match, case-sensitive).
+A stub is resolved if `.lore/work/specs/[stub-name].md` exists (exact match, case-sensitive).
 
-Note: Stubs can also be resolved by nested specs (e.g., `.lore/build/specs/parent/[stub-name].md`). Scan recursively for matching filenames.
+Note: Stubs can also be resolved by nested specs (e.g., `.lore/work/specs/parent/[stub-name].md`). Scan recursively for matching filenames.
 
 ### Step 4: Identify Warnings
 
@@ -52,11 +52,11 @@ Flag these conditions as warnings:
 
 ### Step 5: Generate Index
 
-Write the stub index to `.lore/build/stubs/index.md`. Create the directory if it doesn't exist.
+Write the stub index to `.lore/work/stubs/index.md`. Create the directory if it doesn't exist.
 
 ## Output
 
-Save to `.lore/build/stubs/index.md`
+Save to `.lore/work/stubs/index.md`
 
 ### Document Structure
 
@@ -69,8 +69,8 @@ Last updated: [timestamp]
 
 | Stub | Referenced From | Notes |
 |------|-----------------|-------|
-| [STUB: auth-flow] | `.lore/build/specs/login.md` | |
-| [STUB: payment-processing] | `.lore/build/specs/checkout.md`, `.lore/build/specs/subscription.md` | Referenced by multiple specs |
+| [STUB: auth-flow] | `.lore/work/specs/login.md` | |
+| [STUB: payment-processing] | `.lore/work/specs/checkout.md`, `.lore/work/specs/subscription.md` | Referenced by multiple specs |
 
 ## Warnings
 
@@ -94,7 +94,7 @@ Last updated: [timestamp]
 
 Given these specs:
 
-**`.lore/build/specs/login.md`**:
+**`.lore/work/specs/login.md`**:
 ```markdown
 ## Exit Points
 | Exit | Triggers When | Target |
@@ -103,7 +103,7 @@ Given these specs:
 | Create account | User clicks sign up | [STUB: registration] |
 ```
 
-**`.lore/build/specs/checkout.md`**:
+**`.lore/work/specs/checkout.md`**:
 ```markdown
 ## Exit Points
 | Exit | Triggers When | Target |
@@ -112,7 +112,7 @@ Given these specs:
 | Apply coupon | User enters code | [STUB: coupon-system] |
 ```
 
-**`.lore/build/specs/payment-processing.md`** (exists)
+**`.lore/work/specs/payment-processing.md`** (exists)
 
 Running `/update-stubs` produces:
 
@@ -125,12 +125,12 @@ Last updated: 2026-01-29
 
 | Stub | Referenced From | Notes |
 |------|-----------------|-------|
-| [STUB: password-reset] | `.lore/build/specs/login.md` | |
-| [STUB: registration] | `.lore/build/specs/login.md` | |
-| [STUB: coupon-system] | `.lore/build/specs/checkout.md` | |
+| [STUB: password-reset] | `.lore/work/specs/login.md` | |
+| [STUB: registration] | `.lore/work/specs/login.md` | |
+| [STUB: coupon-system] | `.lore/work/specs/checkout.md` | |
 ```
 
-Note: `payment-processing` is absent because `.lore/build/specs/payment-processing.md` exists.
+Note: `payment-processing` is absent because `.lore/work/specs/payment-processing.md` exists.
 
 ## Context
 

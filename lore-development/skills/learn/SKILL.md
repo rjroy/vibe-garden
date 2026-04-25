@@ -1,6 +1,6 @@
 ---
 name: learn
-description: User-invoked dialog for recording institutional or tribal knowledge — a rule, example snippet, configuration trick, command sequence, or pattern the user wants to keep. The skill never asserts that something is worth capturing, never scans build artifacts on its own, and never fires from another skill. Use when the user wants to write down something worth not losing. Triggers include "learn", "/learn", "record a lesson", "capture a learning", "I want to write down a lesson".
+description: User-invoked dialog for recording institutional or tribal knowledge — a rule, example snippet, configuration trick, command sequence, or pattern the user wants to keep. The skill never asserts that something is worth capturing, never scans work artifacts on its own, and never fires from another skill. Use when the user wants to write down something worth not losing. Triggers include "learn", "/learn", "record a lesson", "capture a learning", "I want to write down a lesson".
 artifact_path: .lore/learned
 ---
 
@@ -14,7 +14,7 @@ User-invoked only. `/learn` is never auto-triggered by `/specify`, `/prep-plan`,
 
 ```
 /learn                                      # Open dialog; the user names what they want to capture
-/learn .lore/build/retros/<name>.md         # Optional: name a starting artifact
+/learn .lore/work/retros/<name>.md         # Optional: name a starting artifact
 ```
 
 If invoked with a path, that artifact is the seed for the dialog. The skill still asks the opening question; it does not pre-scan the artifact for candidates.
@@ -27,7 +27,7 @@ The user names the lesson. The skill helps shape the articulation, runs dedup ag
 - The skill never volunteers candidates from artifacts the user did not point at.
 - "Nothing, actually" is a valid user answer at any step. The session ends without writing a file.
 
-This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons. See `.lore/build/brainstorm/principles-for-capture-skills.md` and `.lore/build/brainstorm/learn-dialog.md`.
+This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons. See `.lore/work/brainstorm/principles-for-capture-skills.md` and `.lore/work/brainstorm/learn-dialog.md`.
 
 ## Opening: Two-Path Question
 
@@ -73,8 +73,8 @@ Specificity is checked at the artifact level. The opening question does not pre-
 When the user names material — "look at my recent Thorne reviews," "open the auth retro," "everything tagged `migration`" — the skill fetches it on request. Patterns:
 
 - **File path**: read directly with `Read`.
-- **Tag query / module query**: delegate to `lore-researcher` patterns (grep frontmatter `tags:` or `modules:` across `.lore/build/` and `.lore/learned/`).
-- **Recent-N pattern**: list-by-date under a named subdirectory (e.g., recent retros under `.lore/build/retros/`).
+- **Tag query / module query**: delegate to `lore-researcher` patterns (grep frontmatter `tags:` or `modules:` across `.lore/work/` and `.lore/learned/`).
+- **Recent-N pattern**: list-by-date under a named subdirectory (e.g., recent retros under `.lore/work/retros/`).
 
 Fetch is on-request only. The skill does not pre-scan artifacts the user did not name. After fetching, the skill surfaces what it read; it does not assert which fragment is a lesson.
 
@@ -117,7 +117,7 @@ Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case
 
 Do not pre-create `.lore/learned/`. The directory is materialized by the first `/learn` write. If the directory does not exist when the user accepts the draft, create it then.
 
-This default is revisable. The internal structure of `.lore/learned/` (categorized vs flat, file-per-entry vs append-to-topic-file, full lifecycle) is owned by `.lore/build/issues/design-learned-structure.md`. Adopt revisions when that issue resolves.
+This default is revisable. The internal structure of `.lore/learned/` (categorized vs flat, file-per-entry vs append-to-topic-file, full lifecycle) is owned by `.lore/work/issues/design-learned-structure.md`. Adopt revisions when that issue resolves.
 
 ## Frontmatter
 
@@ -147,7 +147,7 @@ User: `/learn`
 Skill: *(opening question)*
 User: I just finished a Thorne review. He flagged that I caught and swallowed an integration error.
 Skill: Want me to pull the review? What's the file path or tag?
-User: `.lore/build/retros/2026-04-22-deploy-flake.md`
+User: `.lore/work/retros/2026-04-22-deploy-flake.md`
 Skill: *(reads the file)* What did the swallowed error cause downstream?
 User: A silent retry loop. Took an hour to find because nothing logged.
 Skill: *(runs dedup against `.lore/learned/`)* No related entries. Drafting:

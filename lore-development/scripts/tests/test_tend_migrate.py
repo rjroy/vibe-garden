@@ -51,7 +51,7 @@ def test_detect_legacy_finds_all_old_dirs_and_vision(lore_root: Path) -> None:
 
 def test_detect_legacy_returns_empty_on_clean_tree(tmp_path: Path) -> None:
     clean = tmp_path / ".lore"
-    (clean / "build" / "specs").mkdir(parents=True)
+    (clean / "work" / "specs").mkdir(parents=True)
     (clean / "reference").mkdir()
     dirs, files = tend_migrate.detect_legacy(clean)
     assert dirs == []
@@ -89,12 +89,12 @@ def test_load_custom_directories_handles_no_frontmatter(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "before, after",
     [
-        (".lore/brainstorm/foo.md", ".lore/build/brainstorm/foo.md"),
-        (".lore/specs/auth.md", ".lore/build/specs/auth.md"),
-        (".lore/diagrams/x.md", ".lore/build/diagrams/x.md"),
+        (".lore/brainstorm/foo.md", ".lore/work/brainstorm/foo.md"),
+        (".lore/specs/auth.md", ".lore/work/specs/auth.md"),
+        (".lore/diagrams/x.md", ".lore/work/diagrams/x.md"),
         (".lore/vision.md", ".lore/reference/vision.md"),
         # No false-positives on already-migrated paths.
-        (".lore/build/specs/auth.md", ".lore/build/specs/auth.md"),
+        (".lore/work/specs/auth.md", ".lore/work/specs/auth.md"),
         (".lore/reference/vision.md", ".lore/reference/vision.md"),
     ],
 )
@@ -122,15 +122,15 @@ def test_build_plan_moves_match_migration_table(lore_root: Path) -> None:
         for m in plan.moves
     }
     assert moves[Path("brainstorm/exploration.md")] == Path(
-        "build/brainstorm/exploration.md"
+        "work/brainstorm/exploration.md"
     )
-    assert moves[Path("specs/auth.md")] == Path("build/specs/auth.md")
+    assert moves[Path("specs/auth.md")] == Path("work/specs/auth.md")
     assert moves[Path("diagrams/auth-flow.md")] == Path(
-        "build/diagrams/auth-flow.md"
+        "work/diagrams/auth-flow.md"
     )
     assert moves[Path("vision.md")] == Path("reference/vision.md")
     assert moves[Path("ideas/2026-04-10.md")] == Path(
-        "build/ideas/2026-04-10.md"
+        "work/ideas/2026-04-10.md"
     )
 
 
@@ -154,7 +154,7 @@ def test_build_plan_render_lists_moves(lore_root: Path) -> None:
     out = plan.render()
     assert "Moves" in out
     assert "vision.md" in out
-    assert "build/specs/auth.md" in out
+    assert "work/specs/auth.md" in out
 
 
 # ---------------------------------------------------------------------------
@@ -167,10 +167,10 @@ def test_apply_produces_target_layout(lore_root: Path) -> None:
     tend_migrate.apply_plan(plan)
 
     # New tree present.
-    assert (lore_root / "build" / "specs" / "auth.md").is_file()
-    assert (lore_root / "build" / "brainstorm" / "exploration.md").is_file()
-    assert (lore_root / "build" / "diagrams" / "auth-flow.md").is_file()
-    assert (lore_root / "build" / "ideas" / "2026-04-10.md").is_file()
+    assert (lore_root / "work" / "specs" / "auth.md").is_file()
+    assert (lore_root / "work" / "brainstorm" / "exploration.md").is_file()
+    assert (lore_root / "work" / "diagrams" / "auth-flow.md").is_file()
+    assert (lore_root / "work" / "ideas" / "2026-04-10.md").is_file()
     assert (lore_root / "reference" / "vision.md").is_file()
 
     # Old tree gone.
@@ -182,9 +182,9 @@ def test_apply_produces_target_layout(lore_root: Path) -> None:
 def test_apply_rewrites_related_frontmatter(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
-    text = _read(lore_root / "build" / "specs" / "auth.md")
-    assert "- .lore/build/brainstorm/exploration.md" in text
-    assert "- .lore/build/design/oauth.md" in text
+    text = _read(lore_root / "work" / "specs" / "auth.md")
+    assert "- .lore/work/brainstorm/exploration.md" in text
+    assert "- .lore/work/design/oauth.md" in text
     assert ".lore/brainstorm/" not in text
     assert ".lore/design/" not in text
 
@@ -192,36 +192,36 @@ def test_apply_rewrites_related_frontmatter(lore_root: Path) -> None:
 def test_apply_rewrites_source_frontmatter(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
-    notes = _read(lore_root / "build" / "notes" / "install.md")
-    task = _read(lore_root / "build" / "tasks" / "setup-oauth.md")
-    assert "source: .lore/build/plans/migration.md" in notes
-    assert "source: .lore/build/plans/migration.md" in task
+    notes = _read(lore_root / "work" / "notes" / "install.md")
+    task = _read(lore_root / "work" / "tasks" / "setup-oauth.md")
+    assert "source: .lore/work/plans/migration.md" in notes
+    assert "source: .lore/work/plans/migration.md" in task
 
 
 def test_apply_rewrites_in_body_markdown_links(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
-    plans = _read(lore_root / "build" / "plans" / "migration.md")
-    assert "[.lore/build/brainstorm/exploration.md]" in plans
-    assert "(.lore/build/brainstorm/exploration.md)" in plans
+    plans = _read(lore_root / "work" / "plans" / "migration.md")
+    assert "[.lore/work/brainstorm/exploration.md]" in plans
+    assert "(.lore/work/brainstorm/exploration.md)" in plans
     assert ".lore/brainstorm/" not in plans
 
 
 def test_apply_preserves_fenced_code_block(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
-    notes = _read(lore_root / "build" / "notes" / "install.md")
+    notes = _read(lore_root / "work" / "notes" / "install.md")
     # Path inside the bash fence stays as-is.
     assert "cat .lore/brainstorm/exploration.md" in notes
     assert "ls .lore/specs/" in notes
     # Path outside the fence is rewritten.
-    assert "`.lore/build/issues/bug-1.md`" in notes
+    assert "`.lore/work/issues/bug-1.md`" in notes
 
 
 def test_apply_preserves_migration_doc_body(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
-    body = _read(lore_root / "build" / "issues" / "migration-walkthrough.md")
+    body = _read(lore_root / "work" / "issues" / "migration-walkthrough.md")
     assert "`.lore/specs/auth.md`" in body
     assert "`.lore/brainstorm/exploration.md`" in body
     assert "`.lore/vision.md`" in body
@@ -257,7 +257,7 @@ def test_apply_then_apply_is_noop(lore_root: Path) -> None:
 
 def test_build_plan_flags_destination_collision(lore_root: Path) -> None:
     # Pre-existing post-migration file that would be clobbered by the move.
-    target = lore_root / "build" / "specs" / "auth.md"
+    target = lore_root / "work" / "specs" / "auth.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("PRE-EXISTING\n", encoding="utf-8")
 
@@ -268,7 +268,7 @@ def test_build_plan_flags_destination_collision(lore_root: Path) -> None:
 
 
 def test_apply_refuses_when_conflicts_exist(lore_root: Path) -> None:
-    target = lore_root / "build" / "specs" / "auth.md"
+    target = lore_root / "work" / "specs" / "auth.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("PRE-EXISTING\n", encoding="utf-8")
 
@@ -281,7 +281,7 @@ def test_apply_refuses_when_conflicts_exist(lore_root: Path) -> None:
 
 
 def test_plan_render_shows_conflicts(lore_root: Path) -> None:
-    target = lore_root / "build" / "specs" / "auth.md"
+    target = lore_root / "work" / "specs" / "auth.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("PRE-EXISTING\n", encoding="utf-8")
 
@@ -289,13 +289,13 @@ def test_plan_render_shows_conflicts(lore_root: Path) -> None:
     out = plan.render()
     assert "BLOCKED" in out
     assert "destination collision" in out
-    assert "build/specs/auth.md" in out
+    assert "work/specs/auth.md" in out
 
 
 def test_main_exits_nonzero_when_conflicts_present(
     lore_root: Path, capsys: pytest.CaptureFixture
 ) -> None:
-    target = lore_root / "build" / "specs" / "auth.md"
+    target = lore_root / "work" / "specs" / "auth.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("PRE-EXISTING\n", encoding="utf-8")
 
@@ -335,7 +335,7 @@ def test_main_apply_with_yes(lore_root: Path, capsys: pytest.CaptureFixture) -> 
     rc = tend_migrate.main(["--lore-dir", str(lore_root), "--apply", "--yes"])
     assert rc == 0
     assert "Migration applied" in capsys.readouterr().out
-    assert (lore_root / "build" / "specs" / "auth.md").is_file()
+    assert (lore_root / "work" / "specs" / "auth.md").is_file()
     assert not (lore_root / "specs").exists()
 
 
@@ -343,7 +343,7 @@ def test_main_reports_no_legacy_when_clean(
     tmp_path: Path, capsys: pytest.CaptureFixture
 ) -> None:
     clean = tmp_path / ".lore"
-    (clean / "build").mkdir(parents=True)
+    (clean / "work").mkdir(parents=True)
     rc = tend_migrate.main(["--lore-dir", str(clean)])
     assert rc == 0
     assert "No legacy structure detected" in capsys.readouterr().out
@@ -374,7 +374,7 @@ def test_main_apply_proceeds_on_yes_input(
     monkeypatch.setattr("builtins.input", lambda *a, **k: "y")
     rc = tend_migrate.main(["--lore-dir", str(lore_root), "--apply"])
     assert rc == 0
-    assert (lore_root / "build" / "specs" / "auth.md").is_file()
+    assert (lore_root / "work" / "specs" / "auth.md").is_file()
 
 
 # ---------------------------------------------------------------------------
@@ -417,8 +417,8 @@ def test_rewrite_document_skips_fenced_block() -> None:
     )
     new, edits = tend_migrate.rewrite_document(text)
     assert "cat .lore/specs/x.md" in new  # inside fence preserved
-    assert "see .lore/build/specs/x.md" in new
-    assert "and .lore/build/specs/y.md" in new
+    assert "see .lore/work/specs/x.md" in new
+    assert "and .lore/work/specs/y.md" in new
     # Two edits: line 2 and line 6.
     assert {e[0] for e in edits} == {2, 6}
 
@@ -433,14 +433,14 @@ def test_rewrite_document_skip_body_keeps_body_unchanged() -> None:
         "Body refers to .lore/specs/auth.md verbatim.\n"
     )
     new, _ = tend_migrate.rewrite_document(text, skip_body=True)
-    assert "- .lore/build/specs/auth.md" in new  # frontmatter rewritten
+    assert "- .lore/work/specs/auth.md" in new  # frontmatter rewritten
     assert "Body refers to .lore/specs/auth.md verbatim." in new
 
 
 def test_rewrite_document_handles_no_frontmatter() -> None:
     text = "Free body that mentions .lore/specs/auth.md once.\n"
     new, edits = tend_migrate.rewrite_document(text)
-    assert ".lore/build/specs/auth.md" in new
+    assert ".lore/work/specs/auth.md" in new
     assert len(edits) == 1
 
 
@@ -463,8 +463,8 @@ def test_plan_render_noop(tmp_path: Path) -> None:
 def test_plan_render_handles_only_rewrites(tmp_path: Path) -> None:
     """`/tend migrate` rerun-after-edit case: rewrites without moves."""
     lore = tmp_path / ".lore"
-    (lore / "build" / "specs").mkdir(parents=True)
-    target = lore / "build" / "specs" / "doc.md"
+    (lore / "work" / "specs").mkdir(parents=True)
+    target = lore / "work" / "specs" / "doc.md"
     target.write_text(
         "---\ntitle: t\nrelated:\n  - .lore/specs/auth.md\n---\nbody\n",
         encoding="utf-8",
@@ -490,8 +490,8 @@ def test_apply_rewrites_in_place_for_pre_existing_files(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     # Pre-existing in-tree file with stale link.
-    (lore / "build" / "design").mkdir(parents=True)
-    pre = lore / "build" / "design" / "settled.md"
+    (lore / "work" / "design").mkdir(parents=True)
+    pre = lore / "work" / "design" / "settled.md"
     pre.write_text(
         "---\ntitle: settled\nrelated:\n  - .lore/specs/moved.md\n---\n"
         "Link to [old](.lore/specs/moved.md).\n",
@@ -501,8 +501,8 @@ def test_apply_rewrites_in_place_for_pre_existing_files(tmp_path: Path) -> None:
     assert any(rw.path == pre for rw in plan.rewrites)
     tend_migrate.apply_plan(plan)
     text = pre.read_text(encoding="utf-8")
-    assert ".lore/build/specs/moved.md" in text
-    assert "/specs/moved.md" not in text.replace("/build/specs/moved.md", "")
+    assert ".lore/work/specs/moved.md" in text
+    assert "/specs/moved.md" not in text.replace("/work/specs/moved.md", "")
 
 
 def test_has_migration_doc_tag_inline_single_value() -> None:
@@ -536,7 +536,7 @@ def test_apply_handles_binary_file_in_legacy_dir(tmp_path: Path) -> None:
     (lore / "diagrams" / "blob.bin").write_bytes(b"\x00\x01\x02 not utf8 \xff")
     plan = tend_migrate.build_plan(lore)
     tend_migrate.apply_plan(plan)
-    moved = lore / "build" / "diagrams" / "blob.bin"
+    moved = lore / "work" / "diagrams" / "blob.bin"
     assert moved.read_bytes() == b"\x00\x01\x02 not utf8 \xff"
 
 

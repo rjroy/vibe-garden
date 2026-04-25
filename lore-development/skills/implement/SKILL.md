@@ -27,16 +27,16 @@ Invoked as `/implement <path>` where `<path>` is a lore artifact:
 
 | Input Type | Path Pattern | Behavior |
 |------------|-------------|----------|
-| Spec | `.lore/build/specs/*.md` | Determine phases from requirements, implement directly |
-| Design | `.lore/build/design/*.md` | Determine phases from the design, implement directly |
-| Plan | `.lore/build/plans/*.md` | Follow the plan's steps as phases (but see Task File Detection below) |
-| Notes | `.lore/build/notes/*.md` | Resume from progress tracker in the notes file |
+| Spec | `.lore/work/specs/*.md` | Determine phases from requirements, implement directly |
+| Design | `.lore/work/design/*.md` | Determine phases from the design, implement directly |
+| Plan | `.lore/work/plans/*.md` | Follow the plan's steps as phases (but see Task File Detection below) |
+| Notes | `.lore/work/notes/*.md` | Resume from progress tracker in the notes file |
 
 Read the input artifact. Identify its type from the path. If the artifact references other lore documents (a plan referencing a spec, notes referencing a plan), load those too.
 
 ## Output
 
-The primary output is the implemented code plus a notes file at `.lore/build/notes/<artifact-name>.md`.
+The primary output is the implemented code plus a notes file at `.lore/work/notes/<artifact-name>.md`.
 
 Use kebab-case. Match the source artifact's filename (e.g., if the plan is `auth-flow.md`, the notes file is `auth-flow.md`).
 
@@ -87,7 +87,7 @@ modules: [from source artifact if available]
 
 Read the input artifact. If it is a plan, the phases are its implementation steps. If it is a spec or design, break it into implementable phases (aim for independently testable chunks).
 
-**Task file detection.** When the input is a plan, check whether `.lore/build/tasks/<plan-name>/` exists (where `<plan-name>` matches the plan's filename without extension). If the directory exists and contains task files:
+**Task file detection.** When the input is a plan, check whether `.lore/work/tasks/<plan-name>/` exists (where `<plan-name>` matches the plan's filename without extension). If the directory exists and contains task files:
 
 - **Staleness check**: Compare the plan's modification timestamp against the oldest task file's timestamp. The oldest task is the right comparison point because all tasks are generated in one `/plan-breakdown` run, so the oldest represents when the decomposition happened. If the plan is newer than the oldest task, warn the user via AskUserQuestion with three options: re-run `/plan-breakdown`, use existing tasks, or abort.
 - **Phase list**: Read task files sorted by their `sequence` frontmatter field. These become the phases. Each phase corresponds to one task file.
@@ -106,7 +106,7 @@ If resuming from notes, read the progress tracker. Skip completed phases. When t
 
 Use the registry when available. When the registry is missing or doesn't cover a role, use the fallback type. `general-purpose` is always a valid fallback. Domain experts (security, performance, architecture) in the registry can be dispatched when a phase touches their area, but the three core roles are mandatory for every phase.
 
-Create or open the notes file at `.lore/build/notes/<artifact-name>.md`.
+Create or open the notes file at `.lore/work/notes/<artifact-name>.md`.
 
 ### 2. Execute Phases
 
@@ -137,7 +137,7 @@ When all phases and validation pass, update the notes file status to `complete`.
 Suggest running the simplify skill on the notes file:
 
 ```
-Implementation complete. Run `/simplify .lore/build/notes/<artifact-name>.md` to clean up the code for clarity.
+Implementation complete. Run `/simplify .lore/work/notes/<artifact-name>.md` to clean up the code for clarity.
 ```
 
 Replace `<artifact-name>` with the actual notes filename (matching the source artifact's filename).
