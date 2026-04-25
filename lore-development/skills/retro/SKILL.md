@@ -14,7 +14,7 @@ Record what happened. The retro is the witness step. Interpretation belongs else
 - When wanting to capture session context before it fades
 - Periodic reflection on project progress
 
-A retro is worth running on any session that left signal worth preserving — surprises, dead ends, things the user got confused by, assumptions that broke. The fresh-but-messy context is the whole value. A retro produced from a fresh session loses what's worth capturing.
+A retro is worth running on any session that left signal worth preserving — surprises, dead ends, things the user got confused by, assumptions that broke. The fresh-but-messy context is the whole value. A retro produced from a separate, clean session loses what's worth capturing.
 
 ## Stance
 
