@@ -114,6 +114,7 @@ Reference has no prescribed topology. Distill navigates it the same way an engin
 - Filenames and directory names aid search the way they do in code.
 - Frontmatter (`title`, `tags`, `modules`) is what `lore-researcher` queries — keep it accurate.
 - Sub-directories are fine when a topic warrants them (`.lore/reference/auth/`, `.lore/reference/_infrastructure/`). Don't pre-create empty subtrees.
+- **Prefer a sub-directory over a shared filename prefix.** If two or more files would share a topic prefix (`mind-reader-design.md`, `mind-reader-limitations.md`), put them in a sub-directory instead (`mind-reader/design.md`, `mind-reader/limitations.md`). Sub-directories carry the topic; filenames carry the facet.
 
 If a placement decision isn't obvious, propose two options to the user and let them pick.
 
