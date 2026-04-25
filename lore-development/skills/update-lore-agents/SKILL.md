@@ -49,7 +49,7 @@ Focus on agents with analysis/review capabilities (tools like Read, Grep, Glob, 
 
 | Agent | Category | Standard Description |
 |-------|----------|---------------------|
-| `lore-development:surface-surveyor` | Discovery | Entry point discovery for progressive feature excavation |
+| `lore-development:surface-surveyor` | Discovery | Entry point discovery for progressive distillation of features |
 | `lore-development:spec-reviewer` | Documentation Review | Fresh-context review of specs to catch clarity issues |
 | `lore-development:design-reviewer` | Documentation Review | Fresh-context review of designs to catch weak decisions |
 | `lore-development:plan-reviewer` | Documentation Review | Fresh-context review of plans to catch spec coverage gaps |
@@ -102,7 +102,7 @@ Last updated: [date]
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
-| surface-surveyor | Entry point discovery | During excavation, finding codebase entry points |
+| surface-surveyor | Entry point discovery | During `/distill code`, finding codebase entry points |
 
 ## Documentation Review
 
@@ -155,7 +155,7 @@ This registry is consumed by other lore-development skills:
 - `specify` - domain experts for requirements
 - `design` - security, performance, and architecture experts for trade-off analysis
 - `prep-plan` - architecture and security reviewers, plan-reviewer for spec coverage
-- `excavate` - discovery agents beyond surface-surveyor
+- `distill` - discovery agents beyond surface-surveyor for the `code` seed mode
 - `brainstorm`, `research`, `retro`, `ddp` - various domain experts
 
 Each skill checks for `.lore/lore-agents.md` and invokes relevant agents via the Task tool.

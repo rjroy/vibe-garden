@@ -206,4 +206,4 @@ For commissions and meetings (custom directories), search by:
 - `/back-propagate` updates specs backward (after building)
 - `/retro` captures lessons; back-propagate uses those lessons to fix the spec
 - `/tend status` flags stale specs; back-propagate resolves them
-- `/excavate` documents existing code; back-propagate documents existing lore artifacts
+- `/distill` promotes invariants the code can't say into reference; back-propagate updates build artifacts (specs) from what was actually built

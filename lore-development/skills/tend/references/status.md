@@ -50,6 +50,7 @@ Don't trust claimed status. Verify using these techniques:
 - Use Glob to find a plan with the same name in `.lore/build/plans/`
 - Check if that plan's status is `executed`
 - If no plan exists or it isn't executed, the spec likely isn't implemented
+- **Archive coupling (soft prompt)**: when an `implemented` spec is later surfaced as an archive candidate by `directories` mode, prompt "Distill this spec before archiving?" before archiving. The prompt is soft — the user can answer no and archive directly. See the "Distill-Before-Archive" section of `tend/SKILL.md`. Without this prompt, the reference-promotion opportunity captured in `/distill build <spec>` is silently lost when the spec is archived.
 
 **For "executed" plans**:
 - Check if implementation appears done (code exists, tests pass)

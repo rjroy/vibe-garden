@@ -30,6 +30,18 @@ Each mode builds on prior work. Status must be accurate before tag analysis is m
 
 **Migrate is separate.** It is not part of the sequential chain and is not run by `/tend` without arguments. Invoke explicitly with `/tend migrate` when a project still uses the pre-redesign layout. See `references/migrate.md`.
 
+## Distill-Before-Archive (soft prompt)
+
+When the `directories` mode surfaces a spec with `status: implemented` as an archive candidate, prompt the user before archiving:
+
+> "Distill this spec before archiving? (yes / no / skip)"
+
+- **yes**: pause the archive flow for this file and suggest `/distill build <path-to-spec>`. After the user runs distill (or declines mid-distill), return to the archive confirmation.
+- **no**: proceed with archiving as proposed.
+- **skip**: leave the file in place; remove it from this run's archive batch.
+
+This is a soft prompt, not enforcement. The user retains agency to archive without distilling. The prompt exists because once an implemented spec is archived without distillation, the reference-promotion opportunity is silently lost when hygiene runs. See `references/status.md` for the archive logic and `lore-development/skills/distill/SKILL.md` for the distill flow.
+
 ## Invocation
 
 ```

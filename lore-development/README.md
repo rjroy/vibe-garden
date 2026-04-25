@@ -22,7 +22,7 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:simplify` | Orchestrate code cleanup with tests and review |
 | `/lore-development:retro` | Review work, capture lessons learned |
 | `/lore-development:poke-holes` | Challenge ideas adversarially |
-| `/lore-development:excavate` | **Design archaeology** - discover and document existing systems |
+| `/lore-development:distill` | Promote what the code cannot say into reference docs (two seed modes: `code`, `build`) |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
 | `/lore-development:define-validation` | Define AI validation criteria for work in progress |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
@@ -114,9 +114,9 @@ Retros aren't only for build. An explore session that surfaced a surprising cons
 
 Rolling context helps when work is exploratory. It hurts when work is procedural and artifact-driven. Breaking context before `/prep-plan` also serves as a forcing function: if the specs and designs can't stand on their own without the conversation that produced them, they aren't ready.
 
-### Excavating existing code
+### Distilling existing code
 
-Use `/excavate` when inheriting or joining an existing codebase. This discovers the lore that should have been documented. The output is the same (`.lore/specs/`, architecture docs), but the process starts from code instead of intent.
+Use `/distill code` when inheriting or joining an existing codebase, or `/distill build` when a spec, plan, or brainstorm holds invariants worth promoting. Both seeds run the same loop: read the seed, verify against current code, present reconciled candidates, let the user gate each one. Output goes to `.lore/reference/` and only contains what the code cannot tell a reader. Null output is a valid outcome.
 
 ## The Compound Loop
 
@@ -162,5 +162,5 @@ Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` t
 - **Context over process** - build lore, not bureaucracy
 - **Independent but connected** - each skill works alone but knows about the others
 - **Trust the LLM** - don't over-specify what modern AI already does well
-- **Human checkpoints** - excavation requires confirmation at each layer
+- **Human checkpoints** - distillation gates each promotion candidate by user decision
 - **Compound knowledge** - past learnings automatically surface for new work
