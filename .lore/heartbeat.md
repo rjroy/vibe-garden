@@ -26,3 +26,14 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
+- 00:09 commission-Edmund-20260425-000910 result: Version bump completed successfully.
+
+**File touched:** `lore-development/.claude-plugin/plugin.json`
+
+**Version change:** 1.11.2 → 2.0.0
+
+**Verification:**
+- JSON syntax valid (jq parses cleanly)
+- O...
+
+- 00:09 commission-Edmund-20260425-000910 completed
