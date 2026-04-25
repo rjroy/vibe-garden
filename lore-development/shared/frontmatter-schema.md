@@ -84,6 +84,8 @@ Build artifacts retain meaningful per-type lifecycles. The directory key is `bui
 
 `/retro`'s reshape collapses the old `complete` status: retros are free-form notes, not analyzed artifacts, so "complete" has no distinct meaning. A retro is `open` while it can still be amended and `archived` once the work it tracks is fully past.
 
+Diagrams are the one build type whose lifecycle is visual currency rather than a work-cycle state. REQ-REDESIGN-9 does not enumerate diagram statuses, and REQ-REDESIGN-5 splits diagrams by purpose (session-bound vs current-state) rather than by lifecycle. Both `build/diagrams/` and `reference/diagrams/` therefore share the same `current / outdated / archived` set: a diagram is `current` while it accurately depicts what it claims to depict, `outdated` once it does not, and `archived` once it is no longer worth maintaining. The split happens at the directory level (which subtree a diagram belongs to), not at the status level.
+
 ### Reference documents
 
 All reference documents share one status set:

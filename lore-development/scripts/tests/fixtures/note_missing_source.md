@@ -1,7 +1,7 @@
 ---
 title: "Note missing source"
 date: 2026-03-10
-status: active
+status: in_progress
 tags: [testing]
 ---
 

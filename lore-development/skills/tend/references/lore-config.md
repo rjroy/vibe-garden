@@ -21,7 +21,10 @@ custom_directories:
   meetings: [open, closed, deferred]
   prototypes: [active, archived]
 
-# Override the archive directory name (default: _archive)
+# Route archives to a named directory instead of in-place.
+# Default behavior (when this key is absent): documents archive in place
+# by setting status: archived. Set this only when archives should be moved
+# into a dedicated directory.
 archive_directory: _abandoned
 
 # Filename patterns to exempt from convention checks.
@@ -63,7 +66,7 @@ the user confirms as intentional.
 
 ### Directories mode
 - Treats `custom_directories` keys as standard (won't flag as orphans)
-- Uses `archive_directory` instead of hardcoded `_archive`
+- Default archive behavior is in-place (`status: archived` on the document); when `archive_directory` is set, archives are routed to the named directory instead
 - Still reports empty directories and single-file directories regardless of config
 
 ## Config Suggestion Step

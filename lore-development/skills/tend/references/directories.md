@@ -70,7 +70,9 @@ The first sweep is partition discipline. Anything outside `build/`, `reference/`
 | `learned/` entry that doesn't name a mistake | Flag for rewrite; learned is mistakes-only |
 
 **Common legacy orphans** (from the pre-redesign layout):
-`specs/`, `plans/`, `tasks/`, `brainstorm/`, `research/`, `retros/`, `design/`, `notes/`, `issues/`, `diagrams/`, `excavations/`, `_archive/`. All of these now live under `build/` (or have been folded into `reference/learned`). Route via `/tend migrate`.
+`brainstorm/`, `specs/`, `design/`, `plans/`, `tasks/`, `notes/`, `research/`, `retros/`, `issues/`, `ideas/`, `validation/`, `stubs/`, `excavations/`, `diagrams/`. All of these now live under `build/` (or have been folded into `reference/learned/`). Route via `/tend migrate`.
+
+`_archive/` is a separate concern: it is the historical default name for an out-of-tree archive directory. If a project relied on the old default, see `lore-config.md` for how to register it via `archive_directory`. It is not a redesign legacy.
 
 ### Size Threshold
 
