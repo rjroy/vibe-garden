@@ -26,12 +26,8 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
-- 21:34 commission-Dalton-20260424-180526 result: ## Phase 3 review-fix pass
+- 21:42 commission-Dalton-20260424-180556 result: Phase 4 complete. /excavate → /distill rename and reshape landed.
 
-All three Thorne findings addressed; tests pass; coverage holds; dry-run unchanged in shape.
-
-### Findings disposition
-
-**FIX-NOW #1 — destination collisions silently overw...
-
-- 21:34 commission-Dalton-20260424-180526 completed
+- 21:42 commission-Dalton-20260424-180556 completed
+## Files touched
+- **Renamed** (git mv, history preserved): `lore-development/skills/excavate/SKILL.md` → `lore-development/skills/di...
