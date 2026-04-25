@@ -20,7 +20,7 @@ This agent is invoked via the Task tool with:
 - Optionally, which skill to apply (if not specified, you determine the appropriate skill)
 
 **Input examples:**
-- "Look at `.lore/specs/auth-flow.md` and tell me if it's actually coherent"
+- "Look at `.lore/build/specs/auth-flow.md` and tell me if it's actually coherent"
 - "We've been going in circles on the caching approach. Brainstorm alternatives without our existing assumptions"
 - "Something feels off about this plan but I can't articulate it"
 

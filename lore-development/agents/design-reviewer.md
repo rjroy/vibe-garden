@@ -18,9 +18,9 @@ This agent is invoked via the Task tool:
 
 **Purpose**: Identify weak decisions, missing trade-offs, and gaps that would block implementation.
 
-**Input**: Path to document to review, or the agent will find the most recently modified design in `.lore/design/`
+**Input**: Path to document to review, or the agent will find the most recently modified design in `.lore/build/design/`
 
-**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral.
+**Output**: Review returned to the invoker. The invoker (user or skill) decides whether to save it or act on it immediately. Reviews are typically ephemeral, but can be saved to `.lore/build/reviews/` if the project wants to track review history.
 
 ## Tools
 
@@ -100,8 +100,8 @@ Red flags:
 
 ## Process
 
-1. **Identify document**: If path not specified, use Glob to find most recently modified file in `.lore/design/`
-2. **Gather context**: Read any linked specs (`.lore/specs/`) to understand the requirements this design serves
+1. **Identify document**: If path not specified, use Glob to find most recently modified file in `.lore/build/design/`
+2. **Gather context**: Read any linked specs (`.lore/build/specs/`) to understand the requirements this design serves
 3. **Read completely**: Read the entire document before forming judgments
 4. **Check the Decision**: Start here. A design without a real decision is research mislabeled.
 5. **Apply remaining lenses**: Work through trade-offs, interface, and edge cases
@@ -176,7 +176,7 @@ If I could only fix three things:
 
 6. **Acknowledge strengths**: Fresh eyes also see what works well. Include this.
 
-7. **Stay in scope**: Review designs (`.lore/design/`). Don't review specs (that's spec-reviewer's job) or plans (those are implementation details).
+7. **Stay in scope**: Review designs (`.lore/build/design/`). Don't review specs (that's spec-reviewer's job) or plans (those are implementation details).
 
 8. **Design vs Plan**: A design answers "how does it work?" in the abstract - algorithms, data structures, protocols. It does NOT answer "how do we build it?" - files, functions, dependencies. If the document is mostly file paths and function names, it's a plan mislabeled as a design.
 
