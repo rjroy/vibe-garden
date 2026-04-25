@@ -27,7 +27,7 @@ The user names the lesson. The skill helps shape the articulation, runs dedup ag
 - The skill never volunteers candidates from artifacts the user did not point at.
 - "Nothing, actually" is a valid user answer at any step. The session ends without writing a file.
 
-This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons. See `.lore/work/brainstorm/principles-for-capture-skills.md` and `.lore/work/brainstorm/learn-dialog.md`.
+This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons.
 
 ## Opening: Two-Path Question
 
@@ -117,7 +117,7 @@ Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case
 
 Do not pre-create `.lore/learned/`. The directory is materialized by the first `/learn` write. If the directory does not exist when the user accepts the draft, create it then.
 
-This default is revisable. The internal structure of `.lore/learned/` (categorized vs flat, file-per-entry vs append-to-topic-file, full lifecycle) is owned by `.lore/work/issues/design-learned-structure.md`. Adopt revisions when that issue resolves.
+This default is revisable; the internal structure of `.lore/learned/` (categorized vs flat, file-per-entry vs append-to-topic-file, full lifecycle) may evolve.
 
 ## Frontmatter
 

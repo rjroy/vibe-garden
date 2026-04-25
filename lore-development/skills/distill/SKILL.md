@@ -52,13 +52,13 @@ This is what does the work in this skill. Apply it to every candidate before pro
 - Restatements of what a well-named identifier already says
 - Layered summaries that mirror the code's structure
 
-If a candidate paragraph could be reconstructed by reading the code, it does not belong in reference. The full rule lives in `.lore/work/brainstorm/distill-function.md` ("The shape rule for reference"). Cite that brainstorm if a candidate is in dispute.
+If a candidate paragraph could be reconstructed by reading the code, it does not belong in reference.
 
 ## Null Output Is Valid
 
 A distill session may produce zero reference changes. That is a successful outcome when the seed's claims are all already discoverable from code, or when nothing survives the shape rule.
 
-This skill does not demand candidates. There is no template that asks for N items. If a session ends with no writes, that is the right answer for that session. (Forcing N candidates produces N hallucinations — see `.lore/work/brainstorm/principles-for-capture-skills.md` principle 1.)
+This skill does not demand candidates. There is no template that asks for N items. If a session ends with no writes, that is the right answer for that session. (Forcing N candidates produces N hallucinations.)
 
 ## Core Operation
 
