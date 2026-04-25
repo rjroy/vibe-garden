@@ -42,6 +42,12 @@ Both skills shipped in this commission. No split needed.
 
 - `lore-development/skills/learn/SKILL.md` — new file, full promp...
 - 22:29 commission-Dalton-20260424-222341 completed
+- 22:33 commission-Thorne-20260424-222404 result: ## Phase 5 review — `/learn` (new) + `/retro` reshape
+
+**Verdict: clean. No blockers, no fix-now items.** Two nits below.
+
+Both SKILL.md files comply with their requirements. The anti-checks the spec ...
+- 22:33 commission-Thorne-20260424-222404 completed
 ## Per-finding resolution
 
 ### Fix-now
