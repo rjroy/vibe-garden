@@ -1,7 +1,7 @@
 ---
 title: "Commission: Lore-redesign Phase 6: Octavia README review"
 date: 2026-04-25
-status: pending
+status: dispatched
 tags: [commission]
 worker: Octavia
 workerDisplayTitle: "Guild Chronicler"
@@ -24,6 +24,11 @@ activity_timeline:
     reason: "Dependencies satisfied"
     from: "blocked"
     to: "pending"
+  - timestamp: 2026-04-25T05:39:49.121Z
+    event: status_dispatched
+    reason: "Dispatched to worker"
+    from: "pending"
+    to: "dispatched"
 current_progress: ""
 projectName: vibe-garden
 ---
