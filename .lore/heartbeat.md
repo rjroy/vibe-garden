@@ -61,6 +61,16 @@ All five lore-development agents updated for the three-directory model. Search-p
 ---
 
 - 17:31 commission-Thorne-20260424-171719 completed
+- 17:32 commission-Dalton-20260424-171739 result: ## Phase 1 review-gate fix — complete
+
+Thorne's review surfaced exactly one fix-now finding. Fix applied; verification greps re-run and match Thorne's recorded baseline.
+
+---
+
+### Findings dispatch
+
+*...
+- 17:32 commission-Dalton-20260424-171739 completed
 ## Findings
 
 ### fix-now
