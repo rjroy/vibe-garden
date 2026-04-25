@@ -26,34 +26,3 @@ Workers can also add entries to this file during their sessions.
 ## Context Notes
 
 ## Recent Activity
-- 22:39 commission-Dalton-20260424-222441 result: ## Phase 6 — Plugin docs + full audit + dry-run dogfood
-
-### Files touched (lore-development scope only)
-
-- `lore-development/README.md` — replaced flat `.lore/` tree with three-directory model (`buil...
-
-- 22:39 commission-Dalton-20260424-222441 completed
-- 22:42 commission-Octavia-20260424-222511 result: README review of `lore-development/README.md` (Phase 6 rewrite).
-
-- 22:42 commission-Octavia-20260424-222511 completed
-- 22:42 commission-Thorne-20260424-222457 result: ## Phase 6 Review — Clean
-
-**Verdict: No defects. Phase 6 work matches spec and stays within scope.**
-
-### Scope discipline (REQ-REDESIGN-45 boundary)
-
-Pass. `git show 5605d66 --stat` lists six files:...
-- 22:43 commission-Thorne-20260424-222457 completed
-- 22:46 commission-Dalton-20260424-222523 result: ## Phase 6 Review Findings — Addressed
-
-**Inputs:** Thorne (commission-Thorne-20260424-222457) reported clean. Octavia (commission-Octavia-20260424-222511) reported 2 fix-now + 5 nits.
-
-### Conflict r...
-- 22:46 commission-Dalton-20260424-222523 completed
-- 22:53 commission-Thorne-20260424-222549 result: # Phase 7 — Final Spec Validation: lore-redesign.md
-
-**Verdict: Clean.** All in-scope requirements (REQ-REDESIGN-1 through REQ-REDESIGN-44, REQ-REDESIGN-46 through REQ-REDESIGN-48) are met. REQ-REDESI...
-- 22:53 commission-Thorne-20260424-222549 completed
-## Overall
-
-The README's framing of `build/`, `reference/`, and `learned/` matches the spec's three-directory model faithfully. The "s...
