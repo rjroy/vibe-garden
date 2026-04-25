@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Hook script for idea capture in lore-development plugin.
-Intercepts prompts starting with "idea: " and appends to daily ideas file.
+Intercepts prompts starting with "idea: " and appends to the daily ideas file
+under .lore/build/ideas/.
 Outputs block decision JSON or empty {} to stdout.
 Always exits 0 to avoid blocking Claude Code.
 
@@ -44,7 +45,7 @@ def main():
             sys.exit(0)
 
         today = date.today().isoformat()
-        ideas_dir = Path(cwd) / ".lore" / "ideas"
+        ideas_dir = Path(cwd) / ".lore" / "build" / "ideas"
         ideas_dir.mkdir(parents=True, exist_ok=True)
 
         daily_file = ideas_dir / f"{today}.md"
@@ -57,7 +58,7 @@ def main():
 
         output = {
             "decision": "block",
-            "reason": f"Idea saved to .lore/ideas/{today}.md",
+            "reason": f"Idea saved to .lore/build/ideas/{today}.md",
         }
         print(json.dumps(output))
 

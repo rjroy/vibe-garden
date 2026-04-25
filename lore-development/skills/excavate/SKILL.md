@@ -34,7 +34,7 @@ This is the opposite of trying to understand everything at once.
 
 **Action**: Check for existing excavation work.
 
-1. Look for `.lore/excavations/index.md` to see what's been documented
+1. Look for `.lore/build/excavations/index.md` to see what's been documented
 2. Look for existing reference docs in `.lore/reference/`
 3. Determine if this is a fresh start or continuation
 
@@ -92,7 +92,7 @@ Use the document structure below.
 
 ### Step 6: Update the Index
 
-**Action**: Update `.lore/excavations/index.md` with:
+**Action**: Update `.lore/build/excavations/index.md` with:
 - The newly documented feature
 - Any discovered (not yet documented) features
 - Remaining unexplored entry points
@@ -189,7 +189,7 @@ Status values:
 Implementation details, gotchas, or context worth preserving.
 ```
 
-### Excavation Index (`.lore/excavations/index.md`)
+### Excavation Index (`.lore/build/excavations/index.md`)
 
 ```markdown
 # Excavation Index

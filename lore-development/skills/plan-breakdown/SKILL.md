@@ -9,7 +9,7 @@ Decompose a plan into individual task files, each scoped to one logical change w
 
 ## When to Use
 
-- A plan exists in `.lore/plans/` and the work is complex enough that implement benefits from tighter scope control
+- A plan exists in `.lore/build/plans/` and the work is complex enough that implement benefits from tighter scope control
 - The plan has multiple steps that touch different concerns, and reviewing task granularity before implementation would catch problems early
 - Requirement traceability matters: each piece of work should trace back to a specific requirement or goal
 
@@ -20,7 +20,7 @@ Decompose a plan into individual task files, each scoped to one logical change w
 
 ## Input
 
-Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/plans/*.md`).
+Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/build/plans/*.md`).
 
 Read the plan. If the plan references a spec (in its Spec Reference section or frontmatter `related` field), load the spec too. Record the spec's file path; it will be used in both the task frontmatter (`related` field) and the Why section of each task. The spec provides requirement IDs needed for the Why section. If the plan has a Goal section instead of a spec reference, the goal text serves the same purpose and the plan's own path is used in the Why section instead.
 
@@ -78,8 +78,8 @@ title: [Short task description]
 date: YYYY-MM-DD
 status: pending
 tags: [task]
-source: .lore/plans/[plan-name].md
-related: [.lore/specs/[spec-name].md]   # omit if plan has no spec
+source: .lore/build/plans/[plan-name].md
+related: [.lore/build/specs/[spec-name].md]   # omit if plan has no spec
 sequence: N
 modules: [affected-modules]
 ---
@@ -109,10 +109,10 @@ explaining what's missing.]
 [Requirement ID, source file path, and excerpt so the implementation agent
 understands the justification and can find the original context.
 
-With spec: From `.lore/specs/auth-flow.md`, REQ-AUTH-3: "All API endpoints
+With spec: From `.lore/build/specs/auth-flow.md`, REQ-AUTH-3: "All API endpoints
 require authentication except /health and /login"
 
-Without spec (goal-based plan): From `.lore/plans/auth-flow.md`, Goal: "Ensure
+Without spec (goal-based plan): From `.lore/build/plans/auth-flow.md`, Goal: "Ensure
 all API access is authenticated" followed by the relevant excerpt.
 
 If a plan step has no traceable requirement or goal, flag the task for user
@@ -130,9 +130,9 @@ implementation agent may discover additional files need changing.]
 
 ### Storage
 
-Save task files to `.lore/tasks/<plan-name>/NNN-<task-name>.md` where:
+Save task files to `.lore/build/tasks/<plan-name>/NNN-<task-name>.md` where:
 
-- `<plan-name>` matches the plan's filename without extension (e.g., plan `.lore/plans/auth-flow.md` produces directory `.lore/tasks/auth-flow/`)
+- `<plan-name>` matches the plan's filename without extension (e.g., plan `.lore/build/plans/auth-flow.md` produces directory `.lore/build/tasks/auth-flow/`)
 - `NNN` is a zero-padded sequence number starting at 001
 - `<task-name>` is a kebab-case description derived from the task's purpose
 
@@ -158,7 +158,7 @@ Do not proceed to implementation. Plan-breakdown produces task files and stops. 
 
 Plan-breakdown sits in a chain: `/prep-plan` produces the plan, `/plan-breakdown` decomposes it into tasks, `/implement` executes the tasks. Each handoff is explicit and user-controlled. No skill auto-invokes the next.
 
-When `/implement` receives a plan that has corresponding task files in `.lore/tasks/<plan-name>/`, it uses those tasks as its phase list instead of deriving phases from the plan's steps. This is the consumption side of what plan-breakdown produces. The contract between the two skills is the task file format defined above and the directory convention in `.lore/tasks/`. Implement also performs a staleness check, comparing the plan's modification time against the task files, and warns the user if the plan has been modified since decomposition.
+When `/implement` receives a plan that has corresponding task files in `.lore/build/tasks/<plan-name>/`, it uses those tasks as its phase list instead of deriving phases from the plan's steps. This is the consumption side of what plan-breakdown produces. The contract between the two skills is the task file format defined above and the directory convention in `.lore/build/tasks/`. Implement also performs a staleness check, comparing the plan's modification time against the task files, and warns the user if the plan has been modified since decomposition.
 
 ## What Plan-Breakdown Adds
 

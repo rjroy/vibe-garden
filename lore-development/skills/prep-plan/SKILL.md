@@ -34,8 +34,8 @@ This skill is a document-authoring workflow, like `/specify`. It gathers context
 2. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the topic/feature description. **Do not run in background.** Wait for the result before continuing. Include findings in the Codebase Context section.
 
 3. **Gather context** from `.lore/`:
-   - Relevant specs from `.lore/specs/` (if they exist)
-   - Design documents from `.lore/design/` (if they exist)
+   - Relevant specs from `.lore/build/specs/` (if they exist)
+   - Design documents from `.lore/build/design/` (if they exist)
    - Related research or brainstorms
 
 4. **Explore the codebase**: Use the Task tool with an Explore subagent to understand the current state of code relevant to this plan. What exists? What patterns are in use? Where will changes land?
@@ -60,13 +60,13 @@ This skill is a document-authoring workflow, like `/specify`. It gathers context
 
 8. **Confirm with user** before saving.
 
-9. **Save to `.lore/plans/`**
+9. **Save to `.lore/build/plans/`**
 
 10. **Offer fresh-eyes review** (see below)
 
 ## Output
 
-Save to `.lore/plans/[feature-name].md`
+Save to `.lore/build/plans/[feature-name].md`
 
 Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `auth-flow.md`, plan is `auth-flow.md`). When no spec exists, derive the filename from the feature or goal description.
 
@@ -212,7 +212,7 @@ Invoke the `plan-reviewer` agent on the saved plan using the Task tool. The agen
 ## Linking to Specs
 
 When a spec exists, plan documents should reference it:
-- In frontmatter: `related: [.lore/specs/auth-flow.md]`
+- In frontmatter: `related: [.lore/build/specs/auth-flow.md]`
 - In Spec Reference section: full requirement mapping
 
 Plans can also reference design documents when the technical approach is non-trivial.

@@ -16,16 +16,16 @@ Review artifacts and record lessons learned.
 ## Process
 
 1. Review relevant `.lore/` artifacts:
-   - Original spec in `.lore/specs/`
-   - Plan in `.lore/plans/`
+   - Original spec in `.lore/build/specs/`
+   - Plan in `.lore/build/plans/`
 2. Reflect on what happened vs. what was expected
 3. Capture lessons learned
-4. Save to `.lore/retros/`
+4. Save to `.lore/build/retros/`
 5. Graduate lessons (see Lessons Graduation below)
 
 ## Output
 
-Save to `.lore/retros/[feature-name].md`
+Save to `.lore/build/retros/[feature-name].md`
 
 ### Document Structure
 
@@ -70,7 +70,7 @@ After saving the retro, graduate lessons to higher scopes.
 
 ### Detection
 
-If `/retro` is invoked on an existing retro document (path to `.lore/retros/*.md`), skip the normal retro flow and run graduation only.
+If `/retro` is invoked on an existing retro document (path to `.lore/build/retros/*.md`), skip the normal retro flow and run graduation only.
 
 ### Flow
 

@@ -32,19 +32,19 @@ If you ran `/prep-plan` 100 times with current context:
 ## Process
 
 1. **Search for related prior work**: Use the Task tool to invoke the `lore-researcher` agent with the technical problem description. **Do not run in background.** Wait for the result before continuing. Include findings in the Context section.
-2. Review any relevant `.lore/research/`, `.lore/brainstorm/`, or `.lore/specs/` context
+2. Review any relevant `.lore/build/research/`, `.lore/build/brainstorm/`, or `.lore/build/specs/` context
 3. Clarify the technical problem - what exactly needs deciding?
 4. Explore approaches - at least 2-3 options with trade-offs
 5. **Decide**: Pick an approach and document why
 6. Define the interface/contract - how will other code interact?
 7. Document edge cases
 8. Confirm with user before saving
-9. Save to `.lore/design/`
+9. Save to `.lore/build/design/`
 10. **Offer fresh-eyes review** (see below)
 
 ## Output
 
-Save to `.lore/design/[topic].md`
+Save to `.lore/build/design/[topic].md`
 
 Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `history-sync.md`, design is `history-sync.md` or `history-sync-dedup-algorithm.md`).
 
@@ -149,7 +149,7 @@ If `.lore/lore-agents.md` exists, consult it for specialized agents that can hel
 ## Linking to Specs
 
 Design documents should reference their parent spec when one exists:
-- In frontmatter: `related: [.lore/specs/history-sync.md]`
-- In Problem section: "See [Spec: history-sync](.lore/specs/history-sync.md) for requirements."
+- In frontmatter: `related: [.lore/build/specs/history-sync.md]`
+- In Problem section: "See [Spec: history-sync](.lore/build/specs/history-sync.md) for requirements."
 
 Design documents can also stand alone for technical problems that don't have user-facing requirements.

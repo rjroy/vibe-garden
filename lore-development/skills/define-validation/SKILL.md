@@ -26,7 +26,7 @@ Define how the AI validates its work before declaring done.
 
 If a spec or plan exists, offer to append the AI Validation section to it.
 
-If no formal document exists, save to `.lore/validation/[feature-or-work].md`
+If no formal document exists, save to `.lore/build/validation/[feature-or-work].md`
 
 ### Validation Criteria Structure
 

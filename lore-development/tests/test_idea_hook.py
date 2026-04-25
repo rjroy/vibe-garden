@@ -106,14 +106,14 @@ class TestIdeaHook:
         self.run_hook(
             {"prompt": "idea: fix the sidebar", "cwd": str(tmp_path)}, tmp_path
         )
-        daily_file = tmp_path / ".lore" / "ideas" / "2026-02-18.md"
+        daily_file = tmp_path / ".lore" / "build" / "ideas" / "2026-02-18.md"
         assert daily_file.exists()
         content = daily_file.read_text()
         assert content == "# 2026-02-18\n\n- fix the sidebar\n"
 
     def test_appends_to_existing_file(self, tmp_path):
         """Existing file gets append only, no duplicate header."""
-        ideas_dir = tmp_path / ".lore" / "ideas"
+        ideas_dir = tmp_path / ".lore" / "build" / "ideas"
         ideas_dir.mkdir(parents=True)
         daily_file = ideas_dir / "2026-02-18.md"
         daily_file.write_text("# 2026-02-18\n\n- first idea\n")
@@ -128,8 +128,8 @@ class TestIdeaHook:
     # --- Directory creation ---
 
     def test_creates_ideas_directory(self, tmp_path):
-        """.lore/ideas/ is created when missing."""
-        ideas_dir = tmp_path / ".lore" / "ideas"
+        """.lore/build/ideas/ is created when missing."""
+        ideas_dir = tmp_path / ".lore" / "build" / "ideas"
         assert not ideas_dir.exists()
 
         self.run_hook(
@@ -144,7 +144,7 @@ class TestIdeaHook:
         self.run_hook(
             {"prompt": "idea: test", "cwd": str(tmp_path)}, tmp_path
         )
-        daily_file = tmp_path / ".lore" / "ideas" / "2026-02-18.md"
+        daily_file = tmp_path / ".lore" / "build" / "ideas" / "2026-02-18.md"
         content = daily_file.read_text()
         assert not content.startswith("---")
         assert content.startswith("# ")
@@ -159,7 +159,7 @@ class TestIdeaHook:
         output = json.loads(stdout.strip())
         assert output == {
             "decision": "block",
-            "reason": "Idea saved to .lore/ideas/2026-02-18.md",
+            "reason": "Idea saved to .lore/build/ideas/2026-02-18.md",
         }
 
     def test_empty_json_on_no_match(self, tmp_path):
@@ -212,7 +212,7 @@ class TestIdeaHook:
             {"prompt": prompt, "cwd": str(tmp_path)},
             tmp_path,
         )
-        daily_file = tmp_path / ".lore" / "ideas" / "2026-02-18.md"
+        daily_file = tmp_path / ".lore" / "build" / "ideas" / "2026-02-18.md"
         content = daily_file.read_text()
         assert "- fix `code` with **bold** and [links](url)\n" in content
 
@@ -228,5 +228,5 @@ class TestIdeaHook:
             tmp_path,
             mock_date="2026-02-18",
         )
-        assert (tmp_path / ".lore" / "ideas" / "2026-02-17.md").exists()
-        assert (tmp_path / ".lore" / "ideas" / "2026-02-18.md").exists()
+        assert (tmp_path / ".lore" / "build" / "ideas" / "2026-02-17.md").exists()
+        assert (tmp_path / ".lore" / "build" / "ideas" / "2026-02-18.md").exists()

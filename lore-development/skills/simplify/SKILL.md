@@ -28,13 +28,13 @@ Invoked as `/simplify` with optional arguments:
 |------------|---------|----------|
 | Git changes | No args | Simplify uncommitted changes from git status |
 | File patterns | `pattern` | Simplify files matching the pattern |
-| Notes | `.lore/notes/*.md` | Resume from progress tracker in the notes file |
+| Notes | `.lore/build/notes/*.md` | Resume from progress tracker in the notes file |
 
 Read the specified input to identify files requiring simplification. If resuming from notes, load the progress tracker to determine where to continue.
 
 ## Output
 
-The primary output is simplified code plus a notes file at `.lore/notes/simplify-<identifier>.md`.
+The primary output is simplified code plus a notes file at `.lore/build/notes/simplify-<identifier>.md`.
 
 ### Document Structure
 
@@ -115,7 +115,7 @@ modules: [from file paths if identifiable]
 1. Check the first argument (if any)
 2. Determine input mode:
    - **No arguments**: use git changes mode
-   - **First arg ends with `.md` AND contains `.lore/notes/`**: use notes file mode
+   - **First arg ends with `.md` AND contains `.lore/build/notes/`**: use notes file mode
    - **Otherwise**: treat first arg as a file pattern, use file patterns mode
 
 #### Git changes mode
@@ -144,7 +144,7 @@ modules: [from file paths if identifiable]
 
 #### Notes file mode
 
-**When invoked with a path to `.lore/notes/*.md`:**
+**When invoked with a path to `.lore/build/notes/*.md`:**
 
 1. Use Read tool to load the notes file
 2. Parse the Log section entries to extract file paths mentioned in:
@@ -189,14 +189,14 @@ Determine the identifier for the notes file based on input mode:
 
 **Notes file mode (path argument):**
 - Extract base name without `.md` extension
-- Example: `.lore/notes/auth-flow.md` → `auth-flow`
+- Example: `.lore/build/notes/auth-flow.md` → `auth-flow`
 - Example: `feature-impl.md` → `feature-impl`
 
 #### Create notes file
 
 **Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for notes.
 
-Create the notes file at `.lore/notes/simplify-<identifier>.md` using the Write tool immediately after determining the identifier.
+Create the notes file at `.lore/build/notes/simplify-<identifier>.md` using the Write tool immediately after determining the identifier.
 
 Set initial values:
 - `status: active` in frontmatter

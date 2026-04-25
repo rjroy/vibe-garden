@@ -20,7 +20,7 @@ Record exploratory conversation. Emphasize "what if" over raw solutions.
 2. Ask "what if" questions to expand thinking
 3. Don't rush to solutions - sit with possibilities
 4. When the brainstorm reaches a natural pause, offer to save it
-5. Save to `.lore/brainstorm/`
+5. Save to `.lore/build/brainstorm/`
 
 ## Handling Sketches
 
@@ -32,7 +32,7 @@ If the user provides a sketch, diagram, or image:
 
 ## Output
 
-Save to `.lore/brainstorm/[topic].md`
+Save to `.lore/build/brainstorm/[topic].md`
 
 Use kebab-case. Track session dates in frontmatter, not filenames.
 
@@ -66,7 +66,7 @@ Questions that emerged but weren't resolved.
 
 ## Context
 
-Check `.lore/research/` for external context that might inform the brainstorm.
+Check `.lore/build/research/` for external context that might inform the brainstorm.
 
 ## Specialized Agents
 
