@@ -198,7 +198,7 @@ Implementation details, gotchas, or context worth preserving.
 
 | Feature | Spec | Excavated | Connected To |
 |---------|------|-----------|--------------|
-| feature-name | [feature-name.md](../reference/feature-name.md) | YYYY-MM-DD | other, features |
+| feature-name | [feature-name.md](../../reference/feature-name.md) | YYYY-MM-DD | other, features |
 
 ## Discovered (Not Yet Documented)
 
