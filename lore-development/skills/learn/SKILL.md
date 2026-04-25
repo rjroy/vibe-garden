@@ -27,7 +27,7 @@ The user names the lesson. The skill helps shape the articulation, runs dedup ag
 - The skill never volunteers candidates from artifacts the user did not point at.
 - "Nothing, actually" is a valid user answer at any step. The session ends without writing a file.
 
-This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons. See `.lore/brainstorm/principles-for-capture-skills.md` and `.lore/brainstorm/learn-dialog.md`.
+This is load-bearing. A capture skill that proposes candidates produces hallucinated lessons. See `.lore/build/brainstorm/principles-for-capture-skills.md` and `.lore/build/brainstorm/learn-dialog.md`.
 
 ## Opening: Two-Path Question
 
@@ -64,7 +64,7 @@ A `/learn` entry is malformed unless it takes one of these shapes:
 - "Don't do X because Y happened (or would happen)."
 - "If you find yourself doing X, stop — here's why."
 
-Entries shaped like "Do X because it worked" are malformed. Success is overdetermined; success-shaped lessons read like best-practice tips that don't survive the next project. See `.lore/brainstorm/principles-for-capture-skills.md` principle 2.
+Entries shaped like "Do X because it worked" are malformed. Success is overdetermined; success-shaped lessons read like best-practice tips that don't survive the next project. See `.lore/build/brainstorm/principles-for-capture-skills.md` principle 2.
 
 Enforce this at the artifact level. The opening question does not pre-filter material. The shape check happens when the draft is in front of the user — if the draft reads "do X because it worked," reshape it toward the failure it prevents, or close the session without writing.
 

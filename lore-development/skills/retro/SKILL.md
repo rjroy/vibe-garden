@@ -21,7 +21,7 @@ A retro is worth running on any session that left signal worth preserving — su
 The retro describes what happened. It does not interpret. The forbidden moves:
 
 - No analysis vocabulary in the body. The words `lesson`, `insight`, `we learned`, and `takeaway` do not appear in retro output.
-- No template demanding N items. Named sections with implied counts cause the model to manufacture content that doesn't exist. See `.lore/brainstorm/principles-for-capture-skills.md` principle 1.
+- No template demanding N items. Named sections with implied counts cause the model to manufacture content that doesn't exist. See `.lore/build/brainstorm/principles-for-capture-skills.md` principle 1.
 - No success-extraction. "What went well" framing trains the model to invent best-practice tips that don't survive the next project. Success is overdetermined.
 - No promotion of items to higher scopes from inside the retro. If the user notices something worth recording as a rule, that is a separate step (`/learn`).
 

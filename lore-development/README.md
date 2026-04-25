@@ -38,23 +38,41 @@ The plugin includes a hook that captures ideas without invoking the AI. Start an
 
 ## Artifact Storage
 
-All context lives in `.lore/`:
+Context lives in `.lore/` under three top-level directories. Each directory has a different purpose, audience, and lifetime.
 
 ```
 .lore/
-├── research/       # External findings
-├── brainstorm/     # Recorded explorations
-├── specs/          # Requirements
-├── plans/          # Implementation plans (reviewed, persistent)
-├── retros/         # Lessons learned
-├── stubs/          # Outstanding stub index from specs
-├── reference/      # Distilled feature documentation
-├── excavations/    # Distill session tracking (index of distilled areas)
-├── diagrams/       # Visual representations (Mermaid)
-├── issues/         # Structured issues (from /review-ideas or /file-issue)
+├── build/          # Work scaffolding — session-bound, written during a flow
+│   ├── brainstorm/     # Recorded explorations
+│   ├── specs/          # Requirements
+│   ├── design/         # Technical decisions
+│   ├── plans/          # Implementation plans
+│   ├── tasks/          # Task files (from /plan-breakdown)
+│   ├── notes/          # Session notes (e.g. /implement progress)
+│   ├── research/       # External findings
+│   ├── retros/         # Free-form retrospective notes
+│   ├── issues/         # Structured issues
+│   ├── validation/     # Validation criteria
+│   ├── stubs/          # Outstanding stub index from specs
+│   ├── diagrams/       # Visual representations (Mermaid) — promote to reference/diagrams/ when stable
+│   └── excavations/    # /distill session tracking
+│
+├── reference/      # Solidified, system-oriented — what the code cannot say
+│   ├── vision.md       # Project vision (if defined)
+│   ├── <feature>.md    # Distilled feature documentation
+│   └── diagrams/       # Promoted, stable diagrams
+│
+├── learned/        # Mistakes worth not repeating — worker-oriented, born on first /learn
+│
 ├── ideas.md        # Captured ideas (via hook)
 └── lore-agents.md  # Agent registry (optional)
 ```
+
+**Why three directories?** `build/` holds the work-in-progress: messy, conversational, tied to a specific session. `reference/` holds what survived: invariants, vision, distilled documentation that informs future work. `learned/` is narrowly scoped to mistakes — not lessons, not insights, not "what went well." Each has a different decay rate and a different reader.
+
+### Migrating from the old layout
+
+Pre-redesign projects had a flat `.lore/` with directories like `specs/`, `plans/`, `retros/` at the top level. Run `/lore-development:tend migrate` to move an existing tree into the three-directory model. The migrate mode rewrites internal links in frontmatter and prose, leaves guild-hall–owned paths alone, and is idempotent on re-run.
 
 ## Agents
 
@@ -105,11 +123,13 @@ Start a new session. Run `/prep-plan` pointing at the artifacts from the explore
 
 Start a new session. Run `/implement` pointing at the plan. The implement skill delegates to sub-agents who get their own fresh context. The orchestrator shouldn't carry exploration history when it needs full attention on dispatching, testing, and reviewing.
 
-### Learn (same session)
+### Capture (same session)
 
-Run `/retro` at the end of any session where something worth capturing happened. The retro benefits from the messy context: what went wrong, what the LLM got confused by, which assumptions broke. A fresh context would lose exactly the things worth capturing.
+Run `/retro` at the end of any session where something worth capturing happened. Retro produces a free-form notes file with common frontmatter — no template, no demanded sections, no "lessons learned" header. The retro benefits from the messy context: what went wrong, what the LLM got confused by, which assumptions broke. A fresh context would lose exactly the things worth capturing.
 
 Retros aren't only for build. An explore session that surfaced a surprising constraint, or a plan session that revealed a spec gap, are both worth a `/retro` before closing out.
+
+If a specific mistake is worth not repeating, run `/learn` to record it. `/learn` is a user-invoked dialog that writes to `.lore/learned/`. It does not auto-trigger from `/retro` or any other skill, and it does not propose candidates from notes — the user names the mistake. See the skill itself for the framing.
 
 ### Why break context
 
@@ -136,7 +156,7 @@ Knowledge compounds when past learnings inform new work. The plugin closes this 
         ▼
       /retro
         │
-        └─► captures lessons → writes to .lore/retros/
+        └─► captures notes → writes to .lore/build/retros/
 ```
 
 The `lore-researcher` agent runs automatically at the start of `/specify` and `/prep-plan`, surfacing relevant retros, specs, and brainstorms before new work begins.
@@ -155,7 +175,7 @@ modules: [affected-modules]
 ---
 ```
 
-Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents.
+Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents, and `/tend migrate` to move a flat-layout `.lore/` into the three-directory model.
 
 ## Principles
 
