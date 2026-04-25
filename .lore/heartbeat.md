@@ -52,6 +52,8 @@ All five lore-development agents updated for the three-directory model. Search-p
 **Decision: Accept Thorne's pass-with-nits verdict. No code changes applied.**
 
 - 17:26 commission-Dalton-20260424-171745 completed
+- 17:27 commission-Dalton-20260424-171645 result: Phase 1 of lore-development three-directory redesign complete. Bulk path-string updates landed across all 18 in-scope skills plus the idea hook, and the /ddp split-by-purpose dialog from REQ-REDESIGN-...
+- 17:27 commission-Dalton-20260424-171645 completed
 ## Why no changes
 
 Thorne's verdict on `commission-Thorne-20260424-1717...
