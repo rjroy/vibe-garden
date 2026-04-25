@@ -36,3 +36,8 @@ Workers can also add entries to this file during their sessions.
 - 17:01 commission-Thorne-20260424-164323 completed
 - 17:04 commission-Dalton-20260424-164331 result: Phase 0 Thorne findings addressed. All four fix-now items, the nit, and the open question are resolved. Tests pass (78/78), validator runs clean across all three fixture subtrees, in-scope legacy-path...
 - 17:04 commission-Dalton-20260424-164331 completed
+- 17:21 commission-Dalton-20260424-171700 result: 
+# Phase 2 — Agent description updates
+
+All five lore-development agents updated for the three-directory model. Search-priority inversion in lore-researcher.md is the load-bearing semantic change; all...
+- 17:21 commission-Dalton-20260424-171700 completed
