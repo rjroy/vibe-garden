@@ -71,7 +71,10 @@ references in three contexts:
 3. In-body markdown links (`[text](.lore/<old>/...)`, prose mentions, etc.)
 
 **Fenced code blocks are never rewritten.** Snippets inside ` ``` ` or `~~~`
-are documentation, not live links.
+are documentation, not live links. Indented (4-space) code blocks are *not*
+detected — if a legacy path inside an indented block matters, switch the block
+to fenced syntax before running `/tend migrate` or mark the file as a
+`migration-doc` to skip body rewriting entirely.
 
 ## Migration-doc opt-out
 

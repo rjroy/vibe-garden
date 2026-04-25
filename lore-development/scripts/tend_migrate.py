@@ -89,10 +89,15 @@ class MigrationPlan:
     moves: list[Move] = field(default_factory=list)
     rewrites: list[Rewrite] = field(default_factory=list)
     skipped_custom: list[str] = field(default_factory=list)
+    conflicts: list[Move] = field(default_factory=list)
 
     @property
     def is_noop(self) -> bool:
         return not self.moves and not self.rewrites
+
+    @property
+    def has_conflicts(self) -> bool:
+        return bool(self.conflicts)
 
     def render(self) -> str:
         lines: list[str] = []
@@ -101,6 +106,20 @@ class MigrationPlan:
         if self.is_noop:
             lines.append("No legacy structure detected. Nothing to do.")
             return "\n".join(lines)
+
+        if self.conflicts:
+            lines.append("")
+            lines.append(
+                f"BLOCKED: {len(self.conflicts)} destination collision(s) detected."
+            )
+            lines.append(
+                "Each move below would overwrite an existing file. "
+                "Resolve manually before applying."
+            )
+            for mv in self.conflicts:
+                rel_src = mv.src.relative_to(self.lore_root.parent)
+                rel_dst = mv.dst.relative_to(self.lore_root.parent)
+                lines.append(f"  {rel_src}  ->  {rel_dst}  (destination exists)")
 
         if self.skipped_custom:
             lines.append("")
@@ -448,10 +467,12 @@ def _candidate_files_for_rewrite(
 def build_plan(lore_root: Path) -> MigrationPlan:
     custom_dirs = load_custom_directories(lore_root)
     moves = plan_moves(lore_root)
+    conflicts = [m for m in moves if m.dst != m.src and m.dst.exists()]
     plan = MigrationPlan(
         lore_root=lore_root,
         moves=moves,
         skipped_custom=sorted(custom_dirs),
+        conflicts=conflicts,
     )
 
     # We need source content for files being moved; build a map src -> text.
@@ -492,8 +513,25 @@ def build_plan(lore_root: Path) -> MigrationPlan:
 # ---------------------------------------------------------------------------
 
 
+class MigrationConflictError(RuntimeError):
+    """Raised when apply_plan is called with a plan that has conflicts."""
+
+    def __init__(self, conflicts: list[Move]) -> None:
+        self.conflicts = conflicts
+        msg = (
+            f"{len(conflicts)} destination collision(s); refusing to apply. "
+            "Resolve manually and re-run."
+        )
+        super().__init__(msg)
+
+
 def apply_plan(plan: MigrationPlan) -> None:
     """Execute the plan: move files, then write rewritten contents."""
+    if plan.conflicts:
+        # Refusing to mutate is the right call: rename() would silently
+        # overwrite on POSIX and raise on Windows, leaving a half-migrated
+        # tree. Surface the list and let the human resolve it.
+        raise MigrationConflictError(plan.conflicts)
     # 1. Move files. Create parent directories as needed. Reference dir is
     #    only created if a move targets it (vision.md), preserving the
     #    "learned/ is born from /learn" rule (REQ-REDESIGN-4).
@@ -600,6 +638,15 @@ def main(argv: list[str] | None = None) -> int:
 
     plan = build_plan(lore_root)
     print(plan.render())
+
+    if plan.has_conflicts:
+        print("", file=sys.stderr)
+        print(
+            "Cannot apply: destination collisions detected. "
+            "Resolve the conflicts above and re-run.",
+            file=sys.stderr,
+        )
+        return 3
 
     if not args.apply:
         print("")

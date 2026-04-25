@@ -255,6 +255,61 @@ def test_apply_then_apply_is_noop(lore_root: Path) -> None:
     assert _capture_tree(lore_root) == snapshot
 
 
+def test_build_plan_flags_destination_collision(lore_root: Path) -> None:
+    # Pre-existing post-migration file that would be clobbered by the move.
+    target = lore_root / "build" / "specs" / "auth.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("PRE-EXISTING\n", encoding="utf-8")
+
+    plan = tend_migrate.build_plan(lore_root)
+    assert plan.has_conflicts
+    conflict_dsts = {c.dst for c in plan.conflicts}
+    assert target in conflict_dsts
+
+
+def test_apply_refuses_when_conflicts_exist(lore_root: Path) -> None:
+    target = lore_root / "build" / "specs" / "auth.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("PRE-EXISTING\n", encoding="utf-8")
+
+    plan = tend_migrate.build_plan(lore_root)
+    with pytest.raises(tend_migrate.MigrationConflictError):
+        tend_migrate.apply_plan(plan)
+    # Pre-existing file still intact; legacy source still in place.
+    assert _read(target) == "PRE-EXISTING\n"
+    assert (lore_root / "specs" / "auth.md").is_file()
+
+
+def test_plan_render_shows_conflicts(lore_root: Path) -> None:
+    target = lore_root / "build" / "specs" / "auth.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("PRE-EXISTING\n", encoding="utf-8")
+
+    plan = tend_migrate.build_plan(lore_root)
+    out = plan.render()
+    assert "BLOCKED" in out
+    assert "destination collision" in out
+    assert "build/specs/auth.md" in out
+
+
+def test_main_exits_nonzero_when_conflicts_present(
+    lore_root: Path, capsys: pytest.CaptureFixture
+) -> None:
+    target = lore_root / "build" / "specs" / "auth.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("PRE-EXISTING\n", encoding="utf-8")
+
+    rc = tend_migrate.main(
+        ["--lore-dir", str(lore_root), "--apply", "--yes"]
+    )
+    assert rc == 3
+    captured = capsys.readouterr()
+    assert "destination collisions detected" in captured.err
+    # Tree unchanged.
+    assert _read(target) == "PRE-EXISTING\n"
+    assert (lore_root / "specs" / "auth.md").is_file()
+
+
 def test_apply_does_not_create_learned_directory(lore_root: Path) -> None:
     plan = tend_migrate.build_plan(lore_root)
     tend_migrate.apply_plan(plan)
