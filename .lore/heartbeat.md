@@ -33,3 +33,9 @@ Workers can also add entries to this file during their sessions.
 - `lore-development/README.md` — replaced flat `.lore/` tree with three-directory model (`buil...
 
 - 22:39 commission-Dalton-20260424-222441 completed
+- 22:42 commission-Octavia-20260424-222511 result: README review of `lore-development/README.md` (Phase 6 rewrite).
+
+- 22:42 commission-Octavia-20260424-222511 completed
+## Overall
+
+The README's framing of `build/`, `reference/`, and `learned/` matches the spec's three-directory model faithfully. The "s...
