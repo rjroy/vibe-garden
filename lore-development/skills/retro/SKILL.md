@@ -1,130 +1,113 @@
 ---
 name: retro
-description: This skill reviews completed work and records lessons learned. Use after completing a feature, when capturing insights before they fade, for periodic reflection on progress, or to graduate lessons to higher scopes. Triggers include "let's do a retro", "what did we learn", "review what happened", "capture lessons from", "graduate lessons".
+description: This skill reviews completed work and records what happened as free-form notes with structured frontmatter. The capture is observation only, not interpretation. Use after completing a feature, when capturing context before it fades, or for periodic reflection. Triggers include "let's do a retro", "/retro", "review what happened", "capture what happened", "write up the session".
+artifact_path: .lore/build/retros
 ---
 
 # Retro
 
-Review artifacts and record lessons learned.
+Record what happened. The retro is the witness step. Interpretation belongs elsewhere.
 
 ## When to Use
 
 - After completing a feature or significant chunk of work
-- When wanting to capture insights before they fade
+- When wanting to capture session context before it fades
 - Periodic reflection on project progress
+
+A retro is worth running on any session that left signal worth preserving — surprises, dead ends, things the user got confused by, assumptions that broke. The fresh-but-messy context is the whole value. A retro produced from a fresh session loses what's worth capturing.
+
+## Stance
+
+The retro describes what happened. It does not interpret. The forbidden moves:
+
+- No analysis vocabulary in the body. The words `lesson`, `insight`, `we learned`, and `takeaway` do not appear in retro output.
+- No template demanding N items. Named sections with implied counts cause the model to manufacture content that doesn't exist. See `.lore/brainstorm/principles-for-capture-skills.md` principle 1.
+- No success-extraction. "What went well" framing trains the model to invent best-practice tips that don't survive the next project. Success is overdetermined.
+- No promotion of items to higher scopes from inside the retro. If the user notices something worth recording as a rule, that is a separate step (`/learn`).
+
+The shape is structured frontmatter plus free-form body. Length follows what actually happened — five lines or fifty, both valid.
 
 ## Process
 
-1. Review relevant `.lore/` artifacts:
-   - Original spec in `.lore/build/specs/`
-   - Plan in `.lore/build/plans/`
-2. Reflect on what happened vs. what was expected
-3. Capture lessons learned
-4. Save to `.lore/build/retros/`
-5. Graduate lessons (see Lessons Graduation below)
+1. Read the relevant build artifacts:
+   - Spec in `.lore/build/specs/` (if applicable)
+   - Plan in `.lore/build/plans/` (if applicable)
+   - Implementation notes in `.lore/build/notes/` (if applicable)
+2. Write the retro as observation. What was the work? What happened in the doing of it? What surprised, broke, drifted, or unfolded differently than the plan said?
+3. Save to `.lore/build/retros/[descriptive-name].md`.
+
+The body is free-form prose. Use whatever structure the actual session calls for — chronological, by component, by surprise — or none. If a heading helps the reader follow, use it. If not, plain paragraphs are fine.
 
 ## Output
 
-Save to `.lore/build/retros/[feature-name].md`
+Save to `.lore/build/retros/[descriptive-name].md`.
 
-### Document Structure
+### Frontmatter
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for retros.
+Common fields only. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for definitions.
 
 ```markdown
 ---
-[frontmatter per schema]
+title: [Topic — what the session was about, as a noun phrase]
+date: YYYY-MM-DD
+status: open
+tags: [problem-types, technologies, patterns]
+modules: [affected-modules]
+related: [.lore/build/specs/<name>.md, .lore/build/plans/<name>.md]
 ---
 
-# Retro: [Feature Name]
-
-## Summary
-Brief description of what was built.
-
-## What Went Well
-- Thing 1
-- Thing 2
-
-## What Could Improve
-- Thing 1
-- Thing 2
-
-## Lessons Learned
-Insights to carry forward:
-- Lesson 1
-- Lesson 2
-
-## Artifacts
-Links to related `.lore/` documents.
+[Body — free-form notes describing what happened.]
 ```
 
-### Frontmatter Tips for Retros
+- `status: open` while the work the retro tracks can still be amended. `archived` once the work is fully past.
+- `title` describes the work, not an extracted moral. "Auth-flow rollout" is a title; "Why we should always test migrations" is not.
+- `tags` cover what the session touched: problem types (`bug`, `performance`, `refactor`), technologies, patterns. Searchable by `lore-researcher`.
+- `modules` lists codebase areas touched. Omit for purely process-focused sessions.
 
-- **title**: Focus on the key lesson, not just the feature name (e.g., "N+1 query fix in brief generation" not just "Brief generation retro")
-- **tags**: Include problem types (bug, performance, refactor), technologies, and patterns
-- **modules**: Include codebase areas touched; omit if purely process/methodology focused
+### Body Discipline
 
-## Lessons Graduation
+The body answers questions like:
 
-After saving the retro, graduate lessons to higher scopes.
+- What was the work?
+- What did the plan say versus what actually happened?
+- Where did the model or the user get tripped up?
+- What surprises came out of the doing?
+- What dead ends were tried before the path that worked?
+- What context got assembled that's worth preserving for the next session in this area?
 
-### Detection
+Write the answers as prose, not as bullets under preset headings. If a list helps, use a list — but don't reach for the list because a template demands it.
 
-If `/retro` is invoked on an existing retro document (path to `.lore/build/retros/*.md`), skip the normal retro flow and run graduation only.
+Length should track what happened. A short, smooth session with one notable surprise is two paragraphs. A long, rough session with three blowups is longer. There is no length budget.
 
-### Flow
+If during writing the user notices a rule worth recording, that's a `/learn` invocation — a separate skill, separate file. Retro stays as observation.
 
-1. Extract lessons from the "Lessons Learned" section
-2. If no lessons, skip graduation
-3. For each lesson, use AskUserQuestion:
-   - Prompt: `Review lesson: "[lesson text]"`
-   - Options:
-     - **Invalid** - Remove from retro
-     - **Valid (Recommended)** - Keep in retro only
-     - **Critical** - Add to project CLAUDE.md
-     - **Universal** - Add to ~/.claude/rules/lessons-learned.md
-4. Process classifications:
-   - Invalid: Remove lesson from retro document
-   - Valid: No action (already in retro)
-   - Critical: Append to project CLAUDE.md under "## Critical Lessons"
-   - Universal: Append to `~/.claude/rules/lessons-learned.md` under inferred category
+## Recording vs Recording-and-Acting
 
-### File Operations
+The retro records. It does not act. In particular:
 
-**For Critical lessons** (project CLAUDE.md):
-- If "## Critical Lessons" section doesn't exist, create it at file bottom
-- Append lesson as bullet: `- [lesson text]`
-- Don't duplicate existing lessons
+- The retro does not classify items by importance, scope, or universality.
+- The retro does not move items to project `CLAUDE.md` or `~/.claude/rules/lessons-learned.md`.
+- The retro does not run a follow-on prompt to extract rules from the body.
 
-**For Universal lessons** (`~/.claude/rules/lessons-learned.md`):
-- Create file if missing with header: `# Lessons Learned\n\nHard-won lessons that apply across all projects.`
-- Infer category from retro tags (see Category Inference)
-- Create category section if missing
-- Append lesson as bullet under category
-- Don't duplicate existing lessons
+If the user wants to record an operational rule that came out of the session, they invoke `/learn` separately. Lessons live in `.lore/learned/`. The retro stays as a record of what happened.
 
-### Category Inference
+## Frontmatter Tips
 
-Infer category from retro tags, not exact match:
-
-| Tags like | Category |
-|-----------|----------|
-| plugin, extension | Plugin Development |
-| git, commit, branch | Git Workflow |
-| test, testing, coverage | Testing |
-| process, methodology, workflow | Process |
-| performance, optimization | Performance |
-| (no clear match) | General |
-
-**Category hygiene**:
-- Review existing categories before creating new ones
-- Don't let any category sprawl (10+ items suggests splitting)
-- Err on fitting into existing categories over creating new ones
-
-## Purpose
-
-This builds organizational memory. Future work benefits from past experience - but only if it's written down.
+- **title**: Describe the work, not a takeaway. "N+1 in brief generation" describes; "Always test for N+1" interprets.
+- **tags**: Keep grep-discoverable. Include problem types, technologies, and patterns the session actually touched.
+- **modules**: Match codebase structure. Omit for methodology-only sessions.
+- **related**: Link the spec, plan, and notes the retro references. `lore-researcher` follows these links.
 
 ## Specialized Agents
 
-If `.lore/lore-agents.md` exists, consult it for specialized agents that can help identify patterns. Reviewers can spot recurring issues or opportunities worth capturing. Invoke relevant agents via Task tool and incorporate their insights.
+If `.lore/lore-agents.md` exists, project-specific agents (security, architecture, performance) can be useful for assembling context the user wants to record. Their job is to surface what the session touched, not to assert what the takeaways are.
+
+## Verification Pass
+
+Before declaring the retro complete:
+
+- The body does not contain `lesson`, `insight`, `we learned`, or `takeaway`.
+- The body has no "What Went Well", "What Could Improve", or "Lessons Learned" section heading (or any analysis-style heading filling that role).
+- The body describes what happened, not what should be done next time.
+- Length follows the session's actual content. No padding to fill a template that no longer exists.
+- Frontmatter status is `open` or `archived`.

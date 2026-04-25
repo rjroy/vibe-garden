@@ -20,7 +20,8 @@ Modern LLMs have strong native planning and implementation capabilities. This pl
 | `/lore-development:plan-breakdown` | Decompose a plan into task files for `/implement` |
 | `/lore-development:implement` | Orchestrate implementation from a plan via sub-agents |
 | `/lore-development:simplify` | Orchestrate code cleanup with tests and review |
-| `/lore-development:retro` | Review work, capture lessons learned |
+| `/lore-development:retro` | Capture what happened in a session as free-form notes |
+| `/lore-development:learn` | Record a mistake worth not repeating; user-invoked dialog writing to `.lore/learned/` |
 | `/lore-development:poke-holes` | Challenge ideas adversarially |
 | `/lore-development:distill` | Promote what the code cannot say into reference docs (two seed modes: `code`, `build`) |
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
