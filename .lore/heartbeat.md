@@ -29,5 +29,7 @@ Workers can also add entries to this file during their sessions.
 - 21:42 commission-Dalton-20260424-180556 result: Phase 4 complete. /excavate → /distill rename and reshape landed.
 
 - 21:42 commission-Dalton-20260424-180556 completed
+- 21:46 commission-Thorne-20260424-180617 result: Phase 4 review complete. The rewritten `distill/SKILL.md` is brainstorm-faithful, structurally sound, and free of spec-replacement ambition. Migration is mostly complete. One fix-now finding around th...
+- 21:46 commission-Thorne-20260424-180617 completed
 ## Files touched
 - **Renamed** (git mv, history preserved): `lore-development/skills/excavate/SKILL.md` → `lore-development/skills/di...
