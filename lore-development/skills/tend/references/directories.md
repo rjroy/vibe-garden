@@ -64,13 +64,16 @@ The first sweep is partition discipline. Anything outside `build/`, `reference/`
 
 | Signal | Action |
 |--------|--------|
-| Top-level directory not in `{build, reference, learned}` and not in `custom_directories` | Flag as legacy orphan; recommend `/tend migrate` to route into the right zone |
+| Any of the 14 legacy top-level directories or `.lore/vision.md` is present | Emit "**legacy structure detected; run `/tend migrate`**" as the first finding and stop further per-directory analysis until migration completes |
+| Top-level directory not in `{build, reference, learned}` and not in `custom_directories` (and not a known legacy name) | Flag as orphan; ask whether to register in `custom_directories` |
 | Document in `build/` whose status is terminal and content has stabilized | Candidate for promotion to `reference/` |
 | Document in `reference/` whose status is `outdated` for an extended period | Candidate for refresh or archive |
 | `learned/` entry that doesn't name a mistake | Flag for rewrite; learned is mistakes-only |
 
-**Common legacy orphans** (from the pre-redesign layout):
-`brainstorm/`, `specs/`, `design/`, `plans/`, `tasks/`, `notes/`, `research/`, `retros/`, `issues/`, `ideas/`, `validation/`, `stubs/`, `excavations/`, `diagrams/`. All of these now live under `build/` (or have been folded into `reference/learned/`). Route via `/tend migrate`.
+**Legacy top-levels** (from the pre-redesign layout):
+`brainstorm/`, `specs/`, `design/`, `plans/`, `tasks/`, `notes/`, `research/`, `retros/`, `issues/`, `ideas/`, `validation/`, `stubs/`, `excavations/`, `diagrams/`, plus the file `vision.md`.
+
+When any of these are detected, the directories report should lead with the legacy banner and route the user to `/tend migrate`. Other findings still apply to documents already inside `build/`, `reference/`, `learned/`, but reorganizing inside legacy directories is wasted work — they are about to move.
 
 `_archive/` is a separate concern: it is the historical default name for an out-of-tree archive directory. If a project relied on the old default, see `lore-config.md` for how to register it via `archive_directory`. It is not a redesign legacy.
 
@@ -152,9 +155,12 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 ## Directories Report
 
 ### Zone Discipline
+**Legacy structure detected; run `/tend migrate`** (when any pre-redesign layout is present)
+
 | Path | Issue | Suggested Action |
 |------|-------|------------------|
 | .lore/specs/ | Legacy top-level (pre-redesign) | Run /tend migrate -> .lore/build/specs/ |
+| .lore/vision.md | Legacy file (pre-redesign) | Run /tend migrate -> .lore/reference/vision.md |
 | .lore/build/specs/old-auth.md | status: superseded | Archive or remove |
 | .lore/learned/win-story.md | Not a mistake entry | Rewrite or move to reference/ |
 
