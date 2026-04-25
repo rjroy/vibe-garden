@@ -343,13 +343,13 @@ export { Product } from './models/product';
 - [ ] `src/services/payment.ts` - Integration point with external system
 - [ ] `src/legacy/` - Dormant code, unclear if needed
 
-### Questions for Layer 2
+### Questions for Distill
 
 1. How do Orders relate to Users? (data model unclear)
 2. What triggers the notification system? (event patterns found)
 3. Is the legacy/ folder still in use? (no recent activity)
 
-## Suggested Focus Areas for Layer 2
+## Suggested Focus Areas for Distill
 
 Based on this survey, recommend investigating:
 
@@ -359,7 +359,7 @@ Based on this survey, recommend investigating:
 
 ---
 
-*Ready for human review. Proceed to Layer 2 (Feature Extraction) after confirmation.*
+*Ready for human review. Proceed to `/lore-development:distill code` after confirmation.*
 ```
 
 ## Error Handling

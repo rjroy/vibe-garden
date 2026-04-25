@@ -7,7 +7,7 @@ Single source of truth for frontmatter fields across all `.lore/` document types
 `.lore/` is organized into three top-level directories. Every lore document lives under exactly one of them:
 
 - **`.lore/build/`** — work scaffolding. Session-bound material: brainstorms, specs, designs, plans, tasks, notes, research, retros, issues, ideas, validation, stubs, excavation indices, session diagrams.
-- **`.lore/reference/`** — solidified, system-oriented documentation. What the code cannot say. Excavated feature docs, vision, current-state diagrams.
+- **`.lore/reference/`** — solidified, system-oriented documentation. What the code cannot say. Distilled feature docs, vision, current-state diagrams.
 - **`.lore/learned/`** — operational imperatives, mistakes-only, worker-oriented. Written by `/learn`.
 
 Status values are scoped to the directory tree the document lives in (see "Status Values" below).
@@ -254,7 +254,7 @@ modules: [chat-service, ai-client]
 ---
 ```
 
-### Reference (Excavated Feature)
+### Reference (Distilled Feature)
 
 ```yaml
 ---

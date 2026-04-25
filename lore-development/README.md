@@ -47,8 +47,8 @@ All context lives in `.lore/`:
 ├── plans/          # Implementation plans (reviewed, persistent)
 ├── retros/         # Lessons learned
 ├── stubs/          # Outstanding stub index from specs
-├── reference/      # Excavated feature documentation
-├── excavations/    # Design archaeology session tracking
+├── reference/      # Distilled feature documentation
+├── excavations/    # Distill session tracking (index of distilled areas)
 ├── diagrams/       # Visual representations (Mermaid)
 ├── issues/         # Structured issues (from /review-ideas or /file-issue)
 ├── ideas.md        # Captured ideas (via hook)

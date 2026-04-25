@@ -125,17 +125,20 @@ Example suggestion:
 
 Identify documents that could move to archive:
 
-| Signal | Example |
-|--------|---------|
-| Status: superseded | Old spec replaced by newer version |
-| Status: archived not yet moved | Stale entry in active subtree |
-| Status: implemented + related retro exists | Feature cycle finished |
-| No modifications in 90+ days + status: parked | Abandoned ideas |
-| Explicit archive tag | User marked for archival |
+| Signal | Example | Notes |
+|--------|---------|-------|
+| Status: superseded | Old spec replaced by newer version | |
+| Status: archived not yet moved | Stale entry in active subtree | |
+| Status: implemented (spec) | Feature cycle finished | **Run distill-before-archive soft prompt** before archiving (see "Applying Changes" below) |
+| Status: implemented + related retro exists | Feature cycle finished, retro captured | Same soft prompt applies to the spec |
+| No modifications in 90+ days + status: parked | Abandoned ideas | |
+| Explicit archive tag | User marked for archival | |
 
 Archive location: defaults to the `archived` status in place, or the directory named by `archive_directory` in `.lore/lore-config.md` if configured. Some projects use domain-specific names that serve the same purpose.
 
 **Don't auto-archive.** Present candidates and let user decide.
+
+**Distill-before-archive coupling**: any spec with `status: implemented` surfaced as an archive candidate must trigger the soft prompt described in `tend/SKILL.md` ("Distill-Before-Archive") before it is archived. This is the only place in `directories` where a per-file prompt fires inside the apply flow. Archiving without the prompt silently loses the reference-promotion opportunity captured by `/distill build <spec>`. See `lore-development/skills/distill/SKILL.md` for the distill flow.
 
 ### Orphan Detection
 
@@ -194,9 +197,14 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 
 1. Present full restructuring plan
 2. Show all file moves and their dependency updates
-3. On confirmation:
+3. **For each archive candidate that is a spec with `status: implemented`**, run the distill-before-archive soft prompt from `tend/SKILL.md` (yes / no / skip):
+   - **yes**: pause this file's archive step and suggest `/distill build <path-to-spec>`. After the user runs distill (or declines mid-distill), return to the archive confirmation for this file.
+   - **no**: proceed with archiving as proposed.
+   - **skip**: drop this file from the current archive batch; leave it in place for this run.
+   This prompt is soft; the user retains agency to archive without distilling. Do not block the broader restructuring on the distill outcome.
+4. On confirmation of the remaining plan:
    - Create new directories
-   - Move files
+   - Move files (including any archive moves the user accepted in step 3)
    - Update all `related:` paths
    - Update all markdown links
    - Remove empty old directories
