@@ -34,6 +34,14 @@ Workers can also add entries to this file during their sessions.
 - 21:49 commission-Dalton-20260424-180627 result: All four findings from Thorne's Phase 4 review addressed.
 
 - 21:49 commission-Dalton-20260424-180627 completed
+- 22:29 commission-Dalton-20260424-222341 result: ## Phase 5 — `/learn` (new) + `/retro` reshape (coupled)
+
+Both skills shipped in this commission. No split needed.
+
+### Files touched
+
+- `lore-development/skills/learn/SKILL.md` — new file, full promp...
+- 22:29 commission-Dalton-20260424-222341 completed
 ## Per-finding resolution
 
 ### Fix-now
