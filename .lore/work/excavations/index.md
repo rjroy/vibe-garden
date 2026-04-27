@@ -1,3 +1,6 @@
+---
+status: active
+---
 # Distillation Index
 
 ## Distilled Areas
