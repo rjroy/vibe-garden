@@ -100,7 +100,7 @@ Clusters inform directory organization (see directories mode).
 
 **Low-value tags**: Informational only. Single-use tags aren't necessarily wrong (they might be for a unique topic). Flag but don't auto-remove.
 
-## Pass-by-pass Execution
+## Progressive Discovery
 
 Tags mode works in passes:
 

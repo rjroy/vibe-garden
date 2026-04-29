@@ -181,7 +181,7 @@ Subdivision moves are not part of tend's output. When the Oversized Directories 
 - Update references after moves complete
 - Report final structure
 
-## Pass-by-pass Execution
+## Progressive Discovery
 
 Directories mode works in passes:
 
