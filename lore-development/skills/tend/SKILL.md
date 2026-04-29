@@ -21,7 +21,7 @@ If no config exists, use defaults from `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter
 | `status` | Verify and update document status fields | Accuracy: documents reflect reality |
 | `tags` | Unify variants, find connections, identify clusters | Semantics: tags are consistent and meaningful |
 | `filenames` | Check conventions, suggest renames based on content | Findability: names match content |
-| `directories` | Suggest subdivision, archive candidates, detect orphans | Navigation: structure serves scale |
+| `directories` | Flag oversized stable directories for `/stratify`, archive candidates, detect orphans | Navigation: structure serves scale |
 | `migrate` | Move legacy `.lore/` layout to `work/reference/learned` model | Layout: project on the canonical three-directory tree |
 
 **Dependency chain**: status → tags → filenames → directories
