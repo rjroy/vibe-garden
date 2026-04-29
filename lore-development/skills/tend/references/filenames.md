@@ -99,7 +99,7 @@ grep -r "old-filename" .lore/
 - Apply all or none (atomic from user perspective)
 - Report final state after completion
 
-## Progressive Discovery
+## Pass-by-pass Execution
 
 Filenames mode works in passes:
 

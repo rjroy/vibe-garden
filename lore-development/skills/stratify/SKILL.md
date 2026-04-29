@@ -1,9 +1,9 @@
 ---
-name: progressive-discovery
-description: Reorganizes a flat `.lore/` directory of stable docs (typically `reference/` or `learned/`) into layered subdirectories with a top-level index that supports progressive discovery. Use when a single directory has accumulated enough docs that "all in one place" hinders navigation, when readers can't tell where to start, or when `/tend directories` flags an oversized stable directory. Triggers include "stratify", "layer this directory", "rearrange for progressive discovery", "split this directory into categories", "too many files in one directory", "no clear entry point", "where do I start reading".
+name: stratify
+description: Reorganizes a flat `.lore/` directory of stable docs (typically `reference/` or `learned/`) into dependency-ordered subdirectories with a top-level index, so a reader can drill from "what is this" down to specific detail without reading everything. Use when a single directory has accumulated enough docs that "all in one place" hinders navigation, when readers can't tell where to start, or when `/tend directories` flags an oversized stable directory. Triggers include "stratify", "layer this directory", "split this directory into categories", "rearrange for progressive discovery", "too many files in one directory", "no clear entry point", "where do I start reading".
 ---
 
-# Progressive Discovery
+# Stratify
 
 Take a flat directory of stable lore (`.lore/reference/`, `.lore/learned/`, or any project-specific stable subtree) and reorganize it into layered subdirectories so a reader can drill from "what is this" down to specific detail without reading everything.
 

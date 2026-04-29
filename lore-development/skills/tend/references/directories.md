@@ -83,7 +83,7 @@ Directories with 8+ files are flagged for evaluation. Tend does not author subdi
 
 | Zone | Action when oversized |
 |------|----------------------|
-| `reference/`, `learned/`, or any custom stable subtree | Surface as a candidate for `/lore-development:progressive-discovery <path>`. That skill owns layered reorganization and writes the navigational index. |
+| `reference/`, `learned/`, or any custom stable subtree | Surface as a candidate for `/lore-development:stratify <path>`. That skill owns layered reorganization and writes the navigational index. |
 | `work/` | Note the count but propose no fix. Work churns and gets archived; reorganization rarely pays off before the directory empties. The exception is a stalled work subdirectory that has hardened into de facto reference — recommend `/lore-development:distill work <path>` first, then re-evaluate the resulting `reference/` directory. |
 
 **8 is a threshold, not a rule.** A directory with 10 tightly-related specs might be fine. A directory with 6 unrelated documents might warrant a closer look.
@@ -137,8 +137,8 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 ### Oversized Directories
 | Directory | Files | Suggested Action |
 |-----------|-------|------------------|
-| reference/ | 14 | Run `/lore-development:progressive-discovery reference/` |
-| learned/ | 11 | Run `/lore-development:progressive-discovery learned/` |
+| reference/ | 14 | Run `/lore-development:stratify reference/` |
+| learned/ | 11 | Run `/lore-development:stratify learned/` |
 | work/specs/ | 12 | Note only; work zone churns |
 
 ### Archive Candidates
@@ -155,7 +155,7 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 
 ```
 
-Subdivision moves are not part of tend's output. When the Oversized Directories table recommends progressive-discovery, hand off — tend does not author the plan or execute the moves.
+Subdivision moves are not part of tend's output. When the Oversized Directories table recommends stratify, hand off — tend does not author the plan or execute the moves.
 
 ## Applying Changes
 
@@ -181,7 +181,7 @@ Subdivision moves are not part of tend's output. When the Oversized Directories 
 - Update references after moves complete
 - Report final structure
 
-## Progressive Discovery
+## Pass-by-pass Execution
 
 Directories mode works in passes:
 

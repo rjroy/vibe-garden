@@ -89,9 +89,9 @@ Status can be descriptive and honest. When simple values don't capture reality, 
 
 Truth over optimism. A status of "unclear" is better than a false "complete".
 
-## Progressive Discovery
+## Pass-by-pass Execution
 
-Status mode works progressively. **Use TaskCreate for each pass** to maintain structure:
+Status mode works in sequential passes. **Use TaskCreate for each pass** to maintain structure:
 
 1. **First pass**: Identify documents without status fields
    - Create task, mark in_progress, complete when scan is done
