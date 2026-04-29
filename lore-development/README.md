@@ -29,6 +29,7 @@ Skills write into a three-directory `.lore/` tree (`work/`, `reference/`, `learn
 | `/lore-development:ddp` | **Draw the Damn Picture** - visualize flows and relationships with Mermaid |
 | `/lore-development:define-validation` | Define AI validation criteria for work in progress |
 | `/lore-development:tend` | Periodic hygiene to maintain document status accuracy |
+| `/lore-development:progressive-discovery` | Reorganize a stable lore directory into layered subdirectories with a navigational index |
 | `/lore-development:update-stubs` | Scan specs for stubs and generate an outstanding stub index |
 | `/lore-development:update-lore-agents` | Build/update the project's agent registry |
 | `/lore-development:review-ideas` | Process captured ideas into structured issues |
@@ -71,6 +72,8 @@ Context lives in `.lore/` under three top-level directories. Each directory has 
 ```
 
 **Why three directories?** `work/` holds the work-in-progress: messy, conversational, tied to a specific session. `reference/` holds what survived: invariants, vision, distilled documentation that informs future work. `learned/` is narrowly scoped to mistakes — not lessons, not insights, not "what went well." Each has a different decay rate and a different reader.
+
+**Layered subdirectories in stable zones.** When `reference/` or `learned/` accumulates enough docs that "all in one place" hinders navigation, run `/lore-development:progressive-discovery <path>` to reorganize the directory into dependency-ordered subdirectories with a `README.md` index at the top. The index uses standard lore frontmatter (`title`, `date`, `status`, `tags`) and explains reading order, layer dependencies, and what each subdirectory holds.
 
 ### Migrating from the old layout
 

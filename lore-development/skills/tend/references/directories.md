@@ -79,47 +79,14 @@ When any of these are detected, the directories report should lead with the lega
 
 ### Size Threshold
 
-Directories with 8+ files should be evaluated for subdivision:
+Directories with 8+ files are flagged for evaluation. Tend does not author subdivision plans inline; routing keeps tend in its hygiene-pass role and concentrates reorganization decisions (layer model, index authoring, cross-reference verification) in one place.
 
-```
-.lore/work/specs/        # 12 files - consider splitting
-├── auth-flow.md
-├── auth-oauth.md
-├── auth-session.md       # Auth cluster (3)
-├── api-rest.md
-├── api-graphql.md        # API cluster (2)
-├── payment-stripe.md
-├── payment-flow.md       # Payment cluster (2)
-└── ... 5 more
-```
+| Zone | Action when oversized |
+|------|----------------------|
+| `reference/`, `learned/`, or any custom stable subtree | Surface as a candidate for `/lore-development:progressive-discovery <path>`. That skill owns layered reorganization and writes the navigational index. |
+| `work/` | Note the count but propose no fix. Work churns and gets archived; reorganization rarely pays off before the directory empties. The exception is a stalled work subdirectory that has hardened into de facto reference — recommend `/lore-development:distill work <path>` first, then re-evaluate the resulting `reference/` directory. |
 
-**8 is a threshold, not a rule.** A directory with 10 tightly-related specs might be fine. A directory with 6 unrelated documents might need splitting.
-
-### Subdirectory Suggestions
-
-Use tag clusters (from tags mode) to suggest subdivisions:
-
-1. Identify documents in oversized directory
-2. Group by shared tags (3+ documents sharing 2+ tags = candidate cluster)
-3. Suggest subdirectory per cluster
-
-Example suggestion:
-```
-.lore/work/specs/
-├── auth/
-│   ├── auth-flow.md
-│   ├── auth-oauth.md
-│   └── auth-session.md
-├── api/
-│   ├── api-rest.md
-│   └── api-graphql.md
-├── payment/
-│   ├── payment-stripe.md
-│   └── payment-flow.md
-└── [remaining unclustered files]
-```
-
-**Don't over-nest.** Two levels under a zone is usually enough. Deep nesting trades one navigation problem for another.
+**8 is a threshold, not a rule.** A directory with 10 tightly-related specs might be fine. A directory with 6 unrelated documents might warrant a closer look.
 
 ### Archive Candidates
 
@@ -168,10 +135,11 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 | .lore/learned/win-story.md | Not a mistake entry | Rewrite or move to reference/ |
 
 ### Oversized Directories
-| Directory | Files | Suggested Subdivision |
-|-----------|-------|----------------------|
-| work/specs/ | 12 | auth/, api/, payment/ |
-| work/brainstorm/ | 9 | Consider by theme |
+| Directory | Files | Suggested Action |
+|-----------|-------|------------------|
+| reference/ | 14 | Run `/lore-development:progressive-discovery reference/` |
+| learned/ | 11 | Run `/lore-development:progressive-discovery learned/` |
+| work/specs/ | 12 | Note only; work zone churns |
 
 ### Archive Candidates
 | File | Reason | Last Modified |
@@ -185,11 +153,9 @@ Non-standard directories aren't wrong, but should be intentional. When the user 
 | .lore/temp/ | Outside the three zones, 2 files |
 | .lore/work/specs/legacy/ | Empty |
 
-### Suggested Moves
-| File | From | To | Reason |
-|------|------|-------|--------|
-| auth-flow.md | work/specs/ | work/specs/auth/ | Cluster with 2 others |
 ```
+
+Subdivision moves are not part of tend's output. When the Oversized Directories table recommends progressive-discovery, hand off — tend does not author the plan or execute the moves.
 
 ## Applying Changes
 
