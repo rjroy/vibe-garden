@@ -96,3 +96,16 @@ Validation criteria must be things the AI can actually do:
 - "Verify the user experience is good" - not actionable
 - "Check output matches examples/expected.json" - actionable
 - "Ensure performance is acceptable" - not actionable (unless threshold defined)
+
+## Scope: Behavior, Not Code Shape
+
+AI Validation verifies that the spec was followed *after implementation*. It is not CI, and it is not a mechanism to freeze code structure.
+
+Acceptable forms: unit tests, integration tests, manual test steps, lint, type checks, fresh-context code review.
+
+Do **not** invent ad-hoc scripts that assert structural facts about source code, e.g.:
+- "verify this string appears exactly once"
+- "check that this function is only defined in one place"
+- "fail if any file outside X imports Y"
+
+Such scripts add a second surface that can be wrong. Stale code shape validators produce false confidence and break on legitimate refactors. If a regression must not recur, write a test that fails when the *behavior* regresses, not a script that fails when the *lines move*. Structural concerns belong in lint rules or code review, not in AI Validation.
