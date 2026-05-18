@@ -98,51 +98,57 @@ Before saving, ask which directory fits the diagram's purpose:
 
 If unsure, default to work. A reference diagram should answer "this is how it is" not "this is what we're doing." Reference diagrams can be promoted from work later.
 
-Save to the chosen directory as `[subject].md`. Use kebab-case. Be descriptive (e.g., `chat-message-flow.md`, `view-class-hierarchy.md`).
+Save to the chosen directory as `[subject].html`. Use kebab-case. Be descriptive (e.g., `chat-message-flow.html`, `view-class-hierarchy.html`).
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for diagrams.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for diagrams.
 
-```markdown
----
-[frontmatter per schema]
----
+Copy the HTML base template verbatim. Replace `<main>` with these sections:
 
-# Diagram: [Subject]
+```html
+<main>
+  <section id="context">
+    <h2>Context</h2>
+    <p>What prompted this visualization. What question are we answering?</p>
+  </section>
 
-## Context
-
-What prompted this visualization. What question are we answering?
-
-## Diagram
-
-```mermaid
+  <section id="diagram">
+    <h2>Diagram</h2>
+    <pre><code class="language-mermaid">
 [diagram code]
+    </code></pre>
+  </section>
+
+  <section id="reading">
+    <h2>Reading the Diagram</h2>
+    <p>Explanation of what the diagram shows. Call out non-obvious elements.</p>
+  </section>
+
+  <section id="insights">
+    <h2>Key Insights</h2>
+    <ul>
+      <li>What becomes clear when you see it visually.</li>
+    </ul>
+  </section>
+
+  <section id="not-shown">
+    <h2>Not Shown</h2>
+    <ul>
+      <li>Error paths</li>
+      <li>Edge cases</li>
+      <li>Implementation details</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2>Related</h2>
+    <p>Links to specs, other diagrams, or code that provides more context.</p>
+  </section>
+</main>
 ```
 
-## Reading the Diagram
-
-Explanation of what the diagram shows. Call out non-obvious elements.
-
-## Key Insights
-
-What becomes clear when you see it visually:
-- Insight 1
-- Insight 2
-
-## Not Shown
-
-Important aspects not captured in this view:
-- Error paths
-- Edge cases
-- Implementation details
-- etc.
-
-## Related
-
-Links to specs, other diagrams, or code that provides more context.
-```
+Diagrams are simple artifacts. No collapsibles needed.
 
 ## Additional Resources
 

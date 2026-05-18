@@ -23,34 +23,46 @@ Gather context from outside the project scope.
 
 ## Output
 
-Save findings to `.lore/work/research/[topic].md`
+Save findings to `.lore/work/research/[topic].html`
 
-Use kebab-case for filenames. Use the `date:` frontmatter field for time-sensitive research.
+Use kebab-case for filenames. Use the `lore-date` meta tag for time-sensitive research.
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for research.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for research.
 
-```markdown
----
-[frontmatter per schema]
----
+Copy the HTML base template verbatim. Replace `<main>` with these sections:
 
-# Research: [Topic]
+```html
+<main>
+  <section id="summary">
+    <h2>Summary</h2>
+    <p>Brief overview of what was found.</p>
+  </section>
 
-## Summary
-Brief overview of what was found.
+  <section id="findings">
+    <h2>Key Findings</h2>
+    <ul>
+      <li>Finding 1</li>
+      <li>Finding 2</li>
+    </ul>
+  </section>
 
-## Key Findings
-- Finding 1
-- Finding 2
+  <section id="sources">
+    <h2>Sources</h2>
+    <ul>
+      <li><a href="[url]">[Source name]</a></li>
+    </ul>
+  </section>
 
-## Sources
-- [Source name](url)
-
-## Notes
-Any additional context or observations.
+  <section id="notes">
+    <h2>Notes</h2>
+    <p>Any additional context or observations.</p>
+  </section>
+</main>
 ```
+
+Research is a simple artifact. No collapsibles needed.
 
 ## Context
 

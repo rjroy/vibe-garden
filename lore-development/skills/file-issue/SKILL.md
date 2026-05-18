@@ -18,45 +18,47 @@ This bypasses the `idea:` capture and `/review-ideas` refinement flow. Use it wh
 ## Process
 
 1. Determine the issue from context (working context, user request, or both)
-2. Write the issue file to `.lore/work/issues/[kebab-case-title].md`
+2. Write the issue file to `.lore/work/issues/[kebab-case-title].html`
 3. Report what was filed and the path
 
 No conversation loop. No interactive refinement. If the observation is too vague to write up, say so and suggest using `idea:` to capture it for later refinement with `/review-ideas`.
 
 ## Output
 
-Save to `.lore/work/issues/[kebab-case-title].md`
+Save to `.lore/work/issues/[kebab-case-title].html`
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for issues.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for issues.
 
-### Document Structure
+Copy the HTML base template verbatim. Set `<meta name="lore-status" content="open">`. Replace `<main>` with these sections:
 
-```markdown
----
-[frontmatter per schema, status: open]
----
+```html
+<main>
+  <section id="what-happened">
+    <h2>What Happened</h2>
+    <p>[Description of the observation]</p>
+  </section>
 
-# [Issue Title]
+  <section id="why-it-matters">
+    <h2>Why It Matters</h2>
+    <p>[Impact or consequence]</p>
+  </section>
 
-## What Happened
-
-[Description of the observation]
-
-## Why It Matters
-
-[Impact or consequence]
-
-## Fix Direction
-
-[Suggested approach, if known. Omit section if no direction is clear.]
+  <!-- Omit entirely if no direction is known -->
+  <section id="fix-direction">
+    <h2>Fix Direction</h2>
+    <p>[Suggested approach]</p>
+  </section>
+</main>
 ```
+
+Issues are simple artifacts. No collapsibles needed.
 
 ### Frontmatter Tips
 
 - **title**: Name the problem, not the symptom (e.g., "Stale cache after config reload" not "Config changes don't apply")
 - **tags**: Include problem type (bug, gap, inconsistency, debt), domain, and technology
 - **modules**: Match codebase directory structure where possible
-- **related**: Link to the lore artifact where you noticed the issue, if applicable
+- **related**: Link to the lore artifact where you noticed the issue, if applicable. Use `.html` extensions.
 
 ## Constraints
 

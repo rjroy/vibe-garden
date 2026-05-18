@@ -32,30 +32,29 @@ Refine raw ideas captured by `idea:` into structured issues or discard them.
 
 ## Issue Output
 
-Save to `.lore/work/issues/[kebab-case-title].md`
+Save to `.lore/work/issues/[kebab-case-title].html`
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for issues.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for issues.
 
-### Document Structure
+Copy the HTML base template verbatim. Set `<meta name="lore-status" content="open">`. Replace `<main>` with these sections:
 
-```markdown
----
-[frontmatter per schema, status: open]
----
+```html
+<main>
+  <section id="what-happened">
+    <h2>What Happened</h2>
+    <p>[Description of the observation]</p>
+  </section>
 
-# [Issue Title]
+  <section id="why-it-matters">
+    <h2>Why It Matters</h2>
+    <p>[Impact or consequence]</p>
+  </section>
 
-## What Happened
-
-[Description of the observation]
-
-## Why It Matters
-
-[Impact or consequence]
-
-## Fix Direction
-
-[Suggested approach, if known]
+  <section id="fix-direction">
+    <h2>Fix Direction</h2>
+    <p>[Suggested approach, if known]</p>
+  </section>
+</main>
 ```
 
 ## Removing Processed Bullets

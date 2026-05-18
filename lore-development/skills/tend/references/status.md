@@ -22,6 +22,8 @@ Before any manual verification, run the bundled validation script:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_frontmatter.py .lore/
 ```
 
+The script handles both formats: `.md` files (YAML frontmatter between `---` delimiters) and `.html` files (`<meta name="lore-*">` tags in `<head>`). Findings are emitted as JSON lines regardless of file format.
+
 Capture stdout (JSON lines) and the exit code. Parse each JSON line into a structured finding.
 
 **Exit code handling**:
@@ -196,9 +198,12 @@ Use `TaskList` before moving between phases to confirm prior work is actually co
 
 ## Frontmatter Retrofitting
 
-Documents should have YAML frontmatter for searchability. Reference `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for field definitions.
+Documents should have metadata for searchability. Reference `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for field definitions.
 
-When a document lacks frontmatter entirely, offer to add it:
+- **`.md` files**: Check for YAML frontmatter (`---` block). If missing, offer to add it.
+- **`.html` files**: Check for `<meta name="lore-*">` tags in `<head>`. If missing, offer to add them using the base template's `<meta>` structure.
+
+When a `.md` document lacks frontmatter entirely, offer to add it:
 
 ```markdown
 ---

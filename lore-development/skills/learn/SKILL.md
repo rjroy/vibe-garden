@@ -83,7 +83,7 @@ Fetch is on-request only. The skill does not pre-scan artifacts the user did not
 Before writing a file, search `.lore/learned/` for related entries.
 
 1. Pull keywords from the user's articulation (the verbs and nouns of the mistake — what they're doing wrong, what the failure mode is, the affected module).
-2. Grep `.lore/learned/` on those keywords. Include frontmatter (`title:`, `tags:`, `modules:`) and body.
+2. Grep `.lore/learned/` on those keywords. Include HTML meta tags (`lore-title`, `lore-tags`, `lore-modules`) and body content.
 3. If `.lore/learned/` does not yet exist, skip dedup — there are no entries to match against. Note this and proceed to write.
 4. Surface every match to the user with a short excerpt and the file path.
 5. The user decides:
@@ -107,37 +107,41 @@ Forbid the vocabulary of analysis in the body: `lesson`, `insight`, `we learned`
 
 ## File Layout
 
-Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case, derived from the entry's title.
+Default: one file per entry, flat under `.lore/learned/`. Filename is kebab-case, derived from the entry's title, with `.html` extension.
 
-- `dont-mock-the-database.md`
-- `if-you-find-yourself-rewriting-the-config-stop.md`
-- `git-stash-doesnt-reset-node-modules.md`
-- `json-dumps-default-str-for-dates.md`
-- `staging-deploy-port-forward-sequence.md`
+- `dont-mock-the-database.html`
+- `if-you-find-yourself-rewriting-the-config-stop.html`
+- `git-stash-doesnt-reset-node-modules.html`
+- `json-dumps-default-str-for-dates.html`
+- `staging-deploy-port-forward-sequence.html`
 
 Do not pre-create `.lore/learned/`. The directory is materialized by the first `/learn` write. If the directory does not exist when the user accepts the draft, create it then.
 
 This default is revisable; the internal structure of `.lore/learned/` (categorized vs flat, file-per-entry vs append-to-topic-file, full lifecycle) may evolve.
 
-## Frontmatter
+## Output Format
 
-Common fields only. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for definitions.
+Learned entries are written as HTML. **Before writing**, load both:
+- `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md`
+- `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`
 
-```markdown
----
-title: [The mistake or imperative, in the user's words]
-date: YYYY-MM-DD
-status: active
-tags: [problem-type, affected-area]
-modules: [affected-modules]
----
+Output file extension is `.html`. Use a minimal styled card layout — no collapsibles, no interactivity.
 
-[Body — free-form. The mistake, the rule, what it prevents. No section headings unless the lesson actually needs them. No analysis vocabulary.]
+Copy the base HTML shell from `html-base-template.md` verbatim. Populate the `<meta>` tags and fill `<main>` with a single content section. The body is free-form; use prose, code blocks, or both — whatever the lesson requires:
+
+```html
+<section id="summary">
+  <h2>The Lesson</h2>
+  <p>[The mistake, the rule, what it prevents. Free-form. No analysis vocabulary.]</p>
+  <!-- code blocks, snippets, or command sequences as needed -->
+</section>
 ```
 
-- `status: active` for new entries. `superseded` only when a later entry replaces this one (see Dedup).
-- `title` should read as the knowledge itself: "Don't ship the same path string in two places", or "Use `json.dumps(default=str)` for dataclasses with dates", or "Staging deploy needs `--force` after the port-forward step". Not "Path duplication retro" or "JSON serialization notes".
-- `tags` and `modules` follow the standard kebab-case conventions.
+Frontmatter is expressed as `<meta name="lore-*">` tags in the HTML `<head>` (not YAML).
+
+- `<meta name="lore-status" content="active">` for new entries. `superseded` only when a later entry replaces this one (see Dedup).
+- `<meta name="lore-title">` should read as the knowledge itself: "Don't ship the same path string in two places", or "Use `json.dumps(default=str)` for dataclasses with dates", or "Staging deploy needs `--force` after the port-forward step". Not "Path duplication retro" or "JSON serialization notes".
+- `lore-tags` and `lore-modules` follow the standard kebab-case conventions.
 
 ## Examples
 
@@ -152,19 +156,13 @@ Skill: *(reads the file)* What did the swallowed error cause downstream?
 User: A silent retry loop. Took an hour to find because nothing logged.
 Skill: *(runs dedup against `.lore/learned/`)* No related entries. Drafting:
 
+```html
+<!-- lore-title: Don't catch integration errors silently -->
+<!-- lore-date: 2026-04-24, lore-status: active -->
+<!-- lore-tags: error-handling, integration, logging -->
+<!-- lore-modules: deploy-system -->
 ```
----
-title: Don't catch integration errors silently
-date: 2026-04-24
-status: active
-tags: [error-handling, integration, logging]
-modules: [deploy-system]
----
-
-Silent catch blocks at integration points hide failures and turn one-step bugs
-into hour-long debugging sessions. If the call can fail, log the failure and
-surface it.
-```
+*(full HTML shell from html-base-template.md with a single content section)*
 
 User: Cut the second sentence — first one is enough.
 Skill: *(applies cut, writes file)*
@@ -178,17 +176,12 @@ Skill: What does following "don't over-engineer early" prevent?
 User: Two days of refactoring before the spec stabilizes.
 Skill: *(dedup; no matches)* Drafting:
 
+```html
+<!-- lore-title: If you find yourself adding abstractions before the spec stabilizes, stop -->
+<!-- lore-date: 2026-04-24, lore-status: active -->
+<!-- lore-tags: over-engineering, planning -->
 ```
----
-title: If you find yourself adding abstractions before the spec stabilizes, stop
-date: 2026-04-24
-status: active
-tags: [over-engineering, planning]
----
-
-The abstraction will be wrong because the requirements are still moving. Cost is
-two days of refactor when the spec lands.
-```
+*(full HTML shell with single content section)*
 
 User: Looks right.
 
@@ -199,13 +192,10 @@ Skill: *(opening question)*
 User: Specific. I just spent an hour figuring out how to serialize a dataclass with date fields through `json.dumps`. The default serializer chokes on `date`, but `default=str` handles it.
 Skill: *(dedup against `.lore/learned/`)* No related entries. Drafting:
 
-````
----
-title: Use json.dumps(default=str) for dataclasses with date fields
-date: 2026-04-25
-status: active
-tags: [serialization, json, dataclasses]
-modules: []
+````html
+<!-- lore-title: Use json.dumps(default=str) for dataclasses with date fields -->
+<!-- lore-date: 2026-04-25, lore-status: active -->
+<!-- lore-tags: serialization, json, dataclasses -->
 ---
 
 ```python

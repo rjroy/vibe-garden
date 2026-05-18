@@ -19,7 +19,7 @@ Scan all specifications for stubs and generate an index of unresolved ones.
 
 ### Step 1: Scan for Stubs
 
-Scan all `.md` files in `.lore/work/specs/` recursively. Extract all `[STUB: name]` patterns using regex.
+Scan all `.md` and `.html` files in `.lore/work/specs/` recursively. Extract all `[STUB: name]` patterns using regex.
 
 Pattern to match: `\[STUB:\s*([^\]]+)\]`
 
@@ -41,9 +41,9 @@ Invalid names are flagged as errors.
 
 For each valid stub, check if it's resolved:
 
-A stub is resolved if `.lore/work/specs/[stub-name].md` exists (exact match, case-sensitive).
+A stub is resolved if `.lore/work/specs/[stub-name].html` or `.lore/work/specs/[stub-name].md` exists (exact match, case-sensitive).
 
-Note: Stubs can also be resolved by nested specs (e.g., `.lore/work/specs/parent/[stub-name].md`). Scan recursively for matching filenames.
+Note: Stubs can also be resolved by nested specs (e.g., `.lore/work/specs/parent/[stub-name].html`). Scan recursively for matching filenames.
 
 ### Step 4: Identify Warnings
 
@@ -52,11 +52,13 @@ Flag these conditions as warnings:
 
 ### Step 5: Generate Index
 
-Write the stub index to `.lore/work/stubs/index.md`. Create the directory if it doesn't exist.
+Write the stub index to `.lore/work/stubs/index.html`. Create the directory if it doesn't exist.
 
 ## Output
 
-Save to `.lore/work/stubs/index.md`
+Save to `.lore/work/stubs/index.html`
+
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Copy the base shell verbatim; fill `<main>` with the stub index content. Use a clean structured layout.
 
 ### Document Structure
 

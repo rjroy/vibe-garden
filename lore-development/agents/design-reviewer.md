@@ -28,6 +28,16 @@ This agent is invoked via the Task tool:
 - **Read**: Consume the document being reviewed, read related specs for context
 - **Grep**: Find references to this design elsewhere, check consistency with specs
 
+## Artifact Ingest
+
+Lore artifacts are HTML files with `<meta name="lore-*">` tags. When reading an artifact:
+
+- **Metadata**: Extract from `<meta name="lore-title">`, `lore-status`, `lore-tags`, `lore-modules` in `<head>`.
+- **Navigation**: Locate sections by `<section id="...">`. Canonical IDs: `context`, `summary`, `approaches`, `decision`, `open-questions`. Type-specific IDs vary.
+- **User notes**: Check for `<div class="user-note">` elements and include their content in the review summary.
+
+Older artifacts may still be markdown with YAML frontmatter -- handle both.
+
 ## Review Strategy
 
 Review through four lenses, spending roughly equal attention on each:

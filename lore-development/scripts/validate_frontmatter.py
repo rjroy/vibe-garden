@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Validate YAML frontmatter across .lore/ documents.
+Validate frontmatter across .lore/ documents.
 
-Scans a directory tree, finds .md files, and validates each file's YAML
-frontmatter against the lore schema. Outputs JSON lines to stdout (one
-finding per line). Designed for consumption by tend's status mode and
-for standalone CLI use.
+Scans a directory tree, finds .md and .html files, and validates each
+file's frontmatter against the lore schema. For .md files, frontmatter
+is YAML between --- delimiters. For .html files, frontmatter is
+extracted from <meta name="lore-*"> tags in the <head> element.
+
+Outputs JSON lines to stdout (one finding per line). Designed for
+consumption by tend's status mode and for standalone CLI use.
 
 Exit codes:
   0 - No errors found (or target directory is empty/nonexistent)
@@ -18,6 +21,7 @@ import json
 import os
 import re
 import sys
+from html.parser import HTMLParser
 
 try:
     import yaml
@@ -195,6 +199,71 @@ def _doc_type_from_segments(segments):
 
 # -- validation pipeline ------------------------------------------------------
 
+# -- HTML meta tag parsing ---------------------------------------------------
+
+class _MetaParser(HTMLParser):
+    """Extract <meta name="lore-*" content="..."> tags from HTML."""
+
+    def __init__(self):
+        super().__init__()
+        self.meta = {}  # name (without "lore-" prefix) -> content string
+        self._in_head = False
+        self._past_head = False
+
+    def handle_starttag(self, tag, attrs):
+        if self._past_head:
+            return
+        if tag == "head":
+            self._in_head = True
+            return
+        if tag == "body":
+            self._past_head = True
+            return
+        if tag == "meta" and self._in_head:
+            attr_dict = dict(attrs)
+            name = attr_dict.get("name", "")
+            if name.startswith("lore-"):
+                key = name[5:]  # strip "lore-" prefix
+                self.meta[key] = attr_dict.get("content", "")
+
+    def handle_endtag(self, tag):
+        if tag == "head":
+            self._past_head = True
+
+
+def _parse_html_meta(content):
+    """Parse lore meta tags from HTML content.
+
+    Returns a dict of field name -> value, with multi-value fields
+    (tags, modules, related) converted to lists.
+    """
+    parser = _MetaParser()
+    try:
+        parser.feed(content)
+    except Exception:
+        return None
+
+    data = dict(parser.meta)
+
+    # Convert comma-separated multi-value fields to lists.
+    for list_field in ("tags", "modules", "related"):
+        if list_field in data:
+            raw = data[list_field]
+            if raw.strip():
+                data[list_field] = [v.strip() for v in raw.split(",") if v.strip()]
+            else:
+                data[list_field] = []
+
+    # Convert sequence to int if present.
+    if "sequence" in data:
+        try:
+            data["sequence"] = int(data["sequence"])
+        except (ValueError, TypeError):
+            pass  # type check will catch this later
+
+    return data
+
+
 def validate_file(filepath, root, status_values=None):
     """Run the full validation pipeline on a single file.
 
@@ -218,59 +287,72 @@ def validate_file(filepath, root, status_values=None):
     if not content.strip():
         return findings
 
-    # Step 1: Structural check
-    lines = content.split("\n")
-
-    if not lines or lines[0].rstrip("\r") != "---":
-        findings.append(
-            _finding(rel, "structural_error", "Missing opening '---' delimiter")
-        )
-        return findings
-
-    close_idx = None
-    for i in range(1, len(lines)):
-        if lines[i].rstrip("\r") == "---":
-            close_idx = i
-            break
-
-    if close_idx is None:
-        findings.append(
-            _finding(rel, "structural_error", "Missing closing '---' delimiter")
-        )
-        return findings
-
-    fm_lines = lines[1:close_idx]
-    fm_text = "\n".join(fm_lines)
-
-    # Tab check
-    for line_num, line in enumerate(fm_lines, start=2):
-        if "\t" in line:
+    # Route to HTML or YAML parsing based on file extension.
+    if filepath.endswith(".html"):
+        data = _parse_html_meta(content)
+        if data is None:
             findings.append(
-                _finding(
-                    rel,
-                    "structural_error",
-                    f"Tab character in frontmatter indentation (line {line_num})",
-                )
+                _finding(rel, "parse_error", "Could not parse HTML meta tags")
+            )
+            return findings
+        # HTML files without any lore-* meta tags are treated as no-frontmatter
+        # (same as .md files without --- blocks: skip silently).
+        if not data:
+            return findings
+    else:
+        # Step 1: Structural check (YAML)
+        lines = content.split("\n")
+
+        if not lines or lines[0].rstrip("\r") != "---":
+            findings.append(
+                _finding(rel, "structural_error", "Missing opening '---' delimiter")
             )
             return findings
 
-    # Step 2: Parse check
-    try:
-        data = yaml.safe_load(fm_text)
-    except yaml.YAMLError as exc:
-        findings.append(
-            _finding(rel, "parse_error", f"YAML parse error: {exc}")
-        )
-        return findings
+        close_idx = None
+        for i in range(1, len(lines)):
+            if lines[i].rstrip("\r") == "---":
+                close_idx = i
+                break
 
-    # safe_load can return None for empty frontmatter or a non-dict for scalar
-    if data is None:
-        data = {}
-    if not isinstance(data, dict):
-        findings.append(
-            _finding(rel, "parse_error", "Frontmatter is not a YAML mapping")
-        )
-        return findings
+        if close_idx is None:
+            findings.append(
+                _finding(rel, "structural_error", "Missing closing '---' delimiter")
+            )
+            return findings
+
+        fm_lines = lines[1:close_idx]
+        fm_text = "\n".join(fm_lines)
+
+        # Tab check
+        for line_num, line in enumerate(fm_lines, start=2):
+            if "\t" in line:
+                findings.append(
+                    _finding(
+                        rel,
+                        "structural_error",
+                        f"Tab character in frontmatter indentation (line {line_num})",
+                    )
+                )
+                return findings
+
+        # Step 2: Parse check
+        try:
+            data = yaml.safe_load(fm_text)
+        except yaml.YAMLError as exc:
+            findings.append(
+                _finding(rel, "parse_error", f"YAML parse error: {exc}")
+            )
+            return findings
+
+        # safe_load can return None for empty frontmatter or a non-dict for scalar
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            findings.append(
+                _finding(rel, "parse_error", "Frontmatter is not a YAML mapping")
+            )
+            return findings
 
     # Step 3: Required fields
     for field in REQUIRED_FIELDS:
@@ -409,7 +491,9 @@ def scan_directory(directory):
     all_findings = []
     for dirpath, _dirnames, filenames in os.walk(root):
         for fname in sorted(filenames):
-            if not fname.endswith(".md"):
+            is_md = fname.endswith(".md")
+            is_html = fname.endswith(".html")
+            if not (is_md or is_html):
                 continue
             # Skip the config file itself; it's not a lore document.
             if fname == "lore-config.md" and Path(dirpath) == root:

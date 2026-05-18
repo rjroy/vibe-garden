@@ -1,5 +1,7 @@
 # Lore Document Frontmatter Schema
 
+> **Note:** This file is a reference for Claude, not a user-facing artifact. It stays markdown.
+
 Single source of truth for frontmatter fields across all `.lore/` document types.
 
 ## The three-directory model
@@ -16,48 +18,44 @@ Status values are scoped to the directory tree the document lives in (see "Statu
 
 All lore documents should include these fields:
 
-```yaml
----
-title: string        # Descriptive title, used for search
-date: YYYY-MM-DD     # Creation or completion date
-status: string       # Document-type-specific (see below)
-tags: [string]       # Searchable keywords (kebab-case)
-modules: [string]    # Affected modules/components (kebab-case, optional)
-related: [string]    # Paths to related lore documents (optional)
----
+```html
+<meta name="lore-title" content="Descriptive title, used for search">
+<meta name="lore-date" content="YYYY-MM-DD">
+<meta name="lore-status" content="string">
+<meta name="lore-tags" content="tag-one, tag-two, tag-three">
+<meta name="lore-modules" content="module-one, module-two">
+<meta name="lore-related" content=".lore/path/to/doc.html, .lore/path/to/other.html">
 ```
 
 ## Required vs Optional
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| title | Yes | Used by lore-researcher for search |
-| date | Yes | When document was created/completed |
-| status | Yes | Enables `/tend` hygiene checks |
-| tags | Yes | Primary search mechanism |
-| modules | No | Include when document relates to specific codebase areas |
-| related | No | Cross-references to other lore documents |
+| lore-title | Yes | Used by lore-researcher for search |
+| lore-date | Yes | When document was created/completed |
+| lore-status | Yes | Enables `/tend` hygiene checks |
+| lore-tags | Yes | Primary search mechanism |
+| lore-modules | No | Include when document relates to specific codebase areas |
+| lore-related | No | Cross-references to other lore documents |
 
 ## Spec-Specific Fields
 
 Specs support an additional optional field:
 
-```yaml
----
-req-prefix: AUTH    # Short prefix for requirement IDs (optional)
----
+```html
+<meta name="lore-req-prefix" content="AUTH">
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| req-prefix | No | Override auto-generated prefix. Use 3-12 uppercase chars. |
+| lore-req-prefix | No | Override auto-generated prefix. Use 3-12 uppercase chars. |
 
 If omitted, prefix is auto-generated from the spec filename (first 2 segments, uppercase, max 12 chars).
 
 Examples:
-- `auth-flow.md` → `AUTH-FLOW`
-- `user-authentication-oauth2.md` → `USER-AUTH`
-- With `req-prefix: AUTH` → `AUTH`
+- `auth-flow.html` → `AUTH-FLOW`
+- `user-authentication-oauth2.html` → `USER-AUTH`
+- With `<meta name="lore-req-prefix" content="AUTH">` → `AUTH`
 
 Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
 
@@ -106,199 +104,169 @@ Learned entries share one minimal status set. Lifecycle beyond this is owned by 
 
 Notes support an additional required field:
 
-```yaml
----
-source: .lore/work/plans/auth-flow.md    # Path to the source artifact (required)
----
+```html
+<meta name="lore-source" content=".lore/work/plans/auth-flow.html">
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| source | Yes | Path to the spec, design, or plan being implemented. Enables retro to diff plan vs reality. |
+| lore-source | Yes | Path to the spec, design, or plan being implemented. Enables retro to diff plan vs reality. |
 
 ## Task-Specific Fields
 
 Tasks support additional required fields:
 
-```yaml
----
-source: .lore/work/plans/auth-flow.md    # Path to the plan this task was decomposed from (required)
-sequence: 1                                # Integer ordering within the task set (required)
----
+```html
+<meta name="lore-source" content=".lore/work/plans/auth-flow.html">
+<meta name="lore-sequence" content="1">
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| source | Yes | Path to the plan this task was decomposed from. Enables implement to find the parent plan. |
-| sequence | Yes | Integer ordering within the task set. Determines execution order in implement. |
+| lore-source | Yes | Path to the plan this task was decomposed from. Enables implement to find the parent plan. |
+| lore-sequence | Yes | Integer ordering within the task set. Determines execution order in implement. |
 
 ## Vision-Specific Notes
 
-The vision document lives at `.lore/reference/vision.md` (one per project, under `reference/`). It uses the common fields only; `modules` is intentionally omitted because the vision applies to the entire project, not specific modules. As a reference document, its status is one of `current`, `outdated`, or `archived`. A vision becomes `current` when the user edits the frontmatter directly or tells the skill to mark it so. The skill does not approve on the user's behalf.
+The vision document lives at `.lore/reference/vision.html` (one per project, under `reference/`). It uses the common fields only; `lore-modules` is intentionally omitted because the vision applies to the entire project, not specific modules. As a reference document, its status is one of `current`, `outdated`, or `archived`. A vision becomes `current` when the user edits the meta tag directly or tells the skill to mark it so. The skill does not approve on the user's behalf.
 
 ## Examples
 
 ### Notes (Implementation)
 
-```yaml
----
-title: "Implementation notes: auth-flow"
-date: 2026-02-05
-status: in_progress
-tags: [implementation, notes]
-source: .lore/work/plans/auth-flow.md
-modules: [auth-service]
----
+```html
+<meta name="lore-title" content="Implementation notes: auth-flow">
+<meta name="lore-date" content="2026-02-05">
+<meta name="lore-status" content="in_progress">
+<meta name="lore-tags" content="implementation, notes">
+<meta name="lore-source" content=".lore/work/plans/auth-flow.html">
+<meta name="lore-modules" content="auth-service">
 ```
 
 ### Task
 
-```yaml
----
-title: Add auth middleware
-date: 2026-02-10
-status: pending
-tags: [task]
-source: .lore/work/plans/auth-flow.md
-sequence: 1
-modules: [auth-service]
----
+```html
+<meta name="lore-title" content="Add auth middleware">
+<meta name="lore-date" content="2026-02-10">
+<meta name="lore-status" content="pending">
+<meta name="lore-tags" content="task">
+<meta name="lore-source" content=".lore/work/plans/auth-flow.html">
+<meta name="lore-sequence" content="1">
+<meta name="lore-modules" content="auth-service">
 ```
 
 ### Retro
 
-```yaml
----
-title: N+1 query in brief generation
-date: 2026-01-30
-status: open
-tags: [performance, database, eager-loading]
-modules: [brief-system, email-processing]
----
+```html
+<meta name="lore-title" content="N+1 query in brief generation">
+<meta name="lore-date" content="2026-01-30">
+<meta name="lore-status" content="open">
+<meta name="lore-tags" content="performance, database, eager-loading">
+<meta name="lore-modules" content="brief-system, email-processing">
 ```
 
 ### Spec
 
-```yaml
----
-title: User authentication flow
-date: 2026-01-28
-status: draft
-tags: [auth, security, login]
-modules: [auth-service, user-model]
-related: [.lore/work/research/oauth-patterns.md]
-req-prefix: AUTH           # Optional: overrides auto-generated prefix
----
+```html
+<meta name="lore-title" content="User authentication flow">
+<meta name="lore-date" content="2026-01-28">
+<meta name="lore-status" content="draft">
+<meta name="lore-tags" content="auth, security, login">
+<meta name="lore-modules" content="auth-service, user-model">
+<meta name="lore-related" content=".lore/work/research/oauth-patterns.html">
+<meta name="lore-req-prefix" content="AUTH">
 ```
 
 ### Brainstorm
 
-```yaml
----
-title: Compound loop for lore-development
-date: 2026-01-30
-status: open
-tags: [methodology, feedback-loop, knowledge-management]
-modules: [lore-development]
----
+```html
+<meta name="lore-title" content="Compound loop for lore-development">
+<meta name="lore-date" content="2026-01-30">
+<meta name="lore-status" content="open">
+<meta name="lore-tags" content="methodology, feedback-loop, knowledge-management">
+<meta name="lore-modules" content="lore-development">
 ```
 
 ### Design
 
-```yaml
----
-title: Deduplication algorithm for history sync
-date: 2026-02-03
-status: draft
-tags: [algorithm, deduplication, sync, data-structures]
-modules: [history-service, stream-processor]
-related: [.lore/work/specs/history-sync.md]
----
+```html
+<meta name="lore-title" content="Deduplication algorithm for history sync">
+<meta name="lore-date" content="2026-02-03">
+<meta name="lore-status" content="draft">
+<meta name="lore-tags" content="algorithm, deduplication, sync, data-structures">
+<meta name="lore-modules" content="history-service, stream-processor">
+<meta name="lore-related" content=".lore/work/specs/history-sync.html">
 ```
 
 ### Plan
 
-```yaml
----
-title: "Implementation plan: auth-flow"
-date: 2026-02-05
-status: draft
-tags: [plan, auth]
-modules: [auth-service]
-related: [.lore/work/specs/auth-flow.md]
----
+```html
+<meta name="lore-title" content="Implementation plan: auth-flow">
+<meta name="lore-date" content="2026-02-05">
+<meta name="lore-status" content="draft">
+<meta name="lore-tags" content="plan, auth">
+<meta name="lore-modules" content="auth-service">
+<meta name="lore-related" content=".lore/work/specs/auth-flow.html">
 ```
 
 New plans should always start as `draft`. They move to `approved` when the user accepts them, and `executed` after implementation completes.
 
 ### Research
 
-```yaml
----
-title: OAuth 2.0 patterns for CLI tools
-date: 2026-01-25
-status: active
-tags: [oauth, authentication, cli, security]
----
+```html
+<meta name="lore-title" content="OAuth 2.0 patterns for CLI tools">
+<meta name="lore-date" content="2026-01-25">
+<meta name="lore-status" content="active">
+<meta name="lore-tags" content="oauth, authentication, cli, security">
 ```
 
 ### Diagram (work, session-bound)
 
-```yaml
----
-title: Message flow between user and AI
-date: 2026-01-29
-status: current
-tags: [architecture, messaging, websocket]
-modules: [chat-service, ai-client]
----
+```html
+<meta name="lore-title" content="Message flow between user and AI">
+<meta name="lore-date" content="2026-01-29">
+<meta name="lore-status" content="current">
+<meta name="lore-tags" content="architecture, messaging, websocket">
+<meta name="lore-modules" content="chat-service, ai-client">
 ```
 
 ### Reference (Distilled Feature)
 
-```yaml
----
-title: User authentication feature
-date: 2026-01-30
-status: current
-tags: [auth, login, session]
-modules: [auth-service, user-model]
----
+```html
+<meta name="lore-title" content="User authentication feature">
+<meta name="lore-date" content="2026-01-30">
+<meta name="lore-status" content="current">
+<meta name="lore-tags" content="auth, login, session">
+<meta name="lore-modules" content="auth-service, user-model">
 ```
 
 ### Issue
 
-```yaml
----
-title: Session dialog overflow on narrow viewports
-date: 2026-02-18
-status: open
-tags: [ui, layout, responsive]
-modules: [session-dialog]
----
+```html
+<meta name="lore-title" content="Session dialog overflow on narrow viewports">
+<meta name="lore-date" content="2026-02-18">
+<meta name="lore-status" content="open">
+<meta name="lore-tags" content="ui, layout, responsive">
+<meta name="lore-modules" content="session-dialog">
 ```
 
 ### Vision
 
-```yaml
----
-title: Vibe Garden Vision
-date: 2026-03-16
-status: current
-tags: [vision]
----
+```html
+<meta name="lore-title" content="Vibe Garden Vision">
+<meta name="lore-date" content="2026-03-16">
+<meta name="lore-status" content="current">
+<meta name="lore-tags" content="vision">
 ```
 
 ### Learned entry
 
-```yaml
----
-title: Don't ship the same path string in two places
-date: 2026-04-24
-status: active
-tags: [refactor, hardcoded-paths]
-modules: [lore-development]
----
+```html
+<meta name="lore-title" content="Don't ship the same path string in two places">
+<meta name="lore-date" content="2026-04-24">
+<meta name="lore-status" content="active">
+<meta name="lore-tags" content="refactor, hardcoded-paths">
+<meta name="lore-modules" content="lore-development">
 ```
 
 ## Tag Guidelines
@@ -318,8 +286,8 @@ modules: [lore-development]
 ## Search Behavior
 
 The `lore-researcher` agent greps these fields to find related prior work:
-- `title:` for topic matches
-- `tags:` for keyword matches
-- `modules:` for codebase area matches
+- `name="lore-title"` for topic matches
+- `name="lore-tags"` for keyword matches
+- `name="lore-modules"` for codebase area matches
 
-Documents without frontmatter won't be found by search. Use `/tend` to retrofit old documents.
+Documents without meta tags won't be found by search. Use `/tend` to retrofit old documents.

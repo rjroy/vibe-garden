@@ -32,37 +32,58 @@ If the user provides a sketch, diagram, or image:
 
 ## Output
 
-Save to `.lore/work/brainstorm/[topic].md`
+Save to `.lore/work/brainstorm/[topic].html`
 
-Use kebab-case. Track session dates in frontmatter, not filenames.
+Use kebab-case. Track session dates in frontmatter meta tags, not filenames.
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for brainstorms.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for brainstorms.
 
-```markdown
----
-[frontmatter per schema]
----
+Copy the HTML base template verbatim. Fill in the `<meta>` tags and replace `<main>` with these sections:
 
-# Brainstorm: [Topic]
+```html
+<main>
+  <section id="context">
+    <h2>Context</h2>
+    <p>What prompted this exploration.</p>
+  </section>
 
-## Context
-What prompted this exploration.
+  <section id="ideas">
+    <h2>Ideas Explored</h2>
+    <details>
+      <summary>[Idea 1 title]</summary>
+      <p>Description and "what if" implications.</p>
+    </details>
+    <details>
+      <summary>[Idea 2 title]</summary>
+      <p>Description and trade-offs considered.</p>
+    </details>
+  </section>
 
-## Ideas Explored
-- Idea 1: description and "what if" implications
-- Idea 2: description and trade-offs considered
+  <!-- Include only if sketches were provided -->
+  <section id="sketches">
+    <h2>Sketches</h2>
+    <p>Description of provided sketches or diagrams.</p>
+  </section>
 
-## Sketches
-(If any were provided, describe them here)
+  <section id="open-questions">
+    <h2>Open Questions</h2>
+    <ul>
+      <li>Question 1</li>
+      <li>Question 2</li>
+    </ul>
+  </section>
 
-## Open Questions
-Questions that emerged but weren't resolved.
-
-## Next Steps
-(Optional) Where this might lead.
+  <!-- Optional -->
+  <section id="next-steps">
+    <h2>Next Steps</h2>
+    <p>Where this might lead.</p>
+  </section>
+</main>
 ```
+
+Use `<details>`/`<summary>` for individual ideas when there are multiple options to compare. The `open-questions` section receives the highlighted amber styling automatically from the base template.
 
 ## Context
 

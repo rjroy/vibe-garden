@@ -27,9 +27,9 @@ Both modes verify against current code before writing anything. The mode only se
 /distill code feature=auth                              # Code-seeded; named feature
 /distill code entry=/api/admin                          # Code-seeded; from an entry point
 /distill work                                          # Work-seeded; pick from work/
-/distill work .lore/work/specs/<name>.md              # Build-seeded from a specific file
-/distill work .lore/work/plans/<name>.md
-/distill work .lore/work/brainstorm/<name>.md
+/distill work .lore/work/specs/<name>.html              # Build-seeded from a specific file
+/distill work .lore/work/plans/<name>.html
+/distill work .lore/work/brainstorm/<name>.html
 ```
 
 ## Shape Rule (binding)
@@ -118,25 +118,38 @@ Reference has no prescribed topology. Distill navigates it the same way an engin
 
 If a placement decision isn't obvious, propose two options to the user and let them pick.
 
-## Frontmatter
+## Output Format
 
-Reference docs use the common frontmatter fields. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for definitions before writing.
+Reference docs are written as HTML. **Before writing**, load both:
+- `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md`
+- `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`
 
-```markdown
----
-title: [Topic]
-date: YYYY-MM-DD
-status: current
-tags: [relevant, keywords]
-modules: [affected-modules]
----
+Output file extension is `.html`. Use a clean structured layout — no collapsibles or interactivity needed (reference docs are read, not navigated).
 
-# [Topic]
+Copy the base HTML shell from `html-base-template.md` verbatim. Populate the `<meta>` tags and fill `<main>` with artifact-specific sections. Canonical section IDs:
 
-[Body — only what the code cannot tell a reader.]
+```html
+<section id="context">
+  <h2>Context</h2>
+  <p>[Background and framing for this reference area.]</p>
+</section>
+
+<section id="summary">
+  <h2>Summary</h2>
+  <p>[Key invariants and rules — only what the code cannot tell a reader.]</p>
+</section>
+
+<!-- Add additional topic-specific sections as needed -->
+
+<section id="open-questions">
+  <h2>Open Questions</h2>
+  <!-- omit if none -->
+</section>
 ```
 
-The body is shaped by what survives the shape rule, not by a section template. A reference file may be one paragraph, a list of invariants, a small table, or a section per cross-cutting rule. There is no required structure.
+The body is shaped by what survives the shape rule. A reference file may contain one paragraph, a list of invariants, a small table, or a section per cross-cutting rule. There is no required structure beyond what the content demands.
+
+Frontmatter is expressed as `<meta name="lore-*">` tags in the HTML `<head>` (not YAML). Required fields: `lore-title`, `lore-date`, `lore-status`, `lore-tags`. Optional: `lore-modules`, `lore-related`.
 
 ## Excavation Index
 

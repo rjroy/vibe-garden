@@ -20,7 +20,7 @@ Decompose a plan into individual task files, each scoped to one logical change w
 
 ## Input
 
-Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/work/plans/*.md`).
+Invoked as `/plan-breakdown <path>` where `<path>` is a plan artifact (`.lore/work/plans/*.html` or `.md`).
 
 Read the plan. If the plan references a spec (in its Spec Reference section or frontmatter `related` field), load the spec too. Record the spec's file path; it will be used in both the task frontmatter (`related` field) and the Why section of each task. The spec provides requirement IDs needed for the Why section. If the plan has a Goal section instead of a spec reference, the goal text serves the same purpose and the plan's own path is used in the Why section instead.
 
@@ -68,71 +68,75 @@ Walk through the plan's implementation steps in order. The goal is to produce ta
 
 ### Task File Template
 
-Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for field definitions and status values.
+Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the HTML shell and field definitions.
 
 Each task file follows this structure:
 
-```markdown
----
-title: [Short task description]
-date: YYYY-MM-DD
-status: pending
-tags: [task]
-source: .lore/work/plans/[plan-name].md
-related: [.lore/work/specs/[spec-name].md]   # omit if plan has no spec
-sequence: N
-modules: [affected-modules]
----
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Short task description]</title>
+  <meta name="lore-title"    content="[Short task description]">
+  <meta name="lore-date"     content="YYYY-MM-DD">
+  <meta name="lore-status"   content="pending">
+  <meta name="lore-tags"     content="task">
+  <meta name="lore-source"   content=".lore/work/plans/[plan-name].html">
+  <meta name="lore-related"  content=".lore/work/specs/[spec-name].html"><!-- omit if plan has no spec -->
+  <meta name="lore-sequence" content="N">
+  <meta name="lore-modules"  content="[affected-modules]">
+  <!-- inline CSS from html-base-template.md -->
+</head>
+<body>
+<header>
+  <h1>[Short task description]</h1>
+  <div class="meta-bar">
+    <span class="badge">pending</span>
+    <span class="sep">·</span>
+    <span>YYYY-MM-DD</span>
+  </div>
+  <div class="header-actions">
+    <button class="copy-prompt-btn" onclick="copyPrompt(this)">Copy as Prompt</button>
+  </div>
+</header>
+<main>
+  <section id="what">
+    <h2>What</h2>
+    <p>[Concrete implementation description. Specific enough to act on without seeing
+    the broader plan. Name the functions, modules, or components involved.]</p>
+  </section>
 
-# Task: [Short Description]
+  <section id="validation">
+    <h2>Validation</h2>
+    <p>[What specifically to test or verify. Concrete criteria, not "run the tests".]</p>
+  </section>
 
-## What
+  <section id="why">
+    <h2>Why</h2>
+    <p>[Requirement ID, source file path, and excerpt for traceability.]</p>
+  </section>
 
-[Concrete implementation description. Specific enough to act on without seeing
-the broader plan. Name the functions, modules, or components involved. An
-implementation agent reading only this section should understand what to build.]
-
-## Validation
-
-[What specifically to test or verify for this task. Not "run the tests" but
-concrete criteria: "Middleware rejects requests without a valid token and
-returns 401. Middleware passes requests with a valid token to the next handler.
-Unit test covers both paths."
-
-Derive validation from the plan's spec requirements or success criteria. If the
-plan step lacks clear validation criteria, infer from the What section. If
-validation cannot be inferred, flag the task for user review with a note
-explaining what's missing.]
-
-## Why
-
-[Requirement ID, source file path, and excerpt so the implementation agent
-understands the justification and can find the original context.
-
-With spec: From `.lore/work/specs/auth-flow.md`, REQ-AUTH-3: "All API endpoints
-require authentication except /health and /login"
-
-Without spec (goal-based plan): From `.lore/work/plans/auth-flow.md`, Goal: "Ensure
-all API access is authenticated" followed by the relevant excerpt.
-
-If a plan step has no traceable requirement or goal, flag the task for user
-review.]
-
-## Files
-
-- `path/to/file.ts` (create)
-- `path/to/other.ts` (modify)
-- `tests/path/to/file.test.ts` (create)
-
-[Carried forward from the plan step. This is guidance, not a constraint. The
-implementation agent may discover additional files need changing.]
+  <section id="files">
+    <h2>Files</h2>
+    <ul>
+      <li><code>path/to/file.ts</code> (create)</li>
+      <li><code>path/to/other.ts</code> (modify)</li>
+      <li><code>tests/path/to/file.test.ts</code> (create)</li>
+    </ul>
+  </section>
+</main>
+<!-- copyPrompt script from html-base-template.md -->
+</body>
+</html>
 ```
 
 ### Storage
 
-Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.md` where:
+Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.html` where:
 
-- `<plan-name>` matches the plan's filename without extension (e.g., plan `.lore/work/plans/auth-flow.md` produces directory `.lore/work/tasks/auth-flow/`)
+- `<plan-name>` matches the plan's filename without extension (e.g., plan `.lore/work/plans/auth-flow.html` produces directory `.lore/work/tasks/auth-flow/`)
 - `NNN` is a zero-padded sequence number starting at 001
 - `<task-name>` is a kebab-case description derived from the task's purpose
 

@@ -28,6 +28,16 @@ This agent is invoked via the Task tool:
 - **Read**: Consume the plan being reviewed, read the referenced spec and design documents
 - **Grep**: Find references across documents, check requirement IDs, verify file paths mentioned in plan exist
 
+## Artifact Ingest
+
+Lore artifacts are HTML files with `<meta name="lore-*">` tags. When reading an artifact:
+
+- **Metadata**: Extract from `<meta name="lore-title">`, `lore-status`, `lore-tags`, `lore-modules` in `<head>`.
+- **Navigation**: Locate sections by `<section id="...">`. Canonical IDs: `context`, `summary`, `steps`, `open-questions`, `next-steps`. Type-specific IDs vary.
+- **User notes**: Check for `<div class="user-note">` elements and include their content in the review summary.
+
+Older artifacts may still be markdown with YAML frontmatter -- handle both.
+
 ## Review Strategy
 
 Review through four lenses, spending roughly equal attention on each:

@@ -26,20 +26,28 @@ Define how the AI validates its work before declaring done.
 
 If a spec or plan exists, offer to append the AI Validation section to it.
 
-If no formal document exists, save to `.lore/work/validation/[feature-or-work].md`
+If no formal document exists, save to `.lore/work/validation/[feature-or-work].html`
+
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions.
 
 ### Validation Criteria Structure
 
-```markdown
-## AI Validation
+When appending to an existing spec or plan, add a `<section id="ai-validation">` block:
 
-**Defaults** (apply unless overridden):
-- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
-- 90%+ coverage on new code
-- Code review by fresh-context sub-agent
-
-**Custom**:
-- [Feature-specific validation steps]
+```html
+<section id="ai-validation">
+  <h2>AI Validation</h2>
+  <p><strong>Defaults</strong> (apply unless overridden):</p>
+  <ul>
+    <li>Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK <code>query()</code>)</li>
+    <li>90%+ coverage on new code</li>
+    <li>Code review by fresh-context sub-agent</li>
+  </ul>
+  <p><strong>Custom</strong>:</p>
+  <ul>
+    <li>[Feature-specific validation steps]</li>
+  </ul>
+</section>
 ```
 
 ## Defaults Explained
@@ -68,25 +76,29 @@ When probing for custom needs, consider:
 
 ## Standalone Document Structure
 
-When no spec/plan exists:
+When no spec/plan exists, copy the HTML base template verbatim. Replace `<main>` with:
 
-```markdown
-# Validation: [Work Description]
+```html
+<main>
+  <section id="context">
+    <h2>Context</h2>
+    <p>Brief description of what's being built. How this validation criteria was derived (conversation, informal description, etc.)</p>
+  </section>
 
-**For**: Brief description of what's being built
-
-## AI Validation
-
-**Defaults** (apply unless overridden):
-- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
-- 90%+ coverage on new code
-- Code review by fresh-context sub-agent
-
-**Custom**:
-- [Feature-specific items]
-
-## Context
-How this validation criteria was derived (conversation, informal description, etc.)
+  <section id="ai-validation">
+    <h2>AI Validation</h2>
+    <p><strong>Defaults</strong> (apply unless overridden):</p>
+    <ul>
+      <li>Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK <code>query()</code>)</li>
+      <li>90%+ coverage on new code</li>
+      <li>Code review by fresh-context sub-agent</li>
+    </ul>
+    <p><strong>Custom</strong>:</p>
+    <ul>
+      <li>[Feature-specific items]</li>
+    </ul>
+  </section>
+</main>
 ```
 
 ## Keep It Actionable

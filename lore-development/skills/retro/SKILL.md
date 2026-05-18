@@ -34,35 +34,47 @@ The shape is structured frontmatter plus free-form body. Length follows what act
    - Plan in `.lore/work/plans/` (if applicable)
    - Implementation notes in `.lore/work/notes/` (if applicable)
 2. Write the retro as observation. What was the work? What happened in the doing of it? What surprised, broke, drifted, or unfolded differently than the plan said?
-3. Save to `.lore/work/retros/[descriptive-name].md`.
+3. Save to `.lore/work/retros/[descriptive-name].html`.
 
 The body is free-form prose. Use whatever structure the actual session calls for — chronological, by component, by surprise — or none. If a heading helps the reader follow, use it. If not, plain paragraphs are fine.
 
 ## Output
 
-Save to `.lore/work/retros/[descriptive-name].md`.
+Save to `.lore/work/retros/[descriptive-name].html`.
 
 ### Frontmatter
 
-Common fields only. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for definitions.
+Common fields only. Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the HTML shell and field definitions.
 
-```markdown
----
-title: [Topic — what the session was about, as a noun phrase]
-date: YYYY-MM-DD
-status: open
-tags: [problem-types, technologies, patterns]
-modules: [affected-modules]
-related: [.lore/work/specs/<name>.md, .lore/work/plans/<name>.md]
----
+Copy the HTML base template verbatim. Populate the `<meta name="lore-*">` tags in `<head>`. Replace `<main>` with a single body section:
 
-[Body — free-form notes describing what happened.]
+```html
+<!-- <meta> tags in <head>:
+  <meta name="lore-title"   content="[Topic as a noun phrase]">
+  <meta name="lore-date"    content="YYYY-MM-DD">
+  <meta name="lore-status"  content="open">
+  <meta name="lore-tags"    content="[problem-types, technologies, patterns]">
+  <meta name="lore-modules" content="[affected-modules]">
+  <meta name="lore-related" content=".lore/work/specs/<name>.html, .lore/work/plans/<name>.html">
+-->
+
+<main>
+  <section id="body">
+    <h2>[Topic]</h2>
+    <!-- Free-form prose body. Use whatever structure the session calls for.
+         Headings, paragraphs, and lists are all fine -- or none at all.
+         See Body Discipline section for guiding questions. -->
+    <p>[Body text]</p>
+  </section>
+</main>
 ```
 
 - `status: open` while the work the retro tracks can still be amended. `archived` once the work is fully past.
 - `title` describes the work, not an extracted moral. "Auth-flow rollout" is a title; "Why we should always test migrations" is not.
 - `tags` cover what the session touched: problem types (`bug`, `performance`, `refactor`), technologies, patterns. Searchable by `lore-researcher`.
 - `modules` lists codebase areas touched. Omit for purely process-focused sessions.
+
+Retros are simple artifacts. No collapsibles or interactivity needed.
 
 ### Body Discipline
 
@@ -96,7 +108,7 @@ If the user wants to record an operational rule that came out of the session, th
 - **title**: Describe the work, not a takeaway. "N+1 in brief generation" describes; "Always test for N+1" interprets.
 - **tags**: Keep grep-discoverable. Include problem types, technologies, and patterns the session actually touched.
 - **modules**: Match codebase structure. Omit for methodology-only sessions.
-- **related**: Link the spec, plan, and notes the retro references. `lore-researcher` follows these links.
+- `related`: Link the spec, plan, and notes the retro references. `lore-researcher` follows these links. Use `.html` extensions.
 
 ## Specialized Agents
 

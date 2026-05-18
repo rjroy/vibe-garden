@@ -71,9 +71,15 @@ The `/stratify` skill periodically reorganizes these directories for progressive
    - `.lore/work/` third (session material — specs, plans, brainstorms, retros, research, issues, ideas, tasks, validation, stubs, excavations, notes; treat as likely stale)
 
 4. **Use grep-first strategy**:
-   - Grep for keywords in frontmatter fields: `title:`, `tags:`, `modules:`
+   - Search both `.md` and `.html` files — old markdown artifacts and new HTML artifacts coexist during the transition period
+   - For `.md` files, grep for keywords in YAML frontmatter fields: `title:`, `tags:`, `modules:`
+   - For `.html` files, grep for keywords in HTML meta tags: `name="lore-title"`, `name="lore-tags"`, `name="lore-modules"`
    - Only read full files that match
-   - Documents without frontmatter won't be found
+   - Documents without frontmatter or meta tags won't be found
+
+5. **Ingest matched files by type**:
+   - `.md` files: parse YAML frontmatter for metadata (`title`, `tags`, `modules`, `status`), read body as markdown
+   - `.html` files: extract metadata from `<meta name="lore-*">` tags (e.g., `<meta name="lore-title" content="...">`) and read body content from the `<main>` element
 
 5. **Distill findings** to actionable summaries (1-2 sentences per document)
 

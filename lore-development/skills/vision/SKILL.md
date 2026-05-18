@@ -1,6 +1,6 @@
 ---
 name: vision
-description: This skill defines a project's vision and writes it to `.lore/reference/vision.md`. Use when defining project direction, creating a vision document, bootstrapping vision from existing code, or revisiting project identity. Triggers include "define the project vision", "what should this project become", "create a vision document", "set the project direction", "what are our principles".
+description: This skill defines a project's vision and writes it to `.lore/reference/vision.html`. Use when defining project direction, creating a vision document, bootstrapping vision from existing code, or revisiting project identity. Triggers include "define the project vision", "what should this project become", "create a vision document", "set the project direction", "what are our principles".
 ---
 
 # Vision
@@ -18,7 +18,7 @@ Define what the project is trying to become. The vision document serves as a dec
 
 ### Step 1: Check for Existing Vision
 
-Check whether `.lore/reference/vision.md` already exists.
+Check whether `.lore/reference/vision.html` already exists.
 
 - **If it exists with `status: approved`**: Ask the user whether they want to revise it or just review it. If revising, load the document and go to Step 5 (Refinement). If reviewing, present the current vision and stop.
 - **If it exists with `status: draft`**: Load the draft and go to Step 5 (Refinement) to continue where things left off.
@@ -83,7 +83,7 @@ After refining each section, check whether the user wants to continue refining o
 
 ### Step 6: Save or Defer
 
-**Save**: Write the vision document to `.lore/reference/vision.md` using the document format below. Set `status: draft`. The user approves by editing the frontmatter directly or telling you to mark it approved. Do not approve on the user's behalf.
+**Save**: Write the vision document to `.lore/reference/vision.html` using the document format below. Set `lore-status` to `draft`. The user approves by editing the meta tag directly or telling you to mark it approved. Do not approve on the user's behalf.
 
 **Defer**: If the user wants to think more, summarize what was discussed so the conversation can be resumed later. Do not write a file.
 
@@ -91,68 +91,71 @@ After refining each section, check whether the user wants to continue refining o
 
 ## Output
 
-Save to `.lore/reference/vision.md`
+Save to `.lore/reference/vision.html`
 
 ### Document Format
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions.
+**Before writing**, load both:
+- `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md`
+- `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`
 
-```markdown
----
-[frontmatter per schema]
----
+Vision documents get slightly richer treatment — this is a document people read and revisit, not just reference once. Copy the base HTML shell from `html-base-template.md` verbatim. Populate the `<meta>` tags and fill `<main>` with these sections:
 
-# Vision
+```html
+<section id="context">
+  <h2>Vision</h2>
+  <p>[One paragraph. What is this project? Who does it serve? What makes it distinct?
+  This paragraph should be stable across years, not months.]</p>
+</section>
 
-[One paragraph. What is this project? Who does it serve? What makes it distinct?
-This paragraph should be stable across years, not months.]
+<section id="principles">
+  <h2>Principles</h2>
+  <!-- 3-7 principles in priority order. Principle 1 is highest priority. -->
+  <h3>1. [Principle Name]</h3>
+  <p>[One sentence stating the principle as a behavioral guideline.]</p>
+  <p><strong>Looks like:</strong> [Concrete example in action within this project.]</p>
+  <p><strong>Doesn't look like:</strong> [Concrete example of violating this principle.]</p>
 
-# Principles
+  <h3>2. [Principle Name]</h3>
+  <!-- ... -->
+</section>
 
-[3-7 principles in priority order. Principle 1 is highest priority.]
+<section id="anti-goals">
+  <h2>Anti-Goals</h2>
+  <p>Things this project deliberately chooses not to pursue.</p>
+  <ul>
+    <li><strong>[Anti-goal].</strong> [Why we reject this, even though it might seem reasonable.]</li>
+  </ul>
+</section>
 
-## 1. [Principle Name]
+<section id="tensions">
+  <h2>Tension Resolution</h2>
+  <p>When principles conflict, use these defaults:</p>
+  <table>
+    <thead><tr><th>Tension</th><th>Default Winner</th><th>Exception</th></tr></thead>
+    <tbody>
+      <tr><td>[Principle A] vs [Principle B]</td><td>[A]</td><td>[When B wins instead]</td></tr>
+    </tbody>
+  </table>
+</section>
 
-[One sentence stating the principle as a behavioral guideline.]
-
-**Looks like:** [Concrete example of this principle in action within this project.]
-**Doesn't look like:** [Concrete example of violating this principle.]
-
-## 2. [Principle Name]
-
-...
-
-# Anti-Goals
-
-Things this project deliberately chooses not to pursue, with rationale.
-
-- **[Anti-goal].** [Why we reject this, even though it might seem reasonable.]
-- ...
-
-# Tension Resolution
-
-When principles conflict, use these defaults:
-
-| Tension | Default Winner | Exception |
-|---------|---------------|-----------|
-| [Principle A] vs [Principle B] | [A] | [When B wins instead] |
-| ... | ... | ... |
-
-# Current Constraints
-
-(Optional) Temporary limitations that shape what's feasible now.
-Each should state what it is and when it should be reviewed or is expected to expire.
-
-- [Constraint with expected expiration or review trigger]
-- ...
+<section id="constraints">
+  <h2>Current Constraints</h2>
+  <!-- Optional. Omit section if there are no current constraints. -->
+  <ul>
+    <li>[Constraint with expected expiration or review trigger]</li>
+  </ul>
+</section>
 ```
 
 ### Frontmatter Tips for Vision
 
-- `title` should be `"<Project Name> Vision"`
-- `tags` should always include `vision`
-- `status` starts as `draft`; becomes `approved` only when the user says so
-- Omit `modules`; the vision applies to the entire project, not specific modules
+Expressed as `<meta name="lore-*">` tags in the HTML `<head>` (not YAML):
+
+- `lore-title` should be `"<Project Name> Vision"`
+- `lore-tags` should always include `vision`
+- `lore-status` starts as `draft`; becomes `approved` only when the user says so
+- Omit `lore-modules`; the vision applies to the entire project, not specific modules
 - See the schema's "Vision-Specific Notes" for details
 
 ### Principles Quality Check
@@ -175,7 +178,7 @@ Check `.lore/work/brainstorm/` and `.lore/work/research/` for prior thinking abo
 
 ## Downstream Integration
 
-Once `.lore/reference/vision.md` exists, other lore-development workflow skills may reference it as context. The vision is available, not mandatory. Skills that define scope or prioritize work can check for a vision and use it to inform decisions, but they function normally without one.
+Once `.lore/reference/vision.html` exists, other lore-development workflow skills may reference it as context. The vision is available, not mandatory. Skills that define scope or prioritize work can check for a vision and use it to inform decisions, but they function normally without one.
 
 ## Specialized Agents
 

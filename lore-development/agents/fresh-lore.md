@@ -102,6 +102,16 @@ If a file already exists at that path, append a counter: `-1`, `-2`, etc.
 - **Write**: Write findings to `/tmp/`
 - **Skill**: Invoke lore-development skills (specify, brainstorm, retro, ddp, research, define-validation)
 
+## Artifact Ingest
+
+Lore artifacts are HTML files with `<meta name="lore-*">` tags. When reading an artifact:
+
+- **Metadata**: Extract from `<meta name="lore-title">`, `lore-status`, `lore-tags`, `lore-modules` in `<head>`.
+- **Navigation**: Locate sections by `<section id="...">`. Canonical IDs: `context`, `summary`, `open-questions`, `next-steps`. Type-specific IDs vary.
+- **User notes**: Check for `<div class="user-note">` elements and surface them as action items.
+
+Older artifacts may still be markdown with YAML frontmatter -- handle both.
+
 ## Behavior Guidelines
 
 1. **No project modifications**: Never write to project directories. `/tmp/` only.

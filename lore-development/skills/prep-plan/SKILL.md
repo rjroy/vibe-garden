@@ -66,122 +66,130 @@ This skill is a document-authoring workflow, like `/specify`. It gathers context
 
 ## Output
 
-Save to `.lore/work/plans/[feature-name].md`
+Save to `.lore/work/plans/[feature-name].html`
 
-Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `auth-flow.md`, plan is `auth-flow.md`). When no spec exists, derive the filename from the feature or goal description.
+Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `auth-flow.html`, plan is `auth-flow.html`). When no spec exists, derive the filename from the feature or goal description.
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for plans.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for plans.
+
+Copy the HTML base template verbatim. Replace `<main>` with the appropriate sections below.
 
 The plan structure adapts based on whether a spec exists:
 
 #### With Spec
 
-```markdown
----
-[frontmatter per schema]
----
+```html
+<main>
+  <section id="spec-reference">
+    <h2>Spec Reference</h2>
+    <p><strong>Spec</strong>: <a href="[path to spec]">[spec name]</a></p>
+    <p><strong>Design</strong>: <a href="[path to design]">[design name]</a></p> <!-- if one exists -->
+    <h3>Requirements Addressed</h3>
+    <ul>
+      <li><span class="req-id">REQ-XX-1</span> [brief description] &rarr; Steps [N, M]</li>
+      <li><span class="req-id">REQ-XX-2</span> [brief description] &rarr; Step [P]</li>
+    </ul>
+  </section>
 
-# Plan: [Feature Name]
+  <section id="context">
+    <h2>Codebase Context</h2>
+    <ul>
+      <li>Relevant existing code, patterns, conventions</li>
+      <li>Where changes will land</li>
+      <li>Dependencies and integration points</li>
+    </ul>
+  </section>
 
-## Spec Reference
+  <section id="steps">
+    <h2>Implementation Steps</h2>
+    <ol>
+      <li id="step-1">
+        <strong>[Step description]</strong><br>
+        <em>Files:</em> [files affected]<br>
+        <em>Addresses:</em> <span class="req-id">REQ-XX-N</span><br>
+        <em>Expertise:</em> [none needed / specific domain]<br>
+        <p>What to do, concretely.</p>
+      </li>
+      <li id="step-N">
+        <strong>Validate Against Spec</strong><br>
+        <p>Launch a sub-agent that reads the spec at [path], reviews the implementation, and flags any requirements not met. This step is not optional.</p>
+      </li>
+    </ol>
+  </section>
 
-**Spec**: [path to spec]
-**Design**: [path to design, if one exists]
+  <section id="delegation">
+    <h2>Delegation Guide</h2>
+    <ul>
+      <li>Step X: [what expertise, e.g., "security review of auth flow"]</li>
+    </ul>
+    <p>Consult <code>.lore/lore-agents.md</code> (if it exists) for available domain-specific agents.</p>
+  </section>
 
-Requirements addressed:
-- REQ-XX-1: [brief description] → Steps [N, M]
-- REQ-XX-2: [brief description] → Step [P]
-- ...
-
-## Codebase Context
-
-What the exploration found:
-- [Relevant existing code, patterns, conventions]
-- [Where changes will land]
-- [Dependencies and integration points]
-
-## Implementation Steps
-
-### Step 1: [Description]
-
-**Files**: [files affected]
-**Addresses**: REQ-XX-N
-**Expertise**: [none needed / specific domain -- e.g., "security review", "frontend accessibility"]
-
-[What to do, concretely. Not pseudocode -- describe the change.]
-
-### Step 2: [Description]
-
-...
-
-### Step N: Validate Against Spec
-
-Launch a sub-agent that reads the spec at [path], reviews the implementation, and flags any requirements not met. This step is not optional.
-
-## Delegation Guide
-
-Steps requiring specialized expertise:
-- [Step X]: [what expertise -- e.g., "security review of auth flow"]
-- [Step Y]: [what expertise -- e.g., "performance audit of hot path"]
-
-Consult `.lore/lore-agents.md` (if it exists) for available domain-specific agents.
-
-## Open Questions
-
-(Optional) Things to resolve during implementation that don't block starting.
+  <!-- Optional -->
+  <section id="open-questions">
+    <h2>Open Questions</h2>
+    <ul>
+      <li>Things to resolve during implementation that don't block starting.</li>
+    </ul>
+  </section>
+</main>
 ```
 
 #### Without Spec
 
-```markdown
----
-[frontmatter per schema]
----
+```html
+<main>
+  <section id="goal">
+    <h2>Goal</h2>
+    <p>What we're building and why. State the objective clearly enough that the validation step can check against it.</p>
+  </section>
 
-# Plan: [Feature Name]
+  <section id="context">
+    <h2>Codebase Context</h2>
+    <ul>
+      <li>Relevant existing code, patterns, conventions</li>
+      <li>Where changes will land</li>
+      <li>Dependencies and integration points</li>
+    </ul>
+  </section>
 
-## Goal
+  <section id="steps">
+    <h2>Implementation Steps</h2>
+    <ol>
+      <li id="step-1">
+        <strong>[Step description]</strong><br>
+        <em>Files:</em> [files affected]<br>
+        <em>Expertise:</em> [none needed / specific domain]<br>
+        <p>What to do, concretely.</p>
+      </li>
+      <li id="step-N">
+        <strong>Validate Against Goal</strong><br>
+        <p>Launch a sub-agent that reads the Goal section above, reviews the implementation, and flags anything that doesn't match. This step is not optional.</p>
+      </li>
+    </ol>
+  </section>
 
-What we're building and why. This section replaces the spec reference -- state the objective clearly enough that the validation step can check against it.
+  <section id="delegation">
+    <h2>Delegation Guide</h2>
+    <ul>
+      <li>Step X: [what expertise]</li>
+    </ul>
+    <p>Consult <code>.lore/lore-agents.md</code> (if it exists) for available domain-specific agents.</p>
+  </section>
 
-## Codebase Context
-
-What the exploration found:
-- [Relevant existing code, patterns, conventions]
-- [Where changes will land]
-- [Dependencies and integration points]
-
-## Implementation Steps
-
-### Step 1: [Description]
-
-**Files**: [files affected]
-**Expertise**: [none needed / specific domain -- e.g., "security review", "frontend accessibility"]
-
-[What to do, concretely. Not pseudocode -- describe the change.]
-
-### Step 2: [Description]
-
-...
-
-### Step N: Validate Against Goal
-
-Launch a sub-agent that reads the Goal section above, reviews the implementation, and flags anything that doesn't match. This step is not optional.
-
-## Delegation Guide
-
-Steps requiring specialized expertise:
-- [Step X]: [what expertise -- e.g., "security review of auth flow"]
-- [Step Y]: [what expertise -- e.g., "performance audit of hot path"]
-
-Consult `.lore/lore-agents.md` (if it exists) for available domain-specific agents.
-
-## Open Questions
-
-(Optional) Things to resolve during implementation that don't block starting.
+  <!-- Optional -->
+  <section id="open-questions">
+    <h2>Open Questions</h2>
+    <ul>
+      <li>Things to resolve during implementation that don't block starting.</li>
+    </ul>
+  </section>
+</main>
 ```
+
+Implementation steps render as a numbered `<ol>` with `id="step-N"` anchors. Each step includes its file list, requirement references (as `<span class="req-id">`), and expertise label inline. The `open-questions` section receives highlighted amber styling automatically from the base template.
 
 ## What vs How
 
@@ -212,7 +220,7 @@ Invoke the `plan-reviewer` agent on the saved plan using the Task tool. The agen
 ## Linking to Specs
 
 When a spec exists, plan documents should reference it:
-- In frontmatter: `related: [.lore/work/specs/auth-flow.md]`
+- In `<meta name="lore-related">`: `.lore/work/specs/auth-flow.html`
 - In Spec Reference section: full requirement mapping
 
 Plans can also reference design documents when the technical approach is non-trivial.

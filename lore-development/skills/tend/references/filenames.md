@@ -10,7 +10,7 @@ Filenames are the first layer of findability. Consistent naming makes files pred
 
 ### Convention Consistency
 
-All `.lore/` filenames should follow kebab-case:
+All `.lore/` filenames should follow kebab-case. Valid extensions are `.md` (legacy) and `.html` (new format). Both are accepted during the transition period -- do not flag `.html` files as non-conforming.
 
 | Pattern | Problem | Example |
 |---------|---------|---------|

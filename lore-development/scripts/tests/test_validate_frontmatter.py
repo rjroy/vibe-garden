@@ -28,6 +28,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from validate_frontmatter import (
+    _parse_html_meta,
     _resolve_doc_type,
     load_custom_status_values,
     merge_status_values,
@@ -746,3 +747,116 @@ class TestConfigIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHtmlMetaParsing(unittest.TestCase):
+    """Tests for _parse_html_meta and HTML file validation."""
+
+    def _html(self, meta_tags="", body="<p>content</p>"):
+        return (
+            "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+            + meta_tags
+            + "</head><body>"
+            + body
+            + "</body></html>"
+        )
+
+    def test_parse_basic_fields(self):
+        html = self._html(
+            '<meta name="lore-title" content="My Doc">'
+            '<meta name="lore-date" content="2026-05-18">'
+            '<meta name="lore-status" content="draft">'
+        )
+        data = _parse_html_meta(html)
+        self.assertEqual(data["title"], "My Doc")
+        self.assertEqual(data["date"], "2026-05-18")
+        self.assertEqual(data["status"], "draft")
+
+    def test_multi_value_fields_become_lists(self):
+        html = self._html(
+            '<meta name="lore-tags" content="html, artifacts, test">'
+            '<meta name="lore-modules" content="lore-development, skills">'
+        )
+        data = _parse_html_meta(html)
+        self.assertEqual(data["tags"], ["html", "artifacts", "test"])
+        self.assertEqual(data["modules"], ["lore-development", "skills"])
+
+    def test_empty_tags_field_becomes_empty_list(self):
+        html = self._html('<meta name="lore-tags" content="">')
+        data = _parse_html_meta(html)
+        self.assertEqual(data["tags"], [])
+
+    def test_sequence_converted_to_int(self):
+        html = self._html('<meta name="lore-sequence" content="3">')
+        data = _parse_html_meta(html)
+        self.assertEqual(data["sequence"], 3)
+
+    def test_no_lore_meta_returns_empty_dict(self):
+        html = self._html('<meta name="viewport" content="width=device-width">')
+        data = _parse_html_meta(html)
+        self.assertEqual(data, {})
+
+    def test_validate_html_file_valid(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fpath = os.path.join(tmpdir, "work", "specs", "my-spec.html")
+            os.makedirs(os.path.dirname(fpath))
+            with open(fpath, "w") as f:
+                f.write(self._html(
+                    '<meta name="lore-title" content="My Spec">'
+                    '<meta name="lore-date" content="2026-05-18">'
+                    '<meta name="lore-status" content="draft">'
+                    '<meta name="lore-tags" content="auth, security">'
+                ))
+            findings = validate_file(fpath, tmpdir)
+            self.assertEqual(findings, [])
+
+    def test_validate_html_file_missing_required_field(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fpath = os.path.join(tmpdir, "work", "specs", "my-spec.html")
+            os.makedirs(os.path.dirname(fpath))
+            with open(fpath, "w") as f:
+                f.write(self._html(
+                    '<meta name="lore-title" content="My Spec">'
+                    # missing date, status, tags
+                ))
+            findings = validate_file(fpath, tmpdir)
+            error_types = {f["error_type"] for f in findings}
+            self.assertIn("missing_field", error_types)
+            missing = {f["field"] for f in findings if f["error_type"] == "missing_field"}
+            self.assertIn("date", missing)
+            self.assertIn("tags", missing)
+
+    def test_scan_directory_finds_html_files(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "work/specs/valid-spec.html": (
+                    "<!DOCTYPE html><html><head>"
+                    '<meta name="lore-title" content="Valid Spec">'
+                    '<meta name="lore-date" content="2026-05-18">'
+                    '<meta name="lore-status" content="draft">'
+                    '<meta name="lore-tags" content="test">'
+                    "</head><body><p>content</p></body></html>"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [])
+
+    def test_scan_directory_finds_both_md_and_html(self):
+        """HTML and .md files are both scanned; each contributes findings."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {
+                "work/specs/md-spec.md": (
+                    "---\ntitle: MD Spec\ndate: 2026-05-18\n"
+                    "status: draft\ntags: [test]\n---\n"
+                ),
+                "work/specs/html-spec.html": (
+                    "<!DOCTYPE html><html><head>"
+                    '<meta name="lore-title" content="HTML Spec">'
+                    '<meta name="lore-date" content="2026-05-18">'
+                    '<meta name="lore-status" content="draft">'
+                    '<meta name="lore-tags" content="test">'
+                    "</head><body></body></html>"
+                ),
+            })
+            findings = scan_directory(lore)
+            self.assertEqual(findings, [])

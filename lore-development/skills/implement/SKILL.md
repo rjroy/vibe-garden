@@ -27,56 +27,54 @@ Invoked as `/implement <path>` where `<path>` is a lore artifact:
 
 | Input Type | Path Pattern | Behavior |
 |------------|-------------|----------|
-| Spec | `.lore/work/specs/*.md` | Determine phases from requirements, implement directly |
-| Design | `.lore/work/design/*.md` | Determine phases from the design, implement directly |
-| Plan | `.lore/work/plans/*.md` | Follow the plan's steps as phases (but see Task File Detection below) |
-| Notes | `.lore/work/notes/*.md` | Resume from progress tracker in the notes file |
+| Spec | `.lore/work/specs/*.html` or `.md` | Determine phases from requirements, implement directly |
+| Design | `.lore/work/design/*.html` or `.md` | Determine phases from the design, implement directly |
+| Plan | `.lore/work/plans/*.html` or `.md` | Follow the plan's steps as phases (but see Task File Detection below) |
+| Notes | `.lore/work/notes/*.html` or `.md` | Resume from progress tracker in the notes file |
 
 Read the input artifact. Identify its type from the path. If the artifact references other lore documents (a plan referencing a spec, notes referencing a plan), load those too.
 
 ## Output
 
-The primary output is the implemented code plus a notes file at `.lore/work/notes/<artifact-name>.md`.
+The primary output is the implemented code plus a notes file at `.lore/work/notes/<artifact-name>.html`.
 
-Use kebab-case. Match the source artifact's filename (e.g., if the plan is `auth-flow.md`, the notes file is `auth-flow.md`).
+Use kebab-case. Match the source artifact's filename (e.g., if the plan is `auth-flow.html`, the notes file is `auth-flow.html`).
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for notes.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and field definitions for notes.
 
-```markdown
----
-title: Implementation notes: [artifact name]
-date: YYYY-MM-DD
-status: in_progress | complete
-tags: [implementation, notes]
-source: [path to spec/design/plan]
-modules: [from source artifact if available]
----
+Copy the HTML base shell from `html-base-template.md` verbatim. The notes file uses this structure for the `<main>` content:
 
-# Implementation Notes: [Artifact Name]
+```html
+<!-- meta tags: lore-title, lore-date, lore-status (in_progress|complete),
+     lore-tags (implementation, notes), lore-source, lore-modules -->
 
-## Progress
-- [x] Phase 1: [description]
-- [x] Phase 2: [description]
-- [ ] Phase 3: [description]
+<section id="progress">
+  <h2>Progress</h2>
+  <ul>
+    <li>&#x2611; Phase 1: [description]</li>
+    <li>&#x2610; Phase 2: [description]</li>
+  </ul>
+</section>
 
-## Log
+<section id="log">
+  <h2>Log</h2>
 
-### Phase 1: [description]
-- Dispatched: [what was sent to implementation agent]
-- Result: [what came back]
-- Tests: [notable findings only]
-- Review: [concerns only]
-- Resolution: [if failures occurred, how resolved]
+  <h3>Phase 1: [description]</h3>
+  <ul>
+    <li><strong>Dispatched:</strong> [what was sent to implementation agent]</li>
+    <li><strong>Result:</strong> [what came back]</li>
+    <li><strong>Tests:</strong> [notable findings only]</li>
+    <li><strong>Review:</strong> [concerns only]</li>
+    <li><strong>Resolution:</strong> [if failures occurred, how resolved]</li>
+  </ul>
+</section>
 
-### Phase 2: [description]
-...
-
-## Divergence
-(Empty if implementation matched the source artifact)
-
-- [description]: [why it was necessary] (approved/pending)
+<section id="divergence">
+  <h2>Divergence</h2>
+  <p>(Empty if implementation matched the source artifact)</p>
+</section>
 ```
 
 ## Process
@@ -90,11 +88,11 @@ Read the input artifact. If it is a plan, the phases are its implementation step
 **Task file detection.** When the input is a plan, check whether `.lore/work/tasks/<plan-name>/` exists (where `<plan-name>` matches the plan's filename without extension). If the directory exists and contains task files:
 
 - **Staleness check**: Compare the plan's modification timestamp against the oldest task file's timestamp. The oldest task is the right comparison point because all tasks are generated in one `/plan-breakdown` run, so the oldest represents when the decomposition happened. If the plan is newer than the oldest task, warn the user via AskUserQuestion with three options: re-run `/plan-breakdown`, use existing tasks, or abort.
-- **Phase list**: Read task files sorted by their `sequence` frontmatter field. These become the phases. Each phase corresponds to one task file.
+- **Phase list**: Read task files sorted by their `lore-sequence` meta tag value. These become the phases. Each phase corresponds to one task file.
 
 If no task directory exists, derive phases from the plan's steps as usual.
 
-If resuming from notes, read the progress tracker. Skip completed phases. When the source is a plan with task files, also read task file statuses. Tasks marked `complete` or `skipped` are not re-run, regardless of what the notes progress tracker shows. Task file status is authoritative for task-based phases. Load the source artifact referenced in the notes frontmatter (`source:` field). If the source reference is missing, ask the user for the path.
+If resuming from notes, read the progress tracker. Skip completed phases. When the source is a plan with task files, also read task file statuses. Tasks marked `complete` or `skipped` are not re-run, regardless of what the notes progress tracker shows. Task file status is authoritative for task-based phases. Load the source artifact referenced in the notes `lore-source` meta tag. If the source reference is missing, ask the user for the path.
 
 **Select agents.** Consult `.lore/lore-agents.md` if it exists. Match agents to roles:
 
@@ -106,13 +104,13 @@ If resuming from notes, read the progress tracker. Skip completed phases. When t
 
 Use the registry when available. When the registry is missing or doesn't cover a role, use the fallback type. `general-purpose` is always a valid fallback. Domain experts (security, performance, architecture) in the registry can be dispatched when a phase touches their area, but the three core roles are mandatory for every phase.
 
-Create or open the notes file at `.lore/work/notes/<artifact-name>.md`.
+Create or open the notes file at `.lore/work/notes/<artifact-name>.html`.
 
 ### 2. Execute Phases
 
 For each phase:
 
-**When phases come from task files:** The implementation agent prompt includes the task's What, Validation, Why, and Files sections. It does not receive the full plan, other task files, or the task's sequence number. After a task passes the implement/test/review cycle, update the task file's frontmatter `status` to `complete`. If the implementation agent reports the work is already done, surface this to the user via AskUserQuestion (the task file says `pending`, so "already done" is unexpected and needs confirmation). If the user confirms skipping, or explicitly requests it for any other reason, mark the task `skipped`. The orchestrator does not skip tasks without user confirmation.
+**When phases come from task files:** The implementation agent prompt includes the task's What, Validation, Why, and Files sections. It does not receive the full plan, other task files, or the task's sequence number. After a task passes the implement/test/review cycle, update the task file's `lore-status` meta tag to `complete`. If the implementation agent reports the work is already done, surface this to the user via AskUserQuestion (the task file says `pending`, so "already done" is unexpected and needs confirmation). If the user confirms skipping, or explicitly requests it for any other reason, mark the task `skipped`. The orchestrator does not skip tasks without user confirmation.
 
 **a. Dispatch implementation.** Use the Task tool to spawn an implementation agent (using the `subagent_type` selected in Initialize). Include in the prompt: what to build, relevant file paths, and context from prior phases or failures if applicable. Feed one phase at a time. The implementation agent does not see the full plan.
 
@@ -137,7 +135,7 @@ When all phases and validation pass, update the notes file status to `complete`.
 Suggest running the simplify skill on the notes file:
 
 ```
-Implementation complete. Run `/simplify .lore/work/notes/<artifact-name>.md` to clean up the code for clarity.
+Implementation complete. Run `/simplify .lore/work/notes/<artifact-name>.html` to clean up the code for clarity.
 ```
 
 Replace `<artifact-name>` with the actual notes filename (matching the source artifact's filename).

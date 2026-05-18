@@ -83,25 +83,46 @@ Batch moves into one commit's worth of work. Don't reorganize halfway.
 
 ### 5. Write the index
 
-Create `README.md` at the top of the reorganized directory. The index is the load-bearing artifact — without it, the directories are just nested storage.
+Create `README.html` at the top of the reorganized directory. The index is the load-bearing artifact — without it, the directories are just nested storage.
 
-Open with standard lore frontmatter:
+**Before writing**, load both:
+- `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md`
+- `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`
 
-```yaml
----
-title: <Directory> Index
-date: <today>
-status: current
-tags: [reference, index, navigation]   # adjust tags for the directory's role
----
+Use a clean structured layout — no collapsibles or interactivity needed for index docs. Copy the base HTML shell from `html-base-template.md` verbatim. Populate the `<meta>` tags with these values:
+
+- `lore-title`: `"<Directory> Index"`
+- `lore-date`: today
+- `lore-status`: `current`
+- `lore-tags`: `reference, index, navigation` (adjust for the directory's role)
+
+Fill `<main>` with these sections:
+
+```html
+<section id="context">
+  <h2>About This Directory</h2>
+  <p>[One paragraph describing what this directory holds and the dependency
+  direction that organizes it.]</p>
+</section>
+
+<section id="summary">
+  <h2>Reading Order</h2>
+  <!-- One sub-section per layer, in dependency order. -->
+  <h3>[Layer Name]</h3>
+  <p>Start here if… [guidance]. Depends on: none / [prior layer].</p>
+  <ul>
+    <li><a href="[layer]/[file].html">[File title]</a> — [one-line: why would I open this?]</li>
+  </ul>
+
+  <h3>[Next Layer Name]</h3>
+  <!-- ... -->
+</section>
+
+<section id="conventions">
+  <h2>Conventions</h2>
+  <p>[Frontmatter expectations, cross-reference style, status discipline for this directory.]</p>
+</section>
 ```
-
-Index content:
-
-- **Reading order**: one paragraph per layer, in dependency order, with "start here if…" guidance for each.
-- **Layer dependencies**: state explicitly which layers depend on which. This is the rule that future moves must preserve.
-- **What each directory holds**: bullet list per layer with a one-line description of every file. The description should answer "why would I open this" not "what's in this."
-- **Conventions**: frontmatter expectations, cross-reference style, status discipline.
 
 Keep the index under ~150 lines. If it grows past that, the reorganization has too many layers.
 
@@ -124,7 +145,7 @@ Don't claim the reorganization is done until the index exists and reads cleanly 
 
 - Subdirectories exist and reflect dependency layers.
 - Every file is in exactly one layer.
-- The index reads top-to-bottom and tells a reader where to start.
-- Index frontmatter matches lore conventions (`title`, `date`, `status`, `tags`).
-- Cross-references still resolve (bare names grep cleanly; markdown links updated if they existed).
+- The index (`README.html`) reads top-to-bottom and tells a reader where to start.
+- Index `<meta name="lore-*">` tags match lore conventions (`lore-title`, `lore-date`, `lore-status`, `lore-tags`).
+- Cross-references still resolve (bare names grep cleanly; links updated if they existed).
 - `git status` shows renames, not delete+create pairs.

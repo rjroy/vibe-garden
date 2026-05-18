@@ -44,72 +44,82 @@ If you ran `/prep-plan` 100 times with current context:
 
 ## Output
 
-Save to `.lore/work/design/[topic].md`
+Save to `.lore/work/design/[topic].html`
 
-Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `history-sync.md`, design is `history-sync.md` or `history-sync-dedup-algorithm.md`).
+Use kebab-case for filenames. Match spec naming where a spec exists (e.g., if spec is `history-sync.html`, design is `history-sync.html` or `history-sync-dedup-algorithm.html`).
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for design documents.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for design documents.
 
-```markdown
----
-[frontmatter per schema]
----
+Copy the HTML base template verbatim. Replace `<main>` with these sections:
 
-# Design: [Topic]
+```html
+<main>
+  <section id="problem">
+    <h2>Problem</h2>
+    <p>What technical problem are we solving? Link to spec if one exists.</p>
+  </section>
 
-## Problem
-What technical problem are we solving? Link to spec if one exists.
+  <section id="constraints">
+    <h2>Constraints</h2>
+    <ul>
+      <li>Technical constraints</li>
+      <li>Performance requirements</li>
+      <li>Integration points</li>
+      <li>Security considerations</li>
+    </ul>
+  </section>
 
-## Constraints
-- Technical constraints
-- Performance requirements
-- Integration points
-- Security considerations
+  <section id="approaches">
+    <h2>Approaches Considered</h2>
+    <details>
+      <summary>Option 1: [Name]</summary>
+      <p>Description of the approach.</p>
+      <p><strong>Pros:</strong></p>
+      <ul><li>Pro 1</li></ul>
+      <p><strong>Cons:</strong></p>
+      <ul><li>Con 1</li></ul>
+    </details>
+    <details>
+      <summary>Option 2: [Name]</summary>
+      <p>Description of the approach.</p>
+      <p><strong>Pros:</strong></p>
+      <ul><li>Pro 1</li></ul>
+      <p><strong>Cons:</strong></p>
+      <ul><li>Con 1</li></ul>
+    </details>
+  </section>
 
-## Approaches Considered
+  <section id="decision">
+    <h2>Decision</h2>
+    <p>Which approach and why. <strong>This section is required.</strong> A design without a decision is just research.</p>
+  </section>
 
-### Option 1: [Name]
-Description of the approach.
+  <section id="interface">
+    <h2>Interface / Contract</h2>
+    <p>How other code will interact with this: function signatures, data structures, protocols, APIs.</p>
+  </section>
 
-**Pros:**
-- Pro 1
-- Pro 2
+  <section id="edge-cases">
+    <h2>Edge Cases</h2>
+    <ul>
+      <li>Edge case 1: Handled by...</li>
+      <li>Edge case 2: Handled by...</li>
+    </ul>
+  </section>
 
-**Cons:**
-- Con 1
-- Con 2
-
-### Option 2: [Name]
-Description of the approach.
-
-**Pros:**
-- Pro 1
-- Pro 2
-
-**Cons:**
-- Con 1
-- Con 2
-
-## Decision
-Which approach and why. **This section is required.** A design without a decision is just research.
-
-## Interface/Contract
-How other code will interact with this:
-- Function signatures
-- Data structures
-- Protocols
-- APIs
-
-## Edge Cases
-Known edge cases and how they're handled:
-- Edge case 1: Handled by...
-- Edge case 2: Handled by...
-
-## Open Questions
-(Optional) Things still TBD that don't block implementation.
+  <!-- Optional -->
+  <section id="open-questions">
+    <h2>Open Questions</h2>
+    <ul>
+      <li>Things still TBD that don't block implementation.</li>
+    </ul>
+  </section>
+</main>
 ```
+
+Use `<details>`/`<summary>` for each approach option. The `open-questions` section receives highlighted amber styling automatically from the base template.
 
 ## What vs How
 
@@ -149,7 +159,7 @@ If `.lore/lore-agents.md` exists, consult it for specialized agents that can hel
 ## Linking to Specs
 
 Design documents should reference their parent spec when one exists:
-- In frontmatter: `related: [.lore/work/specs/history-sync.md]`
-- In Problem section: "See [Spec: history-sync](.lore/work/specs/history-sync.md) for requirements."
+- In `<meta name="lore-related">`: `.lore/work/specs/history-sync.html`
+- In Problem section: "See <a href='.lore/work/specs/history-sync.html'>Spec: history-sync</a> for requirements."
 
 Design documents can also stand alone for technical problems that don't have user-facing requirements.

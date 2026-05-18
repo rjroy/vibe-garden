@@ -27,61 +27,94 @@ Define what to build and how to know it's done.
 
 ## Output
 
-Save to `.lore/work/specs/[feature-name].md`
+Save to `.lore/work/specs/[feature-name].html`
 
 ### Document Structure
 
-**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get frontmatter field definitions and status values for specs.
+**Before writing**: Load `${CLAUDE_PLUGIN_ROOT}/shared/html-base-template.md` and `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` to get the HTML shell and frontmatter field definitions for specs.
 
 **Requirement prefix**: Each spec has a unique prefix for its requirement IDs. See "Requirement ID Prefix" section below.
 
-```markdown
----
-[frontmatter per schema]
----
+Copy the HTML base template verbatim. Add `<meta name="lore-req-prefix" content="...">` in the type-specific field slot. Replace `<main>` with these sections:
 
-# Spec: [Feature Name]
+```html
+<main>
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>One paragraph describing what this is.</p>
+  </section>
 
-## Overview
-One paragraph describing what this is.
+  <section id="entry-points">
+    <h2>Entry Points</h2>
+    <ul>
+      <li>[Entry description] (from [source])</li>
+    </ul>
+  </section>
 
-## Entry Points
-How users arrive at this feature:
-- [Entry description] (from [source])
+  <section id="requirements">
+    <h2>Requirements</h2>
+    <ul>
+      <li><span class="req-id">REQ-{PREFIX}-1</span> [requirement]</li>
+      <li><span class="req-id">REQ-{PREFIX}-2</span> [requirement]</li>
+    </ul>
+  </section>
 
-## Requirements
-- REQ-{PREFIX}-1: [requirement]
-- REQ-{PREFIX}-2: [requirement]
+  <section id="exit-points">
+    <h2>Exit Points</h2>
+    <table>
+      <thead><tr><th>Exit</th><th>Triggers When</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>[Exit name]</td>
+          <td>[User action or condition]</td>
+          <td>[STUB: target-name] or [Spec: existing-spec]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 
-## Exit Points
-| Exit | Triggers When | Target |
-|------|---------------|--------|
-| [Exit name] | [User action or condition] | [STUB: target-name] or [Spec: existing-spec] |
+  <section id="success-criteria">
+    <h2>Success Criteria</h2>
+    <ul>
+      <li><input type="checkbox"> Criterion 1</li>
+      <li><input type="checkbox"> Criterion 2</li>
+    </ul>
+  </section>
 
-## Success Criteria
-How we know this is done:
-- [ ] Criterion 1
-- [ ] Criterion 2
+  <details>
+    <summary>AI Validation</summary>
+    <p><strong>Defaults</strong> (apply unless overridden):</p>
+    <ul>
+      <li>Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK <code>query()</code>)</li>
+      <li>90%+ coverage on new code</li>
+      <li>Code review by fresh-context sub-agent</li>
+    </ul>
+    <p><strong>Custom</strong> (feature-specific, if needed):</p>
+    <ul>
+      <li>[e.g., "CLI output matches format in examples/"]</li>
+    </ul>
+  </details>
 
-## AI Validation
-How the AI verifies completion before declaring done.
+  <section id="constraints">
+    <h2>Constraints</h2>
+    <p>Any boundaries or limitations.</p>
+  </section>
 
-**Defaults** (apply unless overridden):
-- Unit tests with mocked time/network/filesystem/LLM calls (including Agent SDK `query()`)
-- 90%+ coverage on new code
-- Code review by fresh-context sub-agent
+  <section id="context">
+    <h2>Context</h2>
+    <p>Links to related <code>.lore/</code> documents if relevant. Include findings from lore-researcher here.</p>
+  </section>
 
-**Custom** (feature-specific, if needed):
-- [e.g., "CLI output matches format in examples/"]
-- [e.g., "Generated files parse without errors"]
-
-## Constraints
-Any boundaries or limitations.
-
-## Context
-Links to related `.lore/` documents if relevant.
-Include findings from lore-researcher here.
+  <section id="open-questions">
+    <h2>Open Questions</h2>
+    <ul>
+      <li>Unresolved question 1</li>
+    </ul>
+  </section>
+</main>
 ```
+
+Requirement IDs must always render as `<span class="req-id">REQ-{PREFIX}-N</span>`. The `open-questions` section receives highlighted amber styling automatically from the base template.
 
 ## Requirement ID Prefix
 
@@ -92,17 +125,12 @@ Requirements use namespaced IDs to avoid collisions across specs: `REQ-{PREFIX}-
 - Take first 2 segments of kebab-case name, uppercase
 - Max 12 characters
 - Examples:
-  - `auth-flow.md` → `REQ-AUTH-FLOW-1`
-  - `user-authentication-oauth2.md` → `REQ-USER-AUTH-1`
-  - `checkout.md` → `REQ-CHECKOUT-1`
+  - `auth-flow.html` → `REQ-AUTH-FLOW-1`
+  - `user-authentication-oauth2.html` → `REQ-USER-AUTH-1`
+  - `checkout.html` → `REQ-CHECKOUT-1`
 
 **Manual override:**
-Add `req-prefix` to frontmatter when you want explicit control:
-```yaml
----
-req-prefix: AUTH
----
-```
+Add `<meta name="lore-req-prefix" content="AUTH">` to the spec's `<head>` when you want explicit control.
 Then: `REQ-AUTH-1`, `REQ-AUTH-2`, etc.
 
 Use manual override when:
@@ -122,7 +150,7 @@ When a feature connects to undefined areas, mark them as stubs:
 
 **Examples**:
 - `[STUB: user-authentication]` - Links to undefined auth feature
-- `[Spec: checkout-flow]` - Links to existing `.lore/work/specs/checkout-flow.md`
+- `[Spec: checkout-flow]` - Links to existing `.lore/work/specs/checkout-flow.html`
 
 **When to stub**: Mark something as a stub when it's needed by this feature but defining it would expand scope beyond the current layer. The stub becomes a documented "known unknown" that can be specified later.
 
