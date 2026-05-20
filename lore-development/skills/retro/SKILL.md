@@ -1,6 +1,6 @@
 ---
 name: retro
-description: This skill should be used when completed work needs to be recorded as a lore artifact — what happened, what surprised, what broke, what drifted. Observation only, not interpretation. Triggers: "let's do a retro", "/retro", "review what happened", "capture what happened", "write up the session".
+description: Use when completed work needs to be recorded as a lore artifact covering what happened, what surprised, what broke, and what drifted. Observation only, not interpretation. Triggers include "let's do a retro", "/retro", "review what happened", "capture what happened", and "write up the session".
 ---
 
 # Retro

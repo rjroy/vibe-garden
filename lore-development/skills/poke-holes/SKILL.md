@@ -1,6 +1,6 @@
 ---
 name: poke-holes
-description: This skill should be used when a spec, plan, design, or idea needs adversarial review — finding what's wrong rather than what's right. Triggers: "poke holes in this", "tear this apart", "what am I missing", "stress test this", "find what's wrong", "challenge this", "what could go wrong".
+description: Use when a spec, plan, design, or idea needs adversarial review to find what's wrong rather than what's right. Triggers include "poke holes in this", "tear this apart", "what am I missing", "stress test this", "find what's wrong", "challenge this", and "what could go wrong".
 ---
 
 # Poke Holes

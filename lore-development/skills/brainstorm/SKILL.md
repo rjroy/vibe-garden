@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: This skill should be used when exploring before committing, thinking through trade-offs, or digesting sketches and diagrams. Triggers: "let's brainstorm", "what if we...", "explore options". Spirit: bad ideas welcome, questions over answers, mistakes on purpose.
+description: Use when exploring before committing, thinking through trade-offs, or digesting sketches and diagrams. Triggers include "let's brainstorm", "what if we...", and "explore options". Bad ideas welcome, questions over answers, mistakes on purpose.
 ---
 
 # Brainstorm

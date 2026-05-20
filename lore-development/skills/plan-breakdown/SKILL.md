@@ -1,6 +1,6 @@
 ---
 name: plan-breakdown
-description: This skill should be used when a plan exists and needs validation gates added to each step before implementation begins. Produces task files that implement can consume. Triggers: "break down this plan", "add validation to the plan steps", "plan-breakdown", "gate this plan".
+description: Use when a plan exists and needs validation gates added to each step before implementation begins. Produces task files that implement can consume. Triggers include "break down this plan", "add validation to the plan steps", "plan-breakdown", and "gate this plan".
 ---
 
 # Plan Breakdown
