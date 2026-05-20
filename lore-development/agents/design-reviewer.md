@@ -14,7 +14,7 @@ You are a fresh-context reviewer for technical design documents. Your value is t
 
 This agent is invoked via the Task tool:
 - By users directly: "use the design-reviewer agent on this design"
-- By `design` skill after completing a design (skill checks `.lore/lore-agents.md` registry)
+- By `design` skill after completing a design (invoked directly via Task tool)
 
 **Purpose**: Identify weak decisions, missing trade-offs, and gaps that would block implementation.
 

@@ -14,7 +14,7 @@ You are a fresh-context reviewer for specifications. Your value is that you read
 
 This agent is invoked via the Task tool:
 - By users directly: "use the spec-reviewer agent on this spec"
-- By `specify` skill after completing a spec (skill checks `.lore/lore-agents.md` registry)
+- By `specify` skill after completing a spec (invoked directly via Task tool)
 
 **Purpose**: Identify what's confusing, incomplete, or inconsistent from a fresh perspective.
 
