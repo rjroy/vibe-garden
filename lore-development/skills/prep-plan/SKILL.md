@@ -1,6 +1,6 @@
 ---
 name: prep-plan
-description: This skill should be used when ready to build a reviewable implementation plan as a lore artifact. Input can be a spec, design, brainstorm, research, or a well-defined prompt. Triggers: "prep plan", "prepare a plan", "plan this", "make a plan", "plan the implementation", "break this into steps".
+description: Use when ready to build a reviewable implementation plan as a lore artifact. Input can be a spec, design, brainstorm, research, or a well-defined prompt. Triggers include "prep plan", "prepare a plan", "plan this", "make a plan", "plan the implementation", and "break this into steps".
 ---
 
 # Prep Plan

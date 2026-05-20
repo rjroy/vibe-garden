@@ -1,6 +1,6 @@
 ---
 name: design
-description: This skill should be used when the user has a specific architecture, tool, or technique in mind and wants to explore whether and how it applies. Not full-feature design — a focused technical investigation of one element. Triggers: "design this", "I want to use X for this", "how should this work technically", "explore this approach".
+description: Use when the user has a specific architecture, tool, or technique in mind and wants to explore whether and how it applies. Not full-feature design but a focused technical investigation of one element. Triggers include "design this", "I want to use X for this", "how should this work technically", and "explore this approach".
 ---
 
 # Design

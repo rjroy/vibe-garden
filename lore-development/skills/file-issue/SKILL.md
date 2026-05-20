@@ -1,6 +1,6 @@
 ---
 name: file-issue
-description: This skill should be used when something worth tracking surfaces during work — a bug, gap, or inconsistency. Triggers: "file an issue", "log this", "track this as an issue", "flag this problem".
+description: Use when something worth tracking surfaces during work, such as a bug, gap, or inconsistency. Triggers include "file an issue", "log this", "track this as an issue", and "flag this problem".
 ---
 
 # File Issue

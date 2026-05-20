@@ -1,6 +1,6 @@
 ---
 name: implement
-description: This skill should be used when ready to build from a spec, design, or plan, or to resume from notes. Triggers: "implement this", "build this", "implement the spec/design/plan", "continue implementation", "resume where we left off".
+description: Use when ready to build from a spec, design, or plan, or to resume from notes. Triggers include "implement this", "build this", "implement the spec/design/plan", "continue implementation", and "resume where we left off".
 ---
 
 # Implement
