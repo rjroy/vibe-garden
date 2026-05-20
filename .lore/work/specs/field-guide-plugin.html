@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>field-guide plugin</title>
+  <meta name="date" content="2026-05-20">
+  <meta name="status" content="draft">
+  <meta name="tags" content="field-guide, plugin, wiki, knowledge-base, lore">
+  <meta name="modules" content="field-guide">
+  <meta name="req-prefix" content="FG">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; color: #1a1a1a; line-height: 1.6; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; margin-top: 2rem; }
+    .meta { font-size: 0.85rem; color: #777; margin-bottom: 2rem; }
+    .badge { display: inline-block; padding: 0.15em 0.55em; border-radius: 3px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-right: 0.4rem; }
+    .badge-draft { background: #fef3c7; color: #92400e; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th { text-align: left; font-size: 0.8rem; text-transform: uppercase; color: #555; border-bottom: 2px solid #ddd; padding: 0.4rem 0.6rem; }
+    td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    td:first-child { font-family: monospace; font-size: 0.85rem; white-space: nowrap; color: #1d4ed8; }
+    .req-group { margin: 1.25rem 0 0.25rem; font-weight: 600; font-size: 0.9rem; color: #374151; }
+    .note { font-size: 0.875rem; color: #4b5563; background: #f9fafb; border-left: 3px solid #d1d5db; padding: 0.6rem 0.9rem; margin: 0.5rem 0 1rem; }
+    .severity { font-size: 0.75rem; font-weight: 600; padding: 0.1em 0.45em; border-radius: 3px; margin-left: 0.4rem; }
+    .sev-error { background: #fee2e2; color: #991b1b; }
+    .sev-warning { background: #fef3c7; color: #92400e; }
+    .sev-info { background: #dbeafe; color: #1e40af; }
+    .validation-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 1rem 1.25rem; margin-top: 0.5rem; }
+    .validation-box h3 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #166534; }
+    .validation-box ul { margin: 0; padding-left: 1.2rem; }
+    .validation-box li { font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .sticky { position: sticky; top: 0; background: white; border-bottom: 1px solid #e5e7eb; padding: 0.5rem 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #555; z-index: 10; }
+    code { font-family: monospace; font-size: 0.88em; background: #f3f4f6; padding: 0.1em 0.35em; border-radius: 3px; }
+    a { color: #1d4ed8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="sticky">
+    <span class="badge badge-draft">Draft</span>
+    <span>REQ prefix: <strong>FG</strong></span>
+    <span style="color:#bbb">|</span>
+    <span>field-guide-plugin.html</span>
+  </div>
+
+  <h1>field-guide plugin</h1>
+  <div class="meta">2026-05-20 &nbsp;&middot;&nbsp; spec &nbsp;&middot;&nbsp; field-guide, plugin, wiki, knowledge-base, lore</div>
+
+  <h2>Overview</h2>
+  <p>
+    field-guide is a Claude Code plugin that compiles <code>.lore/</code> artifacts into a persistent, query-able HTML wiki stored in <code>.lore/reference/</code>. It is a sibling to lore-development: lore-development generates working documents in <code>.lore/work/</code>; field-guide synthesizes them into reference material in <code>.lore/reference/</code>. The wiki compounds over time — each ingest adds to an evolving knowledge base rather than re-deriving knowledge from scratch.
+  </p>
+  <p>
+    The pattern is drawn from Andrej Karpathy's LLM Wiki: instead of RAG (re-deriving knowledge on every query), a persistent wiki is built once and kept current. The human curates sources and asks questions; the LLM does the bookkeeping.
+  </p>
+
+  <h2>Entry Points</h2>
+  <ul>
+    <li>User invokes <code>/field-guide:init</code> to bootstrap a project wiki and register scheduled lint</li>
+    <li>User invokes <code>/field-guide:ingest</code> with one or more source paths</li>
+    <li>User invokes <code>/field-guide:query</code> with a natural language question</li>
+    <li>User invokes <code>/field-guide:lint</code> directly, or a scheduled job fires it automatically</li>
+  </ul>
+
+  <h2>Requirements</h2>
+
+  <p class="req-group">Plugin Structure</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-1"><td><a href="#REQ-FG-1">REQ-FG-1</a></td><td>field-guide is a Claude Code plugin at <code>field-guide/</code> in the vibe-garden repository with a <code>.claude-plugin/plugin.json</code> manifest.</td></tr>
+      <tr id="REQ-FG-2"><td><a href="#REQ-FG-2">REQ-FG-2</a></td><td>The plugin exposes four user-invocable skills: <code>init</code>, <code>ingest</code>, <code>query</code>, <code>lint</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="req-group">Init</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-3"><td><a href="#REQ-FG-3">REQ-FG-3</a></td><td>Init creates the <code>.lore/reference/</code> directory if it does not exist and writes an empty <code>index.html</code>.</td></tr>
+      <tr id="REQ-FG-4"><td><a href="#REQ-FG-4">REQ-FG-4</a></td><td>Init registers a durable scheduled lint job by calling CronCreate with <code>durable: true</code> and the prompt <code>/field-guide:lint</code>. The schedule is passed as an argument to init (<code>daily</code>, <code>weekly</code>); the default is daily. The job ID returned by CronCreate is stored in <code>.lore/reference/.field-guide.json</code>.</td></tr>
+      <tr id="REQ-FG-5"><td><a href="#REQ-FG-5">REQ-FG-5</a></td><td>Init is idempotent — before registering a scheduled job, init reads <code>.lore/reference/.field-guide.json</code> to check for an existing job ID, then calls CronList to confirm the job is still active. If an active job exists, no new job is created. Existing wiki pages are never overwritten.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="req-group">Ingest</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-6"><td><a href="#REQ-FG-6">REQ-FG-6</a></td><td>Ingest accepts one or more source paths from the user — individual files or directories within <code>.lore/</code>.</td></tr>
+      <tr id="REQ-FG-7"><td><a href="#REQ-FG-7">REQ-FG-7</a></td><td>For each source, ingest uses model judgment to extract distinct knowledge units and creates or updates the corresponding wiki pages in <code>.lore/reference/</code>.</td></tr>
+      <tr id="REQ-FG-8"><td><a href="#REQ-FG-8">REQ-FG-8</a></td><td>A single ingest may create or update multiple wiki pages from one source.</td></tr>
+      <tr id="REQ-FG-9"><td><a href="#REQ-FG-9">REQ-FG-9</a></td><td>Re-ingesting a source reconciles existing wiki pages — stale content is updated and contradictions with existing pages are flagged to the user. Reconciliation is done by reading current wiki page content and comparing it against the source at ingest time; no separate activity log is maintained.</td></tr>
+      <tr id="REQ-FG-10"><td><a href="#REQ-FG-10">REQ-FG-10</a></td><td>After ingest, <code>index.html</code> in <code>.lore/reference/</code> is updated to reflect new and modified pages.</td></tr>
+      <tr id="REQ-FG-11"><td><a href="#REQ-FG-11">REQ-FG-11</a></td><td>Ingest is stateless — no activity log is maintained. The wiki itself is the record of what was ingested.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="req-group">Wiki Pages</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-12"><td><a href="#REQ-FG-12">REQ-FG-12</a></td><td>Each wiki page is a self-contained HTML file stored under <code>.lore/reference/</code> with no external dependencies.</td></tr>
+      <tr id="REQ-FG-13"><td><a href="#REQ-FG-13">REQ-FG-13</a></td><td>Wiki pages carry standard lore meta tags (<code>date</code>, <code>status</code>, <code>tags</code>) per the lore document schema. The standard <code>status</code> field tracks the page's document lifecycle using reference document values: <code>current</code>, <code>outdated</code>, <code>archived</code>.</td></tr>
+      <tr id="REQ-FG-14"><td><a href="#REQ-FG-14">REQ-FG-14</a></td><td>Wiki pages additionally carry field-guide meta tags: <code>fg-type</code>, <code>fg-sources</code>, <code>fg-status</code>. The <code>fg-status</code> field tracks freshness relative to source files specifically: <code>current</code> (sources unchanged since ingest), <code>stale</code> (one or more sources modified since ingest), <code>archived</code> (deliberately retired). Lint uses <code>fg-status</code> to detect pages needing re-ingest.</td></tr>
+      <tr id="REQ-FG-15"><td><a href="#REQ-FG-15">REQ-FG-15</a></td><td>Valid <code>fg-type</code> values: <code>decision</code>, <code>lesson</code>, <code>architecture</code>, <code>concept</code>, <code>synthesis</code>, <code>entity</code>.</td></tr>
+      <tr id="REQ-FG-16"><td><a href="#REQ-FG-16">REQ-FG-16</a></td><td><code>fg-sources</code> lists the <code>.lore/</code> paths the page was derived from, comma-separated.</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <strong>fg-type assignment:</strong> Ingest uses model judgment to assign a type to each knowledge unit extracted from a source.
+    A <code>decision</code> captures a resolved choice and its rationale.
+    A <code>lesson</code> captures a generalized rule derived from experience (typically from retros or learned entries).
+    An <code>architecture</code> captures how a system or component is structured.
+    A <code>concept</code> captures a recurring term, pattern, or abstraction that appears across multiple sources.
+    An <code>entity</code> captures a named person, system, or component.
+    A <code>synthesis</code> is reserved for query answers filed back into the wiki — ingest never assigns this type.
+  </div>
+
+  <p class="req-group">index.html</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-17"><td><a href="#REQ-FG-17">REQ-FG-17</a></td><td><code>index.html</code> in <code>.lore/reference/</code> catalogs all wiki pages grouped by <code>fg-type</code>.</td></tr>
+      <tr id="REQ-FG-18"><td><a href="#REQ-FG-18">REQ-FG-18</a></td><td>Each index entry includes a relative link to the wiki page and a one-line description drawn from the page's <code>&lt;title&gt;</code> element.</td></tr>
+      <tr id="REQ-FG-19"><td><a href="#REQ-FG-19">REQ-FG-19</a></td><td>The query and lint skills read <code>index.html</code> first to discover all wiki pages before drilling into individual files.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="req-group">Query</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-20"><td><a href="#REQ-FG-20">REQ-FG-20</a></td><td>Query accepts a natural language question from the user.</td></tr>
+      <tr id="REQ-FG-21"><td><a href="#REQ-FG-21">REQ-FG-21</a></td><td>Query reads <code>index.html</code> to identify candidate pages, then reads the relevant pages to synthesize an answer.</td></tr>
+      <tr id="REQ-FG-22"><td><a href="#REQ-FG-22">REQ-FG-22</a></td><td>Query searches both <code>.lore/reference/</code> wiki pages and <code>.lore/work/</code> source documents.</td></tr>
+      <tr id="REQ-FG-23"><td><a href="#REQ-FG-23">REQ-FG-23</a></td><td>Query cites the specific pages used in the answer.</td></tr>
+      <tr id="REQ-FG-24"><td><a href="#REQ-FG-24">REQ-FG-24</a></td><td>After answering, query offers to file the answer back into the wiki as a <code>synthesis</code> page. The resulting page lists the cited wiki and work pages in <code>fg-sources</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="req-group">Lint</p>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr id="REQ-FG-25"><td><a href="#REQ-FG-25">REQ-FG-25</a></td><td>Lint identifies contradictions between wiki pages. <span class="severity sev-error">error</span></td></tr>
+      <tr id="REQ-FG-26"><td><a href="#REQ-FG-26">REQ-FG-26</a></td><td>Lint identifies orphaned wiki pages not listed in <code>index.html</code>. <span class="severity sev-warning">warning</span></td></tr>
+      <tr id="REQ-FG-27"><td><a href="#REQ-FG-27">REQ-FG-27</a></td><td>Lint identifies wiki pages whose <code>fg-sources</code> have a modification date newer than the wiki page itself, setting <code>fg-status</code> to <code>stale</code> on those pages. <span class="severity sev-warning">warning</span></td></tr>
+      <tr id="REQ-FG-28"><td><a href="#REQ-FG-28">REQ-FG-28</a></td><td>Lint identifies concepts mentioned across multiple pages that lack a dedicated <code>concept</code> page. <span class="severity sev-info">info</span></td></tr>
+      <tr id="REQ-FG-29"><td><a href="#REQ-FG-29">REQ-FG-29</a></td><td>Lint produces a report with findings grouped by severity: error, warning, info.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Success Criteria</h2>
+  <ul>
+    <li>User can run <code>/field-guide:init</code> on a fresh project and get a bootstrapped <code>.lore/reference/</code> with a durable scheduled lint job registered and its ID stored in <code>.field-guide.json</code></li>
+    <li>Running <code>/field-guide:init</code> a second time produces no duplicate job</li>
+    <li>User can ingest a <code>.lore/work/</code> artifact and find new HTML pages in <code>.lore/reference/</code> with correct <code>fg-type</code>, <code>fg-sources</code>, <code>fg-status</code> meta tags and an updated <code>index.html</code></li>
+    <li>User can re-ingest a changed source and see wiki pages updated and contradictions surfaced</li>
+    <li>User can ask a natural language question and receive a cited answer drawing from both wiki and work documents</li>
+    <li>User can file a query answer back as a <code>synthesis</code> page with correct <code>fg-sources</code></li>
+    <li>User can run lint and receive a findings report grouped by severity</li>
+    <li>Scheduled lint fires without user intervention</li>
+  </ul>
+
+  <h2>AI Validation</h2>
+  <div class="validation-box">
+    <h3>How to verify this is done</h3>
+    <ul>
+      <li><strong>Init</strong>: Running init on a fresh directory creates <code>.lore/reference/index.html</code> and <code>.field-guide.json</code> containing a CronCreate job ID. Running CronList shows the job as active. Running init again produces no additional entry in CronList.</li>
+      <li><strong>Ingest</strong>: Given a sample <code>.lore/work/</code> artifact, ingest produces one or more HTML pages in <code>.lore/reference/</code> carrying valid <code>fg-type</code>, <code>fg-sources</code>, and <code>fg-status</code> meta tags. <code>index.html</code> is updated and each new page is listed under its correct type group.</li>
+      <li><strong>Query</strong>: Given a populated wiki, a natural language question returns an answer that cites specific wiki or work pages by path. Filing back produces a valid <code>synthesis</code> HTML page in <code>.lore/reference/</code> with <code>fg-sources</code> listing the cited pages.</li>
+      <li><strong>Lint</strong>: Given a wiki with (a) a known orphan, (b) a source file modified after its wiki page, and (c) two pages making conflicting claims about the same concept, lint identifies all three findings at their correct severity levels (warning, warning, error).</li>
+    </ul>
+  </div>
+
+  <h2>Constraints</h2>
+  <ul>
+    <li>Wiki pages are HTML only — no shared stylesheets, no CDN references, no external assets</li>
+    <li>Raw sources in <code>.lore/</code> are read-only — field-guide never modifies them</li>
+    <li>Wiki and config live entirely within <code>.lore/reference/</code> — no files written outside this directory</li>
+    <li>Scheduled lint uses CronCreate with <code>durable: true</code> — not an OS-level cron or background daemon</li>
+    <li>CronCreate recurring jobs auto-expire after 7 days — users must re-run <code>/field-guide:init</code> to refresh the scheduled lint job</li>
+  </ul>
+
+  <h2>Context</h2>
+  <ul>
+    <li>Pattern source: Andrej Karpathy's LLM Wiki (May 2026)</li>
+    <li>Sibling plugin: lore-development (generates <code>.lore/work/</code> artifacts that field-guide ingests)</li>
+    <li>Document schema: <code>.claude/plugins/cache/vibe-garden/lore-development/*/shared/document-schema.md</code></li>
+    <li><strong>CronCreate</strong> is a Claude Code harness tool that schedules a prompt string on a 5-field cron expression. With <code>durable: true</code> the job persists to <code>.claude/scheduled_tasks.json</code> and survives session restarts. It returns a job ID usable with CronDelete. CronList returns all active jobs for the current session.</li>
+  </ul>
+
+</body>
+</html>

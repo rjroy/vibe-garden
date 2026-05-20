@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Implementation notes: field-guide plugin</title>
+  <meta name="date" content="2026-05-20">
+  <meta name="status" content="in_progress">
+  <meta name="tags" content="field-guide, plugin, implementation, wiki">
+  <meta name="modules" content="field-guide">
+  <meta name="source" content=".lore/work/specs/field-guide-plugin.html">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; color: #1a1a1a; line-height: 1.6; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; margin-top: 2rem; }
+    .banner { border-radius: 6px; padding: 0.75rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.95rem; font-weight: 600; }
+    .banner-in-progress { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; }
+    .banner-complete { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .chip { display: inline-block; padding: 0.15em 0.6em; border-radius: 3px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-left: 0.5rem; }
+    .chip-pending { background: #f3f4f6; color: #6b7280; }
+    .chip-in-progress { background: #fef3c7; color: #92400e; }
+    .chip-done { background: #dcfce7; color: #166534; }
+    .chip-failed { background: #fee2e2; color: #991b1b; }
+    .phase { margin: 0.75rem 0; padding: 0.6rem 1rem; border: 1px solid #e5e7eb; border-radius: 6px; }
+    .phase-header { display: flex; align-items: center; cursor: pointer; user-select: none; font-weight: 500; }
+    .phase-header:hover { color: #1d4ed8; }
+    .phase-body { margin-top: 0.75rem; font-size: 0.875rem; color: #374151; display: none; }
+    .phase-body.open { display: block; }
+    .phase-body p { margin: 0.4rem 0; }
+    code { font-family: monospace; font-size: 0.88em; background: #f3f4f6; padding: 0.1em 0.35em; border-radius: 3px; }
+    .meta { font-size: 0.8rem; color: #9ca3af; margin-bottom: 1.5rem; }
+  </style>
+  <script>
+    function toggle(el) {
+      const body = el.nextElementSibling;
+      body.classList.toggle('open');
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Implementation notes: field-guide plugin</h1>
+  <div class="meta">2026-05-20 &nbsp;&middot;&nbsp; source: field-guide-plugin.html</div>
+
+  <div class="banner banner-complete" id="banner">Complete — All 5 phases done, validation passed</div>
+
+  <h2>Phases</h2>
+
+  <div class="phase" id="phase-1">
+    <div class="phase-header" onclick="toggle(this)">
+      1. Plugin scaffolding <span class="chip chip-done" id="chip-1">done</span>
+    </div>
+    <div class="phase-body">
+      <p><strong>Goal:</strong> Create <code>field-guide/.claude-plugin/plugin.json</code> and <code>field-guide/skills/</code> directory structure.</p>
+      <p id="log-1"></p>
+    </div>
+  </div>
+
+  <div class="phase" id="phase-2">
+    <div class="phase-header" onclick="toggle(this)">
+      2. init skill <span class="chip chip-done" id="chip-2">done</span>
+    </div>
+    <div class="phase-body">
+      <p><strong>Goal:</strong> Write <code>field-guide/skills/init/SKILL.md</code> — bootstrap wiki, register durable CronCreate lint job, idempotency via CronList.</p>
+      <p id="log-2"></p>
+    </div>
+  </div>
+
+  <div class="phase" id="phase-3">
+    <div class="phase-header" onclick="toggle(this)">
+      3. ingest skill <span class="chip chip-done" id="chip-3">done</span>
+    </div>
+    <div class="phase-body">
+      <p><strong>Goal:</strong> Write <code>field-guide/skills/ingest/SKILL.md</code> — accept source paths, extract knowledge units by fg-type, create/update wiki pages, update index.html.</p>
+      <p id="log-3"></p>
+    </div>
+  </div>
+
+  <div class="phase" id="phase-4">
+    <div class="phase-header" onclick="toggle(this)">
+      4. query skill <span class="chip chip-done" id="chip-4">done</span>
+    </div>
+    <div class="phase-body">
+      <p><strong>Goal:</strong> Write <code>field-guide/skills/query/SKILL.md</code> — accept question, read index.html, search wiki + .lore/work/, synthesize with citations, offer synthesis filing.</p>
+      <p id="log-4"></p>
+    </div>
+  </div>
+
+  <div class="phase" id="phase-5">
+    <div class="phase-header" onclick="toggle(this)">
+      5. lint skill <span class="chip chip-done" id="chip-5">done</span>
+    </div>
+    <div class="phase-body">
+      <p><strong>Goal:</strong> Write <code>field-guide/skills/lint/SKILL.md</code> — contradictions (error), orphans (warning), stale sources (warning), missing concept pages (info), report by severity.</p>
+      <p id="log-5"></p>
+    </div>
+  </div>
+
+  <h2>Log</h2>
+  <div id="log-main">
+    <p style="font-size:0.875rem; color:#6b7280;">Session started 2026-05-20. No prior work found in lore. Spec: field-guide-plugin.html (REQ-FG-1 through REQ-FG-29). Agents: general-purpose (implementation), plugin-dev:skill-reviewer + plugin-dev:plugin-validator (review).</p>
+  </div>
+
+</body>
+</html>

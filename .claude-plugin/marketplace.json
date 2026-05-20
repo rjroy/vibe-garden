@@ -31,6 +31,13 @@
       "description": "Active feedback based on session patterns and sentiment analysis. Provides gentle nudges when sessions exceed typical duration or detect frustration.",
       "repository": "https://github.com/rjroy/vibe-garden.git",
       "license": "MIT"
+    },
+    {
+      "name": "field-guide",
+      "source": "./field-guide",
+      "description": "Compiles .lore/ artifacts into a persistent, query-able HTML wiki in .lore/reference/. Skills for ingesting lore documents, querying accumulated knowledge, and health-checking the wiki.",
+      "repository": "https://github.com/rjroy/vibe-garden.git",
+      "license": "MIT"
     }
   ]
 }

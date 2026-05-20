@@ -1,0 +1,11 @@
+{
+  "name": "field-guide",
+  "description": "Compiles .lore/ artifacts into a persistent, query-able HTML wiki stored in .lore/reference/. Sibling to lore-development.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ronald Roy",
+    "email": "gsdwig@gmail.com"
+  },
+  "repository": "https://github.com/rjroy/vibe-garden",
+  "license": "MIT"
+}
