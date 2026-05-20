@@ -1,5 +1,7 @@
 # Field Guide
 
+<img src="logo.webp" align="right" width="128" height="128" alt="Field Guide Logo">
+
 A Claude Code plugin that compiles `.lore/` artifacts into a persistent, query-able HTML wiki.
 
 ## What It Does
