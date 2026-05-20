@@ -1,6 +1,6 @@
 ---
 name: define-validation
-description: Use to add validation criteria to a spec or plan. Triggers: "define validation", "how will we validate", "what should the AI check", "add validation to this".
+description: This skill should be used to add validation criteria to a spec or plan. Triggers: "define validation", "how will we validate", "what should the AI check", "add validation to this".
 ---
 
 # Define Validation

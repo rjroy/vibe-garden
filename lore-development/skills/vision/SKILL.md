@@ -1,6 +1,6 @@
 ---
 name: vision
-description: Defines the north star for a project. Why does it exist? What problems is it solving? What would it never become? Use at the start of a project or when direction feels unclear. Triggers: "define the project vision", "what should this project become", "create a vision document", "what are we building toward".
+description: This skill should be used when the user wants to define the north star for a project — why it exists, what problems it solves, what it would never become. Suited for the start of a project or when direction feels unclear. Triggers include "define the project vision", "what should this project become", "create a vision document", "what are we building toward".
 ---
 
 # Vision
@@ -34,4 +34,4 @@ When the document has been reviewed at least once, offer to save. The user can k
 
 ## Saving
 
-Save to `.lore/reference/vision.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: draft` — the user marks it approved, not you. The document body is freeform: what the project is, what it values, what it refuses.
+Save to `.lore/reference/vision.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: draft` — the user marks it approved. The document body is freeform: what the project is, what it values, what it refuses.

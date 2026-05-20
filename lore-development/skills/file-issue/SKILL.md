@@ -1,6 +1,6 @@
 ---
 name: file-issue
-description: Shorthand for recording an issue in the lore system. Use when something worth tracking surfaces during work — a bug, gap, or inconsistency. Triggers: "file an issue", "log this", "track this as an issue", "flag this problem".
+description: This skill should be used when something worth tracking surfaces during work — a bug, gap, or inconsistency. Triggers: "file an issue", "log this", "track this as an issue", "flag this problem".
 ---
 
 # File Issue

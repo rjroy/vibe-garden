@@ -1,13 +1,13 @@
 ---
 name: simplify
-description: Clean up code without changing behavior. Dispatches cleanup agents, runs tests to verify behavior is preserved, then runs code review. Triggers: "simplify this", "clean up this code", "refactor without changing behavior", "reduce complexity".
+description: This skill should be used when the user wants to clean up code without changing behavior. Dispatches cleanup agents, runs tests to verify behavior is preserved, then runs code review. Triggers include "simplify this", "clean up this code", "refactor without changing behavior", "reduce complexity".
 ---
 
 # Simplify
 
 Orchestrate code cleanup through agent delegation. Preserve behavior. Don't change what the code does.
 
-You are the orchestrator. Dispatch work to sub-agents via the Task tool. You do not edit code directly.
+Act as orchestrator. Dispatch work to sub-agents via the Task tool. Do not edit code directly.
 
 ## Input
 

@@ -1,13 +1,13 @@
 ---
 name: plan-breakdown
-description: Use before implementing a complex plan to add validation gates to each step. Produces task files implement can consume. Triggers: "break down this plan", "add validation to the plan steps", "plan-breakdown", "gate this plan".
+description: This skill should be used when a plan exists and needs validation gates added to each step before implementation begins. Produces task files that implement can consume. Triggers: "break down this plan", "add validation to the plan steps", "plan-breakdown", "gate this plan".
 ---
 
 # Plan Breakdown
 
 A plan describes what to build. This skill adds what's missing: how do you know each step is done?
 
-Use when a plan is complex enough that having explicit validation at each step matters before handing off to implement. Simple plans don't need it — implement can work from the plan directly.
+Invoke when a plan is complex enough that explicit validation at each step matters before handing off to implement. Simple plans don't need it — implement can work from the plan directly.
 
 ## Input
 

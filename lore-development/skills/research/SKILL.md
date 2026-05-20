@@ -1,6 +1,6 @@
 ---
 name: research
-description: Pulls context from the internet. Use when specifics matter more than general training knowledge, or when details are newer than the training cutoff. Triggers: "research this", "find documentation for", "look up how X works", "what's the current state of".
+description: This skill should be used when specifics matter more than general training knowledge, or when details are newer than the training cutoff. Triggers: "research this", "find documentation for", "look up how X works", "what's the current state of", "what's the prior art".
 ---
 
 # Research

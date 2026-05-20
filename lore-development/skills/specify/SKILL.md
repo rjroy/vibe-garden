@@ -1,6 +1,6 @@
 ---
 name: specify
-description: Define the requirements of a feature or project. Produces numbered requirements and validation criteria. Triggers: "write a spec for", "define the requirements", "what should this do", "capture the requirements".
+description: This skill should be used when the user wants to define the requirements of a feature or project. Produces numbered requirements and validation criteria. Triggers include "write a spec for", "define the requirements", "what should this do", "capture the requirements".
 ---
 
 # Specify
@@ -17,7 +17,7 @@ After saving, invoke the `spec-reviewer` agent via Task tool on the saved spec. 
 
 Number requirements with a namespaced prefix to avoid collisions across specs: `REQ-{PREFIX}-N`
 
-Derive the prefix from the spec filename — take the first 1-2 segments of the kebab-case name, uppercase. `auth-flow.md` → `REQ-AUTH-FLOW`. `checkout.md` → `REQ-CHECKOUT`. Override with a `req-prefix` frontmatter field when the auto-generated prefix is awkward or you want shorter IDs.
+Derive the prefix from the spec filename — take the first 1-2 segments of the kebab-case name, uppercase. `auth-flow.md` → `REQ-AUTH-FLOW`. `checkout.md` → `REQ-CHECKOUT`. Override with a `req-prefix` frontmatter field when the auto-generated prefix is awkward or shorter IDs are preferred.
 
 ## Validation
 

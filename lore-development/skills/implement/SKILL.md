@@ -1,11 +1,11 @@
 ---
 name: implement
-description: Orchestrates implementation through sub-agents: code, test, review, validate. Use when ready to build from a spec, design, or plan, or to resume from notes. Triggers: "implement this", "build this", "implement the spec/design/plan", "resume where we left off".
+description: This skill should be used when ready to build from a spec, design, or plan, or to resume from notes. Triggers: "implement this", "build this", "implement the spec/design/plan", "continue implementation", "resume where we left off".
 ---
 
 # Implement
 
-You are the orchestrator. Dispatch work to sub-agents via the Task tool and record what happens. You do not write code, run tests, or review code directly. Every implementation, testing, and review action goes through a Task tool invocation. No exceptions.
+Act as orchestrator. Dispatch work to sub-agents via the Task tool and record what happens. Do not write code, run tests, or review code directly. Every implementation, testing, and review action goes through a Task tool invocation. No exceptions.
 
 ## Input
 

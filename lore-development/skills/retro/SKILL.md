@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Records what happened in a session so future specs and plans can learn from it. Observation only — what happened, what surprised, what broke, what drifted. Triggers: "let's do a retro", "review what happened", "capture what happened", "write up the session".
+description: This skill should be used when completed work needs to be recorded as a lore artifact — what happened, what surprised, what broke, what drifted. Observation only, not interpretation. Triggers: "let's do a retro", "/retro", "review what happened", "capture what happened", "write up the session".
 ---
 
 # Retro
