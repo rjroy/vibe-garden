@@ -33,7 +33,6 @@ Skills write into a three-directory `.lore/` tree (`work/`, `reference/`, `learn
 | `/lore-development:update-stubs` | Scan specs for stubs and generate an outstanding stub index |
 | `/lore-development:update-lore-agents` | Build/update the project's agent registry |
 | `/lore-development:review-ideas` | Process captured ideas into structured issues |
-| `/lore-development:file-issue` | File a structured issue directly from an observation |
 
 ## Idea Capture
 

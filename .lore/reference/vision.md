@@ -34,7 +34,7 @@ The system runs on markdown files with YAML frontmatter, searched by grep. No da
 
 ## 4. Plugins Work Alone, Compose When Present
 
-Each plugin is independently useful. Compass Rose manages backlogs without Lore Development. Notify Hook sends alerts without Mind Reader. But when multiple plugins are present, they become more than the sum: `start-work` escalates large items to Lore Development's `/specify`. The lore-researcher can surface context that informs backlog prioritization. This composition happens through conventions (`.lore/` paths, frontmatter fields, skill invocation) rather than hard dependencies.
+Each plugin is independently useful. Compass Rose manages backlogs without Lore Development. Notify Hook sends alerts without Mind Reader. But when multiple plugins are present, they become more than the sum: `reprioritize` surfaces issues that the codebase has already resolved, feeding back into Lore Development's workflow. The lore-researcher can surface context that informs backlog prioritization. This composition happens through conventions (`.lore/` paths, frontmatter fields, skill invocation) rather than hard dependencies.
 
 **Looks like:** Installing only `notify-hook` gives you working notifications. Adding `lore-development` to a project with `compass-rose` makes both better without requiring either to change.
 **Doesn't look like:** A plugin that fails when another plugin is absent. A shared database that all plugins must connect to. Version coupling between plugins.
@@ -48,14 +48,14 @@ Hooks exit 0. Config loading falls back to defaults. Sentiment analysis is optio
 
 ## 6. Ceremony Scales With Consequence
 
-A quick idea gets captured as a one-line `idea:` prefix with no frontmatter. A feature that will take a week gets a spec, a plan, and a review. The system supports both without forcing the heavy path on small work or the light path on large work. Size-based escalation in `start-work` (XL/L items trigger spec writing) is the pattern: match the process to the stakes.
+A quick idea gets captured as a one-line `idea:` prefix with no frontmatter. A feature that will take a week gets a spec, a plan, and a review. The system supports both without forcing the heavy path on small work or the light path on large work. Filing an issue takes one command; speccing a large item before implementing it is a separate, deliberate choice. Match the process to the stakes.
 
 **Looks like:** Ideas flow in with zero friction and get refined later through `/review-ideas`. Large items automatically escalate to specification. `/tend` runs periodically to clean up what accumulated informally.
 **Doesn't look like:** Requiring frontmatter on every captured thought. Skipping specs on large features because they "slow things down." A single workflow that treats a typo fix and a new subsystem identically.
 
 # Anti-Goals
 
-- **Not a project management platform.** Compass Rose integrates with GitHub Projects; it doesn't replace it. The backlog lives in GitHub. The analysis and recommendations live in the plugin. Duplicating the source of truth would create drift, and drift in project management is how teams lose track of what matters.
+- **Not a project management platform.** Compass Rose tracks work in files alongside the code. The backlog lives in `.lore/work/issues/`, versioned with the project. Analysis and recommendations live in the plugin. Duplicating state in external services creates drift, and drift in project management is how teams lose track of what matters.
 
 - **Not an autonomous agent framework.** Plugins observe, recommend, and surface. They do not take actions on behalf of the user without explicit approval. The generation effect (learning through doing, not watching) matters. An AI that does the work for you teaches you nothing about the work.
 
