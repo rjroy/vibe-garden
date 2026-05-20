@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Compass Rose rework: file-based issue tracker</title>
+  <meta name="date" content="2026-05-20">
+  <meta name="status" content="draft">
+  <meta name="tags" content="compass-rose, issue-tracking, file-based, refactor, lore-development">
+  <meta name="modules" content="compass-rose, lore-development">
+  <meta name="req-prefix" content="CR">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* Sticky header */
+    #sticky-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #fff; border-bottom: 2px solid #e2e8f0;
+      padding: 0.6rem 1rem; display: flex; gap: 1rem; align-items: center;
+      font-size: 0.85rem;
+    }
+    .badge {
+      display: inline-block; padding: 0.2em 0.65em; border-radius: 4px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+    }
+    .badge-draft    { background: #fef3c7; color: #92400e; }
+    .badge-open     { background: #dbeafe; color: #1e40af; }
+    .badge-done     { background: #d1fae5; color: #065f46; }
+    .badge-retire   { background: #fee2e2; color: #991b1b; }
+    .badge-keep     { background: #ede9fe; color: #4c1d95; }
+    .prefix-chip {
+      font-family: monospace; font-size: 0.8rem; background: #f1f5f9;
+      border: 1px solid #cbd5e1; padding: 0.15em 0.5em; border-radius: 3px; color: #475569;
+    }
+
+    h1 { font-size: 1.8rem; margin-top: 1.5rem; }
+    h2 { font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.4rem; }
+    h3 { font-size: 1rem; margin-top: 1.5rem; color: #475569; }
+
+    /* Requirements */
+    .req {
+      border: 1px solid #e2e8f0; border-radius: 6px;
+      margin: 1rem 0; overflow: hidden;
+    }
+    .req-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.6rem 1rem; background: #f8fafc; cursor: pointer;
+      user-select: none;
+    }
+    .req-header:hover { background: #f1f5f9; }
+    .req-id {
+      font-family: monospace; font-size: 0.82rem; font-weight: 700;
+      color: #0f172a; min-width: 7rem;
+    }
+    .req-id a { color: inherit; text-decoration: none; }
+    .req-id a:hover { text-decoration: underline; }
+    .req-title { flex: 1; font-weight: 500; }
+    .req-body { padding: 0.75rem 1rem 1rem; border-top: 1px solid #e2e8f0; font-size: 0.93rem; }
+    .req-body p:first-child { margin-top: 0; }
+    .req-body p:last-child  { margin-bottom: 0; }
+    .req-body ul { margin: 0.5rem 0; padding-left: 1.4rem; }
+    .req-body li { margin: 0.2rem 0; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+
+    /* Validation section */
+    #validation { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 1.25rem 1.5rem; margin-top: 2rem; }
+    #validation h2 { border-color: #f59e0b; margin-top: 0; }
+    #validation ol { padding-left: 1.4rem; }
+    #validation li { margin: 0.5rem 0; }
+
+    /* Change summary table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1rem 0; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; }
+    td { padding: 0.45rem 0.75rem; border: 1px solid #e2e8f0; vertical-align: top; }
+    code { font-family: monospace; font-size: 0.88em; background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div id="sticky-header">
+  <span class="badge badge-draft">Draft</span>
+  <span class="prefix-chip">REQ-CR-N</span>
+  <span style="color:#64748b;">Compass Rose rework: file-based issue tracker</span>
+</div>
+
+<h1>Compass Rose rework: file-based issue tracker</h1>
+
+<p>
+  Compass Rose currently requires a GitHub Project, a config file, and an extra auth scope.
+  That setup cost is not worth it for solo projects. This spec reworks it as a file-based issue
+  tracker: issues live in <code>.lore/work/issues/</code>, no external dependencies, zero config.
+</p>
+
+<h2>Context and decisions</h2>
+
+<p>
+  The <code>file-issue</code> skill in lore-development already writes to <code>.lore/work/issues/</code>
+  using the standard document schema. Compass Rose's <code>add-item</code> is the same action
+  plus GitHub overhead. Consolidating them removes duplication and makes compass-rose the single
+  place for issue tracking, from "log this quick" through "what should I work on next."
+</p>
+
+<p>
+  <code>start-work</code> is retired. Its main value was updating GitHub Projects status; without
+  that, it adds nothing that <code>/lore-development:implement</code> doesn't already cover.
+  <code>gh-api-scripts</code> becomes dead code and is deleted. The vision document's anti-goal
+  ("the backlog lives in GitHub") contradicts Principle 3 (file-based state is a deliberate
+  constraint) — the vision must be updated to reflect this direction change.
+</p>
+
+<h2>Change summary</h2>
+
+<table>
+  <tr><th>Item</th><th>Before</th><th>After</th></tr>
+  <tr><td><code>compass-rose/add-item</code></td><td>Creates GitHub Issue + links to Project</td><td>Creates <code>.lore/work/issues/</code> HTML file</td></tr>
+  <tr><td><code>compass-rose/next-item</code></td><td>Queries GitHub Projects GraphQL API</td><td>Reads local issue files, sorts by priority meta</td></tr>
+  <tr><td><code>compass-rose/backlog</code></td><td>Queries GitHub Projects, spawns analyzer</td><td>Reads local issue files, spawns analyzer</td></tr>
+  <tr><td><code>compass-rose/reprioritize</code></td><td>Full codebase scan + batch GitHub API updates</td><td>Scan + update local file meta; no batch API calls, no saved report</td></tr>
+  <tr><td><code>compass-rose/start-work</code></td><td>Updates GitHub status, loads issue</td><td><span class="badge badge-retire">Retired</span></td></tr>
+  <tr><td><code>compass-rose/gh-api-scripts</code></td><td>GitHub Projects API scripts + tests</td><td><span class="badge badge-retire">Deleted</span></td></tr>
+  <tr><td><code>lore-development/file-issue</code></td><td>Standalone issue-filing skill</td><td><span class="badge badge-retire">Retired</span> (superseded by add-item)</td></tr>
+  <tr><td><code>.compass-rose/</code> directory</td><td>Required per-repo config directory</td><td><span class="badge badge-retire">Deleted</span> (entire directory, no config needed)</td></tr>
+  <tr><td><code>compass-rose/README.md</code></td><td>870-line GitHub Projects documentation</td><td>Rewritten for file-based model; all GitHub Projects content removed</td></tr>
+  <tr><td><code>lore-development/README.md</code></td><td>Lists <code>file-issue</code> in skills table</td><td>Updated to remove <code>file-issue</code> row; no broken skill reference</td></tr>
+  <tr><td>Agents: <code>backlog-analyzer</code>, <code>codebase-scanner</code></td><td>Work against GitHub Projects data</td><td><span class="badge badge-keep">Kept</span>, work against local issue files</td></tr>
+</table>
+
+<h2>Issue file format</h2>
+
+<p>
+  Issues use the standard lore document schema. Two additional meta tags carry structured metadata:
+</p>
+<ul>
+  <li><code>&lt;meta name="priority" content="P0|P1|P2|P3"&gt;</code> — optional; P0 is most urgent</li>
+  <li><code>&lt;meta name="size" content="S|M|L|XL"&gt;</code> — optional</li>
+</ul>
+<p>
+  Status values follow the document schema: <code>open</code>, <code>resolved</code>,
+  <code>wontfix</code>, <code>archived</code>. Filename is kebab-case of the issue title.
+</p>
+
+<h2>Requirements</h2>
+
+<!-- REQ-CR-1 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-1" href="#REQ-CR-1">REQ-CR-1</a></span>
+    <span class="req-title">Zero config — no setup required to use any skill</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      No configuration file, no GitHub authentication, no external dependency of any kind.
+      All skills work immediately in any repository. The <code>.compass-rose/</code> directory
+      and its <code>config.json</code> are removed from the plugin entirely.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-2 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-2" href="#REQ-CR-2">REQ-CR-2</a></span>
+    <span class="req-title">Issues are HTML files in <code>.lore/work/issues/</code></span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      All issue files conform to the lore document schema. Required meta fields: <code>date</code>,
+      <code>status</code>, <code>tags</code>. Optional structured meta fields: <code>priority</code>
+      (P0–P3) and <code>size</code> (S/M/L/XL). Filename is kebab-case of the issue title.
+    </p>
+    <p>
+      The body is freeform HTML: observation, why it matters, fix direction if known. A visible
+      status badge and priority indicator are required in the rendered output.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-3 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-3" href="#REQ-CR-3">REQ-CR-3</a></span>
+    <span class="req-title"><code>add-item</code> replaces <code>lore-development:file-issue</code></span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      <code>add-item</code> prompts for title, description, priority (P0–P3, optional), and size
+      (S/M/L/XL, optional). Status always defaults to <code>open</code> — no prompt needed.
+      It creates a conforming issue file at <code>.lore/work/issues/[kebab-title].html</code>.
+    </p>
+    <p>
+      There is no XL escalation prompt. The nudge to spec large items before starting work was
+      part of <code>start-work</code>'s flow, which is retired. Users can invoke
+      <code>/lore-development:specify</code> directly when they judge it necessary.
+    </p>
+    <p>
+      If the observation is too vague to write up clearly, the skill says so rather than filing
+      a placeholder. After filing, the skill moves on — it does not work the issue.
+    </p>
+    <p>
+      The <code>file-issue</code> skill in lore-development is retired. Its <code>SKILL.md</code>
+      is removed. <code>lore-development/README.md</code> must be updated to remove the
+      <code>file-issue</code> row from the skills table.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-4 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-4" href="#REQ-CR-4">REQ-CR-4</a></span>
+    <span class="req-title"><code>next-item</code> works from local issue files</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      Reads all <code>.lore/work/issues/*.html</code> files with <code>status: open</code>.
+      Sorts by priority (P0 &gt; P1 &gt; P2 &gt; P3 &gt; unprioritized), then by date ascending.
+      Displays top 2–3 options in a table with title, priority, size, and date. Provides a
+      recommendation with rationale.
+    </p>
+    <p>
+      If no open issues exist, says so clearly and suggests <code>add-item</code>.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-5 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-5" href="#REQ-CR-5">REQ-CR-5</a></span>
+    <span class="req-title"><code>backlog</code> works from local issue files</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      Reads all issue files with status <code>open</code> or <code>wontfix</code> (wontfix items
+      are deferred, not done — intentionally included so they surface if priority context changes).
+      Spawns the <code>backlog-analyzer</code> agent to score each issue on clarity, completeness,
+      and fix direction. Reports: top 2–3 recommendations, a health summary (priority distribution,
+      definition quality breakdown), and a list of vague items needing clarification.
+    </p>
+    <p>
+      The <code>backlog-analyzer</code> agent is updated to accept a file-based input array instead
+      of GitHub Projects GraphQL JSON. New input shape per item:
+    </p>
+    <pre><code>{ filepath, title, priority, size, status, date, body }</code></pre>
+    <p>
+      Output format is unchanged (scored recommendations + health summary), but issue references
+      use file paths instead of GitHub issue numbers and URLs.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-6 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-6" href="#REQ-CR-6">REQ-CR-6</a></span>
+    <span class="req-title"><code>reprioritize</code> is simplified: scan + update local meta</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      Reads all open issue files. Spawns the <code>codebase-scanner</code> agent to compare issue
+      descriptions against current code. For each issue, the agent reports whether it appears
+      already resolved, unchanged, more urgent, or less urgent than its current priority.
+    </p>
+    <p>
+      Presents recommendations with codebase evidence. After user confirmation, updates the
+      <code>priority</code> and/or <code>status</code> meta tags in the affected HTML files directly.
+      No batch GitHub API calls. No report file saved to disk.
+    </p>
+    <p>
+      The <code>codebase-scanner</code> agent is updated to accept the same file-based input array
+      as <code>backlog-analyzer</code>: <code>{ filepath, title, priority, size, status, date, body }</code>.
+      Its output changes from <code>gh project item-edit</code> batch commands to a list of
+      file path + meta field update pairs that the skill applies directly. All other output
+      structure (recommendations table, codebase evidence, confidence levels) is unchanged.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-7 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-7" href="#REQ-CR-7">REQ-CR-7</a></span>
+    <span class="req-title"><code>start-work</code> and <code>gh-api-scripts</code> are removed</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      The <code>start-work</code> skill directory is deleted. The <code>gh-api-scripts</code>
+      skill directory (scripts and tests) is deleted. No references to either remain in the plugin.
+    </p>
+  </div>
+</div>
+
+<!-- REQ-CR-8 -->
+<div class="req">
+  <div class="req-header" onclick="this.parentElement.querySelector('.req-body').toggleAttribute('hidden')">
+    <span class="req-id"><a id="REQ-CR-8" href="#REQ-CR-8">REQ-CR-8</a></span>
+    <span class="req-title">READMEs updated; vision document updated</span>
+    <span class="badge badge-open">Open</span>
+  </div>
+  <div class="req-body">
+    <p>
+      <strong>compass-rose/README.md</strong>: The current README documents GitHub Projects setup,
+      auth scopes, config file format, and skills that are being deleted. It is rewritten to
+      describe the file-based model: issue file format, the four surviving skills, and zero-config
+      operation. All GitHub Projects references are removed.
+    </p>
+    <p>
+      <strong>lore-development/README.md</strong>: The skills table currently lists
+      <code>/lore-development:file-issue</code>. That row is removed. No replacement row is
+      needed — <code>compass-rose:add-item</code> is the replacement and lives in a different plugin.
+    </p>
+    <p>
+      <strong>.lore/reference/vision.md</strong>: The vision currently contains a direct conflict —
+      an anti-goal states "the backlog lives in GitHub," while Principle 3 states file-based state
+      is a deliberate constraint. The anti-goal is updated to reflect that compass-rose is now a
+      file-based tracker and GitHub Projects is no longer part of the system.
+      <em>Note: the file exists as <code>vision.md</code>, not <code>vision.html</code> — the
+      document schema's canonical path differs from reality here.</em>
+    </p>
+  </div>
+</div>
+
+<div id="validation">
+  <h2>AI Validation</h2>
+  <p>After implementation, verify the following behaviorally:</p>
+  <ol>
+    <li>
+      <strong>Zero config:</strong> Run <code>/compass-rose:add-item</code> in a repo with no
+      <code>.compass-rose/</code> directory and no <code>gh</code> authentication. The skill
+      completes without error and creates a file in <code>.lore/work/issues/</code>.
+    </li>
+    <li>
+      <strong>Issue file conformance:</strong> Inspect the created file — it must have valid
+      <code>date</code>, <code>status: open</code>, <code>tags</code> meta fields, and optional
+      <code>priority</code> / <code>size</code> meta fields if provided. Body must include a
+      visible status badge.
+    </li>
+    <li>
+      <strong>next-item sorting:</strong> Create three issue files with priorities P2, P0, and no
+      priority. Run <code>/compass-rose:next-item</code> and confirm the P0 item is recommended
+      first, P2 second, unprioritized last.
+    </li>
+    <li>
+      <strong>No GitHub Projects calls:</strong> Grep the entire <code>compass-rose/</code>
+      directory for <code>gh project</code>, <code>GraphQL</code>, and <code>config.json</code>
+      references. Zero matches expected.
+    </li>
+    <li>
+      <strong>lore-development cleanup:</strong> Confirm
+      <code>lore-development/skills/file-issue/SKILL.md</code> no longer exists. Confirm
+      <code>lore-development/README.md</code> contains no reference to <code>file-issue</code>.
+    </li>
+    <li>
+      <strong>start-work and gh-api-scripts deleted:</strong> Confirm
+      <code>compass-rose/skills/start-work/</code> and
+      <code>compass-rose/skills/gh-api-scripts/</code> no longer exist.
+    </li>
+    <li>
+      <strong>next-item date tiebreaker:</strong> Create two issue files with the same priority
+      (P1) but different dates. Run <code>/compass-rose:next-item</code> and confirm the older
+      file appears first.
+    </li>
+    <li>
+      <strong>reprioritize updates files:</strong> Create an open issue file with
+      <code>priority: P2</code>. Run <code>/compass-rose:reprioritize</code> against a repo where
+      the issue is clearly resolved. Confirm that after approval, the file's meta tag is updated
+      (priority changed or status set to <code>resolved</code>).
+    </li>
+  </ol>
+</div>
+
+<script>
+  // All req-body divs open by default; toggle on header click handled by onclick.
+  // Nothing to initialize.
+</script>
+
+</body>
+</html>

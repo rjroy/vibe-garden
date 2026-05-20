@@ -1,189 +1,133 @@
 ---
 name: reprioritize
-description: This skill should be used when the user asks to "reprioritize", "update priorities", "scan codebase for relevance", or invokes /compass-rose:reprioritize. Provides codebase-aware priority recommendations with batch update capability.
-allowed-tools: Skill(compass-rose:gh-api-scripts), Bash, Read, Grep, Glob, Agent
+description: Use when the user asks to "reprioritize", "update priorities", "scan codebase for relevance", or invokes /compass-rose:reprioritize. Scans codebase against local issue files and updates their priority/status meta tags.
+allowed-tools: Bash, Read, Glob, Edit, Agent
 ---
 
 # Reprioritize Mode
 
-You are now in **Reprioritize Mode**. Your role is to analyze the current codebase state and compare it against GitHub Project items to provide data-driven priority change recommendations. You identify issues that may be resolved, outdated, more urgent, or more feasible based on recent code changes.
+You are now in **Reprioritize Mode**. Your role is to analyze the current codebase state against local issue files and provide data-driven priority change recommendations. You identify issues that may be resolved, outdated, more urgent, or more feasible based on recent code changes.
 
 ## Your Focus
 
-- **Item querying**: Fetch all project items using `gh-api-scripts list-issues`
-- **Codebase analysis**: Spawn codebase-scanner agent to assess relevance
-- **Recommendation presentation**: Show priority changes with evidence-based rationale
-- **Batch updates**: Execute approved changes via `gh-api-scripts` operations (`set-priority`, `set-status`)
-- **Summary reporting**: Report count of changes made
-
-## Required Skills
-
-**IMPORTANT**: Before performing any GitHub Project operations, you MUST invoke the `compass-rose:gh-api-scripts` skill using the Skill tool:
-
-```
-Skill(compass-rose:gh-api-scripts)
-```
-
-This skill provides:
-- `list-issues` - Fetch all project items
-- `set-priority` - Update priority field
-- `set-status` - Update status field
-
-**Do NOT use raw `gh project` commands.** The skill documentation shows exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
+- **Issue reading**: Load all open issues from `.lore/work/issues/*.html`
+- **Codebase analysis**: Spawn `codebase-scanner` agent to assess relevance
+- **Recommendation presentation**: Show priority/status changes with evidence-based rationale
+- **Meta tag updates**: Apply approved changes directly to the HTML files
 
 ## Workflow
 
-### 1. Query All Project Items
+### 1. Read All Open Issues
 
-Use the `list-issues` operation from the `gh-api-scripts` skill (which you invoked above). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
-
-**Output Format** (JSON):
-```json
-{
-  "success": true,
-  "data": {
-    "issues": [
-      {
-        "number": 42,
-        "title": "Fix login timeout",
-        "body": "Description...",
-        "url": "https://github.com/...",
-        "state": "OPEN",
-        "labels": ["bug", "priority-high"],
-        "status": "Ready",
-        "priority": "P0",
-        "size": "S"
-      }
-    ],
-    "count": 15
-  }
-}
-```
-
-**Item Filtering** (filter BEFORE passing to agent):
-- The script already filters to OPEN issues only
-- Exclude items with "Done" project status (completed work):
+Use Glob to find all HTML files under `.lore/work/issues/`:
 
 ```bash
-# Filter out "Done" status items
-echo "$RESPONSE" | jq '[
-  .data.issues[] |
-  select(.status | test("done"; "i") | not)
-]'
+find .lore/work/issues -name "*.html" 2>/dev/null
 ```
 
-**If no open items found**:
-```
-No open items found for reprioritization.
+For each file found, use Read to extract the meta tags and body content. The relevant tags are:
 
-All issues in the project are either closed or marked as Done.
-```
-
-**If large backlog detected (>50 items)**:
-```
-Large backlog detected: 75 items to analyze.
-
-This may take 5-10 minutes to complete. Continue? (y/n)
+```html
+<meta name="title" content="...">
+<meta name="priority" content="...">
+<meta name="size" content="...">
+<meta name="status" content="...">
+<meta name="date" content="...">
 ```
 
-Wait for user confirmation before proceeding with large backlogs.
+Filter to only files where `<meta name="status" content="open">`.
+
+**If no open issues exist**:
+
+```
+No open issues found in .lore/work/issues/.
+
+Nothing to reprioritize.
+```
+
+Stop here.
+
+**If a large set is detected (>50 open issues)**:
+
+```
+Large backlog detected: [N] open issues to analyze.
+
+This may take 5-10 minutes. Continue? (y/n)
+```
+
+Wait for confirmation before proceeding.
 
 ### 2. Spawn Codebase Scanner Agent
 
-Invoke the `codebase-scanner` agent with the filtered project items:
+Build a JSON array from the parsed issue files and pass it to the `codebase-scanner` agent:
 
 **Agent Input Format**:
 ```json
 {
   "items": [
     {
-      "id": "PVTI_...",
+      "filepath": ".lore/work/issues/fix-login-timeout.html",
       "title": "Fix login timeout",
       "body": "Users experiencing timeouts after 30 seconds...",
       "priority": "P1",
       "size": "M",
-      "status": "Ready",
-      "url": "https://github.com/org/repo/issues/123"
-    },
-    ...
-  ],
-  "project": {
-    "owner": "my-org",
-    "number": 42
-  }
+      "status": "open",
+      "date": "2026-05-01"
+    }
+  ]
 }
 ```
 
 **Agent Invocation**:
 ```
-You are the codebase-scanner agent. Analyze the codebase and assess the relevance of these GitHub Project issues:
+You are the codebase-scanner agent. Analyze the codebase and assess the relevance of these local issues:
 
-[JSON data with items and project info]
+[JSON data]
 
 Follow the codebase-scanner agent protocol defined in compass-rose/agents/codebase-scanner.md.
 
 Explore the codebase structure, check recent git activity, and analyze each issue to determine if:
-- Feature already exists (recommend closing)
+- Feature already exists (recommend status: resolved)
 - Issue is outdated or superseded (recommend lowering priority)
 - Issue is more urgent due to recent changes (recommend raising priority)
-- Issue is more feasible due to completed prerequisites (recommend moving to Ready)
-- Issue remains valid as-is (no change needed)
+- Issue is more feasible due to completed prerequisites (recommend raising priority or status: ready)
+- Issue remains valid as-is (no change)
 
-Return structured markdown report with priority change recommendations, confidence levels, and codebase evidence.
+Return a structured markdown report with recommendations, confidence levels, and codebase evidence.
 ```
 
-**Expected Output**: Markdown report following the format defined in `codebase-scanner.md`
-
-**Processing Time**:
-- Small backlog (<20 items): 2-4 minutes
-- Medium backlog (20-50 items): 4-8 minutes
-- Large backlog (50+ items): 8-15 minutes
-
-Show progress indicator:
-```
-Analyzing codebase and assessing issue relevance...
-
-Phase 1: Exploring codebase structure and recent activity...
-Found 15 commits in last 30 days
-Identified 8 primary directories
-Most active area: src/auth/
-
-Phase 2: Analyzing issues...
-[Progress: 5/25 issues analyzed]
-```
+**Expected Output**: Structured markdown report following the format defined in `codebase-scanner.md`.
 
 ### 3. Present Recommendations
 
-Display the agent's findings with clear categorization:
+Display the agent's findings:
 
 ```markdown
 ## Reprioritization Analysis Complete
 
-**Items Analyzed**: 25
+**Issues Analyzed**: 25
 **Recommendations**: 10 changes proposed
 
 ### Summary
 
 - **Increase Priority**: 2 issues (prerequisites now met)
 - **Decrease Priority**: 4 issues (less urgent than before)
-- **Mark Resolved/Close**: 3 issues (feature already implemented)
+- **Mark Resolved**: 3 issues (feature already implemented)
 - **No Change**: 16 issues (remain valid as-is)
 
 ### High Confidence Changes (7 items)
 
-| Issue | Current | Recommended | Rationale |
-|-------|---------|-------------|-----------|
-| #123: Fix login timeout | P1 | Close | Feature implemented in auth/login.ts (commit abc123, 2025-11-15) |
-| #456: Add OAuth support | P2 | P0 | Auth system refactored, OAuth integration now feasible |
-| #789: Migrate to PostgreSQL | P1 | P3 | DB abstraction added, migration no longer urgent |
-
-**Codebase Evidence**: Click any issue number to see detailed findings below.
+| File | Current | Recommended | Rationale |
+|------|---------|-------------|-----------|
+| fix-login-timeout.html | P1 | resolved | Feature implemented in auth/login.ts (commit abc123, 2025-11-15) |
+| add-oauth-support.html | P2 | P0 | Auth system refactored, OAuth integration now feasible |
+| migrate-to-postgresql.html | P1 | P3 | DB abstraction added, migration no longer urgent |
 
 ### Medium Confidence Changes (3 items)
 
-| Issue | Current | Recommended | Rationale |
-|-------|---------|-------------|-----------|
-| #234: Improve error handling | P2 | P1 | Error handling recently modified in 5 files, consistency important |
+| File | Current | Recommended | Rationale |
+|------|---------|-------------|-----------|
+| improve-error-handling.html | P2 | P1 | Error handling recently modified in 5 files, consistency important |
 
 **Note**: Medium confidence recommendations should be reviewed before applying.
 
@@ -191,9 +135,9 @@ Display the agent's findings with clear categorization:
 
 ## Detailed Findings
 
-### Issue #123: Fix login timeout
+### fix-login-timeout.html
 **Current Priority**: P1
-**Recommended**: Close (mark as resolved)
+**Recommended**: status → resolved
 **Confidence**: High
 
 **Codebase Evidence**:
@@ -202,113 +146,81 @@ Display the agent's findings with clear categorization:
 - Tests cover timeout scenarios (`tests/auth/login.test.ts`)
 - Recent commit: "Add session timeout handling" (commit abc123)
 
-**Rationale**: The feature described in this issue is fully implemented with test coverage. Issue can be closed.
+**Rationale**: The feature described in this issue is fully implemented with test coverage.
 
-[... Continue with detailed findings for each recommendation ...]
+[... continue for each recommendation ...]
 
 ---
 
 Would you like to proceed with these changes?
 
 Options:
-1. **Apply all high confidence changes** (7 items)
+1. **Apply all high confidence changes** ([N] items)
 2. **Review and select specific changes** (show checklist)
 3. **Cancel** (no changes made)
 
 Enter choice (1/2/3):
 ```
 
-**User Selection Handling**:
+### 4. Apply Updates
 
-**Option 1**: Apply all high confidence changes immediately
-**Option 2**: Show interactive checklist for user to select specific items
-**Option 3**: Exit without making changes
+For Option 1: apply all high confidence changes.
+For Option 2: show a checklist of all recommended changes; apply only the ones the user selects.
+For Option 3: exit without changes.
 
-### 4. Batch Update Execution
+For each approved change, use the Edit tool to update the relevant meta tag in the target HTML file.
 
-For approved changes, use the `set-priority` and `set-status` operations from the `gh-api-scripts` skill (which you invoked earlier). The skill documentation shows the exact command syntax using `${CLAUDE_PLUGIN_ROOT}`.
+**Priority update example** (changing priority to P0 in `fix-login-timeout.html`):
 
-For items marked to close, also use `gh issue close` with an appropriate comment.
+Update the `content` attribute of `<meta name="priority" content="...">` to the new value.
 
-**Error Handling During Batch Update**:
+**Status update example** (marking as resolved):
 
-If an update fails:
-```
-Error updating #456: API rate limit exceeded
+Update the `content` attribute of `<meta name="status" content="open">` to `resolved`.
 
-Successfully updated: 5 items
-Failed updates: 1 item (#456)
-
-Retry failed items? (y/n)
-```
-
-Track successes and failures separately. Allow retry for failed items.
-
-### 5. Report Summary
-
-After batch update completes, show final summary:
+After applying all changes, show a summary:
 
 ```markdown
 ## Reprioritization Complete
 
-**Total Items Analyzed**: 25
-**Updates Applied**: 10 items changed
+**Issues Analyzed**: 25
+**Updates Applied**: 7 items changed
 
 ### Changes Applied
 
 - **Priority Increased**: 2 issues
-  - #456: Add OAuth support (P2 -> P0)
+  - add-oauth-support.html (P2 -> P0)
 
 - **Priority Decreased**: 4 issues
-  - #789: Migrate to PostgreSQL (P1 -> P3)
-  - #890: Refactor authentication (P1 -> P2)
-  - #901: Add caching layer (P2 -> P3)
-  - #912: Update documentation (P1 -> P2)
+  - migrate-to-postgresql.html (P1 -> P3)
+  - refactor-authentication.html (P1 -> P2)
+  - add-caching-layer.html (P2 -> P3)
+  - update-documentation.html (P1 -> P2)
 
-- **Closed as Resolved**: 3 issues
-  - #123: Fix login timeout (feature already implemented)
-  - #234: Add session management (feature already implemented)
-  - #345: Improve error messages (feature already implemented)
+- **Marked Resolved**: 1 issue
+  - fix-login-timeout.html
 
-- **No Change**: 16 issues remain at current priority
+- **No Change**: 18 issues remain at current priority
 
 **Next Steps**:
-- Review the updated backlog: `/compass-rose:next-item`
-- View all items: `gh project view $NUMBER --owner $OWNER`
-- Start work on highest priority item: `/compass-rose:start-work`
-
-**Report saved to**: `.compass-rose/reprioritize-report-YYYY-MM-DD.md`
+- View open issues: `/compass-rose:backlog`
 ```
 
-Save the detailed report (including all findings and evidence) to `.compass-rose/reprioritize-report-YYYY-MM-DD.md` for future reference.
-
-## Edge Cases and Error Handling
+## Edge Cases
 
 ### No Changes Recommended
 
 ```
 ## Reprioritization Analysis Complete
 
-**Items Analyzed**: 25
+**Issues Analyzed**: 25
 **Recommendations**: No changes needed
 
-All issues remain relevant at their current priorities. The codebase state aligns well with the current backlog prioritization.
+All issues remain relevant at their current priorities. The codebase state aligns well with the current backlog.
 
 **Next Steps**:
 - Continue with current priorities: `/compass-rose:next-item`
 - Review backlog for definition quality: `/compass-rose:backlog`
-```
-
-### Authentication Issues
-
-```
-Error: GitHub CLI is not authenticated or lacks project scope.
-
-Run the following commands to authenticate:
-  gh auth login
-  gh auth refresh -s project
-
-After authentication, try running /compass-rose:reprioritize again.
 ```
 
 ### Git Repository Not Found
@@ -321,183 +233,22 @@ The codebase scanner requires git history to assess issue relevance based on rec
 Continue with limited analysis? (y/n)
 ```
 
-If user continues, agent will skip git-based analysis and focus only on feature existence checks.
-
-### Large Backlog Timeout
-
-If analysis exceeds reasonable time (>15 minutes):
-
-```
-Analysis taking longer than expected (15+ minutes).
-
-Options:
-1. Continue waiting (may take up to 30 minutes for 100+ issues)
-2. Cancel and filter backlog (analyze only P0/P1 items)
-3. Abort
-
-Enter choice (1/2/3):
-```
-
-### Partial Update Failure
-
-If some updates succeed but others fail:
-
-```
-Batch update completed with errors.
-
-Successfully updated: 8 of 10 items
-
-Failed updates:
-- #456: Add OAuth support (P2 -> P0) - Rate limit exceeded
-- #789: Migrate to PostgreSQL (P1 -> P3) - Item not found
-
-Options:
-1. Retry failed items
-2. Continue without retrying (manual fix required)
-
-Enter choice (1/2):
-```
-
-## Requirements Mapping
-
-This skill implements the following specification requirements:
-
-- **REQ-F-14**: Explore current codebase state before reprioritizing
-- **REQ-F-15**: Compare issue descriptions against codebase to assess relevance
-- **REQ-F-16**: Batch-update priorities via `gh` CLI
-- **REQ-F-17**: Report summary of changes made
-- **REQ-NF-1**: Use only `gh` CLI for GitHub interactions
-- **REQ-NF-3**: Handle missing custom fields gracefully (requires Priority field for operation)
-- **REQ-NF-4**: Explain reasoning when making recommendations
-
-## Performance Targets
-
-- **Item listing**: <3s (up to 500 items, includes pagination)
-- **Codebase analysis**: 2-15 minutes (depends on backlog size)
-- **Batch update**: ~1s per item (sequential `set-priority`/`set-status` calls)
-
-## Implementation Notes
-
-**Codebase Scanner Integration**:
-- Agent is defined in `compass-rose/agents/codebase-scanner.md`
-- Agent has access to: Glob, Grep, Read, Bash tools
-- Agent analyzes git history, file structure, and code patterns
-- Agent returns structured markdown report with recommendations
-
-**Priority Field Requirement**:
-- Unlike `/compass-rose:next-item` which degrades gracefully without Priority field, `/compass-rose:reprioritize` requires it
-- Cannot change priorities if Priority field doesn't exist
-- Clear error message directs user to add Priority field to project
-
-**Batch Update Limitations**:
-- Each `set-priority`/`set-status` operation is a separate API call
-- Must make separate API call for each item being updated
-- Sequential execution (not parallel) to avoid rate limiting
-- Each update takes ~1 second (rate limiting consideration)
-
-**Data Freshness**:
-- Always fetch fresh data (no caching between sessions per spec constraint)
-- Ensures recommendations reflect current project and codebase state
-
-**CLI Dependencies**:
-- `gh` CLI installed and authenticated
-- `project` scope authorized (`gh auth refresh -s project`)
-- `jq` for JSON filtering (optional - script handles parsing)
-- `git` for codebase analysis
-- Python 3.12+ for `gh-api-scripts` skill
+If the user continues, the agent skips git-based analysis and focuses on feature existence checks only.
 
 ## Anti-Patterns to Avoid
 
-- **Don't use raw gh commands**: Always use gh-api-scripts skill for GitHub Project operations
-- **Don't cache project data**: Always fetch fresh data from GitHub
-- **Don't skip user approval**: Always get explicit confirmation before batch updates
+- **Don't skip user approval**: Always get explicit confirmation before applying updates
 - **Don't auto-apply medium confidence changes**: Require review for uncertain recommendations
 - **Don't update without evidence**: Every recommendation must cite specific codebase evidence
-- **Don't fail silently**: Report all errors clearly with actionable fix instructions
-- **Don't update Done items**: Filter out completed items before analysis
-- **Don't proceed without Priority field**: Clear error if field missing
+- **Don't save a report file**: Present findings inline; no disk artifact
+- **Don't use GitHub API**: All reads and writes are local HTML file operations only
 
 ## Related Skills
 
 - `/compass-rose:next-item` - View highest priority ready item after reprioritization
-- `/compass-rose:backlog` - Review backlog for definition quality (complementary analysis)
-- `/compass-rose:start-work` - Begin work on an item
-- `/compass-rose:add-item` - Create new issue and add to project
+- `/compass-rose:backlog` - Review backlog for definition quality
+- `/compass-rose:add-item` - Create a new issue file
 
-## Example Session
+## Requirements Mapping
 
-```
-User: /compass-rose:reprioritize
-
-Querying project items...
-Found 25 open issues (excluding Done items)
-
-Spawning codebase-scanner agent...
-
-Analyzing codebase and assessing issue relevance...
-
-Phase 1: Exploring codebase structure...
-Found 15 commits in last 30 days
-Identified src/, tests/, docs/ directories
-Most active area: src/auth/ (8 commits)
-
-Phase 2: Analyzing issues...
-[Progress: 25/25 issues analyzed]
-
----
-
-## Reprioritization Analysis Complete
-
-**Items Analyzed**: 25
-**Recommendations**: 7 changes proposed
-
-### Summary
-- Increase Priority: 2 issues
-- Decrease Priority: 3 issues
-- Mark Resolved: 2 issues
-- No Change: 18 issues
-
-### High Confidence Changes (5 items)
-
-| Issue | Current | Recommended | Rationale |
-|-------|---------|-------------|-----------|
-| #123: Fix login timeout | P1 | Close | Feature implemented in auth/login.ts |
-| #456: Add OAuth support | P2 | P0 | Auth refactoring makes this now feasible |
-| #789: DB migration | P1 | P3 | Abstraction layer reduces urgency |
-| #890: Error handling | P2 | P1 | Recent changes in 5 files need consistency |
-| #901: Cache layer | P2 | P3 | Performance acceptable, can defer |
-
-[... Full report with detailed findings ...]
-
-Would you like to proceed with these changes?
-
-Options:
-1. Apply all high confidence changes (5 items)
-2. Review and select specific changes
-3. Cancel
-
-Enter choice (1/2/3): 1
-
-Executing priority updates...
-Updated #456: P2 -> P0
-Updated #789: P1 -> P3
-Updated #890: P2 -> P1
-Updated #901: P2 -> P3
-Closed #123 (feature already implemented)
-
-## Reprioritization Complete
-
-**Total Items Analyzed**: 25
-**Updates Applied**: 5 items changed
-
-[... Final summary ...]
-
-Report saved to: .compass-rose/reprioritize-report-2025-12-14.md
-```
-
-## References
-
-- **Spec**: REQ-F-14, REQ-F-15, REQ-F-16, REQ-F-17, REQ-NF-4
-- **Plan**: TD-1 (gh CLI), TD-3 (Stateless), Skill Spec for /compass-rose:reprioritize
-- **Agent**: `compass-rose/agents/codebase-scanner.md` (spawned by this skill)
-- **Skill**: `compass-rose/skills/gh-api-scripts/SKILL.md` (GitHub Project API operations)
+- **REQ-CR-6**: Read local issue files, scan codebase, update meta tags after confirmation

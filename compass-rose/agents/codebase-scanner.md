@@ -18,18 +18,16 @@ This agent is invoked by:
 
 **Purpose**: Provide data-driven priority change recommendations based on actual codebase state rather than issue metadata alone.
 
-**Input**: JSON array of project items from GraphQL query (pre-filtered to OPEN issues only) with fields:
-- `id`: Item ID (PVTI_...)
+**Input**: JSON array of local issue files (pre-filtered to `status: open`) with fields:
+- `filepath`: Path to the issue HTML file (e.g., `.lore/work/issues/fix-login-timeout.html`)
 - `title`: Issue title
-- `body`: Issue description
-- `number`: Issue number
-- `url`: GitHub issue URL
-- `repository`: Repository name (owner/repo)
+- `body`: Issue body HTML
 - `priority`: Current priority (P0/P1/P2/P3 or "Unset")
 - `size`: Estimated size (S/M/L/XL or "Unset")
-- `status`: Project status (Ready, In progress, Backlog, etc.)
+- `status`: Issue status (`open`)
+- `date`: Issue creation date (YYYY-MM-DD)
 
-**Note**: Closed issues are filtered out before agent invocation. All items passed to this agent are OPEN GitHub issues.
+**Note**: Closed and resolved issues are filtered out before agent invocation. All items passed to this agent have `status: open`.
 
 ## Codebase Exploration Strategy
 
@@ -162,26 +160,26 @@ Return structured markdown with priority change recommendations:
 
 ### High Confidence Changes
 
-| Issue | Current | Recommended | Rationale |
-|-------|---------|-------------|-----------|
-| #123: Fix login timeout | P1 | Close | Feature already implemented in auth/login.ts (added 2025-11-15) |
-| #456: Add OAuth support | P2 | P0 | Auth system recently refactored, OAuth integration now feasible |
-| #789: Migrate to PostgreSQL | P1 | P3 | Database abstraction layer added, migration no longer urgent |
+| File | Current | Recommended | Rationale |
+|------|---------|-------------|-----------|
+| fix-login-timeout.html | P1 | resolved | Feature already implemented in auth/login.ts (added 2025-11-15) |
+| add-oauth-support.html | P2 | P0 | Auth system recently refactored, OAuth integration now feasible |
+| migrate-to-postgresql.html | P1 | P3 | Database abstraction layer added, migration no longer urgent |
 
-**Impact**: [X] issues recommended for change ([Y] higher, [Z] lower, [W] close)
+**Impact**: [X] issues recommended for change ([Y] higher, [Z] lower, [W] resolved)
 
 ### Medium Confidence Changes
 
-| Issue | Current | Recommended | Rationale |
-|-------|---------|-------------|-----------|
-| #234: Improve error handling | P2 | P1 | Error handling recently modified in 5 files, consistency now important |
+| File | Current | Recommended | Rationale |
+|------|---------|-------------|-----------|
+| improve-error-handling.html | P2 | P1 | Error handling recently modified in 5 files, consistency now important |
 
 ### No Change Recommended
 
-| Issue | Current | Notes |
-|-------|---------|-------|
-| #345: Add user dashboard | P1 | Not yet started, remains valid |
-| #567: Export to CSV | P2 | Planned feature, no codebase changes affecting it |
+| File | Current | Notes |
+|------|---------|-------|
+| add-user-dashboard.html | P1 | Not yet started, remains valid |
+| export-to-csv.html | P2 | Planned feature, no codebase changes affecting it |
 
 **Total**: [X] issues with no change needed
 
@@ -199,9 +197,9 @@ Return structured markdown with priority change recommendations:
 
 ## Detailed Findings
 
-### Issue #123: Fix login timeout
+### fix-login-timeout.html
 **Current Priority**: P1
-**Recommended**: Close (mark as resolved)
+**Recommended**: status → resolved
 **Confidence**: High
 
 **Codebase Evidence**:
@@ -210,9 +208,9 @@ Return structured markdown with priority change recommendations:
 - Tests cover timeout scenarios (`tests/auth/login.test.ts`)
 - Recent commit: "Add session timeout handling" (commit abc123)
 
-**Rationale**: The feature described in this issue is fully implemented. The login timeout mechanism exists with proper error handling and test coverage. Issue can be closed.
+**Rationale**: The feature described in this issue is fully implemented. The login timeout mechanism exists with proper error handling and test coverage.
 
-### Issue #456: Add OAuth support
+### add-oauth-support.html
 **Current Priority**: P2
 **Recommended**: P0 (increase priority)
 **Confidence**: High
@@ -225,7 +223,7 @@ Return structured markdown with priority change recommendations:
 
 **Rationale**: Recent auth refactoring created the infrastructure needed for OAuth integration. The prerequisite work is complete, making this issue now feasible and timely to implement while auth code is fresh.
 
-### Issue #789: Migrate to PostgreSQL
+### migrate-to-postgresql.html
 **Current Priority**: P1
 **Recommended**: P3 (decrease priority)
 **Confidence**: High
@@ -240,28 +238,22 @@ Return structured markdown with priority change recommendations:
 
 [... continue for all issues with recommendations ...]
 
-## Implementation Notes
+## Updates to Apply
 
-**Batch Update Command**:
-```bash
-# Example gh CLI commands for priority updates (user must approve and execute)
-gh project item-edit --id <ITEM_ID_123> --project-id <PROJECT_ID> --field-id <PRIORITY_FIELD> --single-select-option-id <DONE_OPTION>
-gh project item-edit --id <ITEM_ID_456> --project-id <PROJECT_ID> --field-id <PRIORITY_FIELD> --single-select-option-id <P0_OPTION>
-gh project item-edit --id <ITEM_ID_789> --project-id <PROJECT_ID> --field-id <PRIORITY_FIELD> --single-select-option-id <P3_OPTION>
-```
+| File | Field | New Value |
+|------|-------|-----------|
+| fix-login-timeout.html | status | resolved |
+| add-oauth-support.html | priority | P0 |
+| migrate-to-postgresql.html | priority | P3 |
 
-**Manual Review Recommended**:
-- Issues with medium confidence should be reviewed before changing
-- Check if closed issues have follow-up work needed
-- Verify assumptions about resolved issues with team
+The `/reprioritize` skill reads this table and applies the meta tag updates directly to the listed files. Issues with medium confidence are listed separately for user review before inclusion.
 
 ## Next Steps
 
 1. Review high confidence recommendations
 2. Approve priority changes or provide feedback
-3. Execute batch update via gh CLI
-4. Close resolved issues with reference to implementing commit
-5. Update issue descriptions if codebase changes warrant clarification
+3. Apply meta tag updates to local HTML files (priority and/or status)
+4. Update issue descriptions if codebase changes warrant clarification
 ```
 
 ## Scanning Process
@@ -270,7 +262,7 @@ gh project item-edit --id <ITEM_ID_789> --project-id <PROJECT_ID> --field-id <PR
 
 ```bash
 # Receive JSON array of project items from /reprioritize command
-# Parse essential fields: id, title, body, priority, url
+# Parse essential fields: filepath, title, body, priority, size, status, date
 ```
 
 ### Step 2: Explore Codebase Baseline
@@ -388,15 +380,15 @@ For each issue in input array:
 
 ```
 User: /reprioritize
-→ Command loads config (.compass-rose/config.json)
-→ Command fetches project items via gh CLI
-→ Command spawns codebase-scanner agent with JSON input
+→ Skill reads .lore/work/issues/*.html (status: open only)
+→ Skill builds JSON array from parsed meta tags and body
+→ Skill spawns codebase-scanner agent with JSON input
 → Agent explores codebase and analyzes issues
-→ Agent returns recommendations
-→ Command presents findings to user
-→ User approves changes (or modifies)
-→ Command executes batch updates via gh CLI
-→ Command reports summary: "Updated 10 of 60 issues"
+→ Agent returns structured recommendations
+→ Skill presents findings to user
+→ User approves changes (or selects specific items)
+→ Skill updates meta tags directly in the HTML files
+→ Skill reports summary: "Updated 10 of 25 issues"
 ```
 
 ### Data Flow
@@ -406,25 +398,20 @@ User: /reprioritize
 {
   "items": [
     {
-      "id": "ITEM_ID_123",
+      "filepath": ".lore/work/issues/fix-login-timeout.html",
       "title": "Fix login timeout",
       "body": "Users experiencing timeouts after 30 seconds...",
       "priority": "P1",
       "size": "M",
-      "status": "Ready",
-      "url": "https://github.com/org/repo/issues/123"
-    },
-    ...
-  ],
-  "project": {
-    "owner": "my-org",
-    "number": 42
-  }
+      "status": "open",
+      "date": "2026-05-01"
+    }
+  ]
 }
 ```
 
 **Output from Agent**:
-Markdown report (see Output Format above)
+Markdown report (see Output Format above), including the "Updates to Apply" table the skill uses to write changes back to disk.
 
 ## Key Principles
 
@@ -432,7 +419,7 @@ Markdown report (see Output Format above)
 - **Conservative**: When in doubt, don't recommend changes (maintain existing priority)
 - **Transparent**: Always explain WHY a change is recommended with codebase evidence
 - **Efficient**: Use targeted searches, not exhaustive codebase reads
-- **Actionable**: Provide ready-to-execute gh CLI commands for batch updates
+- **Actionable**: Provide a clear "Updates to Apply" table the skill can execute directly
 - **User-controlled**: Agent recommends, user decides and executes
 
 ## Example Usage
@@ -446,18 +433,17 @@ Scan codebase and assess relevance of 25 project items
 1. Explores codebase structure (finds src/, tests/, config/)
 2. Checks git history (15 commits in last 30 days, auth/ most active)
 3. Analyzes each issue:
-   - Issue #123: Grep finds login timeout code → recommend close
-   - Issue #456: Auth refactor recent → recommend increase priority
-   - Issue #789: DB abstraction added → recommend decrease priority
-4. Returns report with recommendations and confidence levels
-5. Provides batch gh CLI commands for execution
+   - fix-login-timeout.html: Grep finds login timeout code → recommend status: resolved
+   - add-oauth-support.html: Auth refactor recent → recommend increase priority
+   - migrate-to-postgresql.html: DB abstraction added → recommend decrease priority
+4. Returns report with recommendations, confidence levels, and "Updates to Apply" table
 
 **Command response**:
 ```markdown
 Codebase scan complete. Analysis of 25 issues:
 
 **Recommendations**:
-- 3 issues ready to close (feature implemented)
+- 3 issues ready to mark resolved (feature implemented)
 - 2 issues increase priority (prerequisites met)
 - 4 issues decrease priority (less urgent)
 - 16 issues no change (remain valid)
