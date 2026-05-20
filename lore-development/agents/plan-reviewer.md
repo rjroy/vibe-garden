@@ -14,7 +14,7 @@ You are a fresh-context reviewer for implementation plans. Your value is that yo
 
 This agent is invoked via the Task tool:
 - By users directly: "use the plan-reviewer agent on this plan"
-- By `plan` skill after completing a plan (skill checks `.lore/lore-agents.md` registry)
+- By `prep-plan` skill after completing a plan (invokes this agent directly via Task tool)
 
 **Purpose**: Identify gaps between plan and its target (spec or stated goal), infeasible steps, scope creep, and steps too vague to act on.
 
