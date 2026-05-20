@@ -27,8 +27,10 @@ Present the task list to the user for review before saving. Adjust ordering, val
 
 ## Output
 
-Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: pending` and include a `sequence` field for ordering.
+Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. Set `status: pending` and include a `sequence` meta field for ordering.
 
 Each task file body: What, Validation, Why, Files sections.
+
+The output is HTML — give each task file a clear visual status chip (pending / in progress / complete / skipped), the sequence position prominently displayed, and the validation criteria visually separated from the implementation description so a reviewing agent can find them without reading everything. Inline CSS and JS are fine; no external dependencies.
 
 Stop here. The user invokes `/implement` when ready.

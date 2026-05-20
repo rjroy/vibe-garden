@@ -23,4 +23,6 @@ Build an implementation plan the user can review and approve before any code is 
 
 ## Saving
 
-Save to `.lore/work/plans/[feature-name].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. The document body is freeform — what matters is that steps are concrete (files, functions, changes) and the source artifact or goal is clearly referenced so validation has something to check against.
+Save to `.lore/work/plans/[feature-name].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. The document body is freeform — what matters is that steps are concrete (files, functions, changes) and the source artifact or goal is clearly referenced so validation has something to check against.
+
+The output is HTML — make the plan navigable. A visual step sequence with dependency indicators, expandable detail per step, and a clear reference to the source artifact at the top. If steps have validation gates, distinguish them visually from the implementation description. Inline CSS and JS are fine; no external dependencies.

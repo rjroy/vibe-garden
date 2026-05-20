@@ -11,4 +11,6 @@ End with a decision. A design without one is just research.
 
 ## Saving
 
-Save to `.lore/work/design/[topic].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing. The document body is freeform — capture the problem, the exploration, and the decision.
+Save to `.lore/work/design/[topic].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields before writing.
+
+The output is HTML — use it. Tabbed sections for alternatives under consideration, side-by-side comparison tables for trade-offs, a prominent callout box for the final decision. Architecture or flow diagrams rendered as inline SVG beat description alone when topology is what matters. Inline CSS and JS are fine; no external dependencies.

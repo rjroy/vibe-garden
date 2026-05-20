@@ -11,4 +11,6 @@ Synthesize what you find into a saved document. Don't just dump links — captur
 
 ## Saving
 
-Save to `.lore/work/research/[topic].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Use the `date:` field — research goes stale and future sessions need to know when it was gathered. The document body is freeform.
+Save to `.lore/work/research/[topic].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. Include the `date` meta — research goes stale and future sessions need to know when it was gathered.
+
+The output is HTML — use it. A freshness badge near the title, collapsible source summaries, a prominent "Key Findings" section above the detail. Research that buries its conclusions in prose gets skipped. Inline CSS and JS are fine; no external dependencies.

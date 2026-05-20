@@ -7,7 +7,7 @@ description: This skill should be used when the user wants to define the north s
 
 The vision is the north star. It doesn't define requirements or validate behavior — it tells you whether a decision is keeping with the spirit of the project or going against it.
 
-If `.lore/reference/vision.md` already exists, load it and offer to review or revise.
+If `.lore/reference/vision.html` already exists, load it and offer to review or revise.
 
 ## Two Paths
 
@@ -34,4 +34,6 @@ When the document has been reviewed at least once, offer to save. The user can k
 
 ## Saving
 
-Save to `.lore/reference/vision.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: draft` — the user marks it approved. The document body is freeform: what the project is, what it values, what it refuses.
+Save to `.lore/reference/vision.html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. Set `status: draft` — the user marks it approved. The document body is freeform: what the project is, what it values, what it refuses.
+
+The output is HTML — treat this as a document worth reading, not just storing. Each principle as a styled block, anti-goals visually distinguished from values, the project's core identity prominent at the top. This is the document someone reads when a decision feels wrong. Make it feel like it matters. Inline CSS and JS are fine; no external dependencies.

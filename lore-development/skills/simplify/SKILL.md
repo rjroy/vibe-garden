@@ -15,7 +15,7 @@ Invoked as `/simplify` with optional arguments:
 
 - **No args**: simplify files with uncommitted changes (`git status`)
 - **File pattern**: simplify files matching the pattern
-- **Notes path** (`.lore/work/notes/*.md`): resume a previous session
+- **Notes path** (`.lore/work/notes/*.html`): resume a previous session
 
 ## Process
 
@@ -27,7 +27,9 @@ Invoked as `/simplify` with optional arguments:
 
 ## Output
 
-Record what happened in a notes file at `.lore/work/notes/simplify-<identifier>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. The body is freeform — capture which files were processed, what was simplified, any failures and how they were resolved.
+Record what happened in a notes file at `.lore/work/notes/simplify-<identifier>.html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. The body is freeform — capture which files were processed, what was simplified, any failures and how they were resolved.
+
+The output is HTML — a file list with per-file outcome chips (simplified / unchanged / failed), collapsible detail for what changed in each file, and any escalated issues visually flagged. Inline CSS and JS are fine; no external dependencies.
 
 ## Escalation
 

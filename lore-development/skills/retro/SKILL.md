@@ -23,6 +23,8 @@ Write it as prose. Use structure only when it helps the reader follow.
 
 ## Saving
 
-Read relevant work artifacts first (spec, plan, notes) to reconstruct context before writing. Save to `.lore/work/retros/[descriptive-name].md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields.
+Read relevant work artifacts first (spec, plan, notes) to reconstruct context before writing. Save to `.lore/work/retros/[descriptive-name].html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields.
 
 Title describes the work, not a takeaway. "Auth-flow rollout" is a title. "Why we should always test migrations" is not. Tags and modules are how `lore-researcher` finds this later — keep them grep-discoverable.
+
+The output is HTML — let the structure reflect the session. A chronological timeline of what happened, visual callouts for surprises or dead ends, and a clear distinction between what the plan said and what actually occurred. Prose is the default; structure only where it helps the reader follow. Inline CSS and JS are fine; no external dependencies.
