@@ -9,7 +9,7 @@ Define what to build and how to know it's done. Requirements, numbered. Validati
 
 ## Process
 
-Search for related prior work: invoke the `lore-researcher` agent via Task tool with the topic description — wait for the result. Review any relevant lore context. Ask clarifying questions. Draft. Confirm with the user. Save. Then run a fresh-eyes review.
+Search for related prior work: invoke the `lore-researcher` agent via Task tool with the topic description — wait for the result. Review any relevant lore context. Ask clarifying questions. Draft. Save. Then run a fresh-eyes review.
 
 After saving, invoke the `spec-reviewer` agent via Task tool on the saved spec. Present findings and offer to address issues before moving on.
 

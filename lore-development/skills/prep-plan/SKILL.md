@@ -17,7 +17,7 @@ Build an implementation plan the user can review and approve before any code is 
 
 **Draft collaboratively.** Map the goal or requirements to concrete implementation steps. Order by dependency. Flag steps that need specialized expertise. Include a final validation step that checks the implementation against the source artifact.
 
-**Confirm, then save.** Present the plan for user approval before saving.
+**Save.** The saved file is the review vehicle — don't present the plan in chat before saving.
 
 **Fresh-eyes review.** After saving, invoke the `plan-reviewer` agent via Task tool on the saved plan. Present findings and offer to address issues before implementation begins.
 
