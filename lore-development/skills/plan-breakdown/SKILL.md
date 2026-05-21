@@ -23,7 +23,7 @@ For each plan step, define:
 
 Split a step only when it bundles genuinely different concerns with different validation needs. Resist over-decomposition — the value is the validation gates, not artificial granularity.
 
-Present the task list to the user for review before saving. Adjust ordering, validation, or scope based on feedback.
+Save the task list. The saved files are the review vehicle.
 
 ## Output
 
