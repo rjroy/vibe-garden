@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
   <meta charset="UTF-8">
   <title>Compass Rose rework: file-based issue tracker</title>
   <meta name="date" content="2026-05-20">
-  <meta name="status" content="draft">
+  <meta name="status" content="approved">
   <meta name="tags" content="compass-rose, issue-tracking, file-based, refactor, lore-development">
   <meta name="modules" content="compass-rose, lore-development">
   <meta name="req-prefix" content="CR">
@@ -112,7 +110,7 @@
 <h2>Change summary</h2>
 
 <table>
-  <tr><th>Item</th><th>Before</th><th>After</th></tr>
+  <tbody><tr><th>Item</th><th>Before</th><th>After</th></tr>
   <tr><td><code>compass-rose/add-item</code></td><td>Creates GitHub Issue + links to Project</td><td>Creates <code>.lore/work/issues/</code> HTML file</td></tr>
   <tr><td><code>compass-rose/next-item</code></td><td>Queries GitHub Projects GraphQL API</td><td>Reads local issue files, sorts by priority meta</td></tr>
   <tr><td><code>compass-rose/backlog</code></td><td>Queries GitHub Projects, spawns analyzer</td><td>Reads local issue files, spawns analyzer</td></tr>
@@ -124,7 +122,7 @@
   <tr><td><code>compass-rose/README.md</code></td><td>870-line GitHub Projects documentation</td><td>Rewritten for file-based model; all GitHub Projects content removed</td></tr>
   <tr><td><code>lore-development/README.md</code></td><td>Lists <code>file-issue</code> in skills table</td><td>Updated to remove <code>file-issue</code> row; no broken skill reference</td></tr>
   <tr><td>Agents: <code>backlog-analyzer</code>, <code>codebase-scanner</code></td><td>Work against GitHub Projects data</td><td><span class="badge badge-keep">Kept</span>, work against local issue files</td></tr>
-</table>
+</tbody></table>
 
 <h2>Issue file format</h2>
 
@@ -382,5 +380,6 @@
   // Nothing to initialize.
 </script>
 
-</body>
-</html>
+
+
+</body></html>
