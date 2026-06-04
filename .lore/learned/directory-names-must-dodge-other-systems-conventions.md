@@ -1,7 +1,7 @@
 ---
 title: Directory names in a plugin must dodge other systems' conventions
 date: 2026-04-25
-status: active
+status: approved
 tags: [naming, plugin-development, gitignore]
 modules: [lore-development]
 ---

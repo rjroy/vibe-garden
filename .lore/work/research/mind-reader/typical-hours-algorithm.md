@@ -1,7 +1,7 @@
 ---
 title: Typical hours/days algorithm options
 date: 2026-01-31
-status: active
+status: approved
 tags: [algorithm, statistics, baselines, temporal-patterns]
 modules: [mind-reader]
 related: [.lore/work/specs/mind-reader/mind-reader-plugin.md]

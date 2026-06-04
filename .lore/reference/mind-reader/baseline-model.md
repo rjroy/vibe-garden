@@ -1,7 +1,7 @@
 ---
 title: mind-reader baseline model
 date: 2026-04-25
-status: current
+status: approved
 tags: [mind-reader, baseline, bucket-model, temporal-detection]
 modules: [mind-reader]
 ---

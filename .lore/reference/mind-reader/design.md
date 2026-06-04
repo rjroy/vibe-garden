@@ -1,7 +1,7 @@
 ---
 title: mind-reader design principles
 date: 2026-04-25
-status: current
+status: approved
 tags: [mind-reader, design-principles, nudges, ux]
 modules: [mind-reader]
 ---

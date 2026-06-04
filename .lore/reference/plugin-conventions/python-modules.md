@@ -1,7 +1,7 @@
 ---
 title: Python module structure in vibe-garden plugins
 date: 2026-04-25
-status: current
+status: approved
 tags: [plugin-conventions, python, imports, packaging]
 modules: [mind-reader, notify-hook]
 ---

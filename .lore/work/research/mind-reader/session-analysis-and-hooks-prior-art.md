@@ -1,7 +1,7 @@
 ---
 title: Session analysis and hooks prior art
 date: 2026-01-31
-status: active
+status: approved
 tags: [hooks, session-analysis, quantified-self, behavioral-nudges, developer-productivity]
 modules: [mind-reader]
 related: [.lore/work/brainstorm/mind-reader/mind-reader-plugin.md]
