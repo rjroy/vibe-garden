@@ -1,7 +1,7 @@
 ---
 title: mind-reader known limitations
 date: 2026-04-25
-status: current
+status: approved
 tags: [mind-reader, limitations, claude-code-hooks, scope]
 modules: [mind-reader]
 ---

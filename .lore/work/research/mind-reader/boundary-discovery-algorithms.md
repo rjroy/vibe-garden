@@ -1,7 +1,7 @@
 ---
 title: Boundary discovery algorithms for time buckets
 date: 2026-02-01
-status: active
+status: approved
 tags: [algorithm, time-series, segmentation, local-minima, mind-reader]
 modules: [mind-reader]
 related:

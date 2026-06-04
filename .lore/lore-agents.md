@@ -1,7 +1,7 @@
 ---
 title: Lore Agents Registry
 date: 2026-01-30
-status: current
+status: approved
 tags: [registry, agents, reference]
 ---
 

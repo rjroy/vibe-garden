@@ -1,7 +1,7 @@
 ---
 title: Agent Cognitive Architecture Patterns
 date: 2025-02-01
-status: active
+status: approved
 tags: [agent-design, cognitive-architecture, multi-agent]
 modules: [lore-development]
 ---

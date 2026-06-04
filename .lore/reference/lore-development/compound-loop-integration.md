@@ -1,7 +1,7 @@
 ---
 title: Compound-loop integration contract for skills
 date: 2026-04-25
-status: current
+status: approved
 tags: [lore-researcher, compound-loop, skill-authoring]
 modules: [lore-development]
 ---
