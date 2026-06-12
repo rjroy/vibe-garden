@@ -37,7 +37,7 @@ Review through four lenses, spending roughly equal attention on each:
 "What's confusing here? What assumes context I don't have?"
 
 **Before flagging undefined terms:** Check if the term is defined elsewhere in the project:
-- Look for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.html` if the project keeps one)
+- Look for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.md` if the project keeps one)
 - Search other specs in `.lore/work/specs/` for the term
 - Check if it's established domain terminology for this project
 
@@ -92,7 +92,7 @@ Questions to answer:
 ## Process
 
 1. **Identify document**: If path not specified, use Glob to find most recently modified file in `.lore/work/specs/`
-2. **Gather project context**: Check for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.html`) and scan related specs for established terminology
+2. **Gather project context**: Check for definition files under `.lore/reference/` (e.g., `.lore/reference/glossary.md`) and scan related specs for established terminology
 3. **Read completely**: Read the entire document before forming judgments
 4. **Apply lenses**: Work through each lens systematically, using Grep to verify terms are actually undefined before flagging
 5. **Synthesize findings**: Organize feedback by severity (Critical / Important / Minor) and lens

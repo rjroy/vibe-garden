@@ -11,6 +11,6 @@ End with a decision. A design without one is just research.
 
 ## Saving
 
-Save to `.lore/work/design/[topic].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields before writing.
+Save to `.lore/work/design/[topic].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing.
 
-The output is HTML — use it. Tabbed sections for alternatives under consideration, side-by-side comparison tables for trade-offs, a prominent callout box for the final decision. Architecture or flow diagrams rendered as inline SVG beat description alone when topology is what matters. Inline CSS and JS are fine; no external dependencies.
+Write the body Markdown-first per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML when topology or trade-offs need it — inline-SVG architecture or flow diagrams that beat prose, and side-by-side visual comparison of competing options.
