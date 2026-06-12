@@ -11,6 +11,6 @@ Don't rush toward solutions. Don't ask for permission to be wrong. When the sess
 
 ## Saving
 
-Save to `.lore/work/brainstorm/[topic].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields before writing.
+Save to `.lore/work/brainstorm/[topic].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing.
 
-The output is HTML — use it. Visual differentiation between questions, assertions, and dead ends makes the thinking navigable. Collapsible idea threads, callout boxes for open questions, or a simple card layout for competing directions all beat unstyled prose. Inline CSS and JS are fine; no external dependencies.
+Write the body Markdown-first per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a sketch or diagram carries the idea in a way prose can't.

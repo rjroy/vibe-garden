@@ -17,7 +17,7 @@ After saving, invoke the `spec-reviewer` agent via Task tool on the saved spec. 
 
 Number requirements with a namespaced prefix to avoid collisions across specs: `REQ-{PREFIX}-N`
 
-Derive the prefix from the spec filename — take the first 1-2 segments of the kebab-case name, uppercase. `auth-flow.html` → `REQ-AUTH-FLOW`. `checkout.html` → `REQ-CHECKOUT`. Override with a `req-prefix` meta field when the auto-generated prefix is awkward or shorter IDs are preferred.
+Derive the prefix from the spec filename — take the first 1-2 segments of the kebab-case name, uppercase. `auth-flow.md` → `REQ-AUTH-FLOW`. `checkout.md` → `REQ-CHECKOUT`. Override with a `req-prefix` frontmatter field when the auto-generated prefix is awkward or shorter IDs are preferred.
 
 ## Validation
 
@@ -25,6 +25,6 @@ Every spec needs an AI Validation section. It answers: how will the AI verify th
 
 ## Saving
 
-Save to `.lore/work/specs/[feature-name].html` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. The document body is freeform — what matters is that requirements are numbered and validation is explicit.
+Save to `.lore/work/specs/[feature-name].md` using kebab-case. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. The document body is freeform — what matters is that requirements are numbered and validation is explicit.
 
-The output is HTML — make requirements scannable and the validation section impossible to miss. Status badges on individual requirements, collapsible detail sections, a sticky header showing spec status and req-prefix, anchor links per requirement ID so cross-references work. Inline CSS and JS are fine; no external dependencies.
+Write the body Markdown-first per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only where scannability needs it — per-requirement status badges and anchor links per requirement ID so cross-references work.

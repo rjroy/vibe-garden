@@ -13,11 +13,11 @@ Invoked as `/implement <path>` where `<path>` is a lore artifact: spec, design, 
 
 ## Output
 
-Implemented code plus a notes file at `.lore/work/notes/<artifact-name>.html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields before writing.
+Implemented code plus a notes file at `.lore/work/notes/<artifact-name>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing.
 
 The notes file needs enough structure to be resumable: a progress tracker (phases with checkboxes) and a log (what happened, failures, decisions, discoveries). Update it after every phase, not just at session end.
 
-The output is HTML — make the progress tracker visual. Phases as a checklist with status chips (pending / in progress / done / failed), a collapsible log per phase, and a summary banner at the top showing overall state. Someone opening this mid-session should be able to read the situation in five seconds. Inline CSS and JS are fine; no external dependencies.
+Write the body in Markdown per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual carries meaning prose can't, such as a color-coded phase-status diagram readable at a glance mid-session.
 
 ## Process
 
@@ -27,7 +27,7 @@ Search for related prior work: invoke the `lore-researcher` agent via Task tool 
 
 Break the input into implementable phases. If the input is a plan, phases are its steps. If a spec or design, break into independently testable chunks.
 
-**Task file detection.** When the input is a plan, check whether `.lore/work/tasks/<plan-name>/` exists. If it does, read task files sorted by their `sequence` meta field — these become the phases. Compare the plan's modification timestamp against the oldest task file. If the plan is newer, warn the user and offer three options: re-run `/plan-breakdown`, use existing tasks, or abort.
+**Task file detection.** When the input is a plan, check whether `.lore/work/tasks/<plan-name>/` exists. If it does, read task files sorted by their `sequence` frontmatter field — these become the phases. Compare the plan's modification timestamp against the oldest task file. If the plan is newer, warn the user and offer three options: re-run `/plan-breakdown`, use existing tasks, or abort.
 
 **Select agents.** Consult `.lore/lore-agents.md` if it exists. Match agents to three mandatory roles:
 

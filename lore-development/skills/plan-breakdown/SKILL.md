@@ -27,10 +27,10 @@ Save the task list. The saved files are the review vehicle.
 
 ## Output
 
-Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields. Set `status: pending` and include a `sequence` meta field for ordering.
+Save task files to `.lore/work/tasks/<plan-name>/NNN-<task-name>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: pending` and include a `sequence` frontmatter field for ordering.
 
 Each task file body: What, Validation, Why, Files sections.
 
-The output is HTML — give each task file a clear visual status chip (pending / in progress / complete / skipped), the sequence position prominently displayed, and the validation criteria visually separated from the implementation description so a reviewing agent can find them without reading everything. Inline CSS and JS are fine; no external dependencies.
+Write the body in Markdown per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual carries meaning prose can't, such as a color-coded status badge or a diagram a reviewing agent needs at a glance.
 
 Stop here. The user invokes `/implement` when ready.

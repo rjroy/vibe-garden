@@ -9,9 +9,9 @@ Validation answers: "How will the AI know this is done?"
 
 It must be behavioral and actionable — something the AI can actually run or observe. "Run the CLI with these args and confirm the output contains X." "Use Playwright to confirm clicking the button triggers Y." "Run the test suite and check it passes." Not "verify the UX feels right."
 
-Add a validation section to an existing spec or plan. If none exists, save standalone to `.lore/work/validation/[topic].html`. Load `${CLAUDE_PLUGIN_ROOT}/shared/document-schema.md` for the meta tag fields before writing.
+Add a validation section to an existing spec or plan. If none exists, save standalone to `.lore/work/validation/[topic].md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing.
 
-When saving standalone, the output is HTML — make the validation steps interactive. A checklist with pass/fail state, code blocks with copy buttons for CLI invocations, or clear visual separation between automated and manual steps turns a doc into something someone can actually work through. Inline CSS and JS are fine; no external dependencies.
+When saving standalone, write the body in Markdown per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual carries meaning prose can't, such as a diagram separating automated from manual steps.
 
 ## What counts
 

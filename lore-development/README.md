@@ -181,6 +181,14 @@ modules: [affected-modules]
 
 Documents without frontmatter won't be found by `lore-researcher`. Use `/tend` to retrofit old documents, and `/tend migrate` to move a flat-layout `.lore/` into the three-directory model.
 
+Document bodies are Markdown by default. Embed raw inline HTML only where a visual carries meaning Markdown cannot (color-coding, inline-`<svg>` charts, side-by-side comparison) — never inside a fenced code block, and with no `<script>` or external resources. See the "Body Format" section of `shared/frontmatter-schema.md`.
+
+To validate frontmatter across a tree (the schema's field and per-directory status rules), run the bundled checker. It scans `.md` files, emits one JSON finding per line, and exits non-zero when any document is invalid:
+
+```bash
+python scripts/validate_frontmatter.py .lore
+```
+
 ## Principles
 
 - **Light touch** - skills guide, they don't dictate
