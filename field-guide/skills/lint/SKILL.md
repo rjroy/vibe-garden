@@ -11,7 +11,7 @@ Health-check the wiki. Find what's broken, what's stale, what's drifted. Produce
 
 **1. Load the index.**
 
-Read `.lore/reference/index.html`. Collect every relative link it lists — these are the indexed pages. If the index doesn't exist or contains no links, report that and stop.
+Read `.lore/reference/index.md`. Collect every Markdown link it lists — these are the indexed pages. If the index doesn't exist or contains no links, report that and stop.
 
 **2. Run four checks.**
 
@@ -32,7 +32,7 @@ For each contradiction found, record:
 
 ### [warning] Orphans
 
-List every `.html` file in `.lore/reference/`. Exclude `index.html`. Any file not listed in the index is an orphan.
+List every `.md` file in `.lore/reference/`. Exclude `index.md`. Any file not listed in the index is an orphan.
 
 For each orphan, record its path.
 
@@ -40,7 +40,7 @@ For each orphan, record its path.
 
 ### [warning] Stale sources
 
-For each indexed wiki page, read its `<meta name="fg-sources">` tag. The value is a comma-separated list of relative paths.
+For each indexed wiki page, read its `fg-sources` frontmatter field. The value is a YAML list of relative paths.
 
 For each source path:
 1. Check whether the file exists on the filesystem.
@@ -48,7 +48,7 @@ For each source path:
 3. If the source is newer than the wiki page, the page is stale.
 
 For each stale page:
-- Set the `<meta name="fg-status">` tag value to `stale`.
+- Set the `fg-status` frontmatter field to `stale`.
 - Record the page path and which source files triggered the flag.
 
 After updating all stale pages, include the list of modified files in the report output under the stale sources section: `Modified: [path list]`.
@@ -75,25 +75,25 @@ Format:
 
 ```
 [error] Contradiction
-  Pages: .lore/reference/auth-decision.html, .lore/reference/auth-architecture.html
+  Pages: .lore/reference/auth-decision.md, .lore/reference/auth-architecture.md
   Subject: whether JWT tokens are stateless
   Claim A: "tokens are stateless and require no server-side storage"
   Claim B: "tokens are validated against a server-side revocation list"
 
 [warning] Orphan
-  Path: .lore/reference/old-spike.html
+  Path: .lore/reference/old-spike.md
 
 [warning] Stale page
-  Page: .lore/reference/auth-decision.html
-  Newer sources: .lore/work/retros/auth-rollout.html
+  Page: .lore/reference/auth-decision.md
+  Newer sources: .lore/work/retros/auth-rollout.md
 
 [warning] Missing source
-  Page: .lore/reference/deploy-config.html
-  Missing: .lore/work/specs/deploy-spec.html
+  Page: .lore/reference/deploy-config.md
+  Missing: .lore/work/specs/deploy-spec.md
 
 [info] Missing concept page
   Term: "revocation list"
-  Referenced in: .lore/reference/auth-decision.html, .lore/reference/auth-architecture.html, .lore/reference/session-management.html
+  Referenced in: .lore/reference/auth-decision.md, .lore/reference/auth-architecture.md, .lore/reference/session-management.md
 ```
 
 If a severity bucket is empty, omit it. If no findings at all, say so.
