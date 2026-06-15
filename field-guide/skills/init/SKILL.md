@@ -9,13 +9,26 @@ Bootstrap the project wiki and register a durable scheduled lint job.
 
 ## Dependencies
 
-This skill requires CronCreate and CronList to be available in the Claude Code harness. If those tools are not present, the wiki directory and index.html will still be created, but the scheduled lint job cannot be registered — inform the user that scheduling is unavailable.
+This skill requires CronCreate and CronList to be available in the Claude Code harness. If those tools are not present, the wiki directory and index.md will still be created, but the scheduled lint job cannot be registered — inform the user that scheduling is unavailable.
 
 ## Steps
 
 **1. Create the wiki directory.**
 
-Check whether `.lore/reference/` exists. If not, create it. Then check whether `.lore/reference/index.html` exists. If not, write an empty HTML file there — a bare `<!DOCTYPE html>` shell is enough. Never overwrite an existing `index.html`.
+Check whether `.lore/reference/` exists. If not, create it. Then check whether `.lore/reference/index.md` exists. If not, write a minimal Markdown file there:
+
+```markdown
+---
+title: Field Guide Index
+date: YYYY-MM-DD
+status: current
+tags: [index, field-guide]
+---
+
+# Field Guide Index
+```
+
+Never overwrite an existing `index.md`.
 
 **2. Check for an existing lint job.**
 

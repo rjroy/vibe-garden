@@ -9,7 +9,7 @@ Answer a question using the project wiki and work artifacts. Cite every source. 
 
 ## Gathering sources
 
-Read `.lore/reference/index.html` first. Scan all listed pages to identify which are relevant to the question. Relevance is broad — include any page whose subject could bear on the answer, even indirectly.
+Read `.lore/reference/index.md` first. Scan all listed pages to identify which are relevant to the question. Relevance is broad — include any page whose subject could bear on the answer, even indirectly.
 
 Read every candidate page in full. Then scan `.lore/work/` for source documents (specs, designs, retros, plans, research) that may contain context not yet extracted into the wiki. Use judgment: if the question is about a decision, check plans and specs. If it's about what broke, check retros. If it's about how something works, check architecture and research documents.
 
@@ -21,31 +21,32 @@ Give a direct answer, then the supporting evidence. If sources conflict, name th
 
 After the answer, list every file cited. Use the file path as the identifier. Example:
 
-> Sources: `.lore/reference/auth-flow-decision.html`, `.lore/work/specs/auth-spec.html`
+> Sources: `.lore/reference/auth-flow-decision.md`, `.lore/work/specs/auth-spec.md`
 
 ## Saving as synthesis
 
 After delivering the answer, ask whether to save it as a synthesis wiki page. If the user accepts:
 
-Write an HTML page at `.lore/reference/[descriptive-kebab-name].html`. The page must be self-contained — no external stylesheets, no external scripts, no external image URLs. Inline styles and scripts are fine.
+Write a Markdown page at `.lore/reference/[descriptive-kebab-name].md` with YAML frontmatter:
 
-Required HTML structure:
+```markdown
+---
+title: Precise noun-first description of what the synthesis answers
+date: YYYY-MM-DD
+status: current
+tags: [kebab-case, terms, subject, domain, question-type]
+fg-type: synthesis
+fg-sources: [relative/path/to/source1.md, relative/path/to/source2.md]
+fg-status: current
+---
 
-- `<title>`: a precise noun-first description of what the synthesis answers
-- `<h1>`: matches the `<title>` text
+# Precise noun-first description of what the synthesis answers
 
-Required meta tags:
+<!-- body in Markdown -->
+```
 
-**Standard lore meta:**
-- `<meta name="date">`: today's date
-- `<meta name="status" content="current">`
-- `<meta name="tags">`: kebab-case terms covering the subject, domain, and question type
+`fg-sources` lists every source cited in the answer as a YAML list.
 
-**Field-guide meta:**
-- `<meta name="fg-type" content="synthesis">`
-- `<meta name="fg-sources" content="...">`: comma-separated paths of every source cited in the answer
-- `<meta name="fg-status" content="current">`
+The body must be self-contained in Markdown. A reader with no access to the original question or sources should understand what the page is saying and why it exists. Reach for embedded inline HTML only when a visual carries meaning Markdown cannot — color-coded status, inline `<svg>` diagram, side-by-side comparison. When you do, write it raw and inline; never in a fenced code block.
 
-The body should read as a standalone document. A reader with no access to the original question or sources should understand what the page is saying and why it exists.
-
-After writing the page, update `.lore/reference/index.html`. Add the new page to the `synthesis` group. If the group doesn't exist yet, create it. The entry must use the page's `<title>` as link text and description, matching the format of other entries in `index.html`. Preserve all other groups and entries.
+After writing the page, update `.lore/reference/index.md`. Add the new page to the `synthesis` group. If the group doesn't exist yet, create it. The entry must use the page's `title` as link text, matching the format of other entries in `index.md`. Preserve all other groups and entries.
