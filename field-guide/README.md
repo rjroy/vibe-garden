@@ -2,7 +2,7 @@
 
 <img src="logo.webp" align="right" width="128" height="128" alt="Field Guide Logo">
 
-A Claude Code plugin that compiles `.lore/` artifacts into a persistent, query-able HTML wiki.
+A Claude Code plugin that compiles `.lore/` artifacts into a persistent, query-able project wiki.
 
 ## What It Does
 
@@ -23,7 +23,7 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 
 **Start with init.** Run `/field-guide:init` once per project to create `.lore/reference/` and register a daily lint job. Re-run it after 7 days to refresh the scheduled job (CronCreate recurring jobs auto-expire after 7 days).
 
-**Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads the source, extracts distinct knowledge units, and writes them as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
+**Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads Markdown and HTML sources, extracts distinct knowledge units, and writes them as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
 
 **Query the accumulated knowledge.** Run `/field-guide:query` with a natural language question. The skill reads the wiki index, pulls relevant pages, searches `.lore/work/` for additional context, and synthesizes a cited answer. You can file the answer back into the wiki as a synthesis page.
 
@@ -31,18 +31,27 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 
 ## Output Structure
 
-All wiki pages are self-contained HTML files in `.lore/reference/`. No external stylesheets or scripts.
+Wiki pages live in `.lore/reference/`. New pages are Markdown by default, and existing HTML pages remain supported during migration. HTML pages should be self-contained with no external stylesheets or scripts.
 
 ```
 .lore/reference/
-├── index.html              # Catalog of all wiki pages, grouped by type
+├── index.md                # Catalog of all wiki pages, grouped by type
 ├── .field-guide.json       # Scheduled lint job ID and schedule config
-└── <wiki-pages>.html       # Generated pages
+└── <wiki-pages>.md         # Generated pages
+```
+
+Mixed-format projects are valid:
+
+```
+.lore/reference/
+├── index.md or index.html
+├── existing-page.html
+└── new-page.md
 ```
 
 ### Page Types
 
-Each wiki page carries an `fg-type` meta tag that describes what kind of knowledge it holds:
+Each wiki page carries an `fg-type` field that describes what kind of knowledge it holds:
 
 | Type | What it captures |
 |------|-----------------|
@@ -55,12 +64,12 @@ Each wiki page carries an `fg-type` meta tag that describes what kind of knowled
 
 ### Page Metadata
 
-Each page carries standard lore meta tags (`date`, `status`, `tags`) plus field-guide-specific tags:
+Markdown pages carry YAML frontmatter. HTML pages carry equivalent `<meta name="...">` tags. Each page includes standard lore fields (`date`, `status`, `tags`) plus field-guide-specific fields:
 
 - `fg-type` — the page type (see above)
-- `fg-sources` — comma-separated paths to the `.lore/` artifacts this page was derived from
+- `fg-sources` — paths to the `.lore/` artifacts this page was derived from; YAML list in Markdown, comma-separated or YAML-like value in HTML
 - `fg-status` — `current`, `stale` (set by lint when sources have changed), or `archived`
 
 ## Dependencies
 
-The `init` skill requires `CronCreate` and `CronList` from the Claude Code harness to register the scheduled lint job. If those tools are unavailable, the wiki directory and `index.html` are still created, but scheduling will not be set up.
+The `init` skill requires `CronCreate` and `CronList` from the Claude Code harness to register the scheduled lint job. If those tools are unavailable, the wiki directory and `index.md` are still created, but scheduling will not be set up.

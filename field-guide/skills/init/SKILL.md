@@ -9,13 +9,15 @@ Bootstrap the project wiki and register a durable scheduled lint job.
 
 ## Dependencies
 
-This skill requires CronCreate and CronList to be available in the Claude Code harness. If those tools are not present, the wiki directory and index.md will still be created, but the scheduled lint job cannot be registered — inform the user that scheduling is unavailable.
+This skill requires CronCreate and CronList to be available in the Claude Code harness. If those tools are not present, the wiki directory and Markdown index will still be created, but the scheduled lint job cannot be registered — inform the user that scheduling is unavailable.
 
 ## Steps
 
 **1. Create the wiki directory.**
 
-Check whether `.lore/reference/` exists. If not, create it. Then check whether `.lore/reference/index.md` exists. If not, write a minimal Markdown file there:
+Check whether `.lore/reference/` exists. If not, create it. Then check whether `.lore/reference/index.md` or `.lore/reference/index.html` exists.
+
+If neither index exists, write a minimal Markdown file at `.lore/reference/index.md`:
 
 ```markdown
 ---
@@ -28,7 +30,7 @@ tags: [index, field-guide]
 # Field Guide Index
 ```
 
-Never overwrite an existing `index.md`.
+Never overwrite an existing index. If `index.html` already exists and `index.md` does not, leave it in place; the other field-guide skills can read either format.
 
 **2. Check for an existing lint job.**
 
@@ -65,6 +67,6 @@ Store the returned job ID in `.lore/reference/.field-guide.json`:
 
 **5. Tell the user what happened.**
 
-Confirm whether the directory and index were created or already existed. Confirm whether a new lint job was registered or an existing one was found. Report the job ID and schedule.
+Confirm whether the directory and index were created or already existed. If an existing HTML index was found, mention that it was preserved for compatibility. Confirm whether a new lint job was registered or an existing one was found. Report the job ID and schedule.
 
 Include this notice: recurring CronCreate jobs expire after 7 days. Re-run `/field-guide:init` to refresh the scheduled lint job before it lapses.

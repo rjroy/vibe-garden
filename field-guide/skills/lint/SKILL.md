@@ -11,7 +11,7 @@ Health-check the wiki. Find what's broken, what's stale, what's drifted. Produce
 
 **1. Load the index.**
 
-Read `.lore/reference/index.md`. Collect every Markdown link it lists — these are the indexed pages. If the index doesn't exist or contains no links, report that and stop.
+Read the field-guide index. Prefer `.lore/reference/index.md`; if it does not exist, read `.lore/reference/index.html`. Collect every local page link it lists — these are the indexed pages. Links may point to `.md` or `.html` files. If no index exists or the index contains no links, report that and stop.
 
 **2. Run four checks.**
 
@@ -21,7 +21,7 @@ Run all four checks before reporting. Each check has a defined severity; do not 
 
 ### [error] Contradictions
 
-Read every indexed wiki page in full. Look for pages that make conflicting claims about the same concept, entity, or decision. Two pages contradict each other when they assert incompatible facts about the same subject — not merely when they discuss it differently or at different levels of detail.
+Read every indexed wiki page in full. Pages may be Markdown or HTML. For HTML pages, use meta tags as metadata and visible body content as the page body. Look for pages that make conflicting claims about the same concept, entity, or decision. Two pages contradict each other when they assert incompatible facts about the same subject — not merely when they discuss it differently or at different levels of detail.
 
 For each contradiction found, record:
 - Both page paths
@@ -32,7 +32,7 @@ For each contradiction found, record:
 
 ### [warning] Orphans
 
-List every `.md` file in `.lore/reference/`. Exclude `index.md`. Any file not listed in the index is an orphan.
+List every `.md` and `.html` file in `.lore/reference/`. Exclude `index.md` and `index.html`. Any file not listed in the index is an orphan.
 
 For each orphan, record its path.
 
@@ -40,7 +40,7 @@ For each orphan, record its path.
 
 ### [warning] Stale sources
 
-For each indexed wiki page, read its `fg-sources` frontmatter field. The value is a YAML list of relative paths.
+For each indexed wiki page, read its source metadata. Markdown pages use the `fg-sources` frontmatter field as a YAML list of relative paths. HTML pages use the `fg-sources` meta tag as a comma-separated or YAML-like list.
 
 For each source path:
 1. Check whether the file exists on the filesystem.
@@ -48,7 +48,7 @@ For each source path:
 3. If the source is newer than the wiki page, the page is stale.
 
 For each stale page:
-- Set the `fg-status` frontmatter field to `stale`.
+- Set the `fg-status` field to `stale`. For Markdown pages, update frontmatter. For HTML pages, update or add the `fg-status` meta tag.
 - Record the page path and which source files triggered the flag.
 
 After updating all stale pages, include the list of modified files in the report output under the stale sources section: `Modified: [path list]`.
@@ -59,7 +59,7 @@ If a source file no longer exists, record it as a missing source (also a warning
 
 ### [info] Missing concept pages
 
-Scan all indexed wiki page bodies for terms that appear across multiple pages. A term is a candidate if it recurs in at least two pages and has no dedicated page with `fg-type` set to `concept`.
+Scan all indexed wiki page bodies for terms that appear across multiple pages. A term is a candidate if it recurs in at least two pages and has no dedicated page with `fg-type` set to `concept`. Read `fg-type` from Markdown frontmatter or HTML meta tags.
 
 Flag all candidates found.
 

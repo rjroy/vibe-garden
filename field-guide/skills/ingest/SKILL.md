@@ -1,6 +1,6 @@
 ---
 name: ingest
-description: Use when extracting knowledge from .lore/ artifacts into the reference wiki. Converts work artifacts (retros, specs, plans, research, notes) into structured Markdown wiki pages grouped by knowledge type. Triggers include "ingest this", "extract knowledge from", "add this to the wiki", "update the reference from", and "populate the field guide".
+description: Use when extracting knowledge from .lore/ artifacts into the reference wiki. Converts work artifacts (retros, specs, plans, research, notes) into structured wiki pages grouped by knowledge type. Reads Markdown or HTML sources and writes Markdown by default. Triggers include "ingest this", "extract knowledge from", "add this to the wiki", "update the reference from", and "populate the field guide".
 ---
 
 # Ingest
@@ -9,7 +9,12 @@ Read source artifacts, extract what they know, and write it into `.lore/referenc
 
 ## Sources
 
-Accept one or more paths from the user. Each may be a file or a directory. For directories, walk them and read every `.md` file found. If a directory walk finds zero `.md` files, report this clearly to the user ("No .md files found in [path] — nothing ingested") and move on to the next source path. Sources should live under `.lore/` — warn and skip anything that doesn't.
+Accept one or more paths from the user. Each may be a file or a directory. For directories, walk them and read every `.md` and `.html` file found. If a directory walk finds zero supported files, report this clearly to the user ("No .md or .html files found in [path] — nothing ingested") and move on to the next source path. Sources should live under `.lore/` — warn and skip anything that doesn't.
+
+Treat Markdown and HTML sources as equivalent knowledge inputs:
+
+- Markdown files use YAML frontmatter when present, followed by Markdown body content.
+- HTML files use `<meta name="...">` fields when present, `<title>` as the title, and visible document body content as the source text. Ignore scripts, styles, and generated chrome that does not carry project knowledge.
 
 ## Extraction
 
@@ -29,9 +34,11 @@ When a unit is borderline between types, pick the type that best describes how s
 
 ## Writing pages
 
-For each extracted knowledge unit, write or update a Markdown page in `.lore/reference/`. Filename should be kebab-case, descriptive of the unit's content, with `.md` extension. No subdirectories beyond `.lore/reference/` unless they already exist.
+For each extracted knowledge unit, write or update a page in `.lore/reference/`. New pages should be Markdown files with kebab-case names and `.md` extensions. No subdirectories beyond `.lore/reference/` unless they already exist.
 
-Each page is a Markdown file with YAML frontmatter:
+Compatibility rule: before creating a new page, check for an existing page for the same knowledge unit in either `.md` or `.html` form. Prefer updating an existing Markdown page. If only an HTML page exists for that unit, update that HTML page in place unless the user has asked to migrate it to Markdown. Do not create duplicate `.md` and `.html` pages for the same unit.
+
+New Markdown pages use YAML frontmatter:
 
 ```markdown
 ---
@@ -49,13 +56,13 @@ fg-status: current
 <!-- body in Markdown -->
 ```
 
-`fg-sources` is a YAML list of relative paths. Include all source files that contributed to this page.
+`fg-sources` is a YAML list of relative paths. Include all source files that contributed to this page; paths may end in `.md` or `.html`.
 
 The body must be self-contained. Write it in Markdown. Reach for embedded inline HTML only when a visual carries meaning Markdown cannot — a color-coded status badge, an inline `<svg>` diagram, a side-by-side comparison. When you do, write it raw and inline; never in a fenced code block.
 
 ## Re-ingest (same source)
 
-If a source path was previously ingested, some pages already exist. Before writing, read existing pages whose `fg-sources` frontmatter list includes the current source path. Compare content against what the source now says.
+If a source path was previously ingested, some pages already exist. Before writing, read existing `.md` and `.html` pages whose source metadata includes the current source path. For Markdown, read the `fg-sources` frontmatter list. For HTML, read the `fg-sources` meta tag as a comma-separated or YAML-like list. Compare content against what the source now says.
 
 Three outcomes per existing page:
 
@@ -67,13 +74,13 @@ Reconciliation is content comparison only. No activity log, no change history in
 
 ## Index update
 
-After all pages are written, update `.lore/reference/index.md`.
+After all pages are written, update the field-guide index. Prefer `.lore/reference/index.md`. If only `.lore/reference/index.html` exists, update it in place unless the user asked to migrate the index to Markdown. If neither exists, create `.lore/reference/index.md`.
 
-The index groups pages by `fg-type`. Within each group, each entry is a Markdown link to the page using the page's `title` as both the link text and a one-line description.
+The index groups pages by `fg-type`. Within each group, each entry links to the page using the page's `title` as both the link text and a one-line description. Markdown indexes use Markdown links. HTML indexes use normal anchor links.
 
 Add new pages to their group. Update link text and descriptions for modified pages. Do not remove entries for pages that weren't touched in this run. Preserve existing entries and groups that aren't affected.
 
-If `index.md` does not exist, create it. If it exists but has no group structure yet, build it from scratch using all pages currently in `.lore/reference/`.
+If the index exists but has no group structure yet, build it from scratch using all supported pages currently in `.lore/reference/`, including both `.md` and `.html` pages.
 
 Example index structure:
 
