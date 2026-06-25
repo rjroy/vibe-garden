@@ -6,7 +6,7 @@ A Claude Code plugin that compiles `.lore/` artifacts into a persistent, query-a
 
 ## What It Does
 
-Most knowledge work produces scattered artifacts: specs, retros, design decisions, lessons learned. Field Guide reads those artifacts and synthesizes them into a wiki stored in `.lore/reference/`. The wiki compounds over time. Each ingest adds to an evolving knowledge base rather than re-deriving knowledge from scratch on every question.
+Most knowledge work produces scattered artifacts: specs, retros, design decisions, lessons learned. Field Guide reads those artifacts and synthesizes the durable knowledge they contain into a wiki stored in `.lore/reference/`. The wiki compounds over time and preserves context the source code cannot recover on its own: intent, rationale, constraints, rejected alternatives, operating lessons, and domain vocabulary.
 
 Field Guide is a sibling to lore-development. lore-development generates artifacts in `.lore/work/`; field guide synthesizes them into reference material in `.lore/reference/`.
 
@@ -23,7 +23,7 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 
 **Start with init.** Run `/field-guide:init` once per project to create `.lore/reference/` and register a daily lint job. Re-run it after 7 days to refresh the scheduled job (CronCreate recurring jobs auto-expire after 7 days).
 
-**Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads Markdown and HTML sources, extracts distinct knowledge units, and writes them as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
+**Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads Markdown and HTML sources, extracts distinct durable knowledge units, skips implementation details that can be reconstructed from code, and writes the surviving guidance as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
 
 **Query the accumulated knowledge.** Run `/field-guide:query` with a natural language question. The skill reads the wiki index, pulls relevant pages, searches `.lore/work/` for additional context, and synthesizes a cited answer. You can file the answer back into the wiki as a synthesis page.
 
