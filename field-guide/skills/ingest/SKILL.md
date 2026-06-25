@@ -5,7 +5,9 @@ description: Use when extracting knowledge from .lore/ artifacts into the refere
 
 # Ingest
 
-Read source artifacts, extract what they know, and write it into `.lore/reference/` as searchable wiki pages.
+Read source artifacts, extract the durable knowledge they contain, and write it into `.lore/reference/` as searchable wiki pages.
+
+The goal is not to archive artifacts or summarize them exhaustively. Ingest exists to build reference material that cannot be recovered just by reading the associated source code: intent, rationale, constraints, rejected alternatives, operating lessons, domain vocabulary, and system context.
 
 ## Sources
 
@@ -18,7 +20,17 @@ Treat Markdown and HTML sources as equivalent knowledge inputs:
 
 ## Extraction
 
-Read each source file in full. Use judgment to identify distinct knowledge units within it. A knowledge unit is a claim that stands on its own and would be useful without the source document's context. One source typically yields one to several units; a retro might yield three, a plan might yield one, a research document might yield ten.
+Read each source file in full. Use judgment to identify distinct knowledge units within it. A knowledge unit is a claim that stands on its own, would be useful without the source document's context, and belongs in long-lived project reference. One source typically yields one to several units; a retro might yield three, a plan might yield one, a research document might yield ten.
+
+Before writing a unit, apply this reference-worthiness gate:
+
+- Keep knowledge that explains why the system is shaped the way it is: goals, tradeoffs, constraints, dependencies, domain rules, stakeholder intent, rejected alternatives, migration context, and lessons learned from incidents or implementation attempts.
+- Keep architecture only when the source adds context beyond the code's current structure, such as module boundaries, responsibility splits, data ownership, lifecycle expectations, or coupling that is not obvious from filenames and function bodies.
+- Skip ordinary implementation details that can be rebuilt from the source code: file lists, function inventories, endpoint names, schema fields, control flow summaries, library usage that is already visible in manifests, and transient task checklists.
+- Skip plan/spec content that did not survive into durable guidance. A planned step is not reference knowledge unless it records an enduring constraint, decision, rationale, or requirement that future work should honor.
+- If a source contains no reference-worthy units, do not create a page for it. Count the source as processed and report that no durable knowledge was found.
+
+When in doubt, ask: "Would a future maintainer lose this knowledge if they only had the current code?" If the answer is no, skip it.
 
 Assign each unit an `fg-type`:
 
