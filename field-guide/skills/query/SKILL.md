@@ -9,9 +9,9 @@ Answer a question using the project wiki and work artifacts. Cite every source. 
 
 ## Gathering sources
 
-Read `.lore/reference/index.md` first. Scan all listed pages to identify which are relevant to the question. Relevance is broad — include any page whose subject could bear on the answer, even indirectly.
+Read the field-guide index first. Prefer `.lore/reference/index.md`; if it does not exist, read `.lore/reference/index.html`. Scan all listed pages to identify which are relevant to the question. Relevance is broad — include any page whose subject could bear on the answer, even indirectly.
 
-Read every candidate page in full. Then scan `.lore/work/` for source documents (specs, designs, retros, plans, research) that may contain context not yet extracted into the wiki. Use judgment: if the question is about a decision, check plans and specs. If it's about what broke, check retros. If it's about how something works, check architecture and research documents.
+Read every candidate page in full. Candidate pages may be Markdown or HTML. For HTML pages, use meta tags as metadata and visible body content as the page body. Then scan `.lore/work/` for supported source documents (`.md` and `.html` specs, designs, retros, plans, research) that may contain context not yet extracted into the wiki. Use judgment: if the question is about a decision, check plans and specs. If it's about what broke, check retros. If it's about how something works, check architecture and research documents.
 
 If no relevant material exists, say so. Don't synthesize an answer from general knowledge when the question is asking what this project specifically decided or learned.
 
@@ -45,8 +45,8 @@ fg-status: current
 <!-- body in Markdown -->
 ```
 
-`fg-sources` lists every source cited in the answer as a YAML list.
+`fg-sources` lists every source cited in the answer as a YAML list. Sources may be Markdown or HTML files.
 
 The body must be self-contained in Markdown. A reader with no access to the original question or sources should understand what the page is saying and why it exists. Reach for embedded inline HTML only when a visual carries meaning Markdown cannot — color-coded status, inline `<svg>` diagram, side-by-side comparison. When you do, write it raw and inline; never in a fenced code block.
 
-After writing the page, update `.lore/reference/index.md`. Add the new page to the `synthesis` group. If the group doesn't exist yet, create it. The entry must use the page's `title` as link text, matching the format of other entries in `index.md`. Preserve all other groups and entries.
+After writing the page, update the field-guide index. Prefer `.lore/reference/index.md`; if only `.lore/reference/index.html` exists, update it in place. Add the new page to the `synthesis` group. If the group doesn't exist yet, create it. The entry must use the page's `title` as link text, matching the existing index format. Preserve all other groups and entries.
