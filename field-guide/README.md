@@ -16,6 +16,8 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 |-------|---------|
 | `/field-guide:init` | Bootstrap the wiki directory and register a scheduled daily lint job |
 | `/field-guide:ingest` | Compile one or more `.lore/` artifacts into wiki pages |
+| `/field-guide:update-evidence` | Attach living code/test anchors to reference pages |
+| `/field-guide:resolve-drift` | Compare reference pages against evidence and reconcile semantic drift |
 | `/field-guide:query` | Answer natural language questions against the wiki |
 | `/field-guide:lint` | Health-check the wiki for contradictions, orphans, stale pages, and missing concept pages |
 
@@ -24,6 +26,10 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 **Start with init.** Run `/field-guide:init` once per project to create `.lore/reference/` and register a daily lint job. Re-run it after 7 days to refresh the scheduled job (CronCreate recurring jobs auto-expire after 7 days).
 
 **Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads Markdown and HTML sources, extracts distinct durable knowledge units, skips implementation details that can be reconstructed from code, and writes the surviving guidance as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
+
+**Wire evidence after ingestion.** Run `/field-guide:update-evidence` to connect reference pages to living code, tests, data files, and symbols. Treat `fg-sources` as ingestion provenance; source artifacts can be deleted after durable knowledge is captured. Evidence anchors are what future checks use to notice likely drift.
+
+**Resolve semantic drift when evidence changes.** Run `/field-guide:resolve-drift` when code or tests have moved under an evidence-backed page, or when you want an audit of reference accuracy. This pass reads the page plus its evidence, then updates stale prose, refreshes evidence, or reports implementation drift from intended design.
 
 **Query the accumulated knowledge.** Run `/field-guide:query` with a natural language question. The skill reads the wiki index, pulls relevant pages, searches `.lore/work/` for additional context, and synthesizes a cited answer. You can file the answer back into the wiki as a synthesis page.
 
@@ -69,6 +75,8 @@ Markdown pages carry YAML frontmatter. HTML pages carry equivalent `<meta name="
 - `fg-type` — the page type (see above)
 - `fg-sources` — paths to the `.lore/` artifacts this page was derived from; YAML list in Markdown, comma-separated or YAML-like value in HTML
 - `fg-status` — `current`, `stale` (set by lint when sources have changed), or `archived`
+- `fg-evidence` — optional living code/test/symbol anchors for Markdown pages
+- `fg-evidence-code`, `fg-evidence-tests`, `fg-evidence-symbols` — optional living anchors for HTML pages
 
 ## Dependencies
 
