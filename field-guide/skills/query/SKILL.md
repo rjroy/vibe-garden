@@ -27,7 +27,7 @@ After the answer, list every file cited. Use the file path as the identifier. Ex
 
 After delivering the answer, ask whether to save it as a synthesis wiki page. If the user accepts:
 
-Write a Markdown page at `.lore/reference/[descriptive-kebab-name].md` with YAML frontmatter:
+Write a Markdown page at `.lore/reference/[descriptive-kebab-name].md`. If the wiki is stratified into category directories (the index will have a "Layout" section), write the page into the best-fitting existing category directory instead of the root. Use YAML frontmatter:
 
 ```markdown
 ---
@@ -49,4 +49,4 @@ fg-status: current
 
 The body must be self-contained in Markdown. A reader with no access to the original question or sources should understand what the page is saying and why it exists. Reach for embedded inline HTML only when a visual carries meaning Markdown cannot — color-coded status, inline `<svg>` diagram, side-by-side comparison. When you do, write it raw and inline; never in a fenced code block.
 
-After writing the page, update the field-guide index. Prefer `.lore/reference/index.md`; if only `.lore/reference/index.html` exists, update it in place. Add the new page to the `synthesis` group. If the group doesn't exist yet, create it. The entry must use the page's `title` as link text, matching the existing index format. Preserve all other groups and entries.
+After writing the page, update the field-guide index. Prefer `.lore/reference/index.md`; if only `.lore/reference/index.html` exists, update it in place. Add the new page to the `synthesis` group, or, in a stratified category-organized index, under its category heading. If the group doesn't exist yet, create it. The entry must use the page's `title` as link text, matching the existing index format. Preserve all other groups and entries.
