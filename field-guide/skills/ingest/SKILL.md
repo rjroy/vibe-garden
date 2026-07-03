@@ -46,7 +46,9 @@ When a unit is borderline between types, pick the type that best describes how s
 
 ## Writing pages
 
-For each extracted knowledge unit, write or update a page in `.lore/reference/`. New pages should be Markdown files with kebab-case names and `.md` extensions. No subdirectories beyond `.lore/reference/` unless they already exist.
+For each extracted knowledge unit, write or update a page in `.lore/reference/`. New pages should be Markdown files with kebab-case names and `.md` extensions.
+
+If the wiki has been stratified into category directories (see the `stratify` skill — the index will have a "Layout" section), place each new page in the category, and subcategory if present, whose subject best fits the unit. Fall back to the wiki root only when no existing category fits, and say so in the summary so a future stratify pass can file it. Never invent new category directories during ingest. In an unstratified wiki, write pages directly in `.lore/reference/` — no subdirectories unless they already exist.
 
 Compatibility rule: before creating a new page, check for an existing page for the same knowledge unit in either `.md` or `.html` form. Prefer updating an existing Markdown page. If only an HTML page exists for that unit, update that HTML page in place unless the user has asked to migrate it to Markdown. Do not create duplicate `.md` and `.html` pages for the same unit.
 
@@ -88,7 +90,7 @@ Reconciliation is content comparison only. No activity log, no change history in
 
 After all pages are written, update the field-guide index. Prefer `.lore/reference/index.md`. If only `.lore/reference/index.html` exists, update it in place unless the user asked to migrate the index to Markdown. If neither exists, create `.lore/reference/index.md`.
 
-The index groups pages by `fg-type`. Within each group, each entry links to the page using the page's `title` as both the link text and a one-line description. Markdown indexes use Markdown links. HTML indexes use normal anchor links.
+The index groups pages by `fg-type`. If the wiki is stratified and the index is organized by category instead, keep that structure: add each entry under its page's category (and subcategory) heading, with the link path relative to `.lore/reference/`. Within each group, each entry links to the page using the page's `title` as both the link text and a one-line description. Markdown indexes use Markdown links. HTML indexes use normal anchor links.
 
 Add new pages to their group. Update link text and descriptions for modified pages. Do not remove entries for pages that weren't touched in this run. Preserve existing entries and groups that aren't affected.
 

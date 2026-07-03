@@ -13,9 +13,9 @@ Health-check the wiki. Find what's broken, what's stale, what's drifted. Produce
 
 Read the field-guide index. Prefer `.lore/reference/index.md`; if it does not exist, read `.lore/reference/index.html`. Collect every local page link it lists — these are the indexed pages. Links may point to `.md` or `.html` files. If no index exists or the index contains no links, report that and stop.
 
-**2. Run four checks.**
+**2. Run five checks.**
 
-Run all four checks before reporting. Each check has a defined severity; do not promote or demote.
+Run all five checks before reporting. Each check has a defined severity; do not promote or demote.
 
 ---
 
@@ -32,7 +32,7 @@ For each contradiction found, record:
 
 ### [warning] Orphans
 
-List every `.md` and `.html` file in `.lore/reference/`. Exclude `index.md` and `index.html`. Any file not listed in the index is an orphan.
+List every `.md` and `.html` file under `.lore/reference/`, recursively — stratified wikis keep pages in category subdirectories. Exclude `index.md` and `index.html`. Any file not listed in the index is an orphan.
 
 For each orphan, record its path.
 
@@ -54,6 +54,14 @@ For each stale page:
 After updating all stale pages, include the list of modified files in the report output under the stale sources section: `Modified: [path list]`.
 
 If a source file no longer exists, record it as a missing source (also a warning).
+
+---
+
+### [info] Stratification due
+
+Count the pages directly inside each directory under `.lore/reference/`, including the root itself (`index.*` and dotfiles don't count; pages in deeper subdirectories count toward their own directory, not the parent). Flag any directory holding more than ~12 pages.
+
+For each flagged directory, record its path and page count, and suggest running `/field-guide:stratify`.
 
 ---
 
@@ -90,6 +98,10 @@ Format:
 [warning] Missing source
   Page: .lore/reference/deploy-config.md
   Missing: .lore/work/specs/deploy-spec.md
+
+[info] Stratification due
+  Directory: .lore/reference/ (17 pages)
+  Suggestion: run /field-guide:stratify
 
 [info] Missing concept page
   Term: "revocation list"

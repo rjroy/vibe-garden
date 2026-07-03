@@ -19,7 +19,8 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 | `/field-guide:update-evidence` | Attach living code/test anchors to reference pages |
 | `/field-guide:resolve-drift` | Compare reference pages against evidence and reconcile semantic drift |
 | `/field-guide:query` | Answer natural language questions against the wiki |
-| `/field-guide:lint` | Health-check the wiki for contradictions, orphans, stale pages, and missing concept pages |
+| `/field-guide:stratify` | Reorganize an overgrown wiki into category directories and repair every referrer |
+| `/field-guide:lint` | Health-check the wiki for contradictions, orphans, stale pages, missing concept pages, and overgrown directories |
 
 ## Workflow
 
@@ -33,7 +34,9 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 
 **Query the accumulated knowledge.** Run `/field-guide:query` with a natural language question. The skill reads the wiki index, pulls relevant pages, searches `.lore/work/` for additional context, and synthesizes a cited answer. You can file the answer back into the wiki as a synthesis page.
 
-**Let lint run, or trigger it manually.** The scheduled lint job fires daily and checks for stale pages, orphans, contradictions, and concepts that deserve their own page. Run `/field-guide:lint` directly any time you want a health check.
+**Stratify when the wiki outgrows a flat directory.** Once a directory accumulates more than ~12 pages, run `/field-guide:stratify` to group pages into topical category directories (3-4 groups per split, adjusting toward 6-7 top-level categories as the wiki grows). Stratify moves pages, rewrites the index by category, and repairs every link that referenced the old paths — inside the wiki and across the repository. After the first run, later runs split only the directories that have outgrown the threshold. Ingest and query place new pages into the category layout automatically.
+
+**Let lint run, or trigger it manually.** The scheduled lint job fires daily and checks for stale pages, orphans, contradictions, concepts that deserve their own page, and directories due for stratification. Run `/field-guide:lint` directly any time you want a health check.
 
 ## Output Structure
 
@@ -44,6 +47,16 @@ Wiki pages live in `.lore/reference/`. New pages are Markdown by default, and ex
 ├── index.md                # Catalog of all wiki pages, grouped by type
 ├── .field-guide.json       # Scheduled lint job ID and schedule config
 └── <wiki-pages>.md         # Generated pages
+```
+
+After stratification, pages live in topical category directories and the index is grouped by category instead of type. The index still lists every page — lint discovers pages only through index links:
+
+```
+.lore/reference/
+├── index.md                        # Catalog of all wiki pages, grouped by category
+├── .field-guide.json
+├── <category>/<page>.md
+└── <category>/<subcategory>/<page>.md
 ```
 
 Mixed-format projects are valid:
