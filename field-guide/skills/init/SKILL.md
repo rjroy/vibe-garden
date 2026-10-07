@@ -5,15 +5,37 @@ description: Use when setting up field-guide on a project for the first time, or
 
 # Init
 
-Bootstrap the project wiki and register a durable scheduled lint job.
+Bootstrap the project wiki, ensure disposable local lore output is ignored when
+the lore-development setup helper is available, and register a scheduled lint job.
 
 ## Dependencies
 
-This skill requires CronCreate and CronList to be available in the Claude Code harness. If those tools are not present, the wiki directory and Markdown index will still be created, but the scheduled lint job cannot be registered — inform the user that scheduling is unavailable.
+CronCreate and CronList are only required for scheduling. Project/wiki setup
+does not depend on Cron availability. The local-lore ignore setup is provided
+by lore-development's `scripts/ensure_local.py`; when plugins are installed as
+siblings, resolve `../../../lore-development/scripts/ensure_local.py` relative
+to this skill's installed location, then run it with `python3 <resolved-helper-path>
+<explicit-project-root>`.
+Do not guess the project root or a global helper path. If lore-development is
+installed separately and the sibling helper is unavailable, report that the
+optional helper is unavailable; users can run `python3 <path-to-lore-development>/scripts/ensure_local.py <project-root>` directly. This standalone
+helper requires Python's standard library only.
+
+If either CronCreate or CronList is unavailable in the Claude Code harness,
+skip all scheduling operations. Continue wiki setup and tell the user that
+scheduling was unavailable; do not substitute another harness's tools.
 
 ## Steps
 
 **1. Create the wiki directory.**
+
+If the lore-development helper is available as described above, run it for the
+project before creating any local lore output. This creates `.lore/local/` and
+adds the root-anchored `/.lore/local/` rule to `.gitignore` without replacing
+existing contents. Do not require the helper or Cron for wiki/index setup.
+If the helper is unavailable or exits with an error, say local-lore setup did
+not succeed and do not claim `.lore/local/` is ready. Continue the independent
+reference wiki/index setup; users can retry the helper directly.
 
 Check whether `.lore/reference/` exists. If not, create it. Then check whether `.lore/reference/index.md` or `.lore/reference/index.html` exists.
 
@@ -23,7 +45,7 @@ If neither index exists, write a minimal Markdown file at `.lore/reference/index
 ---
 title: Field Guide Index
 date: YYYY-MM-DD
-status: current
+status: draft
 tags: [index, field-guide]
 ---
 
@@ -32,7 +54,12 @@ tags: [index, field-guide]
 
 Never overwrite an existing index. If `index.html` already exists and `index.md` does not, leave it in place; the other field-guide skills can read either format.
 
+Use the shared lore lifecycle values: new agent-created documents start `draft`; `approved` requires explicit user approval (including editing to approve) or a request for the relevant next process step; arbitrary edits are not approval. `completed` records completed agent work, not user approval. Lifecycle `status` is separate from field-guide `fg-status` freshness. Current direction can revise approved artifacts; do not ask for approval on minor transitions or every document.
+
 **2. Check for an existing lint job.**
+
+If either required Cron tool is unavailable, skip to the summary step after
+wiki setup. Otherwise continue below.
 
 CronCreate jobs auto-delete when they expire, so any job present in CronList is by definition active. The check is simply: is the job ID present in the CronList results?
 
@@ -53,13 +80,13 @@ Before calling CronCreate, convert the user's requested schedule to a 5-field cr
 
 **4. Register the lint job.**
 
-If no active job was found, call CronCreate with:
+If no active job was found, call CronCreate using only arguments supported by the tool's exposed schema:
 
 - `prompt`: `/field-guide:lint`
-- `durable`: `true`
-- `schedule`: the translated cron expression from step 3
+- `cron`: the translated cron expression from step 3
+- `durable`: optionally set to `true` only if the exposed schema supports this argument
 
-Store the returned job ID in `.lore/reference/.field-guide.json`:
+Store the returned job ID and the requested cron expression in `.lore/reference/.field-guide.json`:
 
 ```json
 { "lint_job_id": "<id>", "schedule": "<schedule>" }
@@ -67,6 +94,6 @@ Store the returned job ID in `.lore/reference/.field-guide.json`:
 
 **5. Tell the user what happened.**
 
-Confirm whether the directory and index were created or already existed. If an existing HTML index was found, mention that it was preserved for compatibility. Confirm whether a new lint job was registered or an existing one was found. Report the job ID and schedule.
+Confirm whether the directory and index were created or already existed. If an existing HTML index was found, mention that it was preserved for compatibility. Confirm whether a new lint job was registered or an existing one was found. Report the job ID, cron expression, and whether the CronCreate response confirms durable persistence. Do not claim persistence when the response does not confirm it.
 
-Include this notice: recurring CronCreate jobs expire after 7 days. Re-run `/field-guide:init` to refresh the scheduled lint job before it lapses.
+Report persistence and expiration separately: durable persistence means the job survives restarts, but recurring CronCreate jobs still expire after 7 days. Always tell the user about the 7-day expiration and recommend rerunning `/field-guide:init` before then, regardless of the persistence result.

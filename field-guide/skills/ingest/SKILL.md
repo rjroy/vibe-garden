@@ -1,17 +1,17 @@
 ---
 name: ingest
-description: Use when extracting knowledge from .lore/ artifacts into the reference wiki. Converts work artifacts (retros, specs, plans, research, notes) into structured wiki pages grouped by knowledge type. Reads Markdown or HTML sources and writes Markdown by default. Triggers include "ingest this", "extract knowledge from", "add this to the wiki", "update the reference from", and "populate the field guide".
+description: Use when distilling useful project understanding from eligible .lore/ artifacts into the reference wiki. Historical artifacts suggest candidates; current claims are checked against implementation and tests. Triggers include "ingest this", "distill reference knowledge", "update the reference", and "populate the field guide".
 ---
 
 # Ingest
 
-Read source artifacts, extract the durable knowledge they contain, and write it into `.lore/reference/` as searchable wiki pages.
+Distill useful project understanding into `.lore/reference/`. The reference is an aid to future work, not a contract or archive of project pages.
 
-The goal is not to archive artifacts or summarize them exhaustively. Ingest exists to build reference material that cannot be recovered just by reading the associated source code: intent, rationale, constraints, rejected alternatives, operating lessons, domain vocabulary, and system context.
+Keep only knowledge that code and tests do not adequately communicate and that materially helps a future change: rationale, real external constraints, relevant failed approaches, domain context, or useful current seams/coupling/refactoring guidance. Do not make a page just to summarize a feature, implementation, or source artifact. No useful candidate is a valid result; report that nothing was added.
 
 ## Sources
 
-Accept one or more paths from the user. Each may be a file or a directory. For directories, walk them and read every `.md` and `.html` file found. If a directory walk finds zero supported files, report this clearly to the user ("No .md or .html files found in [path] — nothing ingested") and move on to the next source path. Sources should live under `.lore/` — warn and skip anything that doesn't.
+Accept one or more paths from the user. Sources should live under `.lore/`; warn and skip anything else. For directories, walk supported `.md` and `.html` files. Historical brainstorms, designs, intents, research, and retros can suggest candidates. Plans, notes, and tasks (including under `.lore/local/`) are never reference sources: they may point to where to investigate, but do not lift their execution choices or claims into reference knowledge. If a directory contains no eligible sources, report that and continue.
 
 Treat Markdown and HTML sources as equivalent knowledge inputs:
 
@@ -20,17 +20,19 @@ Treat Markdown and HTML sources as equivalent knowledge inputs:
 
 ## Extraction
 
-Read each source file in full. Use judgment to identify distinct knowledge units within it. A knowledge unit is a claim that stands on its own, would be useful without the source document's context, and belongs in long-lived project reference. One source typically yields one to several units; a retro might yield three, a plan might yield one, a research document might yield ten.
+Read each eligible source in full. Treat it only as a lead, not proof of current behavior or authority over current user direction. For every candidate about current behavior, architecture, constraints, or extension seams, inspect relevant implementation and tests; correct, qualify, or discard claims they do not support. Historical rationale may be retained when useful even if code cannot prove it, but label it as historical rationale rather than current behavior or a mandate. The user's current direction prevails over any old artifact; call out a concrete safety or compatibility consequence when one matters, not documentary noncompliance.
 
 Before writing a unit, apply this reference-worthiness gate:
 
-- Keep knowledge that explains why the system is shaped the way it is: goals, tradeoffs, constraints, dependencies, domain rules, stakeholder intent, rejected alternatives, migration context, and lessons learned from incidents or implementation attempts.
-- Keep architecture only when the source adds context beyond the code's current structure, such as module boundaries, responsibility splits, data ownership, lifecycle expectations, or coupling that is not obvious from filenames and function bodies.
+- Keep rationale, tradeoffs, real external constraints, domain rules, failed approaches, or lessons when they remain useful and code/tests do not communicate them.
+- Keep current architecture, extension seams, ownership, lifecycle, or coupling only when it is not adequately apparent from code/tests and helps a likely future change; verify current claims against those sources.
 - Skip ordinary implementation details that can be rebuilt from the source code: file lists, function inventories, endpoint names, schema fields, control flow summaries, library usage that is already visible in manifests, and transient task checklists.
-- Skip plan/spec content that did not survive into durable guidance. A planned step is not reference knowledge unless it records an enduring constraint, decision, rationale, or requirement that future work should honor.
+- Skip plans, notes, and tasks as sources. Other historical documents are not requirements that future work must honor; their rationale is context, and current direction/evidence can supersede their choices.
+- Do not add speculative future architecture, unused abstractions, feature catalogs, implementation summaries, or a page per artifact. Do not invent a “futures” score or promote an extension seam just because it might someday be useful.
+- Before creating a page, compare the candidate with the existing wiki. Merge it into the best-fitting page, update/supersede an obsolete page, or retire redundant material rather than accumulating parallel summaries. Preserve valuable rationale proportionately; no mandatory history, template, or revisit checklist.
 - If a source contains no reference-worthy units, do not create a page for it. Count the source as processed and report that no durable knowledge was found.
 
-When in doubt, ask: "Would a future maintainer lose this knowledge if they only had the current code?" If the answer is no, skip it.
+When in doubt, ask whether this knowledge is both missing from code/tests and materially useful to a future change. If either answer is no, skip it. A historical source alone is not enough to promote a claim.
 
 Assign each unit an `fg-type`:
 
@@ -46,9 +48,9 @@ When a unit is borderline between types, pick the type that best describes how s
 
 ## Writing pages
 
-For each extracted knowledge unit, write or update a page in `.lore/reference/`. New pages should be Markdown files with kebab-case names and `.md` extensions.
+For each surviving knowledge unit, update/merge the most relevant page or create a Markdown page in `.lore/reference/`. Retire or supersede obsolete redundant pages when appropriate, repairing the index and links. New pages should be kebab-case `.md` files. No page is required for every artifact or candidate.
 
-If the wiki has been stratified into category directories (see the `stratify` skill — the index will have a "Layout" section), place each new page in the category, and subcategory if present, whose subject best fits the unit. Fall back to the wiki root only when no existing category fits, and say so in the summary so a future stratify pass can file it. Never invent new category directories during ingest. In an unstratified wiki, write pages directly in `.lore/reference/` — no subdirectories unless they already exist.
+If the wiki has been stratified into category directories (see the `stratify` skill — the index will have a "Layout" section), place a new page in the best-fitting existing category. Never invent new category directories during ingest. In an unstratified wiki, write pages directly in `.lore/reference/` — no subdirectories unless they already exist.
 
 Compatibility rule: before creating a new page, check for an existing page for the same knowledge unit in either `.md` or `.html` form. Prefer updating an existing Markdown page. If only an HTML page exists for that unit, update that HTML page in place unless the user has asked to migrate it to Markdown. Do not create duplicate `.md` and `.html` pages for the same unit.
 
@@ -58,7 +60,7 @@ New Markdown pages use YAML frontmatter:
 ---
 title: Precise noun-first description of the knowledge unit
 date: YYYY-MM-DD
-status: current
+status: draft
 tags: [kebab-case, terms, subject, domain, problem-type]
 fg-type: decision|lesson|architecture|concept|entity
 fg-sources: [relative/path/to/source.md]
@@ -72,19 +74,21 @@ fg-status: current
 
 `fg-sources` is a YAML list of relative paths. Include all source files that contributed to this page; paths may end in `.md` or `.html`.
 
+`status` is the shared lore lifecycle (`draft`, `approved`, `completed`, or `archived`), not freshness; `fg-status` separately records field-guide freshness. New agent-created pages start `draft`. Use `approved` only for explicit user approval (including editing to approve) or when the user asks for the relevant next process step; arbitrary edits are not approval. Mark applicable agent work `completed` when done, independently of approval. Current user direction may revise approved pages; approval is not a veto or mandatory gate. Do not ask approval for minor transitions or every page.
+
 The body must be self-contained. Write it in Markdown. Reach for embedded inline HTML only when a visual carries meaning Markdown cannot — a color-coded status badge, an inline `<svg>` diagram, a side-by-side comparison. When you do, write it raw and inline; never in a fenced code block.
 
 ## Re-ingest (same source)
 
-If a source path was previously ingested, some pages already exist. Before writing, read existing `.md` and `.html` pages whose source metadata includes the current source path. For Markdown, read the `fg-sources` frontmatter list. For HTML, read the `fg-sources` meta tag as a comma-separated or YAML-like list. Compare content against what the source now says.
+`fg-sources` records provenance only; it does not grant authority, establish currency, or make an old choice binding. When a source changes, reassess affected claims against current implementation/tests and user direction. Do not preserve a claim merely because the older source supported it.
 
 Three outcomes per existing page:
 
-- **No change**: source still supports the page content. Leave the page alone.
-- **Stale content**: source has changed or superseded the claim. Update the page body and reset `date` to today.
-- **Contradiction**: source now asserts something that directly conflicts with the page. Note it during processing but do not surface it immediately and do not overwrite the page. Leave the page unchanged. At the end of the run, report all contradictions together, each with the page path, the existing claim, and what the source now says. Let the user decide.
+- **Still useful/current**: independently grounded behavior remains accurate and knowledge still earns reference space; update only as needed.
+- **Superseded/redundant**: merge or retire the page and repair the index/references.
+- **Historical rationale**: preserve only if useful, clearly framed as history rather than instruction.
 
-Reconciliation is content comparison only. No activity log, no change history in the page.
+Do not treat a conflict between historical sources as a blocker or require the user to arbitrate old documents. Ask only when current intent itself is unclear or a material consequence requires a decision. No activity log or change history in the page.
 
 ## Index update
 
@@ -92,7 +96,7 @@ After all pages are written, update the field-guide index. Prefer `.lore/referen
 
 The index groups pages by `fg-type`. If the wiki is stratified and the index is organized by category instead, keep that structure: add each entry under its page's category (and subcategory) heading, with the link path relative to `.lore/reference/`. Within each group, each entry links to the page using the page's `title` as both the link text and a one-line description. Markdown indexes use Markdown links. HTML indexes use normal anchor links.
 
-Add new pages to their group. Update link text and descriptions for modified pages. Do not remove entries for pages that weren't touched in this run. Preserve existing entries and groups that aren't affected.
+Add surviving pages, update changed entries, and remove entries for pages retired in this run. Preserve unrelated entries and groups.
 
 If the index exists but has no group structure yet, build it from scratch using all supported pages currently in `.lore/reference/`, including both `.md` and `.html` pages.
 
@@ -102,7 +106,7 @@ Example index structure:
 ---
 title: Field Guide Index
 date: YYYY-MM-DD
-status: current
+status: completed
 tags: [index, field-guide]
 ---
 
@@ -121,6 +125,6 @@ tags: [index, field-guide]
 
 After all writes complete, tell the user:
 
-- How many sources were processed
-- How many pages were created, updated, or unchanged
-- Any contradictions that need resolution, with enough context to act on each one
+- Sources considered and whether any candidates were independently grounded
+- Pages created, merged/updated, or retired (if any)
+- Any concrete unresolved uncertainty; do not report mere disagreement with an old artifact as a blocker

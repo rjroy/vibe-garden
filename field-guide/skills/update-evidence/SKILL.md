@@ -9,15 +9,15 @@ Attach living implementation anchors to field-guide reference pages.
 
 This is the mechanical pass between ingestion and semantic drift review:
 
-1. `ingest` extracts durable knowledge from `.lore/work/`.
-2. `update-evidence` connects that knowledge to current code and tests.
-3. `resolve-drift` compares the prose against those anchors.
+1. `ingest` distills useful candidates from eligible historical `.lore/` artifacts and verifies current claims against code/tests.
+2. `update-evidence` adds honest anchors for claims about current behavior.
+3. `resolve-drift` reviews prose against those anchors and current user direction.
 
 ## Scope
 
 Update indexed pages in `.lore/reference/`. Prefer `.lore/reference/index.md`; if it does not exist, read `.lore/reference/index.html`. Links may point to `.md` or `.html` pages.
 
-Do not require `fg-sources` files to exist. Source artifacts are ingestion provenance and may be intentionally deleted after knowledge is extracted.
+Do not require `fg-sources` files to exist. Source artifacts are provenance only and may be intentionally deleted; their presence, status, or age does not establish that page claims are current or binding.
 
 ## Evidence Metadata
 
@@ -43,7 +43,7 @@ For HTML pages, add or refresh meta tags in `<head>`:
 
 ## How To Choose Evidence
 
-Read the page body and identify concrete implementation claims:
+Read the page body and identify concrete claims about current implementation that merit verification:
 
 - named modules, files, APIs, data files, and tests
 - symbols in backticks
@@ -66,7 +66,7 @@ Weak evidence:
 - stale work artifacts under `.lore/work/`
 - broad project files such as `package.json` unless the page is specifically about tooling or stack choice
 
-If a page is mostly policy or product philosophy and has no honest living implementation anchor, leave it without evidence and report it as intentionally unanchored.
+If a page is historical rationale, policy, or product philosophy that code/tests cannot prove, leave it without a fabricated anchor and report it as intentionally unanchored. An evidence link supports investigation; it does not by itself prove the whole page or make old intent binding. Do not add evidence to an implementation summary that should instead be merged or retired.
 
 ## Output
 

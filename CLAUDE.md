@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Repository Overview
 
-**Vibe Garden** is a collection of Claude Code plugins for project management, development workflows, and notifications.
+**Vibe Garden** is a collection of five Claude Code plugins for project management, development workflows, project knowledge, and notifications.
 
 ## Repository Structure
 
@@ -15,9 +15,9 @@ vibe-garden/
 │   ├── skills/                # Skill implementations
 │   └── agents/                # Agent definitions
 │
-├── lore-development/          # Project context and workflow plugin (v0.13.0)
+├── lore-development/          # Project context and workflow plugin (v4.0.0)
 │   ├── .claude-plugin/        # Plugin metadata
-│   ├── skills/                # Workflow skills (research, brainstorm, specify, etc.)
+│   ├── skills/                # Workflow skills (intent, research, brainstorm, implementation, etc.)
 │   ├── agents/                # Agent definitions
 │   └── shared/                # Shared resources
 │
@@ -25,6 +25,10 @@ vibe-garden/
 │   ├── .claude-plugin/        # Plugin metadata
 │   ├── hooks/                 # Hook implementations
 │   └── scripts/               # Notification scripts
+│
+├── field-guide/               # Selective project knowledge wiki plugin
+│   ├── .claude-plugin/        # Plugin metadata
+│   └── skills/                # Wiki and distillation skills
 │
 └── mind-reader/               # Active feedback plugin (v1.0.0)
     ├── .claude-plugin/        # Plugin metadata
@@ -42,7 +46,11 @@ GitHub Projects integration. Skills for task tracking, backlog analysis, and pri
 
 ### Lore Development
 
-Project context and workflow management. Skills for research, brainstorming, specifications, planning, and retrospectives. Stores artifacts in `.lore/` directories.
+Project context and workflow management. Captures intent and supports research, brainstorming, optional planning, implementation, and retrospectives. Its four `.lore/` zones are `local/` (gitignored execution context), `work/` (shared historical artifacts), `reference/` (maintained explanatory knowledge), and `learned/` (operational mistakes). Historical work artifacts are nonbinding context; current user direction takes precedence.
+
+### Field Guide
+
+Selectively distills useful project understanding into `.lore/reference/`. Eligible historical artifacts can serve as leads, but this is not automatic compilation: verify current behavior against code/tests, preserve only knowledge that adds value, and treat adding nothing as a valid outcome.
 
 ### Notify Hook
 
@@ -65,6 +73,6 @@ When creating package configuration files (pyproject.toml, package.json, setup.p
 ## Critical Lessons
 
 - Marketplace registration for vibe-garden is just an entry in `.claude-plugin/marketplace.json` at repo root
-- Plans are first-class lore artifacts: `/prep-plan` generates, persists, and reviews plans like `/specify` does for specs. Plans live in `.lore/plans/` and compound through the lore-researcher loop.
+- `/intent` captures what to build and why; `/prep-plan` can create a disposable plan in `.lore/local/`. Neither historical intents nor plans override the current request.
 - Specs for AI-guided skills should be lighter than application specs. Leave room for model growth and agent flexibility. Over-constraining a prompt removes the AI's ability to adapt to project-specific context.
 - Skill reviewer is worth running on any skill edit, not just new skills. It catches structural and consistency issues that spec-compliance validators miss.

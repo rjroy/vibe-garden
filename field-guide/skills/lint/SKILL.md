@@ -5,7 +5,7 @@ description: "This skill is used when the project wiki needs a health check. Tri
 
 # Lint
 
-Health-check the wiki. Find what's broken, what's stale, what's drifted. Produce a report the maintainer can act on.
+Health-check wiki structure and surface review candidates. A lint finding is not a verdict that historical intent binds current work; semantic accuracy requires checking implementation/tests and current user direction with `resolve-drift`.
 
 ## Steps
 
@@ -38,22 +38,17 @@ For each orphan, record its path.
 
 ---
 
-### [warning] Stale sources
+### [info] Changed or missing provenance
 
 For each indexed wiki page, read its source metadata. Markdown pages use the `fg-sources` frontmatter field as a YAML list of relative paths. HTML pages use the `fg-sources` meta tag as a comma-separated or YAML-like list.
 
 For each source path:
 1. Check whether the file exists on the filesystem.
-2. If it exists, compare its modification time against the wiki page's modification time.
-3. If the source is newer than the wiki page, the page is stale.
+2. If it exists, its newer modification time may suggest a review, but is not evidence that the reference page is stale. Historical source edits do not establish current behavior.
 
-For each stale page:
-- Set the `fg-status` field to `stale`. For Markdown pages, update frontmatter. For HTML pages, update or add the `fg-status` meta tag.
-- Record the page path and which source files triggered the flag.
+For each page with a newer provenance source, report it only as an optional review lead; do not change `fg-status` from modification time alone. A source timestamp is provenance, not proof of semantic drift. Use `resolve-drift` to check current claims against code/tests and current user direction.
 
-After updating all stale pages, include the list of modified files in the report output under the stale sources section: `Modified: [path list]`.
-
-If a source file no longer exists, record it as a missing source (also a warning).
+If a source file no longer exists, report missing provenance as information, not a defect: sources may be deleted after distillation and provenance is not authority.
 
 ---
 
@@ -91,11 +86,11 @@ Format:
 [warning] Orphan
   Path: .lore/reference/old-spike.md
 
-[warning] Stale page
+[info] Changed provenance (optional review lead)
   Page: .lore/reference/auth-decision.md
-  Newer sources: .lore/work/retros/auth-rollout.md
+  Newer source: .lore/work/retros/auth-rollout.md
 
-[warning] Missing source
+[info] Missing provenance
   Page: .lore/reference/deploy-config.md
   Missing: .lore/work/specs/deploy-spec.md
 

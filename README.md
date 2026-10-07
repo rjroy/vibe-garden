@@ -2,7 +2,7 @@
 
 <img src="logo.webp" align="right" width="128" height="128" alt="Vibe Garden Logo">
 
-![Version](https://img.shields.io/badge/version-2026.02-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-4-purple.svg)
+![Version](https://img.shields.io/badge/version-2026.04-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Plugins](https://img.shields.io/badge/plugins-5-purple.svg)
 
 > A collection of Claude Code plugins for project management, development workflows, and notifications.
 >
@@ -42,17 +42,18 @@ Manage GitHub Projects directly from Claude Code with skills for task tracking, 
 
 **Purpose**: Build and organize project context for development workflows
 
-**Version**: 0.12.0
+**Version**: 4.0.0
 **Location**: `lore-development/`
 
-A lightweight plugin for research, brainstorming, specifications, planning, and retrospectives. Helps maintain project knowledge in `.lore/` directories.
+A lightweight plugin for building and organizing project context. Current skills capture intent, explore ideas, prepare optional plans, and support implementation and retrospectives. Lore is historical context to reconsider against the user's current direction, not a binding specification or required plan.
 
 **Features**:
 - Research and brainstorm tracking
-- Specification writing
-- Plan mode integration
+- Intent and technical design
+- Optional, evidence-informed planning
+- Implementation workflow support
 - Retrospective capture
-- Diagram generation (Mermaid)
+- Four-zone `.lore/` organization (`local/`, `work/`, `reference/`, `learned/`)
 
 ```bash
 # Install in Claude Code
@@ -60,6 +61,28 @@ A lightweight plugin for research, brainstorming, specifications, planning, and 
 ```
 
 [Documentation →](lore-development/README.md)
+
+---
+
+### Field Guide - Project Knowledge
+
+**Purpose**: Selectively distill useful project understanding into a searchable `.lore/reference/` wiki
+
+**Location**: `field-guide/`
+
+Field Guide can synthesize eligible historical artifacts into reference pages, while checking current behavior against code and tests. It is not an automatic compilation of every lore artifact: pages are kept selective, and adding nothing is a valid outcome.
+
+**Features**:
+- Selective lore distillation with user direction taking precedence
+- Optional code/test evidence anchors and drift review
+- Wiki querying, health checks, and reference organization
+
+```bash
+# Install in Claude Code
+/plugin install field-guide@vibe-garden
+```
+
+[Documentation →](field-guide/README.md)
 
 ---
 
@@ -120,10 +143,14 @@ vibe-garden/
 │   └── agents/                # Agent definitions
 │
 ├── lore-development/          # Project context and workflow plugin
-│   ├── .claude-plugin/        # Plugin metadata (v0.12.0)
+│   ├── .claude-plugin/        # Plugin metadata (v4.0.0)
 │   ├── skills/                # Workflow skills
 │   ├── agents/                # Agent definitions
 │   └── shared/                # Shared resources
+│
+├── field-guide/               # Selective project knowledge wiki plugin
+│   ├── .claude-plugin/        # Plugin metadata
+│   └── skills/                # Wiki and distillation skills
 │
 ├── notify-hook/               # Desktop/mobile notification plugin
 │   ├── .claude-plugin/        # Plugin metadata (v1.0.0)
@@ -147,6 +174,7 @@ Install plugins from this repository in Claude Code:
 ```bash
 /plugin install compass-rose@vibe-garden        # Project management
 /plugin install lore-development@vibe-garden    # Development workflows
+/plugin install field-guide@vibe-garden         # Project knowledge wiki
 /plugin install notify-hook@vibe-garden         # Notifications
 /plugin install mind-reader@vibe-garden         # Active feedback
 ```
@@ -179,6 +207,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 <div align="center">
 
-*Last Updated: 2026-02-01*
+*Last Updated: 2026-10-06*
 
 </div>

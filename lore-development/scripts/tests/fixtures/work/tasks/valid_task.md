@@ -1,7 +1,7 @@
 ---
 title: "A valid task"
 date: 2026-03-10
-status: pending
+status: draft
 tags: [testing]
 source: .lore/work/plans/example.md
 sequence: 1

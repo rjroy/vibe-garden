@@ -1,7 +1,7 @@
 ---
 title: "A valid note"
 date: 2026-03-10
-status: in_progress
+status: draft
 tags: [testing]
 source: .lore/work/specs/example.md
 ---

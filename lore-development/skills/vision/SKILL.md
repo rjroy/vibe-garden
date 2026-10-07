@@ -34,6 +34,6 @@ When the document has been reviewed at least once, offer to save. The user can k
 
 ## Saving
 
-Save to `.lore/reference/vision.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. Set `status: draft` — the user marks it approved. The document body is freeform: what the project is, what it values, what it refuses.
+Save to `.lore/reference/vision.md`. Load `../../shared/frontmatter-schema.md (resolved from this skill's base directory)` for the frontmatter fields. Set `status: draft` for a new agent-created document; set `approved` only after explicit user approval (including editing to approve) or when the user asks for its relevant next process step. Arbitrary edits are not approval. Mark applicable work `completed` when the agent's work is done; completion does not imply user approval. Status is lifecycle, not maturity or correctness; current user direction can revise approved artifacts without approval becoming a veto or mandatory gate. Do not ask approval for minor transitions or every document. The document body is freeform: what the project is, what it values, what it refuses.
 
-Write the body Markdown-first per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual genuinely clarifies the north star.
+Write the body Markdown-first per the "Body Format" section of `../../shared/frontmatter-schema.md (resolved from this skill's base directory)`. Reach for embedded inline HTML only when a visual genuinely clarifies the north star.

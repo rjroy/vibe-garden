@@ -1,7 +1,7 @@
 {
   "name": "field-guide",
-  "description": "Compiles .lore/ artifacts into a persistent, query-able HTML wiki stored in .lore/reference/. Sibling to lore-development.",
-  "version": "0.3.0",
+  "description": "Distills useful project understanding into a persistent, searchable wiki in .lore/reference/. Sibling to lore-development.",
+  "version": "1.0.0",
   "author": {
     "name": "Ronald Roy",
     "email": "gsdwig@gmail.com"
