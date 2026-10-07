@@ -2,19 +2,21 @@
 
 <img src="logo.webp" align="right" width="128" height="128" alt="Field Guide Logo">
 
-A Claude Code plugin that compiles `.lore/` artifacts into a persistent, query-able project wiki.
+A Claude Code plugin for distilling useful project understanding into a searchable `.lore/reference/` wiki.
 
 ## What It Does
 
-Most knowledge work produces scattered artifacts: specs, retros, design decisions, lessons learned. Field Guide reads those artifacts and synthesizes the durable knowledge they contain into a wiki stored in `.lore/reference/`. The wiki compounds over time and preserves context the source code cannot recover on its own: intent, rationale, constraints, rejected alternatives, operating lessons, and domain vocabulary.
+Project knowledge appears in scattered artifacts. Field Guide can use eligible historical artifacts as leads to preserve useful rationale, real constraints, failed approaches, and context that code/tests do not adequately communicate. Current behavior claims are checked against implementation and tests. The wiki is explanatory context, not legal authority, a contract, or an archive; current user direction prevails. Keep it selective: merge, update, supersede, or retire pages rather than accumulating a page per artifact. Adding nothing is a valid outcome.
 
 Field Guide is a sibling to lore-development. lore-development generates artifacts in `.lore/work/`; field guide synthesizes them into reference material in `.lore/reference/`.
+
+For an optional preview-first move of legacy `.lore/work/specs/`, `plans/`, `tasks/`, and `notes/`, use `/lore-development:migrate`. Migration preserves these artifacts as historical context; it does not promote them into field-guide reference pages.
 
 ## Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `/field-guide:init` | Bootstrap the wiki directory and register a scheduled daily lint job |
+| `/field-guide:init` | Bootstrap the wiki directory and register a scheduled daily lint job when Claude Cron tools are available |
 | `/field-guide:ingest` | Compile one or more `.lore/` artifacts into wiki pages |
 | `/field-guide:update-evidence` | Attach living code/test anchors to reference pages |
 | `/field-guide:resolve-drift` | Compare reference pages against evidence and reconcile semantic drift |
@@ -24,19 +26,19 @@ Field Guide is a sibling to lore-development. lore-development generates artifac
 
 ## Workflow
 
-**Start with init.** Run `/field-guide:init` once per project to create `.lore/reference/` and register a daily lint job. Re-run it after 7 days to refresh the scheduled job (CronCreate recurring jobs auto-expire after 7 days).
+Run `/field-guide:init` to create `.lore/reference/` and register a daily lint job when the Claude Code harness provides `CronCreate` and `CronList`. Without those tools, wiki setup still succeeds but scheduling is skipped. Re-run init after 7 days to refresh the scheduled job (CronCreate recurring jobs auto-expire after 7 days).
 
-**Ingest as you go.** After completing work in lore-development (finishing a retro, approving a spec, closing out a design), run `/field-guide:ingest` pointing at the new artifact or a whole directory. Ingest reads Markdown and HTML sources, extracts distinct durable knowledge units, skips implementation details that can be reconstructed from code, and writes the surviving guidance as typed wiki pages. Re-ingesting an existing source reconciles the wiki against the updated content and flags contradictions for your review.
+**Distill when useful.** `/field-guide:ingest` can take historical brainstorms, designs, intents, research, and retros as candidate leads. It independently checks current claims against code/tests, skips knowledge already apparent there, and retains only material that can help a future change. Plans, notes, and tasks (including local plans) are not reference sources; at most they can suggest where to investigate. No candidate need produce a page.
 
-**Wire evidence after ingestion.** Run `/field-guide:update-evidence` to connect reference pages to living code, tests, data files, and symbols. Treat `fg-sources` as ingestion provenance; source artifacts can be deleted after durable knowledge is captured. Evidence anchors are what future checks use to notice likely drift.
+**Evidence is optional and scoped.** `/field-guide:update-evidence` connects current behavior claims to code/tests. `fg-sources` is provenance only; it does not establish authority or currency, and source artifacts can be deleted.
 
-**Resolve semantic drift when evidence changes.** Run `/field-guide:resolve-drift` when code or tests have moved under an evidence-backed page, or when you want an audit of reference accuracy. This pass reads the page plus its evidence, then updates stale prose, refreshes evidence, or reports implementation drift from intended design.
+**Review accuracy when useful.** `/field-guide:resolve-drift` compares current behavior claims with evidence and user direction. It can update, merge, supersede, or retire pages; historical design differences are reported as context, not automatic implementation failures.
 
-**Query the accumulated knowledge.** Run `/field-guide:query` with a natural language question. The skill reads the wiki index, pulls relevant pages, searches `.lore/work/` for additional context, and synthesizes a cited answer. You can file the answer back into the wiki as a synthesis page.
+**Query the reference.** `/field-guide:query` answers with citations, separating code/test-backed behavior from historical rationale. Work artifacts may offer context or investigation leads, not authority; plans, notes, and tasks are not reference sources, and current user direction prevails. Save a synthesis only if it adds useful understanding not already present.
 
 **Stratify when the wiki outgrows a flat directory.** Once a directory accumulates more than ~12 pages, run `/field-guide:stratify` to group pages into topical category directories (3-4 groups per split, adjusting toward 6-7 top-level categories as the wiki grows). Stratify moves pages, rewrites the index by category, and repairs every link that referenced the old paths — inside the wiki and across the repository. After the first run, later runs split only the directories that have outgrown the threshold. Ingest and query place new pages into the category layout automatically.
 
-**Let lint run, or trigger it manually.** The scheduled lint job fires daily and checks for stale pages, orphans, contradictions, concepts that deserve their own page, and directories due for stratification. Run `/field-guide:lint` directly any time you want a health check.
+**Lint when useful.** `/field-guide:lint` checks wiki structure and surfaces review leads. Changed source timestamps do not prove a page stale or make a historical source binding; use resolve-drift for semantic validation.
 
 ## Output Structure
 
@@ -87,7 +89,7 @@ Markdown pages carry YAML frontmatter. HTML pages carry equivalent `<meta name="
 
 - `fg-type` — the page type (see above)
 - `fg-sources` — paths to the `.lore/` artifacts this page was derived from; YAML list in Markdown, comma-separated or YAML-like value in HTML
-- `fg-status` — `current`, `stale` (set by lint when sources have changed), or `archived`
+- `fg-status` — `current`, `stale` (semantic review found outdated content; provenance timestamps alone do not establish staleness), or `archived`
 - `fg-evidence` — optional living code/test/symbol anchors for Markdown pages
 - `fg-evidence-code`, `fg-evidence-tests`, `fg-evidence-symbols` — optional living anchors for HTML pages
 

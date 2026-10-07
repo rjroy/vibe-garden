@@ -1,39 +1,30 @@
 ---
 name: simplify
-description: This skill should be used when the user wants to clean up code without changing behavior. Dispatches cleanup agents, runs tests to verify behavior is preserved, then runs code review. Triggers include "simplify this", "clean up this code", "refactor without changing behavior", "reduce complexity".
+description: Use when the user wants to simplify or clean up code without changing behavior. Accepts standalone scope or user-selected findings from /refactor.
 ---
 
 # Simplify
 
-Orchestrate code cleanup through agent delegation. Preserve behavior. Don't change what the code does.
+Execute a bounded, behavior-preserving cleanup through delegation; do not edit target code directly.
 
-Act as orchestrator. Dispatch work to sub-agents via the Task tool. Do not edit code directly.
+## Scope and contract
 
-## Input
+Center execution on the scope the user agreed to, behavior to preserve, and enough evidence to verify preservation. For a /refactor handoff, use only the findings the user selected: carry their paths/scope, intended structural improvement, preserved behaviors, and checks. No plan, spec, or behavior matrix is required. Findings are recommendations, not authorization to change behavior. A requested retirement or other behavior change must be handled separately with the user's authorization; do not disguise it as cleanup. The current user's direction governs over any old artifact, which is context rather than binding authority.
 
-Invoked as `/simplify` with optional arguments:
+Standalone use remains supported. Resolve scope reliably before dispatch. Load `scope-resolution.md` only when determining Git or file scope; it covers committed and pending work, explicit inputs, replacement/deletion references, and when to ask rather than guess. Include necessary adjacent code/tests without absorbing unrelated work. Never recreate deleted files, mutate commits, or revert unrelated changes.
 
-- **No args**: simplify files with uncommitted changes (`git status`)
-- **File pattern**: simplify files matching the pattern
-- **Notes path** (`.lore/work/notes/*.md`): resume a previous session
+Simplify duplication, unnecessary scaffolding, or incidental tests only when there is a material maintenance cost in the agreed scope. Do not chase every smell or target a test count. Keep relevant contracts protected; do not make automatic behavior changes or assume test count/apparent lack of use makes behavior obsolete.
 
 ## Process
 
-**Cleanup.** Dispatch `code-simplifier:code-simplifier` via Task tool with the file list. If `.lore/lore-agents.md` exists, check for additional simplification agents in the Code Quality section and dispatch them too.
+Only one agent edits target files at a time. Select the cleanup agent from `.lore/lore-agents.md` when available and invoke it with Claude Code's current `Agent` tool; on older versions use `Task`. Use `lore-development:<agent-name>` for a bundled agent, the registered name for a project agent, or `general-purpose` if no specialist applies. Delegate the agreed scope, improvement, preserved behavior, and verification evidence.
 
-**Test.** Dispatch a testing agent via Task tool. Include which files changed and how to run the test suite. Expect pass/fail and notable findings. If tests fail, diagnose and route back to the cleanup agent for correction. After two failed attempts on the same issue, escalate to the user.
-
-**Review.** Dispatch a review agent via Task tool. Include which files to review and the requirement that behavior must be preserved. Route findings back to the cleanup agent for correction. After two failed attempts, escalate to the user.
+Then run the ordered loop: **cleanup** (delegated edits) → **test** (read-only verification) → **review** (read-only review). Test retained behavior proportionally; test and review return findings, not edits. Give review findings stable IDs. Route bounded corrections to cleanup and request fresh read-only verification with complete finding records and correction diff. Escalate after two failed attempts on an issue, or three total correction rounds.
 
 ## Output
 
-Record what happened in a notes file at `.lore/work/notes/simplify-<identifier>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields. The body is freeform — capture which files were processed, what was simplified, any failures and how they were resolved.
-
-Write the body in Markdown per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual carries meaning prose can't, such as a color-coded per-file outcome table.
+Writing a local note is optional. If useful, resolve `../../scripts/ensure_local.py` from this skill's installed directory and run `python3 <resolved-helper-path> <explicit-project-root>` before writing under `.lore/local/notes/`. Write only after setup succeeds; do not fall back to `.lore/work/` if setup fails. Load `../../shared/frontmatter-schema.md` from this skill's base directory for common fields and lifecycle semantics: start `draft`, use `approved` on explicit user approval or a request for the relevant next step, `completed` when work is done, and `archived` when archived. Record scope, files processed, simplifications, and failures/resolutions when useful; no note is mandatory.
 
 ## Escalation
 
-Two conditions require human intervention. Everything else is autonomous.
-
-1. **Stuck loop**: Two consecutive failed attempts on the same test or review failure.
-2. **Behavior change detected**: Tests fail in a way that suggests behavior changed rather than a cleanup regression.
+Ask when scope cannot be resolved reliably, when behavior change is proposed or detected, or when a correction limit is reached. Keep behavior-changing work separate from this behavior-preserving workflow.

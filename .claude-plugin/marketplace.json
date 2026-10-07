@@ -21,7 +21,7 @@
     {
       "name": "lore-development",
       "source": "./lore-development",
-      "description": "A lightweight plugin for building and organizing project context. Skills for research, brainstorming, specifications, work breakdown, planning, validation, and retrospectives.",
+      "description": "Builds and organizes project context through intent, research, brainstorming, optional planning, implementation, and retrospectives. Historical work artifacts are nonbinding context; current user direction takes precedence.",
       "repository": "https://github.com/rjroy/vibe-garden.git",
       "license": "MIT"
     },
@@ -35,7 +35,7 @@
     {
       "name": "field-guide",
       "source": "./field-guide",
-      "description": "Compiles .lore/ artifacts into a persistent, query-able HTML wiki in .lore/reference/. Skills for ingesting lore documents, querying accumulated knowledge, and health-checking the wiki.",
+      "description": "Selectively distills useful project understanding into a searchable .lore/reference/ wiki. Historical artifacts are leads, not authority; current behavior is checked against code/tests, and adding no page is valid.",
       "repository": "https://github.com/rjroy/vibe-garden.git",
       "license": "MIT"
     }

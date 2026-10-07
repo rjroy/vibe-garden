@@ -1,7 +1,7 @@
 ---
 title: "A valid reference doc"
 date: 2026-03-10
-status: current
+status: completed
 tags: [testing]
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "A valid learned entry"
 date: 2026-03-10
-status: active
+status: completed
 tags: [testing]
 ---
 

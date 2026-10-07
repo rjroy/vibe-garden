@@ -6,6 +6,15 @@ This project uses [CalVer](https://calver.org/) (YYYY.MM) for repository release
 
 ---
 
+## Unreleased
+
+### Documentation
+
+- Updated the repository inventory to include Field Guide and describe the current Lore Development intent-centered workflow.
+- Clarified that `.lore/` historical work artifacts are nonbinding context, and that Field Guide distillation is selective rather than automatic compilation.
+
+---
+
 ## [2026.04] - 2026-04-25
 
 **Lore Development reset.** The `lore-development` plugin was redesigned around a three-tier directory model (`work/`, `reference/`, `learned/`) that separates in-flight artifacts, durable invariants, and institutional knowledge. Existing projects migrate via `/tend migrate`.

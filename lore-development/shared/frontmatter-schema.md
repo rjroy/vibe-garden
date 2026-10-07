@@ -38,15 +38,16 @@ When you do, write the HTML **raw and inline** so it renders. Never put it in a 
 
 Render target is local editors (Obsidian, VS Code preview, pandoc, browser), where inline `style=` and `<svg>` render fully.
 
-## The three-directory model
+## The four-zone model
 
-`.lore/` is organized into three top-level directories. Every lore document lives under exactly one of them:
+`.lore/` separates disposable local context, shared historical work, maintained reference, and operational learning:
 
-- **`.lore/work/`** — work scaffolding. Session-bound material: brainstorms, specs, designs, plans, tasks, notes, research, retros, issues, ideas, validation, stubs, excavation indices, session diagrams.
+- **`.lore/local/`** — disposable, gitignored plans, implementation notes, and generic task context. New plans and notes go here; task artifacts are not automatic implementation phases.
+- **`.lore/work/`** — shared historical conversations and work. Intents, brainstorms, legacy specs, designs, research, retros, issues, ideas, validation, stubs, excavation indices, and session diagrams remain discoverable. Existing tracked content is preserved. Legacy plans, tasks, and notes remain readable historical context, not binding instructions.
 - **`.lore/reference/`** — solidified, system-oriented documentation. What the code cannot say. Distilled feature docs, vision, current-state diagrams.
-- **`.lore/learned/`** — operational imperatives, mistakes-only, worker-oriented. Written by `/learn`.
+- **`.lore/learned/`** — operational imperatives, mistakes-only, worker-oriented. This zone is reserved for useful operational learning; no lore-development skill currently writes it.
 
-Status values are scoped to the directory tree the document lives in (see "Status Values" below).
+All lore uses the same four lifecycle statuses (see "Status Values" below). Initialize local storage with `python3 <path-to-lore-development>/scripts/ensure_local.py <project-root>` before writing local artifacts. The helper creates the directory, adds a root-anchored ignore rule, and verifies effective ignore behavior in Git worktrees.
 
 ## Common Fields
 
@@ -56,74 +57,63 @@ All lore documents include these fields:
 |-------|----------|-------|
 | title | Yes | Used for search; repeated in body as `# H1` |
 | date | Yes | Creation or completion date, `YYYY-MM-DD` |
-| status | Yes | Document-type-specific (see below) |
+| status | Yes | Shared four-value lifecycle across all lore zones (see below) |
 | tags | Yes | List of kebab-case keywords |
 | modules | No | List of kebab-case module names |
 | related | No | List of paths to related lore documents |
 
 Array fields (`tags`, `modules`, `related`) use YAML list syntax: `[a, b, c]` inline, or a block list with `-` items.
 
-## Spec-Specific Fields
+## Optional Review Annotations
 
-Specs support one additional optional field:
+Lore Garden supports optional `comments`, `todos`, and `starred` frontmatter
+fields on work documents. These are annotations for review, not lifecycle
+statuses, approval signals, or implementation authorization:
 
 ```yaml
-req-prefix: AUTH
+comments:
+  - author: rjroy
+    at: "2026-10-06"
+    text: Please clarify this point.
+todos:
+  - text: Check the migration boundary
+    done: false
+starred: true
 ```
 
-| Field | Required | Notes |
-|-------|----------|-------|
-| req-prefix | No | Override auto-generated prefix. Use 3-12 uppercase chars. |
+| Field | Required shape | Notes |
+|-------|----------------|-------|
+| comments | Optional list of records, each with string `author`, `at`, and `text` | A comment is review context; it does not approve or authorize work. |
+| todos | Optional list of records, each with string `text` and boolean `done` | Document-level follow-ups only, not a replacement for Beads task tracking. |
+| starred | Optional boolean | A marker for a document; it does not indicate approval or priority authorization. |
 
-If omitted, prefix is auto-generated from the spec filename (first 2 segments, uppercase, max 12 chars).
-
-Examples:
-- `auth-flow.md` → `AUTH-FLOW`
-- `user-authentication-oauth2.md` → `USER-AUTH`
-- With `req-prefix: AUTH` → `AUTH`
-
-Requirements then use format: `REQ-{prefix}-N` (e.g., `REQ-AUTH-FLOW-1`)
+Do not add empty annotation fields to new documents. When editing an existing
+document, preserve its comments, todos, star, and unrelated frontmatter unless
+the user explicitly asks to change them. Do not infer approval, completion, or
+permission to implement from comments, checked follow-ups, or a star. Do not
+resolve comments or mark follow-ups done automatically just because the agent
+believes the work is finished; change annotations only when explicitly asked.
+The lifecycle remains `draft`, `approved`, `completed`, or `archived` as defined
+in Status Values above; annotations do not add or replace lifecycle states.
 
 ## Status Values
 
-Status values are organized into three sets, one per top-level directory.
+Every document in all four zones, including nested reference and learned documents, uses exactly these lifecycle values:
 
-### Work documents
+| Status | Meaning |
+|--------|---------|
+| `draft` | Agent-created work not yet explicitly approved by the user. Default for new documents. |
+| `approved` | The user explicitly approved the document, including by editing it to approve it, or asked for its relevant next process step. |
+| `completed` | The agent completed the work applicable to the document. This does not imply user approval. |
+| `archived` | The document is archived for any reason. |
 
-Work artifacts retain meaningful per-type lifecycles. The directory key is `work/<type>`.
+Status describes document/work lifecycle, not maturity, correctness, currency, or authority. Do not infer approval from arbitrary edits; user editing that signals approval/acceptance is explicit approval. Current user direction can revise an approved artifact; approval is not a veto or a mandatory gate. Do not ask for approval on minor transitions or every document. Approval includes the user asking to proceed to the relevant next process step; do not treat agent guesses or a generic request to do work as approval of a particular artifact. Field-guide freshness uses separate `fg-status` metadata (for example `current`/`stale`) and is not this lifecycle field. Beads issue status is also separate.
 
-| Type | Directory | Valid Status Values |
-|------|-----------|---------------------|
-| brainstorm | `.lore/work/brainstorm/` | `open`, `parked`, `resolved`, `archived` |
-| spec | `.lore/work/specs/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
-| design | `.lore/work/design/` | `draft`, `approved`, `implemented`, `superseded`, `archived` |
-| plan | `.lore/work/plans/` | `draft`, `approved`, `executed`, `archived` |
-| task | `.lore/work/tasks/` | `pending`, `complete`, `skipped` |
-| notes | `.lore/work/notes/` | `in_progress`, `complete`, `archived` |
-| research | `.lore/work/research/` | `active`, `archived` |
-| retro | `.lore/work/retros/` | `open`, `archived` |
-| issue | `.lore/work/issues/` | `open`, `resolved`, `wontfix`, `archived` |
-| diagram (work) | `.lore/work/diagrams/` | `current`, `outdated`, `archived` |
-
-Diagrams in both `work/diagrams/` and `reference/diagrams/` share the same status set: `current` while accurate, `outdated` once not, `archived` once no longer worth maintaining. The split is at the directory level, not the status level.
-
-### Reference documents
-
-All reference documents share one status set:
-
-| Directory | Valid Status Values |
-|-----------|---------------------|
-| `.lore/reference/` (and any subdirectory) | `current`, `outdated`, `archived` |
-
-### Learned documents
-
-| Directory | Valid Status Values |
-|-----------|---------------------|
-| `.lore/learned/` | `active`, `superseded` |
+The schema validator enforces only these four values uniformly in `.lore/work/`, `.lore/local/`, `.lore/reference/` (including subdirectories), and `.lore/learned/`.
 
 ## Notes-Specific Fields
 
-Notes support one additional required field:
+Notes may include a source field when a particular artifact informed the work:
 
 ```yaml
 source: .lore/work/plans/auth-flow.md
@@ -131,11 +121,13 @@ source: .lore/work/plans/auth-flow.md
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| source | Yes | Path to the spec, design, or plan being implemented. Enables retro to diff plan vs reality. |
+| source | No | Path to a relevant intent, spec, design, plan, or other context. Useful for navigation, but notes do not require a source artifact. |
 
 ## Task-Specific Fields
 
-Tasks support two additional required fields:
+Historical tasks under `.lore/work/tasks/` support two additional required
+fields. Generic task context under `.lore/local/tasks/` uses common fields only
+and is not an execution sequence.
 
 ```yaml
 source: .lore/work/plans/auth-flow.md
@@ -144,12 +136,12 @@ sequence: 1
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| source | Yes | Path to the plan this task was decomposed from. Enables implement to find the parent plan. |
-| sequence | Yes | Integer ordering within the task set. Determines execution order in implement. |
+| source | Required for historical `.lore/work/tasks/`; optional for local tasks | Path to relevant context. |
+| sequence | Required for historical `.lore/work/tasks/`; optional for local tasks | Historical ordering only; it does not determine `/implement` execution order. |
 
 ## Vision-Specific Notes
 
-The vision document lives at `.lore/reference/vision.md` (one per project). It uses the common fields only; `modules` is intentionally omitted because the vision applies to the entire project. A vision becomes `current` when the user edits the meta directly or tells the skill to mark it so.
+The vision document lives at `.lore/reference/vision.md` (one per project). It uses the common fields only; `modules` is intentionally omitted because the vision applies to the entire project. Use the shared lifecycle: explicit user approval or a request for its relevant next process step may mark it `approved`; agent completion is `completed`. Freshness is not represented by lifecycle status.
 
 ## Examples
 
@@ -159,7 +151,7 @@ The vision document lives at `.lore/reference/vision.md` (one per project). It u
 ---
 title: "Implementation notes: auth-flow"
 date: 2026-02-05
-status: in_progress
+status: draft
 tags: [implementation, notes]
 source: .lore/work/plans/auth-flow.md
 modules: [auth-service]
@@ -176,7 +168,7 @@ modules: [auth-service]
 ---
 title: Add auth middleware
 date: 2026-02-10
-status: pending
+status: draft
 tags: [task]
 source: .lore/work/plans/auth-flow.md
 sequence: 1
@@ -194,7 +186,7 @@ modules: [auth-service]
 ---
 title: N+1 query in brief generation
 date: 2026-01-30
-status: open
+status: draft
 tags: [performance, database, eager-loading]
 modules: [brief-system, email-processing]
 ---
@@ -204,23 +196,41 @@ modules: [brief-system, email-processing]
 ...
 ```
 
-### Spec
+### Intent
 
 ```markdown
 ---
-title: User authentication flow
+title: Why users need a simpler sign-in flow
 date: 2026-01-28
 status: draft
-tags: [auth, security, login]
+tags: [auth, security, sign-in]
 modules: [auth-service, user-model]
 related: [.lore/work/research/oauth-patterns.md]
-req-prefix: AUTH
 ---
 
-# User authentication flow
+# Why users need a simpler sign-in flow
 
-...
+The current sign-in flow is confusing for returning users. We want to make it
+easier to get back into an account without weakening account security. We have
+not chosen an implementation; discuss options and useful validation in the plan.
 ```
+
+Older `.lore/work/specs/` documents remain discoverable historical context. Their
+requirement IDs and validation sections do not make them authoritative for
+current work. Explicit migration normalizes old lifecycle status to the four
+values and records a changed original value in optional `legacy_status`. This
+does not make a document newly authored or confer authority. Do not rewrite
+project histories merely to normalize status.
+
+On explicitly migrated artifacts, old `draft`/`open`/`pending`/`in_progress`
+become `draft`; `approved` stays `approved`; `completed`/`complete`/
+`implemented`/`executed`/`resolved` become `completed`; `archived`/
+`superseded`/`parked`/`outdated`/`wontfix`/`skipped` become `archived`.
+Old `current` and `active` become `completed`: those labels describe maintained
+or agent-produced content, not explicit user approval or guaranteed currency.
+An unrecognized value blocks preview rather than guessing. This migration is
+limited to mapped legacy-layout artifacts; it does not normalize project
+histories, wikis, or current-zone files en masse.
 
 ### Brainstorm
 
@@ -228,7 +238,7 @@ req-prefix: AUTH
 ---
 title: Compound loop for lore-development
 date: 2026-01-30
-status: open
+status: draft
 tags: [methodology, feedback-loop, knowledge-management]
 modules: [lore-development]
 ---
@@ -272,7 +282,7 @@ related: [.lore/work/specs/auth-flow.md]
 ...
 ```
 
-New plans always start as `draft`. They move to `approved` when the user accepts them, and `executed` after implementation completes.
+New plans start as `draft`. Mark them `approved` only on explicit user approval or when the user asks for the relevant next process step; mark applicable work `completed` when it is done. Implementing a plan does not imply that the plan itself was user-approved.
 
 ### Research
 
@@ -280,7 +290,7 @@ New plans always start as `draft`. They move to `approved` when the user accepts
 ---
 title: OAuth 2.0 patterns for CLI tools
 date: 2026-01-25
-status: active
+status: draft
 tags: [oauth, authentication, cli, security]
 ---
 
@@ -295,7 +305,7 @@ tags: [oauth, authentication, cli, security]
 ---
 title: Message flow between user and AI
 date: 2026-01-29
-status: current
+status: completed
 tags: [architecture, messaging, websocket]
 modules: [chat-service, ai-client]
 ---
@@ -313,7 +323,7 @@ A diagram is a strong case for embedded HTML: an inline `<svg>` of the topology 
 ---
 title: User authentication feature
 date: 2026-01-30
-status: current
+status: approved
 tags: [auth, login, session]
 modules: [auth-service, user-model]
 ---
@@ -329,7 +339,7 @@ modules: [auth-service, user-model]
 ---
 title: Session dialog overflow on narrow viewports
 date: 2026-02-18
-status: open
+status: draft
 tags: [ui, layout, responsive]
 modules: [session-dialog]
 ---
@@ -345,7 +355,7 @@ modules: [session-dialog]
 ---
 title: Vibe Garden Vision
 date: 2026-03-16
-status: current
+status: approved
 tags: [vision]
 ---
 
@@ -360,7 +370,7 @@ tags: [vision]
 ---
 title: Don't ship the same path string in two places
 date: 2026-04-24
-status: active
+status: completed
 tags: [refactor, hardcoded-paths]
 modules: [lore-development]
 ---
@@ -386,9 +396,11 @@ modules: [lore-development]
 
 ## Search Behavior
 
-The `lore-researcher` agent greps these fields to find related prior work:
+The `lore-researcher` agent uses these fields to rank related prior work:
 - `title:` for topic matches
 - `tags:` for keyword matches
 - `modules:` for codebase area matches
 
-Documents without frontmatter won't be found by search.
+It also searches document bodies. A document without frontmatter can therefore
+be found by body text, but it is lower-confidence legacy material because its
+type, lifecycle status, and module scope cannot be established from metadata.

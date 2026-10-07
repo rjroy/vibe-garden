@@ -1,0 +1,67 @@
+formula = "lore-development"
+description = "Explore intent, design, plan, implement, and capture lore for a change"
+version = 1
+type = "workflow"
+
+[vars.topic]
+description = "The problem or change being explored"
+required = true
+
+[vars.artifact_name]
+description = "Kebab-case name used for lore artifacts"
+required = true
+
+[[steps]]
+id = "research"
+title = "Research prior lore for {{topic}}"
+
+[[steps]]
+id = "brainstorm"
+title = "Brainstorm {{topic}}"
+needs = ["research"]
+
+[[steps]]
+id = "intent"
+title = "Capture intent for {{artifact_name}}"
+needs = ["brainstorm"]
+
+[[steps]]
+id = "design"
+title = "Design {{artifact_name}}"
+needs = ["intent"]
+
+[[steps]]
+id = "approve-design"
+title = "Human approval: design for {{artifact_name}}"
+needs = ["design"]
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "plan"
+title = "Prepare implementation plan for {{artifact_name}}"
+needs = ["approve-design"]
+
+[[steps]]
+id = "approve-plan"
+title = "Human approval: implementation plan for {{artifact_name}}"
+needs = ["plan"]
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "implement"
+title = "Implement {{artifact_name}}"
+needs = ["approve-plan"]
+
+[[steps]]
+id = "validate"
+title = "Test and review {{artifact_name}}"
+needs = ["implement"]
+
+[[steps]]
+id = "retro"
+title = "Capture a retro for {{artifact_name}}"
+needs = ["validate"]

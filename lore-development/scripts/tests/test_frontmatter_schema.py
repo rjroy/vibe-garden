@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from frontmatter_schema import (
     FIELD_TYPES,
+    LORE_STATUSES,
     OPTIONAL_FIELDS,
     REQUIRED_FIELDS,
     STATUS_VALUES,
@@ -22,10 +23,11 @@ from frontmatter_schema import (
 )
 
 # Directory keys listed in the schema's "Status Values" tables.
-# Keying convention: work/<type> for work documents, single-name keys for
-# reference and learned (each covers its whole subtree).
+# Keying convention: <zone>/<type> for work/local documents, single-name keys
+# for reference and learned (each covers its whole subtree).
 SCHEMA_DOCUMENT_TYPES = [
     "work/brainstorm",
+    "work/intents",
     "work/specs",
     "work/design",
     "work/plans",
@@ -35,6 +37,9 @@ SCHEMA_DOCUMENT_TYPES = [
     "work/retros",
     "work/issues",
     "work/diagrams",
+    "local/plans",
+    "local/tasks",
+    "local/notes",
     "reference",
     "learned",
 ]
@@ -60,6 +65,23 @@ class TestOptionalFields(unittest.TestCase):
         """Optional fields match the 'No' rows in the Required vs Optional table."""
         expected = ["modules", "related"]
         self.assertEqual(OPTIONAL_FIELDS, expected)
+
+    def test_documents_optional_review_annotations_and_safety_guidance(self):
+        root = Path(__file__).resolve().parents[2]
+        schema = " ".join((root / "shared" / "frontmatter-schema.md").read_text().split())
+        for required_text in (
+            "Optional Review Annotations",
+            "Optional list of records, each with string `author`, `at`, and `text`",
+            "Optional list of records, each with string `text` and boolean `done`",
+            "Optional boolean",
+            "not a replacement for Beads task tracking",
+            "preserve its comments, todos, star, and unrelated frontmatter",
+            "Do not add empty annotation fields",
+            "Do not infer approval, completion, or permission to implement",
+            "Do not resolve comments or mark follow-ups done automatically",
+        ):
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, schema)
 
 
 class TestFieldTypes(unittest.TestCase):
@@ -108,18 +130,40 @@ class TestStatusValues(unittest.TestCase):
             for v in values:
                 self.assertIsInstance(v, str, f"Non-string status value in '{doc_type}': {v}")
 
+    def test_all_zones_share_exact_four_lifecycle_values(self):
+        expected = ["draft", "approved", "completed", "archived"]
+        self.assertEqual(LORE_STATUSES, expected)
+        for values in STATUS_VALUES.values():
+            self.assertEqual(values, expected)
+
+    def test_document_writing_skills_use_shared_lifecycle_guidance(self):
+        root = Path(__file__).resolve().parents[2]
+        skill_names = [
+            "intent", "brainstorm", "design", "prep-plan", "retro", "research",
+            "vision", "define-validation", "implement", "simplify",
+        ]
+        for name in skill_names:
+            with self.subTest(skill=name):
+                text = (root / "skills" / name / "SKILL.md").read_text()
+                self.assertIn("draft", text)
+                self.assertIn("explicit user approval", text)
+                self.assertIn("completed", text)
+
 
 class TestTypeSpecificRequired(unittest.TestCase):
-    def test_notes_has_source(self):
-        """Notes require 'source' per the Notes-Specific Fields section."""
+    def test_notes_do_not_require_source(self):
+        """Notes may capture work from a direct request without a source artifact."""
         self.assertIn("work/notes", TYPE_SPECIFIC_REQUIRED)
-        self.assertIn("source", TYPE_SPECIFIC_REQUIRED["work/notes"])
+        self.assertNotIn("source", TYPE_SPECIFIC_REQUIRED["work/notes"])
 
     def test_tasks_has_source_and_sequence(self):
         """Tasks require 'source' and 'sequence' per the Task-Specific Fields section."""
         self.assertIn("work/tasks", TYPE_SPECIFIC_REQUIRED)
         self.assertIn("source", TYPE_SPECIFIC_REQUIRED["work/tasks"])
         self.assertIn("sequence", TYPE_SPECIFIC_REQUIRED["work/tasks"])
+
+    def test_local_tasks_are_generic_context(self):
+        self.assertEqual(TYPE_SPECIFIC_REQUIRED["local/tasks"], [])
 
 
 if __name__ == "__main__":

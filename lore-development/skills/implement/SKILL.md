@@ -1,79 +1,93 @@
 ---
 name: implement
-description: Use when ready to build from a spec, design, or plan, or to resume from notes. Triggers include "implement this", "build this", "implement the spec/design/plan", "continue implementation", and "resume where we left off".
+description: Use when ready to build from the user's current request or intent, optionally informed by a spec, design, plan, or notes. Triggers include "implement this", "build this", "implement the request/intent", "continue implementation", and "resume where we left off".
 ---
 
 # Implement
 
-Act as orchestrator. Dispatch work to sub-agents via the Task tool and record what happens. Do not write code, run tests, or review code directly. Every implementation, testing, and review action goes through a Task tool invocation. No exceptions.
+Coordinate implementation, testing, and review proportionately, keeping their evidence and outcomes distinct. When delegating, prefer Claude Code's current `Agent` tool; on versions without `Agent`, use `Task`. Use fully qualified `lore-development:<agent-name>` identifiers for this plugin's bundled agents, project-provided agents as registered, and `general-purpose` when no specialist applies. For a small or straightforward change, handle work directly when appropriate rather than imposing delegation ceremony.
 
 ## Input
 
-Invoked as `/implement <path>` where `<path>` is a lore artifact: spec, design, plan, or notes file. Read the input artifact and any lore documents it references. If the input is a notes file, resume from where it left off.
+Invoke `/implement` with the user's current request, optionally pointing to an intent, plan, design, spec, or notes file for context. A plan is useful but not required. Read linked material when it helps; historical artifacts inform the work but do not authorize or veto it. When resuming from notes, use them as context and confirm the next action against the user's current direction.
 
 ## Output
 
-Implemented code plus a notes file at `.lore/work/notes/<artifact-name>.md`. Load `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md` for the frontmatter fields before writing.
-
-The notes file needs enough structure to be resumable: a progress tracker (phases with checkboxes) and a log (what happened, failures, decisions, discoveries). Update it after every phase, not just at session end.
-
-Write the body in Markdown per the "Body Format" section of `${CLAUDE_PLUGIN_ROOT}/shared/frontmatter-schema.md`. Reach for embedded inline HTML only when a visual carries meaning prose can't, such as a color-coded phase-status diagram readable at a glance mid-session.
+Implement the requested change. Keep or update a notes file only when it helps resume substantial or interrupted work; do not create one by default. Save lore notes under `.lore/local/notes/` and follow the shared frontmatter schema. New agent-created notes start `draft`; use `approved` only after explicit user approval (including editing to approve) or when the user asks for the relevant next process step. Arbitrary edits are not approval. Mark applicable work `completed` when agent work is done; completion does not imply approval. Status tracks lifecycle, not maturity or correctness; current direction may revise approved artifacts and approval is not a veto or mandatory gate. Do not ask approval for minor transitions or every document. Before writing local output, resolve `../../scripts/ensure_local.py` from this skill's installed directory and run it with `python3 <resolved-helper-path> <explicit-project-root>`. Write only after setup succeeds; report setup failure as a blocker for local output, not a reason to fall back to `.lore/work/`. Do not run setup if no local output is useful.
 
 ## Process
 
 ### 1. Initialize
 
-Search for related prior work: invoke the `lore-researcher` agent via Task tool with the artifact description. Wait for the result before continuing.
+For substantial work where prior context may matter, ask Claude Code's `Agent` tool with `subagent_type: "lore-development:lore-researcher"` to surface relevant history; on versions without `Agent`, use `Task` with the same fully qualified name. Do not delay a straightforward change for irrelevant lore research. If invoked, use its result as context and verify consequential claims against current code or the user.
 
-Break the input into implementable phases. If the input is a plan, phases are its steps. If a spec or design, break into independently testable chunks.
-
-**Task file detection.** When the input is a plan, check whether `.lore/work/tasks/<plan-name>/` exists. If it does, read task files sorted by their `sequence` frontmatter field — these become the phases. Compare the plan's modification timestamp against the oldest task file. If the plan is newer, warn the user and offer three options: re-run `/plan-breakdown`, use existing tasks, or abort.
+Understand the user's requested outcome and any new evidence. Use the plan's steps when a useful plan is supplied; otherwise choose a small number of coherent phases appropriate to the work. Prefer existing capabilities and account for affected consumers, actual behavior, and relevant safety or compatibility constraints. Current user direction may authorize behavior or contract changes; do not treat an old artifact's silence, approval status, or requirements as a veto. Raise concrete safety/compatibility consequences or consequential unresolved choices, not mere historical noncompliance.
 
 **Select agents.** Consult `.lore/lore-agents.md` if it exists. Match agents to three mandatory roles:
 
 | Role | Registry Category | Fallback |
 |------|-------------------|----------|
-| Implementation | Implementation | `general-purpose` |
-| Testing | Testing | `general-purpose` |
-| Review | Code Quality | `general-purpose` |
+| Implementation | Implementation | Claude Code `general-purpose` subagent |
+| Testing | Testing | Claude Code `general-purpose` subagent |
+| Review | Code Quality | `lore-development:bun-typescript-reviewer` for matching projects; otherwise Claude Code `general-purpose` subagent |
+
+When the registry has no Code Quality selection, use the bundled
+`lore-development:bun-typescript-reviewer` if the repository uses Bun and TypeScript and the
+changed surface includes its daemon, Unix-socket, CLI, Next.js, or React
+architecture. Do not use it merely because a repository contains one incidental
+TypeScript file. For other stacks, retain the host general-purpose fallback.
+
+**Choose evidence.** Identify the project-specific behavior and risks that matter
+to this change. Reuse adequate tests and other evidence; add focused checks for
+distinct plausible defects or important safety/compatibility boundaries. The full
+suite passing is not enough when it does not demonstrate the requested behavior.
+Do not create requirement IDs, exhaustive mappings, or one test per step or goal.
 
 ### 2. Execute Phases
 
 For each phase:
 
-**a. Implement.** Dispatch to an implementation agent via Task tool. Include: what to build, relevant file paths, context from prior phases or failures. One phase at a time — the agent does not see the full plan.
+Only one agent may operate on a phase's files at a time. Await each result before
+dispatching the next role. Testing and review agents are read-only: they return
+evidence or findings and never edit files. Do not test or review a moving worktree.
 
-**b. Test.** Dispatch to a testing agent via Task tool. Include: which files changed, what behavior to verify, how to run the test suite. Expect back: pass/fail and notable findings only.
+**a. Implement.** When implementation delegation is useful, dispatch with the current `Agent` tool or older-version `Task`, selecting the fully qualified registry agent as `subagent_type` when available and otherwise `general-purpose`. Include the requested outcome, relevant paths, affected consumers, consequential constraints or authorized behavior changes, and useful prior-phase findings. When relevant, identify existing behavior to reuse, replace, or remove. Keep handoffs concise but sufficient to avoid contradicting the current direction. One agent at a time on the same files; await its result before continuing.
 
-**c. Review.** Dispatch to a review agent via Task tool. Include: which files to review, relevant requirements from the source artifact. Expect back: non-conformances only.
+**b. Test.** When independent testing materially helps, dispatch a read-only testing agent with the changed files, requested behavior, project-specific checks and risks, and test commands using `Agent` or older-version `Task`. Expect the result, commands or observations, and behavioral evidence. The suite passing does not substitute for focused checks when those are needed to prove the requested outcome.
 
-**d. Handle failures.** Route test or review failures back to an implementation agent via Task tool for correction. Re-dispatch only the failing step, not the full cycle. After two consecutive failed attempts on the same issue, escalate to the user.
+**c. Review.** When independent review materially helps, dispatch a read-only review agent in initial-review mode using `Agent` or older-version `Task`. Include changed files, current requested behavior, validation evidence, and affected consumers/boundaries. Review actual behavior and relevant system invariants; do not treat historical documents as authority over current user direction. Report a finding only for a concrete material defect or risk with a consequence and bounded required outcome; give each finding a stable ID for correction. An obsolete parallel path or unused scaffolding is a finding only when evidence shows material maintenance or behavior cost, not a cleanup quota. A request for another test must identify a plausible defect current evidence would miss and the observable check needed. Accept adequate work without optional hardening or ceremonial coverage.
 
-**e. Record.** Update the notes file: mark the phase complete, log anything worth preserving (failures, unexpected behavior, decisions not specified in the source).
+**d. Handle failures.** Route failures back to an implementation agent for correction and await completion. Re-dispatch only the failed checks and a verification review with the complete unresolved finding records and correction diff. Inspect the changed surface and report any newly encountered material issue, but do not reopen unrelated accepted surfaces. After two failed attempts on one finding, or three correction rounds in a phase, escalate to the user.
 
-When phases come from task files, update the task file's `status` meta to `complete` after the cycle passes. If the implementation agent reports work is already done (task file still says `pending`), surface this to the user before skipping.
+**e. Record.** Share concise results and evidence with the caller. Update existing notes when useful for resumption; do not create phase trackers or obligation maps as ceremony.
 
 ### 3. Validate
 
-After all phases complete, dispatch a review agent with the full source artifact. Directive: validate the implementation against the source, flag requirements not met or behavior that diverges. This is a holistic check, not a code quality review.
+For multi-phase or cross-boundary work, use a terminal review to catch interactions the phase reviews could miss. A focused review can serve for a small change. Check cross-cutting behavior and relevant affected consumers; raise only concrete material findings, not historical noncompliance or cleanup preferences.
 
-Route any findings back through the implement/test/review cycle.
+Route material findings to implementation for correction, then repeat only the failed checks and a focused verification review with the finding and correction context. Do not restart broad review unless the accepted surface materially changes. Continue until resolved or the bounded retry limit is reached.
 
 ### 4. Finalize
 
-Update the notes file status to `complete`. Summarize: what was built, how many phases, any divergences.
+Summarize what changed, tests/review performed, important findings or divergences, and anything still unresolved. Update existing notes if applicable.
 
-Suggest: `Run /simplify on the changed files to clean up for clarity.`
+If the project uses an external tracker, inspect its hierarchy and dependency
+semantics and reconcile related entries before creating or changing issues. Avoid
+duplicates and dependency cycles; add dependencies only when needed and verify
+they do not block prerequisites. After the last tracker mutation, regenerate any
+passive export and compare it with authoritative tracker state.
+
+When asked to commit after review, check the intended changes and required project safeguards. If code changes after testing/review, validate and review the changed behavior again.
 
 ## Escalation
 
 Two conditions require human intervention. Everything else is autonomous.
 
-1. **Stuck loop**: Two consecutive failed attempts on the same issue. Present the failure history.
-2. **Plan divergence**: Implementation requires something the source artifact didn't specify or contradicts. Present the divergence and ask the user to authorize or redirect.
+1. **Stuck loop**: Two failed attempts on one finding, or three correction rounds in one phase. Present the finding IDs and failure history.
+2. **Material uncertainty**: New evidence reveals a choice that could materially change the outcome and the user's current direction does not resolve it. Explain the trade-off and ask. A conflict with an old artifact alone is not a blocker; follow current user direction and surface concrete safety or compatibility consequences.
 
 Do not ask for confirmation between phases.
 
 ## Divergence
 
-If reality requires something the source artifact didn't account for, do not proceed. Escalate to the user with the specific divergence and why it's needed. Record approved divergences in the notes file.
+If new evidence raises a material choice not resolved by the user's current direction, explain it and ask before choosing. Do not treat an old artifact's omission or contradiction alone as a blocker. Preserve test and review rigor, and raise concrete safety or compatibility consequences when they matter.

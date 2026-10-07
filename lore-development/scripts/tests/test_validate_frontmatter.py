@@ -69,7 +69,7 @@ VALID_BRAINSTORM_FM = """\
 ---
 title: "Test brainstorm"
 date: 2026-03-10
-status: open
+status: draft
 tags: [testing]
 ---
 
@@ -80,7 +80,7 @@ VALID_NOTE_FM = """\
 ---
 title: "Test note"
 date: 2026-03-10
-status: in_progress
+status: draft
 tags: [testing]
 source: .lore/work/specs/example.md
 ---
@@ -92,7 +92,7 @@ VALID_TASK_FM = """\
 ---
 title: "Test task"
 date: 2026-03-10
-status: pending
+status: draft
 tags: [testing]
 source: .lore/work/plans/example.md
 sequence: 1
@@ -203,16 +203,15 @@ class TestRequiredFields(unittest.TestCase):
 
 
 class TestTypeSpecificRequired(unittest.TestCase):
-    """Type-specific required fields (notes need source, tasks need source+sequence)."""
+    """Type-specific required fields (tasks need source+sequence)."""
 
-    def test_note_missing_source(self):
+    def test_note_without_source_is_valid(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             lore = _make_lore_tree(tmpdir, {
                 "work/notes/test.md": (FIXTURES / "note_missing_source.md").read_text()
             })
             findings = scan_directory(lore)
-            missing = [f for f in findings if f["error_type"] == "missing_field" and f["field"] == "source"]
-            self.assertEqual(len(missing), 1)
+            self.assertEqual(findings, [])
 
     def test_task_missing_sequence(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -287,7 +286,10 @@ class TestFieldTypes(unittest.TestCase):
 
     def test_sequence_must_be_integer(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            content = '---\ntitle: test\ndate: 2026-03-10\nstatus: pending\ntags: [a]\nsource: x\nsequence: "one"\n---\n'
+            content = (
+                '---\ntitle: test\ndate: 2026-03-10\nstatus: draft\n'
+                'tags: [a]\nsource: x\nsequence: "one"\n---\n'
+            )
             lore = _make_lore_tree(tmpdir, {"work/tasks/test.md": content})
             findings = scan_directory(lore)
             type_errs = [f for f in findings if f["error_type"] == "invalid_type" and f["field"] == "sequence"]
@@ -297,6 +299,16 @@ class TestFieldTypes(unittest.TestCase):
 class TestStatusValues(unittest.TestCase):
     """REQ-FMVAL-6: status value validation."""
 
+    def test_legacy_spec_req_prefix_remains_accepted(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            legacy_spec = VALID_FM.replace(
+                "tags: [testing]", "tags: [testing]\nreq-prefix: AUTH"
+            )
+            lore = _make_lore_tree(
+                tmpdir, {"work/specs/legacy.md": legacy_spec}
+            )
+            self.assertEqual(scan_directory(lore), [])
+
     def test_invalid_status_for_specs(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             lore = _make_lore_tree(tmpdir, {
@@ -305,7 +317,38 @@ class TestStatusValues(unittest.TestCase):
             findings = scan_directory(lore)
             status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
             self.assertEqual(len(status_errs), 1)
+            self.assertIn("approved", status_errs[0]["message"])
             self.assertIn("wip", status_errs[0]["message"])
+
+    def test_legacy_intent_marker_does_not_bypass_four_status_schema(self):
+        legacy = (
+            "---\ntitle: Historical\ndate: 2024-01-01\nstatus: open\n"
+            "tags: [legacy]\nlegacy_source_type: spec\n---\n# Historical\n"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {"work/intents/legacy.md": legacy})
+            findings = scan_directory(lore)
+            status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
+            self.assertEqual(len(status_errs), 1)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            unmarked = legacy.replace("legacy_source_type: spec\n", "")
+            lore = _make_lore_tree(tmpdir, {"work/intents/legacy.md": unmarked})
+            findings = scan_directory(lore)
+            status_errs = [
+                f for f in findings if f["error_type"] == "invalid_status"
+            ]
+            self.assertEqual(len(status_errs), 1)
+            self.assertIn("open", status_errs[0]["message"])
+
+    def test_existing_legacy_marker_is_accepted_as_extra_frontmatter(self):
+        marked = (
+            "---\ntitle: Historical\ndate: 2024-01-01\nstatus: approved\n"
+            "tags: [legacy]\nlegacy_source_type: spec\n---\n# Historical\n"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(tmpdir, {"work/intents/legacy.md": marked})
+            self.assertEqual(scan_directory(lore), [])
 
     def test_valid_status_for_brainstorm(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -322,6 +365,20 @@ class TestStatusValues(unittest.TestCase):
             status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
             self.assertEqual(status_errs, [])
 
+    def test_unlisted_work_subdirectory_uses_shared_lore_statuses(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            content = (
+                "---\ntitle: test\ndate: 2026-03-10\nstatus: open\n"
+                "tags: [a]\n---\n"
+            )
+            lore = _make_lore_tree(tmpdir, {"work/ideas/test.md": content})
+            findings = scan_directory(lore)
+            status_errs = [f for f in findings if f["error_type"] == "invalid_status"]
+            self.assertEqual(len(status_errs), 1)
+            self.assertIn(
+                "draft, approved, completed, archived", status_errs[0]["message"]
+            )
+
     def test_file_directly_in_lore_skips_status_check(self):
         """Files directly in .lore/ (no subdirectory) skip status validation."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -335,6 +392,37 @@ class TestStatusValues(unittest.TestCase):
 # -- Unit tests: helpers -------------------------------------------------------
 
 class TestResolveDocType(unittest.TestCase):
+    def test_local_plan_and_notes_resolve_to_local_keys(self):
+        self.assertEqual(_resolve_doc_type(".lore/local/plans/auth.md"), "local/plans")
+        self.assertEqual(_resolve_doc_type(".lore/local/notes/auth.md"), "local/notes")
+
+    def test_local_task_does_not_require_historical_sequence_fields(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(
+                tmpdir,
+                {
+                    "local/tasks/task.md": (
+                        "---\ntitle: Task\ndate: 2026-03-10\nstatus: draft\n"
+                        "tags: [task]\n---\n"
+                    )
+                },
+            )
+            self.assertEqual(scan_directory(lore), [])
+
+    def test_legacy_work_tasks_still_require_historical_fields(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lore = _make_lore_tree(
+                tmpdir,
+                {
+                    "work/tasks/task.md": (
+                        "---\ntitle: Task\ndate: 2026-03-10\nstatus: draft\n"
+                        "tags: [task]\n---\n"
+                    )
+                },
+            )
+            missing = {finding.get("field") for finding in scan_directory(lore)}
+            self.assertEqual(missing, {"source", "sequence"})
+
     def test_work_path_resolves_to_two_level_key(self):
         self.assertEqual(_resolve_doc_type(".lore/work/specs/auth.md"), "work/specs")
 

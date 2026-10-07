@@ -5,7 +5,7 @@ description: Use when checking whether field-guide reference pages still match c
 
 # Resolve Drift
 
-Compare reference prose against living implementation evidence and reconcile drift.
+Check whether reference pages remain useful and whether claims about current behavior match living implementation evidence. Reconcile stale or redundant knowledge without turning historical intent into a mandate.
 
 This is the semantic pass. It is intentionally more expensive than lint.
 
@@ -18,7 +18,7 @@ For each page, read evidence metadata:
 - Markdown: `fg-evidence` frontmatter
 - HTML: `fg-evidence-code`, `fg-evidence-tests`, and `fg-evidence-symbols` meta tags
 
-If evidence is missing, either:
+Treat `fg-sources` as provenance, not authority or proof of currency. If evidence is missing, either:
 
 - run `update-evidence` first, or
 - audit manually and report that the page needs evidence
@@ -30,14 +30,15 @@ For each page:
 1. Extract concrete claims from the prose.
 2. Read the listed code and test evidence.
 3. Search nearby code with `rg` when the evidence is incomplete.
-4. Decide whether each claim is:
+4. For claims about current behavior, validate against code/tests and current user direction. Historical rationale may be useful even when code cannot prove it; label it as history, not as an instruction. Decide whether each claim is:
    - current
    - stale prose
    - stale evidence
-   - implementation drift from intended design
-   - unverifiable policy or philosophy
+   - implementation drift from documented intent (report as a fact, not automatic noncompliance)
+   - useful historical rationale that cannot be proven from code
+   - redundant or no longer useful reference material
 
-Only flag contradictions when the code/tests and page make incompatible claims about the same subject. Do not treat different levels of detail as drift.
+Only flag contradictions when code/tests and page make incompatible claims about the same subject. A conflict with an old plan, note, or artifact alone is not drift or a blocker. Current user direction prevails; call out a concrete safety or compatibility consequence when relevant. Do not treat different levels of detail as drift.
 
 ## Parallel Review
 
@@ -59,8 +60,9 @@ Prefer the smallest correction that restores truth:
 
 - update stale reference prose when code/tests are clearly current
 - update `fg-evidence` when the prose is true but anchors are incomplete
-- report a code/test issue when the page documents intended design and implementation contradicts it
-- mark historical pages as non-current when they are no longer meant to describe live behavior
+- report implementation behavior and distinguish it from historical intent when they differ; do not infer a code defect from old design prose alone
+- merge, supersede, or retire redundant/obsolete pages and repair index links
+- preserve useful rationale proportionately as clearly marked history
 
 Do not delete useful rationale just because implementation changed. Reframe it as history or a superseded decision when it still explains why the system evolved.
 

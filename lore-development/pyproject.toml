@@ -1,6 +1,6 @@
 [project]
 name = "lore-development"
-version = "3.1.0"
+version = "4.0.0"
 description = "A lightweight plugin for building and organizing project context"
 authors = [{ name = "Ronald Roy", email = "gsdwig@gmail.com" }]
 requires-python = ">=3.12"
@@ -16,5 +16,5 @@ line-length = 88
 lint.select = ["E", "F", "UP", "I", "B", "SIM"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["scripts/tests"]
 pythonpath = ["scripts"]
